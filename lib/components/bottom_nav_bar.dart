@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:hifdh_planner_app/pages/home_page.dart';
+import 'package:hifdh_planner_app/pages/plans_page.dart';
+import 'package:hifdh_planner_app/pages/progress_page.dart';
+import 'package:hifdh_planner_app/pages/schedule_page.dart';
+import 'package:hifdh_planner_app/themes/theme_provider.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
+
+class MyBottomNavBar extends StatelessWidget {
+  const MyBottomNavBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.put(NavigatorController());
+
+    return Scaffold(
+      bottomNavigationBar: Obx(
+        () => NavigationBar(
+          height: 60,
+          elevation: 0,
+          indicatorColor: Provider.of<ThemeProvider>(context).isDarkMode
+              ? Theme.of(context).colorScheme.inversePrimary
+              : Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          selectedIndex: controller.selectedIndex.value,
+          onDestinationSelected: (value) =>
+              controller.selectedIndex.value = value,
+          destinations: const [
+            Padding(
+              padding: EdgeInsets.only(top: 16.0),
+              child: NavigationDestination(
+                icon: Icon(Iconsax.home),
+                label: 'Home',
+              ),
+            ),
+            Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: NavigationDestination(
+                  icon: Icon(Iconsax.note),
+                  label: 'Plans',
+                )),
+            Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: NavigationDestination(
+                  icon: ImageIcon(AssetImage('assets/rise.png'), size: 24),
+                  label: 'Progress',
+                )),
+            Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: NavigationDestination(
+                  icon: Icon(Iconsax.calendar),
+                  label: 'Schedule',
+                )),
+          ],
+        ),
+      ),
+      body: Obx(() => controller.screens[controller.selectedIndex.value]),
+    );
+  }
+}
+
+class NavigatorController extends GetxController {
+  final Rx<int> selectedIndex = 0.obs;
+
+  final screens = [
+    const Padding(
+      padding: EdgeInsets.only(top: 50.0),
+      child: HomePage(),
+    ),
+    const Padding(
+      padding: EdgeInsets.only(top: 50.0),
+      child: PlansPage(),
+    ),
+    const Padding(
+      padding: EdgeInsets.only(top: 50.0),
+      child: ProgressPage(),
+    ),
+    const Padding(
+      padding: EdgeInsets.only(top: 50.0),
+      child: SchedulePage(),
+    ),
+  ];
+}

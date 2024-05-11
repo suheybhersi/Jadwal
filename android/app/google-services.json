@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "524256100703",
+    "project_id": "hifdh-planner-app-519c6",
+    "storage_bucket": "hifdh-planner-app-519c6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:524256100703:android:e99b0f7aa6afd1471636ea",
+        "android_client_info": {
+          "package_name": "com.example.hifdh_planner_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWkifyVuraPzB_i8hgnK9L8YG1JQZA-II"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
