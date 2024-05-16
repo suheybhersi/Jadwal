@@ -5,6 +5,7 @@ import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:popover/popover.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 // ignore: must_be_immutable
 class PlanTile extends StatelessWidget {
@@ -12,6 +13,7 @@ class PlanTile extends StatelessWidget {
   String id;
   int hifdhIn;
   String verses;
+  final _controller = PageController();
   PlanTile(
       {super.key,
       required this.plan,
@@ -153,125 +155,27 @@ class PlanTile extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 10.0,
-            ),
-            child: CircularPercentIndicator(
-              radius: 110,
-              lineWidth: 25,
-              percent: 0.4,
-              progressColor: Colors.blue,
-              backgroundColor: Colors.blue.shade100,
-              circularStrokeCap: CircularStrokeCap.round,
-              center: const Text(
-                '40%',
-                style: TextStyle(fontSize: 50),
-              ),
-            ),
-          ),
-          Text(
-            '${plan['completedAjza']}/${plan['totalAjza']}',
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          SizedBox(
+            height: 350,
+            child: PageView(
+              controller: _controller,
               children: [
-                Container(
-                  width: 300,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue, width: 2),
-                      borderRadius: BorderRadius.circular(30)),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Iconsax.note_text,
-                            size: 50,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                plan['hifdhs'] == null || plan['hifdhs'].isEmpty
-                                    ? 'No hifdh'
-                                    : verses,
-                                style: const TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                hifdhIn == 0
-                                    ? 'Today'
-                                    : hifdhIn == 1
-                                        ? 'Tomorrow'
-                                        : 'In $hifdhIn days',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  width: 300,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.green, width: 2),
-                      borderRadius: BorderRadius.circular(30)),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Icons.refresh,
-                            size: 50,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                plan['reviews'] == null ||
-                                        plan['reviews'].isEmpty
-                                    ? 'No review'
-                                    : plan['reviews'].first['review'],
-                                style: const TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          )
-                        ],
-                      )
-                    ],
-                  ),
-                ),
+                MyProgressIndicator(plan: plan),
+                Hifdh(plan: plan, verses: verses, hifdhIn: hifdhIn),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 15.0),
+            child: SmoothPageIndicator(
+              controller: _controller,
+              count: 2,
+              effect: WormEffect(
+                activeDotColor: Colors.blue,
+                dotColor: Theme.of(context).colorScheme.secondary,
+                dotHeight: 25,
+                dotWidth: 25,
+              ),
             ),
           ),
           Padding(
@@ -296,6 +200,162 @@ class PlanTile extends StatelessWidget {
                   fontSize: 20,
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MyProgressIndicator extends StatelessWidget {
+  const MyProgressIndicator({
+    super.key,
+    required this.plan,
+  });
+
+  final Map<String, dynamic> plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        CircularPercentIndicator(
+          radius: 140,
+          lineWidth: 30,
+          percent: 0.4,
+          progressColor: Colors.blue,
+          backgroundColor: Colors.blue.shade100,
+          circularStrokeCap: CircularStrokeCap.round,
+          center: const Text(
+            '40%',
+            style: TextStyle(fontSize: 60),
+          ),
+        ),
+        Text(
+          '${plan['completedAjza']}/${plan['totalAjza']}',
+          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+class Hifdh extends StatelessWidget {
+  const Hifdh({
+    super.key,
+    required this.plan,
+    required this.verses,
+    required this.hifdhIn,
+  });
+
+  final Map<String, dynamic> plan;
+  final String verses;
+  final int hifdhIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 30,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+            decoration: BoxDecoration(
+                border: Border.all(color: Colors.blue, width: 2),
+                borderRadius: BorderRadius.circular(30)),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const Icon(
+                      Iconsax.note_text,
+                      size: 55,
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan['hifdhs'] == null || plan['hifdhs'].isEmpty
+                              ? 'No hifdh'
+                              : verses,
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          hifdhIn == 0
+                              ? 'Today'
+                              : hifdhIn == 1
+                                  ? 'Tomorrow'
+                                  : 'In $hifdhIn days',
+                          style: const TextStyle(
+                            fontSize: 24,
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+            decoration: BoxDecoration(
+                border: Border.all(color: Colors.green, width: 2),
+                borderRadius: BorderRadius.circular(30)),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    const Icon(
+                      Icons.refresh,
+                      size: 55,
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan['reviews'] == null || plan['reviews'].isEmpty
+                              ? 'No review'
+                              : plan['reviews'].first['review'],
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          hifdhIn == 0
+                              ? 'Today'
+                              : hifdhIn == 1
+                                  ? 'Tomorrow'
+                                  : 'In $hifdhIn days',
+                          style: const TextStyle(
+                            fontSize: 24,
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                )
+              ],
             ),
           ),
         ],

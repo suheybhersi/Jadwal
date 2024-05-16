@@ -31,26 +31,35 @@ class MyBottomNavBar extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(top: 16.0),
               child: NavigationDestination(
-                icon: Icon(Iconsax.home),
+                icon: Icon(
+                  Iconsax.home,
+                  size: 30,
+                ),
                 label: 'Home',
               ),
             ),
             Padding(
                 padding: EdgeInsets.only(top: 16.0),
                 child: NavigationDestination(
-                  icon: Icon(Iconsax.note),
+                  icon: Icon(
+                    Iconsax.note,
+                    size: 30,
+                  ),
                   label: 'Plans',
                 )),
             Padding(
                 padding: EdgeInsets.only(top: 16.0),
                 child: NavigationDestination(
-                  icon: ImageIcon(AssetImage('assets/rise.png'), size: 24),
+                  icon: ImageIcon(AssetImage('assets/rise.png'), size: 30),
                   label: 'Progress',
                 )),
             Padding(
                 padding: EdgeInsets.only(top: 16.0),
                 child: NavigationDestination(
-                  icon: Icon(Iconsax.calendar),
+                  icon: Icon(
+                    Iconsax.calendar,
+                    size: 30,
+                  ),
                   label: 'Schedule',
                 )),
           ],
