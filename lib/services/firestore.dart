@@ -199,13 +199,13 @@ class FirestoreService extends ChangeNotifier {
         'hifdhIn': hifdhIn,
         'hifdhs': planHifdhs,
       }); //update plan with hifdhIn and newHifdh
-    }
+    } else {
+      Timestamp hifdhTimestamp = planData['hifdhs'].last['date'];
+      DateTime hifdhDate = hifdhTimestamp.toDate();
 
-    Timestamp hifdhTimestamp = planData['hifdhs'].last['date'];
-    DateTime hifdhDate = hifdhTimestamp.toDate();
-
-    if (hifdhDate.day == DateTime.now().day) {
-      updateNextHifdh(id);
+      if (hifdhDate.day == DateTime.now().day) {
+        updateNextHifdh(id);
+      }
     }
   }
 

@@ -65,8 +65,8 @@ class NavigatorController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
   final screens = [
-    const Padding(
-      padding: EdgeInsets.only(top: 50.0),
+    Padding(
+      padding: const EdgeInsets.only(top: 50.0),
       child: HomePage(),
     ),
     const Padding(
