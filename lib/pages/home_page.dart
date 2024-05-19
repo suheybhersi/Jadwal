@@ -55,12 +55,7 @@ class HomePage extends StatelessWidget {
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Shimmer.fromColors(
-              period: const Duration(milliseconds: 1500),
-              baseColor: Colors.grey.shade500,
-              highlightColor: Colors.grey.shade200,
-              child: const YourContentPlaceholder(),
-            );
+            return const YourContentPlaceholder();
           }
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
@@ -283,7 +278,6 @@ class Upcoming extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 padding:
@@ -588,11 +582,16 @@ class YourContentPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
+    return SingleChildScrollView(
       child: Column(
         children: [
           // Placeholder for WeekDays
-          WeekDaysPlaceholder(),
+          Shimmer.fromColors(
+            period: const Duration(milliseconds: 1500),
+            baseColor: Colors.grey.shade500,
+            highlightColor: Colors.grey.shade200,
+            child: const WeekDaysPlaceholder(),
+          ),
           // Placeholder for Upcoming
           UpcomingPlaceholder(),
           // Placeholder for Statistics
@@ -627,162 +626,209 @@ class UpcomingPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20.0),
+              child: Text(
+                'Upcoming',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 30,
+                    color: Theme.of(context).colorScheme.inversePrimary),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
-                child: Text(
-                  'Upcoming',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 30,
-                      color: Theme.of(context).colorScheme.inversePrimary),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue, width: 2),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Column(
+                  children: [
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 45,
+                            height: 45,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 200,
+                                height: 20,
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 150,
+                                height: 20,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.green, width: 2),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Column(
+                  children: [
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 45,
+                            height: 45,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 200,
+                                height: 20,
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 150,
+                                height: 20,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.tertiary, width: 2),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Column(
+                  children: [
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 45,
+                            height: 45,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 200,
+                                height: 20,
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                width: 150,
+                                height: 20,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
                 ),
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(width: 20),
-                    SizedBox(
-                      width: 45,
-                      height: 45,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 200,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          width: 150,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(width: 20),
-                    SizedBox(
-                      width: 45,
-                      height: 45,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 200,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          width: 150,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(width: 20),
-                    SizedBox(
-                      width: 45,
-                      height: 45,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 200,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          width: 150,
-                          height: 20,
-                          color: Colors.grey[300], // Placeholder color
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -800,7 +846,7 @@ class StatisticsPlaceholder extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
+                padding: const EdgeInsets.only(left: 20.0),
                 child: Text(
                   'Statistics',
                   style: TextStyle(
@@ -817,7 +863,8 @@ class StatisticsPlaceholder extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 2),
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.tertiary, width: 2),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Column(
@@ -826,16 +873,25 @@ class StatisticsPlaceholder extends StatelessWidget {
                     Text(
                       'Streak',
                       style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.tertiary),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      width: 90,
-                      height: 30,
-                      color: Colors.grey[300], // Placeholder color
-                    ),
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.grey[300],
+                        ),
+                        width: 90,
+                        height: 30,
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -846,7 +902,8 @@ class StatisticsPlaceholder extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 2),
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.tertiary, width: 2),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Column(
@@ -860,11 +917,19 @@ class StatisticsPlaceholder extends StatelessWidget {
                           color: Theme.of(context).colorScheme.tertiary),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      width: 110,
-                      height: 30,
-                      color: Colors.grey[300], // Placeholder color
-                    ),
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.grey[300],
+                        ),
+                        width: 110,
+                        height: 30,
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -874,7 +939,8 @@ class StatisticsPlaceholder extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey, width: 2),
+              border: Border.all(
+                  color: Theme.of(context).colorScheme.tertiary, width: 2),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Column(
@@ -891,20 +957,38 @@ class StatisticsPlaceholder extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Container(
-                      width: 240,
-                      height: 40, // Adjust height as needed
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300], // Placeholder color
-                        borderRadius: BorderRadius.circular(40),
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Container(
+                        width: 230,
+                        height: 40, // Adjust height as needed
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300], // Placeholder color
+                          borderRadius: BorderRadius.circular(40),
+                        ),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 10.0),
-                      child: Text(
-                        '30%',
-                        style: TextStyle(fontSize: 20),
+                    const SizedBox(width: 5),
+                    Shimmer.fromColors(
+                      period: const Duration(milliseconds: 1500),
+                      baseColor: Colors.grey.shade500,
+                      highlightColor: Colors.grey.shade200,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey[300],
+                        ),
+                        width: 40,
+                        height: 40,
+                        // Placeholder color
                       ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Text(
+                      '%',
+                      style: TextStyle(fontSize: 20),
                     ),
                   ],
                 )

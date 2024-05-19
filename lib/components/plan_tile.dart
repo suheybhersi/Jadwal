@@ -39,6 +39,13 @@ class PlanTile extends StatelessWidget {
   void deletePlan(BuildContext context) {
     firestoreService.deletePlan(id);
     Navigator.pop(context);
+    // if (plan['active'] == true && firestoreService.plansCollection.count().get() != 0) {
+    //   showDialog(
+    //     context: context,
+    //     builder: (context) =>
+    //         const AlertDialog(title: Text('Choose a new active plan')),
+    //   );
+    // }
   }
 
   @override
@@ -46,12 +53,7 @@ class PlanTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(35),
-        border: Border.all(
-          color: plan['active']
-              ? Colors.green
-              : Theme.of(context).colorScheme.inversePrimary,
-          width: plan['active'] ? 3 : 2,
-        ),
+        color: Theme.of(context).colorScheme.primary,
       ),
       margin: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -62,13 +64,25 @@ class PlanTile extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  plan['name'],
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      plan['name'],
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    if (plan['active'])
+                      const Padding(
+                        padding: EdgeInsets.only(left: 10.0),
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 30,
+                        ),
+                      ),
+                  ],
                 ),
                 Builder(
                   builder: (context) => IconButton(
@@ -171,8 +185,8 @@ class PlanTile extends StatelessWidget {
               controller: _controller,
               count: 2,
               effect: WormEffect(
-                activeDotColor: Colors.blue,
-                dotColor: Theme.of(context).colorScheme.secondary,
+                activeDotColor: Theme.of(context).colorScheme.inversePrimary,
+                dotColor: Theme.of(context).colorScheme.tertiary,
                 dotHeight: 25,
                 dotWidth: 25,
               ),
@@ -221,20 +235,25 @@ class MyProgressIndicator extends StatelessWidget {
     return Column(
       children: [
         CircularPercentIndicator(
-          radius: 140,
-          lineWidth: 30,
+          radius: 130,
+          lineWidth: 40,
           percent: 0.4,
-          progressColor: Colors.blue,
-          backgroundColor: Colors.blue.shade100,
+          progressColor: Colors.blue.shade700,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           circularStrokeCap: CircularStrokeCap.round,
-          center: const Text(
+          center: Text(
             '40%',
-            style: TextStyle(fontSize: 60),
+            style: TextStyle(
+                fontSize: 60,
+                color: Theme.of(context).colorScheme.inversePrimary),
           ),
         ),
         Text(
           '${plan['completedAjza']}/${plan['totalAjza']}',
-          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.inversePrimary),
         ),
       ],
     );

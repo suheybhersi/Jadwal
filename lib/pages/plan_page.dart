@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:hifdh_planner_app/components/edit_daily_reading_form.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
@@ -10,8 +9,7 @@ class PlanPage extends StatelessWidget {
   final String id;
   final FirestoreService firestoreService = FirestoreService();
 
-  // ignore: use_super_parameters
-  PlanPage({Key? key, required this.id}) : super(key: key);
+  PlanPage({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -46,34 +44,38 @@ class PlanPage extends StatelessWidget {
                 plansList.indexWhere((element) => element.id == id);
             DocumentSnapshot document = plansList[documentIndex];
             Map<String, dynamic> plan = document.data() as Map<String, dynamic>;
+            bool completed = false;
+            int hifdhIn = 0;
+            String verses = '';
 
-            bool completed = plan['hifdhs'].last['completed'];
-            Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
-            DateTime hifdhDate = hifdhTimestamp.toDate();
-            firestoreService.hifdhIn(id);
-            int hifdhIn = plan['hifdhIn'];
-            String verses = plan['hifdhs'].last['hifdh'];
+            if (plan.isNotEmpty) {
+              completed = plan['hifdhs'].last['completed'];
+              Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
+              DateTime hifdhDate = hifdhTimestamp.toDate();
+              firestoreService.hifdhIn(id);
+              hifdhIn = plan['hifdhIn'];
+              verses = plan['hifdhs'].last['hifdh'];
 
-            if (completed == false) {
-              isLoading = false;
+              if (completed == false) {
+                isLoading = false;
+              }
+
+              if (hifdhDate.day == DateTime.now().day && completed) {
+                isLoading = true;
+                firestoreService.updateNextHifdh(id);
+              }
+
+              if (isLoading) {
+                return Column(
+                  children: [
+                    _buildPlanDetails(context, plan),
+                    _buildNextHifdhShimmer(context, completed, plan),
+                    _buildUpcomingReviewsShimmer(context),
+                    _buildDailyReadingShimmer(context, plan),
+                  ],
+                );
+              }
             }
-
-            if (hifdhDate.day == DateTime.now().day && completed) {
-              isLoading = true;
-              firestoreService.updateNextHifdh(id);
-            }
-
-            if (isLoading) {
-              return Column(
-                children: [
-                  _buildPlanDetails(context, plan),
-                  _buildNextHifdhShimmer(context, completed, plan),
-                  _buildUpcomingReviewsShimmer(context),
-                  _buildDailyReadingShimmer(context, plan),
-                ],
-              );
-            }
-
             return SingleChildScrollView(
               child: Column(
                 children: [
@@ -435,15 +437,21 @@ class PlanPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 150,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                         const SizedBox(height: 10),
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 100,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                       ],
                     ),
@@ -518,15 +526,21 @@ class PlanPage extends StatelessWidget {
                       children: [
                         const SizedBox(height: 10),
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 150,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                         const SizedBox(height: 10),
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 100,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                       ],
                     ),
@@ -604,15 +618,21 @@ class PlanPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 150,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                         const SizedBox(height: 10),
                         Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey[300],
+                          ),
                           width: 100,
                           height: 20,
-                          color: Colors.grey[300],
                         ),
                       ],
                     ),
