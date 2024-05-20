@@ -4,9 +4,7 @@ import 'package:hifdh_planner_app/pages/home_page.dart';
 import 'package:hifdh_planner_app/pages/plans_page.dart';
 import 'package:hifdh_planner_app/pages/progress_page.dart';
 import 'package:hifdh_planner_app/pages/schedule_page.dart';
-import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:provider/provider.dart';
 
 class MyBottomNavBar extends StatelessWidget {
   const MyBottomNavBar({super.key});
@@ -20,10 +18,8 @@ class MyBottomNavBar extends StatelessWidget {
         () => NavigationBar(
           height: 60,
           elevation: 0,
-          indicatorColor: Provider.of<ThemeProvider>(context).isDarkMode
-              ? Theme.of(context).colorScheme.inversePrimary
-              : Theme.of(context).colorScheme.primary,
-          backgroundColor: Theme.of(context).colorScheme.secondary,
+          indicatorColor: Theme.of(context).colorScheme.tertiary,
+          backgroundColor: Colors.transparent,
           selectedIndex: controller.selectedIndex.value,
           onDestinationSelected: (value) =>
               controller.selectedIndex.value = value,

@@ -234,26 +234,30 @@ class MyProgressIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        CircularPercentIndicator(
-          radius: 130,
-          lineWidth: 40,
-          percent: 0.4,
-          progressColor: Colors.blue.shade700,
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          circularStrokeCap: CircularStrokeCap.round,
-          center: Text(
-            '40%',
-            style: TextStyle(
-                fontSize: 60,
-                color: Theme.of(context).colorScheme.inversePrimary),
+        Padding(
+          padding: const EdgeInsets.only(top: 15.0),
+          child: CircularPercentIndicator(
+            radius: 130,
+            lineWidth: 40,
+            percent: 0.4,
+            progressColor: Colors.blue.shade700,
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            circularStrokeCap: CircularStrokeCap.round,
+            center: Text(
+              '40%',
+              style: TextStyle(
+                  fontSize: 60,
+                  color: Theme.of(context).colorScheme.inversePrimary),
+            ),
           ),
         ),
         Text(
           '${plan['completedAjza']}/${plan['totalAjza']}',
           style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.inversePrimary),
+            fontSize: 30,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
         ),
       ],
     );

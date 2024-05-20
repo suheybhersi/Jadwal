@@ -35,14 +35,16 @@ class FirestoreService extends ChangeNotifier {
       hifdhs: [],
       hifdhIn: -1,
       reviews: [],
+      streak: 0,
+      missedReviews: 0,
     );
 
     /* * * * * * * * * * * M A K E   P L A N   A C T I V E   A S   S O O N   A S   N E W   P L A N   IS  A D D E D * * * * * * * * * * */
 
     final document = await plansCollection.add(newPlan.toMap());
-    updateActivePlan(document.id);
 
     createNewHifdh(start, lines, document.id);
+    updateActivePlan(document.id);
   }
 
   Stream<QuerySnapshot> getPlansStream() {

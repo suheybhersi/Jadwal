@@ -84,19 +84,24 @@ class HomePage extends StatelessWidget {
               if (hifdhDate.day == DateTime.now().day && completed) {
                 firestoreService.updateNextHifdh(id);
               }
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const WeekDays(),
+                    Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
+                    Statistics(plan: plan)
+                  ],
+                ),
+              );
             }
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  const WeekDays(),
-                  Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
-                  const Statistics()
-                ],
-              ),
-            );
           }
-          return const SizedBox();
+          return Center(
+              child: Text(
+            'No plans...',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+                fontSize: 24),
+          ));
         },
       ),
     );
@@ -110,136 +115,116 @@ class WeekDays extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                width: 3,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.green,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  child: Text(
-                    'M',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Theme.of(context).colorScheme.background,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-                  child: Text(
-                    'T',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.green,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  child: Text(
-                    'W',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.red.shade300,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-                  child: Text(
-                    'T',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Theme.of(context).colorScheme.background,
-                    border: Border.all(
-                      width: 3,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  child: Text(
-                    'F',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Theme.of(context).colorScheme.background,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-                  child: Text(
-                    'S',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Theme.of(context).colorScheme.background,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-                  child: Text(
-                    'S',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            width: 3,
+            color: Theme.of(context).colorScheme.tertiary,
           ),
-        )
-      ],
+          borderRadius: BorderRadius.circular(40),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: const Color.fromARGB(255, 153, 250, 131),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              child: const Text(
+                'M',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Theme.of(context).colorScheme.background,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+              child: Text(
+                'T',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: const Color.fromARGB(255, 153, 250, 131),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              child: const Text(
+                'W',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: const Color.fromARGB(255, 255, 162, 162),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+              child: const Text(
+                'T',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Theme.of(context).colorScheme.background,
+                border: Border.all(
+                  width: 3,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              child: Text(
+                'F',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Theme.of(context).colorScheme.background,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+              child: Text(
+                'S',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Theme.of(context).colorScheme.background,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+              child: Text(
+                'S',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -268,9 +253,10 @@ class Upcoming extends StatelessWidget {
               child: Text(
                 'Upcoming',
                 style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 30,
-                    color: Theme.of(context).colorScheme.inversePrimary),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 30,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
               ),
             ),
           ],
@@ -279,151 +265,250 @@ class Upcoming extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
           child: Column(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 2),
-                    borderRadius: BorderRadius.circular(30)),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        const Icon(
-                          Iconsax.note_text,
-                          size: 40,
-                        ),
-                        const SizedBox(
-                          width: 30,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              plan['hifdhs'] == null || plan['hifdhs'].isEmpty
-                                  ? 'No hifdh'
-                                  : verses,
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.w600),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: 165,
+                    height: 140,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.only(top: 25, left: 15, right: 15),
+                      decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 86, 173, 254),
+                          borderRadius: BorderRadius.circular(30)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 15,
                             ),
-                            hifdhIn == -1
-                                ? const SizedBox()
-                                : Text(
-                                    hifdhIn == 0
-                                        ? 'Today'
-                                        : hifdhIn == 1
-                                            ? 'Tomorrow'
-                                            : 'In $hifdhIn days',
-                                    style: const TextStyle(
-                                      fontSize: 20,
+                            child: Container(
+                              width: 85,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: Color.fromARGB(255, 128, 193, 255),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Icon(
+                                    Iconsax.note_text,
+                                    color: Colors.grey.shade100,
+                                    size: 20,
+                                  ),
+                                  Text(
+                                    'New',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  )
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.green, width: 2),
-                    borderRadius: BorderRadius.circular(30)),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        const Icon(
-                          Icons.refresh,
-                          size: 40,
-                        ),
-                        const SizedBox(
-                          width: 30,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              plan['reviews'] == null || plan['reviews'].isEmpty
-                                  ? 'No review'
-                                  : plan['reviews'].first['review'],
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                ),
+                          ),
+                          plan['hifdhs'] == null ||
+                                  plan['hifdhs'].isEmpty ||
+                                  hifdhIn == -1
+                              ? Text(
+                                  'None',
+                                  style: TextStyle(
+                                      color: Colors.grey.shade100,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      verses,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.grey.shade100,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      hifdhIn == 0
+                                          ? 'Today'
+                                          : hifdhIn == 1
+                                              ? 'Tomorrow'
+                                              : 'In $hifdhIn days',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade100,
+                                        fontSize: 20,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 165,
+                    height: 140,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.only(top: 25, left: 15, right: 15),
+                      decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 60, 209, 107),
+                          borderRadius: BorderRadius.circular(30)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 15,
+                            ),
+                            child: Container(
+                              width: 105,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: Color.fromARGB(255, 124, 228, 157),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Icon(
+                                    Icons.refresh,
+                                    color: Colors.grey.shade100,
+                                    size: 20,
+                                  ),
+                                  Text(
+                                    'Review',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          plan['reviews'] == null || plan['reviews'].isEmpty
+                              ? Text(
+                                  'None',
+                                  style: TextStyle(
+                                      color: Colors.grey.shade100,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      plan['reviews'].first['review'],
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.grey.shade100,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      hifdhIn == 0
+                                          ? 'Today'
+                                          : hifdhIn == 1
+                                              ? 'Tomorrow'
+                                              : 'In $hifdhIn days',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade100,
+                                        fontSize: 20,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(
                 height: 20,
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.tertiary,
-                    width: 2,
-                  ),
+                  color: Color.fromARGB(255, 164, 110, 245),
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: Column(
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        const Icon(
-                          Iconsax.book,
-                          size: 40,
-                        ),
-                        const SizedBox(
-                          width: 30,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              plan['hifdhs'] == null || plan['hifdhs'].isEmpty
-                                  ? 'No Daily Reading'
-                                  : verses,
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.w600),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 15,
+                          ),
+                          child: Container(
+                            width: 170,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Color.fromARGB(255, 187, 144, 251),
                             ),
-                            hifdhIn == -1
-                                ? const SizedBox()
-                                : Text(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Icon(
+                                  Iconsax.book,
+                                  color: Colors.grey.shade100,
+                                  size: 20,
+                                ),
+                                Text(
+                                  'Daily Reading',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey.shade100,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        plan['reviews'] == null || plan['reviews'].isEmpty
+                            ? Text(
+                                'None',
+                                style: TextStyle(
+                                    color: Colors.grey.shade100,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    plan['reviews'].first['review'],
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
                                     hifdhIn == 0
                                         ? 'Today'
                                         : hifdhIn == 1
                                             ? 'Tomorrow'
                                             : 'In $hifdhIn days',
-                                    style: const TextStyle(
+                                    style: TextStyle(
+                                      color: Colors.grey.shade100,
                                       fontSize: 20,
                                     ),
                                   )
-                          ],
-                        )
+                                ],
+                              ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -438,7 +523,9 @@ class Upcoming extends StatelessWidget {
 class Statistics extends StatelessWidget {
   const Statistics({
     super.key,
+    required this.plan,
   });
+  final Map<String, dynamic> plan;
 
   @override
   Widget build(BuildContext context) {
@@ -484,7 +571,7 @@ class Statistics extends StatelessWidget {
                           color: Theme.of(context).colorScheme.tertiary),
                     ),
                     Text(
-                      '8 days',
+                      '${plan['streak']} days',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -511,7 +598,7 @@ class Statistics extends StatelessWidget {
                           color: Theme.of(context).colorScheme.tertiary),
                     ),
                     Text(
-                      '2 reviews',
+                      '${plan['missedReviews']} reviews',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -593,9 +680,9 @@ class YourContentPlaceholder extends StatelessWidget {
             child: const WeekDaysPlaceholder(),
           ),
           // Placeholder for Upcoming
-          UpcomingPlaceholder(),
+          const UpcomingPlaceholder(),
           // Placeholder for Statistics
-          StatisticsPlaceholder(),
+          const StatisticsPlaceholder(),
         ],
       ),
     );

@@ -15,6 +15,8 @@ class Plan {
   final List<Hifdh> hifdhs;
   final int hifdhIn;
   final List<Review> reviews;
+  final int streak;
+  final int missedReviews;
 
   Plan({
     required this.name,
@@ -30,6 +32,8 @@ class Plan {
     required this.hifdhs,
     required this.hifdhIn,
     required this.reviews,
+    required this.streak,
+    required this.missedReviews,
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +51,8 @@ class Plan {
       'hifdhs': hifdhs,
       'hifdhIn': hifdhIn,
       'reviews': reviews,
+      'streak': streak,
+      'missedReviews': missedReviews,
     };
   }
 }
