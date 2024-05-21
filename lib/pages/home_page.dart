@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 // ignore: must_be_immutable
@@ -18,37 +20,38 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 15),
-                child: Text(
-                  'Welcome Suheyb,',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Welcome Suheyb,',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.inversePrimary,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 30,
                 ),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.person,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 30,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(25),
+            bottomRight: Radius.circular(25),
+          ),
+        ),
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
       body: StreamBuilder(
@@ -119,10 +122,9 @@ class WeekDays extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(
-            width: 3,
-            color: Theme.of(context).colorScheme.tertiary,
-          ),
+          color: Theme.of(context).colorScheme.primary,
+          // border: Border.all(
+          //     color: Theme.of(context).colorScheme.tertiary, width: 2),
           borderRadius: BorderRadius.circular(40),
         ),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -132,18 +134,22 @@ class WeekDays extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: const Color.fromARGB(255, 153, 250, 131),
+                color: const Color.fromARGB(255, 60, 209, 107),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              child: const Text(
+              child: Text(
                 'M',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.primary,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
               child: Text(
@@ -157,31 +163,39 @@ class WeekDays extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: const Color.fromARGB(255, 153, 250, 131),
+                color: const Color.fromARGB(255, 60, 209, 107),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              child: const Text(
+              child: Text(
                 'W',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: const Color.fromARGB(255, 255, 162, 162),
+                color: Colors.red.shade300,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              child: const Text(
+              child: Text(
                 'T',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.primary,
                 border: Border.all(
-                  width: 3,
+                  width: 2,
                   color: Theme.of(context).colorScheme.tertiary,
                 ),
               ),
@@ -197,7 +211,7 @@ class WeekDays extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.primary,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
               child: Text(
@@ -211,7 +225,7 @@ class WeekDays extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.primary,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
               child: Text(
@@ -270,12 +284,12 @@ class Upcoming extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 165,
-                    height: 140,
+                    height: 130,
                     child: Container(
-                      padding:
-                          const EdgeInsets.only(top: 25, left: 15, right: 15),
+                      padding: const EdgeInsets.only(
+                          top: 20, left: 15, right: 15, bottom: 10),
                       decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 86, 173, 254),
+                          color: const Color.fromARGB(255, 86, 173, 254),
                           borderRadius: BorderRadius.circular(30)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +302,7 @@ class Upcoming extends StatelessWidget {
                               width: 85,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
-                                color: Color.fromARGB(255, 128, 193, 255),
+                                color: const Color.fromARGB(255, 128, 193, 255),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -351,12 +365,12 @@ class Upcoming extends StatelessWidget {
                   ),
                   SizedBox(
                     width: 165,
-                    height: 140,
+                    height: 130,
                     child: Container(
-                      padding:
-                          const EdgeInsets.only(top: 25, left: 15, right: 15),
+                      padding: const EdgeInsets.only(
+                          top: 20, left: 15, right: 15, bottom: 10),
                       decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 60, 209, 107),
+                          color: const Color.fromARGB(255, 60, 209, 107),
                           borderRadius: BorderRadius.circular(30)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +383,7 @@ class Upcoming extends StatelessWidget {
                               width: 105,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
-                                color: Color.fromARGB(255, 124, 228, 157),
+                                color: const Color.fromARGB(255, 124, 228, 157),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -434,10 +448,11 @@ class Upcoming extends StatelessWidget {
                 height: 20,
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                height: 130,
+                padding: const EdgeInsets.only(
+                    top: 20, left: 15, right: 15, bottom: 10),
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 164, 110, 245),
+                  color: const Color.fromARGB(255, 113, 100, 250),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
@@ -453,7 +468,7 @@ class Upcoming extends StatelessWidget {
                             width: 170,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              color: Color.fromARGB(255, 187, 144, 251),
+                              color: const Color.fromARGB(255, 144, 135, 253),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -475,7 +490,7 @@ class Upcoming extends StatelessWidget {
                             ),
                           ),
                         ),
-                        plan['reviews'] == null || plan['reviews'].isEmpty
+                        plan['hifdhs'] == null || plan['hifdhs'].isEmpty
                             ? Text(
                                 'None',
                                 style: TextStyle(
@@ -487,7 +502,7 @@ class Upcoming extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    plan['reviews'].first['review'],
+                                    plan['hifdhs'].first['hifdh'],
                                     style: TextStyle(
                                       fontSize: 20,
                                       color: Colors.grey.shade100,
@@ -552,59 +567,124 @@ class Statistics extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 170,
                 padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+                    const EdgeInsets.symmetric(horizontal: 13, vertical: 15),
                 decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(30)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  color: Provider.of<ThemeProvider>(context).isDarkMode
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white,
+                  // border: Provider.of<ThemeProvider>(context).isDarkMode
+                  //     ? const Border()
+                  //     : Border.all(
+                  //         color: Theme.of(context).colorScheme.tertiary,
+                  //         width: 2,
+                  //       ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      'Streak',
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.tertiary),
-                    ),
-                    Text(
-                      '${plan['streak']} days',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.inversePrimary,
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 113, 101, 248),
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                    )
+                      child: const ImageIcon(
+                        AssetImage('assets/flame.png'),
+                        size: 35,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 7,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${plan['streak']}',
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
+                              height: 0),
+                        ),
+                        Text(
+                          'Hifdhs',
+                          style: TextStyle(
+                              height: 0,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+                    const EdgeInsets.symmetric(horizontal: 13, vertical: 15),
                 decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.shade400, width: 2),
-                    borderRadius: BorderRadius.circular(30)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  color: Provider.of<ThemeProvider>(context).isDarkMode
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white,
+                  // border: Provider.of<ThemeProvider>(context).isDarkMode
+                  //     ? const Border()
+                  //     : Border.all(
+                  //         color: Theme.of(context).colorScheme.tertiary,
+                  //         width: 2,
+                  //       ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      'Missed',
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.tertiary),
-                    ),
-                    Text(
-                      '${plan['missedReviews']} reviews',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.inversePrimary,
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: plan['missedReviews'] == 0
+                            ? const Color.fromARGB(255, 60, 209, 107)
+                            : plan['missedReviews'] == 1
+                                ? const Color.fromARGB(255, 255, 193, 24)
+                                : Colors.red.shade400,
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                    )
+                      child: Icon(
+                        plan['missedReviews'] == 0
+                            ? Iconsax.emoji_happy5
+                            : plan['missedReviews'] == 1
+                                ? Iconsax.emoji_normal5
+                                : Iconsax.emoji_sad5,
+                        size: 45,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 7,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${plan['missedReviews']}',
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
+                              height: 0),
+                        ),
+                        Text(
+                          'Missed',
+                          style: TextStyle(
+                              height: 0,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -616,21 +696,35 @@ class Statistics extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
             decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  width: 2,
-                ),
+                color: Provider.of<ThemeProvider>(context).isDarkMode
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.white,
+                // border: Border.all(
+                //   color: Theme.of(context).colorScheme.tertiary,
+                //   width: 2,
+                // ),
                 borderRadius: BorderRadius.circular(30)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Goals',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                  ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.sports_soccer,
+                      size: 45,
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Text(
+                      'Goals',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(
                   height: 10,
@@ -643,8 +737,14 @@ class Statistics extends StatelessWidget {
                     ),
                     lineHeight: 40,
                     percent: 0.4,
-                    progressColor: Colors.blue,
-                    backgroundColor: Colors.blue.shade100,
+                    progressColor:
+                        Provider.of<ThemeProvider>(context).isDarkMode
+                            ? Colors.blue.shade700
+                            : Colors.blue.shade400,
+                    backgroundColor:
+                        Provider.of<ThemeProvider>(context).isDarkMode
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.primary,
                     barRadius: const Radius.circular(20),
                     trailing: const Padding(
                       padding: EdgeInsets.only(left: 10.0),
