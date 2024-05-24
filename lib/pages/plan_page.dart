@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/edit_daily_reading_form.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:hifdh_planner_app/themes/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class PlanPage extends StatelessWidget {
@@ -81,8 +83,8 @@ class PlanPage extends StatelessWidget {
                 children: [
                   _buildPlanDetails(context, plan),
                   _buildNextHifdh(context, plan, hifdhIn, completed, verses),
-                  _buildUpcomingReviews(context, plan, hifdhIn),
-                  _buildDailyReading(context, plan, hifdhIn),
+                  _buildUpcomingReviews(context, plan, hifdhIn, completed),
+                  _buildDailyReading(context, plan, hifdhIn, completed, verses),
                 ],
               ),
             );
@@ -103,15 +105,18 @@ class PlanPage extends StatelessWidget {
             children: [
               Text(
                 plan['name'],
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 30,
+                ),
               ),
               IconButton(
                 onPressed: () => editPlan(context, plan),
                 icon: const Icon(Icons.edit),
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                    Theme.of(context).colorScheme.secondary,
+                    Theme.of(context).colorScheme.tertiary,
                   ),
                   padding: MaterialStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
@@ -133,86 +138,110 @@ class PlanPage extends StatelessWidget {
     String verses,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 5.0,
-        bottom: 10,
-        left: 20,
-        right: 20,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Container(
+        padding:
+            const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
         decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
-            color: Colors.blue,
-          ),
-          borderRadius: BorderRadius.circular(25),
+          color: const Color.fromARGB(255, 86, 173, 254),
+          borderRadius: BorderRadius.circular(30),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Next Hifdh',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: 15,
+              ),
+              child: Container(
+                width: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: const Color.fromARGB(255, 128, 193, 255),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      'Next Hifdh',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade100,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(
-                height: 10,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Verses $verses',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        hifdhIn == 0
-                            ? 'Today'
-                            : hifdhIn == 1
-                                ? 'Tomorrow'
-                                : 'In $hifdhIn days',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (!completed) {
-                        markAsComplete(
-                          plan['hifdhs'].last['nextKey'],
-                          context,
-                          plan['lines'],
-                        );
-                      }
-                    },
-                    icon: completed
-                        ? const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Colors.green,
-                            size: 30,
-                          )
-                        : const ImageIcon(
-                            AssetImage('assets/unchecked.png'),
-                            size: 30,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                plan['hifdhs'] == null ||
+                        plan['hifdhs'].isEmpty ||
+                        hifdhIn == -1
+                    ? Text(
+                        'None',
+                        style: TextStyle(
+                            color: Colors.grey.shade100,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            verses,
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade100,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                  )
-                ],
-              )
-            ],
-          ),
+                          Text(
+                            hifdhIn == 0
+                                ? 'Today'
+                                : hifdhIn == 1
+                                    ? 'Tomorrow'
+                                    : 'In $hifdhIn days',
+                            style: TextStyle(
+                              color: Colors.grey.shade100,
+                              fontSize: 20,
+                            ),
+                          )
+                        ],
+                      ),
+                IconButton(
+                  onPressed: () {
+                    if (!completed) {
+                      markAsComplete(
+                        plan['hifdhs'].last['nextKey'],
+                        context,
+                        plan['lines'],
+                      );
+                    }
+                  },
+                  icon: completed
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const ImageIcon(
+                            AssetImage('assets/checked.png'),
+                            color: Color.fromARGB(255, 60, 209, 107),
+                            size: 35,
+                          ),
+                        )
+                      : ImageIcon(
+                          const AssetImage('assets/unchecked.png'),
+                          size: 35,
+                          color: Colors.grey.shade100,
+                        ),
+                )
+              ],
+            )
+          ],
         ),
       ),
     );
@@ -222,94 +251,185 @@ class PlanPage extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> plan,
     int hifdhIn,
+    bool completed,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 5.0,
-        bottom: 10,
-        left: 20,
-        right: 20,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Container(
+        padding:
+            const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
         decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
-            color: Colors.green,
-          ),
-          borderRadius: BorderRadius.circular(25),
+          color: const Color.fromARGB(255, 113, 100, 250),
+          borderRadius: BorderRadius.circular(30),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Upcoming Reviews',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Container(
+                width: 195,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: const Color.fromARGB(255, 144, 135, 253),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      'Upcoming Reviews',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade100,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    plan['reviews'].isEmpty
-                        ? 'No reviews'
-                        : plan['reviews'].first['review'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    hifdhIn == 0
-                        ? 'Today'
-                        : hifdhIn == 1
-                            ? 'Tomorrow'
-                            : 'In $hifdhIn days',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    plan['reviews'].isEmpty
-                        ? 'No reviews'
-                        : plan['reviews'].first['review'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    hifdhIn == 0
-                        ? 'Today'
-                        : hifdhIn == 1
-                            ? 'Tomorrow'
-                            : 'In $hifdhIn days',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                plan['reviews'] == null ||
+                        plan['reviews'].isEmpty ||
+                        hifdhIn == -1
+                    ? Text(
+                        'None',
+                        style: TextStyle(
+                            color: Colors.grey.shade100,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan['reviews'].first['review'],
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade100,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            hifdhIn == 0
+                                ? 'Today'
+                                : hifdhIn == 1
+                                    ? 'Tomorrow'
+                                    : 'In $hifdhIn days',
+                            style: TextStyle(
+                              color: Colors.grey.shade100,
+                              fontSize: 20,
+                            ),
+                          )
+                        ],
+                      ),
+                IconButton(
+                  onPressed: () {
+                    if (!completed) {
+                      markAsComplete(
+                        plan['hifdhs'].last['nextKey'],
+                        context,
+                        plan['lines'],
+                      );
+                    }
+                  },
+                  icon: completed
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const ImageIcon(
+                            AssetImage('assets/checked.png'),
+                            color: Color.fromARGB(255, 60, 209, 107),
+                            size: 35,
+                          ),
+                        )
+                      : ImageIcon(
+                          const AssetImage('assets/unchecked.png'),
+                          size: 35,
+                          color: Colors.grey.shade100,
+                        ),
+                )
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                plan['reviews'] == null ||
+                        plan['reviews'].isEmpty ||
+                        hifdhIn == -1
+                    ? Text(
+                        'None',
+                        style: TextStyle(
+                            color: Colors.grey.shade100,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan['reviews'].first['review'],
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade100,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            hifdhIn == 0
+                                ? 'Today'
+                                : hifdhIn == 1
+                                    ? 'Tomorrow'
+                                    : 'In $hifdhIn days',
+                            style: TextStyle(
+                              color: Colors.grey.shade100,
+                              fontSize: 20,
+                            ),
+                          )
+                        ],
+                      ),
+                IconButton(
+                  onPressed: () {
+                    if (!completed) {
+                      markAsComplete(
+                        plan['hifdhs'].last['nextKey'],
+                        context,
+                        plan['lines'],
+                      );
+                    }
+                  },
+                  icon: completed
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const ImageIcon(
+                            AssetImage('assets/checked.png'),
+                            color: Color.fromARGB(255, 60, 209, 107),
+                            size: 35,
+                          ),
+                        )
+                      : ImageIcon(
+                          const AssetImage('assets/unchecked.png'),
+                          size: 35,
+                          color: Colors.grey.shade100,
+                        ),
+                )
+              ],
+            )
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDailyReading(
-      BuildContext context, Map<String, dynamic> plan, int hifdhIn) {
+  Widget _buildDailyReading(BuildContext context, Map<String, dynamic> plan,
+      int hifdhIn, bool completed, String verses) {
     return Column(
       children: [
         Padding(
@@ -320,9 +440,10 @@ class PlanPage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Daily Reading',
                 style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
                 ),
@@ -332,7 +453,7 @@ class PlanPage extends StatelessWidget {
                 icon: const Icon(Icons.edit),
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                    Theme.of(context).colorScheme.secondary,
+                    Theme.of(context).colorScheme.tertiary,
                   ),
                   padding: MaterialStateProperty.all(
                     const EdgeInsets.symmetric(
@@ -346,52 +467,96 @@ class PlanPage extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(
-            top: 5.0,
-            bottom: 10,
-            left: 20,
-            right: 20,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
           child: Container(
+            padding:
+                const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
             decoration: BoxDecoration(
-                border: Border.all(
-                  width: 2,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                borderRadius: BorderRadius.circular(25)),
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Verses ${plan['hifdhs'].last['hifdh']}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                plan['hifdhs'] == null ||
+                        plan['hifdhs'].isEmpty ||
+                        hifdhIn == -1
+                    ? Text(
+                        'None',
+                        style: TextStyle(
+                            color: Provider.of<ThemeProvider>(context)
+                                    .isDarkMode
+                                ? Colors.grey.shade100
+                                : Theme.of(context).colorScheme.inversePrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            verses,
+                            style: TextStyle(
+                              fontSize: 20,
+                              color:
+                                  Provider.of<ThemeProvider>(context).isDarkMode
+                                      ? Colors.grey.shade100
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            hifdhIn == 0
+                                ? 'Today'
+                                : hifdhIn == 1
+                                    ? 'Tomorrow'
+                                    : 'In $hifdhIn days',
+                            style: TextStyle(
+                              color:
+                                  Provider.of<ThemeProvider>(context).isDarkMode
+                                      ? Colors.grey.shade100
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
+                              fontSize: 20,
+                            ),
+                          )
+                        ],
                       ),
-                      Text(
-                        hifdhIn == 0
-                            ? 'Today'
-                            : hifdhIn == 1
-                                ? 'Tomorrow'
-                                : 'In $hifdhIn days',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
+                IconButton(
+                  onPressed: () {
+                    if (!completed) {
+                      markAsComplete(
+                        plan['hifdhs'].last['nextKey'],
+                        context,
+                        plan['lines'],
+                      );
+                    }
+                  },
+                  icon: completed
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const ImageIcon(
+                            AssetImage('assets/checked.png'),
+                            color: Color.fromARGB(255, 60, 209, 107),
+                            size: 35,
+                          ),
+                        )
+                      : ImageIcon(
+                          const AssetImage('assets/unchecked.png'),
+                          size: 35,
+                          color: Colors.grey.shade100,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                )
+              ],
             ),
           ),
-        ),
+        )
       ],
     );
   }

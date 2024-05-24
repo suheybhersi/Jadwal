@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
 import 'package:hifdh_planner_app/pages/plan_page.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:popover/popover.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable
 class PlanTile extends StatelessWidget {
@@ -13,7 +14,6 @@ class PlanTile extends StatelessWidget {
   String id;
   int hifdhIn;
   String verses;
-  final _controller = PageController();
   PlanTile(
       {super.key,
       required this.plan,
@@ -50,173 +50,197 @@ class PlanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(35),
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      margin: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.only(left: 25, right: 5, top: 20, bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      plan['name'],
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                    ),
-                    if (plan['active'])
-                      const Padding(
-                        padding: EdgeInsets.only(left: 10.0),
-                        child: Icon(
-                          Icons.star_rounded,
-                          size: 30,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlanPage(id: id),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35),
+          border: plan['active']
+              ? const Border()
+              : Border.all(
+                  width: 2,
+                  color: Provider.of<ThemeProvider>(context).isDarkMode
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white),
+          color:
+              plan['active'] && Provider.of<ThemeProvider>(context).isDarkMode
+                  ? Theme.of(context).colorScheme.primary
+                  : plan['active']
+                      ? Colors.white
+                      : Colors.transparent,
+        ),
+        margin: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, top: 15, bottom: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        plan['name'],
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
-                  ],
-                ),
-                Builder(
-                  builder: (context) => IconButton(
-                    onPressed: () => showPopover(
-                        context: context,
-                        bodyBuilder: (context) => Padding(
-                              padding: const EdgeInsets.only(),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  TextButton(
-                                    onPressed: () => selectAsMainPlan(context),
-                                    style: ButtonStyle(
-                                        overlayColor: MaterialStateProperty.all(
-                                            Theme.of(context)
-                                                .colorScheme
-                                                .primary)),
-                                    child: SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        'Select as main',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary),
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      editPlan(context);
-                                    },
-                                    style: ButtonStyle(
-                                        overlayColor: MaterialStateProperty.all(
-                                            Theme.of(context)
-                                                .colorScheme
-                                                .primary)),
-                                    child: SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        'Edit',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary),
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => deletePlan(context),
-                                    style: ButtonStyle(
-                                        overlayColor: MaterialStateProperty.all(
-                                            Theme.of(context)
-                                                .colorScheme
-                                                .primary)),
-                                    child: SizedBox(
-                                      width: 150,
-                                      child: Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        width: 150,
-                        height: 150,
-                        backgroundColor:
-                            Theme.of(context).colorScheme.background),
-                    icon: const Icon(Icons.more_vert),
+                    ],
                   ),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 350,
-            child: PageView(
-              controller: _controller,
-              children: [
-                MyProgressIndicator(plan: plan),
-                Hifdh(plan: plan, verses: verses, hifdhIn: hifdhIn),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 15.0),
-            child: SmoothPageIndicator(
-              controller: _controller,
-              count: 2,
-              effect: WormEffect(
-                activeDotColor: Theme.of(context).colorScheme.inversePrimary,
-                dotColor: Theme.of(context).colorScheme.tertiary,
-                dotHeight: 25,
-                dotWidth: 25,
+                  Row(
+                    children: [
+                      MyProgressIndicator(plan: plan),
+                      Builder(
+                        builder: (context) => IconButton(
+                          onPressed: () => showPopover(
+                              context: context,
+                              bodyBuilder: (context) => Padding(
+                                    padding: const EdgeInsets.only(),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              selectAsMainPlan(context),
+                                          style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty.all(
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary)),
+                                          child: SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              'Select as main',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .inversePrimary),
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            editPlan(context);
+                                          },
+                                          style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty.all(
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary)),
+                                          child: SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              'Edit',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .inversePrimary),
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => deletePlan(context),
+                                          style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty.all(
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary)),
+                                          child: SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              'Delete',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .inversePrimary),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              width: 150,
+                              height: 150,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.background),
+                          icon: const Icon(Icons.more_vert),
+                        ),
+                      )
+                    ],
+                  )
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 10.0, bottom: 20),
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PlanPage(id: id),
-                    ));
-              },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(
-                  Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-              child: Text(
-                'See plan',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
-                  fontSize: 20,
-                ),
-              ),
-            ),
-          ),
-        ],
+
+            // SizedBox(
+            //   height: 350,
+            //   child: PageView(
+            //     controller: _controller,
+            //     children: [
+            //       MyProgressIndicator(plan: plan),
+            //       Hifdh(plan: plan, verses: verses, hifdhIn: hifdhIn),
+            //     ],
+            //   ),
+            // ),
+            // Padding(
+            //   padding: const EdgeInsets.only(bottom: 15.0),
+            //   child: SmoothPageIndicator(
+            //     controller: _controller,
+            //     count: 2,
+            //     effect: WormEffect(
+            //       activeDotColor: Theme.of(context).colorScheme.inversePrimary,
+            //       dotColor: Theme.of(context).colorScheme.tertiary,
+            //       dotHeight: 25,
+            //       dotWidth: 25,
+            //     ),
+            //   ),
+            // ),
+            // Padding(
+            //   padding: const EdgeInsets.only(top: 10.0, bottom: 20),
+            //   child: TextButton(
+            //     onPressed: () {
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //       builder: (context) => PlanPage(id: id),
+            //     ));
+            //     },
+            //     style: ButtonStyle(
+            //       backgroundColor: MaterialStateProperty.all(
+            //         Theme.of(context).colorScheme.inversePrimary,
+            //       ),
+            //     ),
+            //     child: Text(
+            //       'See plan',
+            //       style: TextStyle(
+            //         color: Theme.of(context).colorScheme.secondary,
+            //         fontSize: 20,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
       ),
     );
   }
@@ -234,29 +258,20 @@ class MyProgressIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 15.0),
-          child: CircularPercentIndicator(
-            radius: 130,
-            lineWidth: 40,
-            percent: 0.4,
-            progressColor: Colors.blue.shade700,
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            circularStrokeCap: CircularStrokeCap.round,
-            center: Text(
-              '40%',
-              style: TextStyle(
-                  fontSize: 60,
-                  color: Theme.of(context).colorScheme.inversePrimary),
-            ),
-          ),
-        ),
-        Text(
-          '${plan['completedAjza']}/${plan['totalAjza']}',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.inversePrimary,
+        CircularPercentIndicator(
+          radius: 30,
+          lineWidth: 10,
+          percent: 0.4,
+          progressColor: Provider.of<ThemeProvider>(context).isDarkMode
+              ? Colors.blue.shade700
+              : Colors.blue,
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          circularStrokeCap: CircularStrokeCap.round,
+          center: Text(
+            '40%',
+            style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.inversePrimary),
           ),
         ),
       ],

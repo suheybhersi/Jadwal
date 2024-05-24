@@ -75,27 +75,30 @@ class HomePage extends StatelessWidget {
             if (activePlan != null) {
               // Extract data from the active plan
               plan = activePlan.data() as Map<String, dynamic>;
-              bool completed = plan['hifdhs'].last['completed'];
-              Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
-              DateTime hifdhDate = hifdhTimestamp.toDate();
-              String id = activePlan
-                  .id; // Assuming you need the ID for further operations
-              firestoreService.hifdhIn(id);
-              hifdhIn = plan['hifdhIn'];
-              verses = plan['hifdhs'].last['hifdh'];
 
-              if (hifdhDate.day == DateTime.now().day && completed) {
-                firestoreService.updateNextHifdh(id);
+              if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
+                bool completed = plan['hifdhs'].last['completed'];
+                Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
+                DateTime hifdhDate = hifdhTimestamp.toDate();
+                String id = activePlan
+                    .id; // Assuming you need the ID for further operations
+                firestoreService.hifdhIn(id);
+                hifdhIn = plan['hifdhIn'];
+                verses = plan['hifdhs'].last['hifdh'];
+
+                if (hifdhDate.day == DateTime.now().day && completed) {
+                  firestoreService.updateNextHifdh(id);
+                }
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const WeekDays(),
+                      Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
+                      Statistics(plan: plan)
+                    ],
+                  ),
+                );
               }
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const WeekDays(),
-                    Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
-                    Statistics(plan: plan)
-                  ],
-                ),
-              );
             }
           }
           return Center(
@@ -370,7 +373,7 @@ class Upcoming extends StatelessWidget {
                       padding: const EdgeInsets.only(
                           top: 20, left: 15, right: 15, bottom: 10),
                       decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 60, 209, 107),
+                          color: const Color.fromARGB(255, 113, 100, 250),
                           borderRadius: BorderRadius.circular(30)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +386,7 @@ class Upcoming extends StatelessWidget {
                               width: 105,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
-                                color: const Color.fromARGB(255, 124, 228, 157),
+                                color: const Color.fromARGB(255, 144, 135, 253),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -452,7 +455,7 @@ class Upcoming extends StatelessWidget {
                 padding: const EdgeInsets.only(
                     top: 20, left: 15, right: 15, bottom: 10),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 113, 100, 250),
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
@@ -467,22 +470,34 @@ class Upcoming extends StatelessWidget {
                           child: Container(
                             width: 170,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: const Color.fromARGB(255, 144, 135, 253),
-                            ),
+                                borderRadius: BorderRadius.circular(20),
+                                color: Provider.of<ThemeProvider>(context)
+                                        .isDarkMode
+                                    ? Theme.of(context).colorScheme.secondary
+                                    : Colors.white),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 Icon(
                                   Iconsax.book,
-                                  color: Colors.grey.shade100,
+                                  color: Provider.of<ThemeProvider>(context)
+                                          .isDarkMode
+                                      ? Colors.grey.shade100
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
                                   size: 20,
                                 ),
                                 Text(
                                   'Daily Reading',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.grey.shade100,
+                                    color: Provider.of<ThemeProvider>(context)
+                                            .isDarkMode
+                                        ? Colors.grey.shade100
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -494,7 +509,12 @@ class Upcoming extends StatelessWidget {
                             ? Text(
                                 'None',
                                 style: TextStyle(
-                                    color: Colors.grey.shade100,
+                                    color: Provider.of<ThemeProvider>(context)
+                                            .isDarkMode
+                                        ? Colors.grey.shade100
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary,
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800),
                               )
@@ -505,7 +525,12 @@ class Upcoming extends StatelessWidget {
                                     plan['hifdhs'].first['hifdh'],
                                     style: TextStyle(
                                       fontSize: 20,
-                                      color: Colors.grey.shade100,
+                                      color: Provider.of<ThemeProvider>(context)
+                                              .isDarkMode
+                                          ? Colors.grey.shade100
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -516,7 +541,12 @@ class Upcoming extends StatelessWidget {
                                             ? 'Tomorrow'
                                             : 'In $hifdhIn days',
                                     style: TextStyle(
-                                      color: Colors.grey.shade100,
+                                      color: Provider.of<ThemeProvider>(context)
+                                              .isDarkMode
+                                          ? Colors.grey.shade100
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                       fontSize: 20,
                                     ),
                                   )
@@ -586,7 +616,7 @@ class Statistics extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 113, 101, 248),
+                        color: Color.fromARGB(255, 248, 130, 101),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: const ImageIcon(
@@ -709,8 +739,9 @@ class Statistics extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.sports_soccer,
+                      color: Theme.of(context).colorScheme.inversePrimary,
                       size: 45,
                     ),
                     const SizedBox(
@@ -746,11 +777,15 @@ class Statistics extends StatelessWidget {
                             ? Theme.of(context).colorScheme.secondary
                             : Theme.of(context).colorScheme.primary,
                     barRadius: const Radius.circular(20),
-                    trailing: const Padding(
-                      padding: EdgeInsets.only(left: 10.0),
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
                       child: Text(
                         '30%',
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
                       ),
                     ),
                   ),

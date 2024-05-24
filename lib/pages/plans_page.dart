@@ -32,7 +32,7 @@ class _PlansPageState extends State<PlansPage> {
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text(
           'Plans',
-          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 30),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
         ),
         actions: [
           Padding(
