@@ -134,11 +134,10 @@ class PlanTile extends StatelessWidget {
                                       onPressed: () =>
                                           selectAsMainPlan(context),
                                       style: ButtonStyle(
-                                          overlayColor:
-                                              MaterialStateProperty.all(
-                                                  Theme.of(context)
-                                                      .colorScheme
-                                                      .primary)),
+                                          overlayColor: WidgetStateProperty.all(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .primary)),
                                       child: SizedBox(
                                         width: 150,
                                         child: Text(
@@ -158,11 +157,10 @@ class PlanTile extends StatelessWidget {
                                         editPlan(context);
                                       },
                                       style: ButtonStyle(
-                                          overlayColor:
-                                              MaterialStateProperty.all(
-                                                  Theme.of(context)
-                                                      .colorScheme
-                                                      .primary)),
+                                          overlayColor: WidgetStateProperty.all(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .primary)),
                                       child: SizedBox(
                                         width: 150,
                                         child: Text(
@@ -179,11 +177,10 @@ class PlanTile extends StatelessWidget {
                                     TextButton(
                                       onPressed: () => deletePlan(context),
                                       style: ButtonStyle(
-                                          overlayColor:
-                                              MaterialStateProperty.all(
-                                                  Theme.of(context)
-                                                      .colorScheme
-                                                      .primary)),
+                                          overlayColor: WidgetStateProperty.all(
+                                              Theme.of(context)
+                                                  .colorScheme
+                                                  .primary)),
                                       child: SizedBox(
                                         width: 150,
                                         child: Text(
@@ -203,7 +200,7 @@ class PlanTile extends StatelessWidget {
                           width: 150,
                           height: 150,
                           backgroundColor:
-                              Theme.of(context).colorScheme.background),
+                              Theme.of(context).colorScheme.surface),
                       icon: const Icon(Icons.more_vert),
                     ),
                   ),

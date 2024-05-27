@@ -99,7 +99,7 @@ class _EditPlanFormState extends State<EditPlanForm> {
                             });
                           },
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
+                            backgroundColor: WidgetStateProperty.all(
                               selectedDays[index]
                                   ? Provider.of<ThemeProvider>(context)
                                           .isDarkMode
@@ -162,7 +162,7 @@ class _EditPlanFormState extends State<EditPlanForm> {
                 });
               },
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(
+                backgroundColor: WidgetStateProperty.all(
                   Provider.of<ThemeProvider>(context).isDarkMode
                       ? Theme.of(context).colorScheme.inversePrimary
                       : Theme.of(context).colorScheme.inversePrimary,
@@ -172,7 +172,7 @@ class _EditPlanFormState extends State<EditPlanForm> {
                 'Submit',
                 style: TextStyle(
                     color: Provider.of<ThemeProvider>(context).isDarkMode
-                        ? Theme.of(context).colorScheme.background
+                        ? Theme.of(context).colorScheme.surface
                         : Theme.of(context).colorScheme.primary),
               ),
             ),

@@ -567,12 +567,6 @@ class Statistics extends StatelessWidget {
                   color: Provider.of<ThemeProvider>(context).isDarkMode
                       ? Theme.of(context).colorScheme.primary
                       : Colors.white,
-                  // border: Provider.of<ThemeProvider>(context).isDarkMode
-                  //     ? const Border()
-                  //     : Border.all(
-                  //         color: Theme.of(context).colorScheme.tertiary,
-                  //         width: 2,
-                  //       ),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(
@@ -624,12 +618,6 @@ class Statistics extends StatelessWidget {
                   color: Provider.of<ThemeProvider>(context).isDarkMode
                       ? Theme.of(context).colorScheme.primary
                       : Colors.white,
-                  // border: Provider.of<ThemeProvider>(context).isDarkMode
-                  //     ? const Border()
-                  //     : Border.all(
-                  //         color: Theme.of(context).colorScheme.tertiary,
-                  //         width: 2,
-                  //       ),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Row(

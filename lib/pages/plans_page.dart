@@ -54,7 +54,7 @@ class _PlansPageState extends State<PlansPage> {
       ),
       floatingActionButton: TextButton(
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(
+          backgroundColor: WidgetStateProperty.all<Color>(
               Theme.of(context).colorScheme.tertiary),
         ),
         onPressed: () {
