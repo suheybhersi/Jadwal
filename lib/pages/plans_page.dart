@@ -55,7 +55,7 @@ class _PlansPageState extends State<PlansPage> {
       floatingActionButton: TextButton(
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(
-              Theme.of(context).colorScheme.secondary),
+              Theme.of(context).colorScheme.tertiary),
         ),
         onPressed: () {
           _createNewPlan(context);

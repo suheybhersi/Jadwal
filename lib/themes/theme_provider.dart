@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/themes/theme.dart';
 
 class ThemeProvider with ChangeNotifier {
-  ThemeData _themeData = lightMode;
+  ThemeData _themeData = darkMode;
 
   ThemeData get themeData => _themeData;
 

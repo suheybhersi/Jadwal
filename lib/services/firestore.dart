@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:hifdh_planner_app/models/current_weekday.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/plan.dart';
 import 'package:hifdh_planner_app/models/review.dart';
@@ -13,6 +14,8 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('hifdhs');
   final CollectionReference reviewsCollection =
       FirebaseFirestore.instance.collection('reviews');
+  final CollectionReference weeksCollection =
+      FirebaseFirestore.instance.collection('weeks');
 
   Future<void> addPlan(
     String name,
@@ -37,11 +40,14 @@ class FirestoreService extends ChangeNotifier {
       reviews: [],
       streak: 0,
       missedReviews: 0,
+      currentWeek: [],
     );
 
     /* * * * * * * * * * * M A K E   P L A N   A C T I V E   A S   S O O N   A S   N E W   P L A N   IS  A D D E D * * * * * * * * * * */
 
     final document = await plansCollection.add(newPlan.toMap());
+
+    updateCurrentWeek(document.id);
 
     createNewHifdh(start, lines, document.id);
     updateActivePlan(document.id);
@@ -90,12 +96,60 @@ class FirestoreService extends ChangeNotifier {
     });
   }
 
+  Future<void> updateCurrentWeek(String id) async {
+    final planSnapshot = await plansCollection.doc(id).get();
+    final plan = planSnapshot.data() as Map<String, dynamic>;
+
+    DateTime currWeekStart = DateTime.now().subtract(
+      Duration(days: DateTime.now().weekday - 1),
+    );
+    final week = await weeksCollection
+        .where(
+          'weekStart',
+          isEqualTo:
+              '${currWeekStart.day}-${currWeekStart.month}-${currWeekStart.year}',
+        )
+        .get();
+
+    if (plan['currentWeek'].isEmpty || week.docs.isEmpty) {
+      List<String> weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      List<Map<String, dynamic>> currentWeek = [];
+      DateTime weekStart = DateTime.now().subtract(
+        Duration(days: DateTime.now().weekday - 1),
+      );
+      weekDays.forEach((element) async {
+        final weekDay = CurrentWeekDay(
+          day: element,
+          isCompleted: false,
+          weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+          planId: id,
+        );
+
+        currentWeek.add(weekDay.toMap());
+      });
+
+      await weeksCollection.add({
+        'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+        'weekDays': currentWeek,
+        'planId': id,
+      });
+      await plansCollection.doc(id).update({'currentWeek': currentWeek});
+    } else {
+      String weekId = week.docs[0].id;
+      final weekSnapshot = await weeksCollection.doc(weekId).get();
+      final currWeek = weekSnapshot.data() as Map<String, dynamic>;
+      await plansCollection
+          .doc(id)
+          .update({'currentWeek': currWeek['weekDays']});
+    }
+  }
+
   Future<void> createNewHifdh(String key, int length, String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
     List<dynamic> hifdhs = planData['hifdhs'];
 
-    // Check if the plan has no hifdhs i.e the plan has just been made
+    // Check if the plan has hifdhs i.e the plan has not just been made
     if (hifdhs.isNotEmpty) {
       dynamic hifdh = hifdhs.last;
       hifdh['completed'] = true;
@@ -113,9 +167,23 @@ class FirestoreService extends ChangeNotifier {
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
 
-      plansCollection
-          .doc(id)
-          .update({'reviews': planReviews, 'hifdhs': hifdhs});
+      dynamic currentWeek = planData['currentWeek'];
+      dynamic weekDay = currentWeek[reviewDate.weekday - 1];
+
+      weekDay['isCompleted'] = true;
+      plansCollection.doc(id).update({
+        'reviews': planReviews,
+        'hifdhs': hifdhs,
+        'currentWeek': currentWeek
+      });
+
+      weeksCollection
+          .where('weekStart', isEqualTo: weekDay['weekStart'])
+          .get()
+          .then(
+            (value) =>
+                value.docs[0].reference.update({'weekDays': currentWeek}),
+          );
     }
 
     //calculate the hifdh start and end
@@ -268,12 +336,18 @@ class FirestoreService extends ChangeNotifier {
         await hifdhsCollection.where('planId', isEqualTo: id).get();
     final reviewsSnapshot =
         await reviewsCollection.where('planId', isEqualTo: id).get();
+    final weeksSnapshot =
+        await weeksCollection.where('planId', isEqualTo: id).get();
 
     hifdhsSnapshot.docs.forEach((doc) async {
       await doc.reference.delete();
     });
 
     reviewsSnapshot.docs.forEach((doc) async {
+      await doc.reference.delete();
+    });
+
+    weeksSnapshot.docs.forEach((doc) async {
       await doc.reference.delete();
     });
   }

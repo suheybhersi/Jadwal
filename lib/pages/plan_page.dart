@@ -115,10 +115,10 @@ class PlanPage extends StatelessWidget {
                 onPressed: () => editPlan(context, plan),
                 icon: const Icon(Icons.edit),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
+                  backgroundColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.tertiary,
                   ),
-                  padding: MaterialStateProperty.all(
+                  padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                 ),
@@ -452,10 +452,10 @@ class PlanPage extends StatelessWidget {
                 onPressed: () => editDailyReading(context, plan),
                 icon: const Icon(Icons.edit),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
+                  backgroundColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.tertiary,
                   ),
-                  padding: MaterialStateProperty.all(
+                  padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(
                       vertical: 12,
                       horizontal: 20,

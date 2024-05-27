@@ -3,7 +3,6 @@ import 'package:hifdh_planner_app/components/edit_plan_form.dart';
 import 'package:hifdh_planner_app/pages/plan_page.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
@@ -77,169 +76,141 @@ class PlanTile extends StatelessWidget {
                       : Colors.transparent,
         ),
         margin: const EdgeInsets.only(bottom: 20),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20, top: 15, bottom: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        plan['name'],
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      MyProgressIndicator(plan: plan),
-                      Builder(
-                        builder: (context) => IconButton(
-                          onPressed: () => showPopover(
-                              context: context,
-                              bodyBuilder: (context) => Padding(
-                                    padding: const EdgeInsets.only(),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              selectAsMainPlan(context),
-                                          style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty.all(
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .primary)),
-                                          child: SizedBox(
-                                            width: 150,
-                                            child: Text(
-                                              'Select as main',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .inversePrimary),
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            editPlan(context);
-                                          },
-                                          style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty.all(
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .primary)),
-                                          child: SizedBox(
-                                            width: 150,
-                                            child: Text(
-                                              'Edit',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .inversePrimary),
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () => deletePlan(context),
-                                          style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty.all(
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .primary)),
-                                          child: SizedBox(
-                                            width: 150,
-                                            child: Text(
-                                              'Delete',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .inversePrimary),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              width: 150,
-                              height: 150,
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.background),
-                          icon: const Icon(Icons.more_vert),
-                        ),
-                      )
-                    ],
-                  )
-                ],
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 15, bottom: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                plan['name'],
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
               ),
-            ),
-
-            // SizedBox(
-            //   height: 350,
-            //   child: PageView(
-            //     controller: _controller,
-            //     children: [
-            //       MyProgressIndicator(plan: plan),
-            //       Hifdh(plan: plan, verses: verses, hifdhIn: hifdhIn),
-            //     ],
-            //   ),
-            // ),
-            // Padding(
-            //   padding: const EdgeInsets.only(bottom: 15.0),
-            //   child: SmoothPageIndicator(
-            //     controller: _controller,
-            //     count: 2,
-            //     effect: WormEffect(
-            //       activeDotColor: Theme.of(context).colorScheme.inversePrimary,
-            //       dotColor: Theme.of(context).colorScheme.tertiary,
-            //       dotHeight: 25,
-            //       dotWidth: 25,
-            //     ),
-            //   ),
-            // ),
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 10.0, bottom: 20),
-            //   child: TextButton(
-            //     onPressed: () {
-            // Navigator.push(
-            //     context,
-            //     MaterialPageRoute(
-            //       builder: (context) => PlanPage(id: id),
-            //     ));
-            //     },
-            //     style: ButtonStyle(
-            //       backgroundColor: MaterialStateProperty.all(
-            //         Theme.of(context).colorScheme.inversePrimary,
-            //       ),
-            //     ),
-            //     child: Text(
-            //       'See plan',
-            //       style: TextStyle(
-            //         color: Theme.of(context).colorScheme.secondary,
-            //         fontSize: 20,
-            //       ),
-            //     ),
-            //   ),
-            // ),
-          ],
+              Row(
+                children: [
+                  MyProgressIndicator(plan: plan),
+                  // Column(
+                  //   children: [
+                  //     Padding(
+                  //       padding: const EdgeInsets.only(left: 10.0),
+                  //       child: Text(
+                  //         '30%',
+                  //         style: TextStyle(
+                  //           fontSize: 20,
+                  //           fontWeight: FontWeight.w600,
+                  //           color: Theme.of(context).colorScheme.inversePrimary,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     SizedBox(
+                  //       width: 60,
+                  //       child: LinearPercentIndicator(
+                  //         padding: const EdgeInsets.symmetric(
+                  //           horizontal: 0,
+                  //         ),
+                  //         lineHeight: 10,
+                  //         percent: 0.3,
+                  //         progressColor: Colors.blue,
+                  //         backgroundColor:
+                  //             Theme.of(context).colorScheme.tertiary,
+                  //         barRadius: const Radius.circular(20),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  Builder(
+                    builder: (context) => IconButton(
+                      onPressed: () => showPopover(
+                          context: context,
+                          bodyBuilder: (context) => Padding(
+                                padding: const EdgeInsets.only(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          selectAsMainPlan(context),
+                                      style: ButtonStyle(
+                                          overlayColor:
+                                              MaterialStateProperty.all(
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .primary)),
+                                      child: SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          'Select as main',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary),
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        editPlan(context);
+                                      },
+                                      style: ButtonStyle(
+                                          overlayColor:
+                                              MaterialStateProperty.all(
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .primary)),
+                                      child: SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          'Edit',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary),
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => deletePlan(context),
+                                      style: ButtonStyle(
+                                          overlayColor:
+                                              MaterialStateProperty.all(
+                                                  Theme.of(context)
+                                                      .colorScheme
+                                                      .primary)),
+                                      child: SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          'Delete',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          width: 150,
+                          height: 150,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.background),
+                      icon: const Icon(Icons.more_vert),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -259,145 +230,21 @@ class MyProgressIndicator extends StatelessWidget {
     return Column(
       children: [
         CircularPercentIndicator(
-          radius: 30,
-          lineWidth: 10,
+          radius: 35,
+          lineWidth: 12,
           percent: 0.4,
-          progressColor: Provider.of<ThemeProvider>(context).isDarkMode
-              ? Colors.blue.shade700
-              : Colors.blue,
+          progressColor: Colors.blue,
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           circularStrokeCap: CircularStrokeCap.round,
           center: Text(
             '40%',
             style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.inversePrimary),
+                color: Theme.of(context).colorScheme.inversePrimary,
+                fontWeight: FontWeight.w800),
           ),
         ),
       ],
-    );
-  }
-}
-
-class Hifdh extends StatelessWidget {
-  const Hifdh({
-    super.key,
-    required this.plan,
-    required this.verses,
-    required this.hifdhIn,
-  });
-
-  final Map<String, dynamic> plan;
-  final String verses;
-  final int hifdhIn;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 30,
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-            decoration: BoxDecoration(
-                border: Border.all(color: Colors.blue, width: 2),
-                borderRadius: BorderRadius.circular(30)),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const Icon(
-                      Iconsax.note_text,
-                      size: 55,
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          plan['hifdhs'] == null || plan['hifdhs'].isEmpty
-                              ? 'No hifdh'
-                              : verses,
-                          style: const TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          hifdhIn == 0
-                              ? 'Today'
-                              : hifdhIn == 1
-                                  ? 'Tomorrow'
-                                  : 'In $hifdhIn days',
-                          style: const TextStyle(
-                            fontSize: 24,
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 30,
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-            decoration: BoxDecoration(
-                border: Border.all(color: Colors.green, width: 2),
-                borderRadius: BorderRadius.circular(30)),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    const Icon(
-                      Icons.refresh,
-                      size: 55,
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          plan['reviews'] == null || plan['reviews'].isEmpty
-                              ? 'No review'
-                              : plan['reviews'].first['review'],
-                          style: const TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          hifdhIn == 0
-                              ? 'Today'
-                              : hifdhIn == 1
-                                  ? 'Tomorrow'
-                                  : 'In $hifdhIn days',
-                          style: const TextStyle(
-                            fontSize: 24,
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:hifdh_planner_app/models/current_weekday.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/review.dart';
 
@@ -17,6 +18,7 @@ class Plan {
   final List<Review> reviews;
   final int streak;
   final int missedReviews;
+  final List<CurrentWeekDay> currentWeek;
 
   Plan({
     required this.name,
@@ -34,6 +36,7 @@ class Plan {
     required this.reviews,
     required this.streak,
     required this.missedReviews,
+    required this.currentWeek,
   });
 
   Map<String, dynamic> toMap() {
@@ -53,6 +56,7 @@ class Plan {
       'reviews': reviews,
       'streak': streak,
       'missedReviews': missedReviews,
+      'currentWeek': currentWeek,
     };
   }
 }

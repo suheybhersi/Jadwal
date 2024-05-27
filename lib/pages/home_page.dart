@@ -53,7 +53,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: StreamBuilder(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
@@ -89,10 +89,25 @@ class HomePage extends StatelessWidget {
                 if (hifdhDate.day == DateTime.now().day && completed) {
                   firestoreService.updateNextHifdh(id);
                 }
+
+                String weekStart = plan['currentWeek'][0]['weekStart'];
+
+                DateTime currWeekStartDT = DateTime.now().subtract(
+                  Duration(days: DateTime.now().weekday - 1),
+                );
+
+                String currWeekStart =
+                    '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+                if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
+                    currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
+                    currWeekStart.split('-')[2] != weekStart.split('-')[2])) {
+                  firestoreService.updateCurrentWeek(id);
+                }
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      const WeekDays(),
+                      WeekDays(plan: plan),
                       Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
                       Statistics(plan: plan)
                     ],
@@ -117,7 +132,10 @@ class HomePage extends StatelessWidget {
 class WeekDays extends StatelessWidget {
   const WeekDays({
     super.key,
+    required this.plan,
   });
+
+  final Map<String, dynamic> plan;
 
   @override
   Widget build(BuildContext context) {
@@ -126,121 +144,67 @@ class WeekDays extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
-          // border: Border.all(
-          //     color: Theme.of(context).colorScheme.tertiary, width: 2),
           borderRadius: BorderRadius.circular(40),
         ),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: const Color.fromARGB(255, 60, 209, 107),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              child: Text(
-                'M',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              child: Text(
-                'T',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: const Color.fromARGB(255, 60, 209, 107),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              child: Text(
-                'W',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: Colors.red.shade300,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              child: Text(
-                'T',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.primary,
-                border: Border.all(
-                  width: 2,
-                  color: Theme.of(context).colorScheme.tertiary,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-              child: Text(
-                'F',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              child: Text(
-                'S',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              child: Text(
-                'S',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
-        ),
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(7, (index) {
+              dynamic day = plan['currentWeek'][index];
+              List<String> weekStartString = day['weekStart'].split('-');
+              DateTime weekStart = DateTime(
+                int.parse(weekStartString[2]),
+                int.parse(weekStartString[1]),
+                int.parse(weekStartString[0]),
+                0,
+                0,
+              );
+
+              return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    border: weekStart.add(Duration(days: index)).day ==
+                            DateTime.now().day
+                        ? Border.all(
+                            width: 2,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          )
+                        : const Border(),
+                    color: day['isCompleted'] &&
+                            plan['hifdhDays'][index] ==
+                                true //hifdh day marked as complete and is in plan
+                        ? const Color.fromARGB(255, 60, 209, 107)
+                        : weekStart.add(Duration(days: index)).isBefore(
+                                    DateTime.now()
+                                        .subtract(const Duration(days: 1))) &&
+                                plan['hifdhDays'][index] ==
+                                    true //hifdh day has been passed and is in plan (not completed)
+                            ? Colors.red.shade300
+                            : Theme.of(context)
+                                .colorScheme
+                                .primary, //hifdh day not part of plan || hifdh day has not been reached
+                  ),
+                  padding: EdgeInsets.symmetric(
+                      horizontal:
+                          day['day'] == 'M' || day['day'] == 'W' ? 12 : 15,
+                      vertical: 7),
+                  child: Text(
+                    day['day'],
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: plan['hifdhDays'][index] == true &&
+                              (day['isCompleted'] ||
+                                  weekStart.add(Duration(days: index)).isBefore(
+                                        DateTime.now().subtract(
+                                          const Duration(days: 1),
+                                        ),
+                                      ))
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                  ));
+            })),
       ),
     );
   }
@@ -616,7 +580,7 @@ class Statistics extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 248, 130, 101),
+                        color: const Color.fromARGB(255, 248, 130, 101),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: const ImageIcon(
@@ -768,10 +732,7 @@ class Statistics extends StatelessWidget {
                     ),
                     lineHeight: 40,
                     percent: 0.4,
-                    progressColor:
-                        Provider.of<ThemeProvider>(context).isDarkMode
-                            ? Colors.blue.shade700
-                            : Colors.blue.shade400,
+                    progressColor: Colors.blue,
                     backgroundColor:
                         Provider.of<ThemeProvider>(context).isDarkMode
                             ? Theme.of(context).colorScheme.secondary
