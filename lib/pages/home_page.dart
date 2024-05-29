@@ -18,6 +18,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool hifdhMissedCalled = false;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -78,16 +79,40 @@ class HomePage extends StatelessWidget {
 
               if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
                 bool completed = plan['hifdhs'].last['completed'];
-                Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
-                DateTime hifdhDate = hifdhTimestamp.toDate();
+
                 String id = activePlan
                     .id; // Assuming you need the ID for further operations
                 firestoreService.hifdhIn(id);
                 hifdhIn = plan['hifdhIn'];
                 verses = plan['hifdhs'].last['hifdh'];
 
-                if (hifdhDate.day == DateTime.now().day && completed) {
+                String hifdhDate = plan['hifdhs'].last['date'];
+                String today =
+                    '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
+
+                DateTime hifdhDT = DateTime(
+                  int.parse(hifdhDate.split('-')[2]),
+                  int.parse(hifdhDate.split('-')[1]),
+                  int.parse(hifdhDate.split('-')[0]),
+                  0,
+                  0,
+                );
+                DateTime todayDT = DateTime(
+                  int.parse(today.split('-')[2]),
+                  int.parse(today.split('-')[1]),
+                  int.parse(today.split('-')[0]),
+                  0,
+                  0,
+                );
+
+                if (hifdhDate == today && completed) {
                   firestoreService.updateNextHifdh(id);
+                } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
+                  hifdhMissedCalled = true;
+                  firestoreService.hifdhMissed(id).then((_) {
+                    // Reset the flag after the method completes
+                    hifdhMissedCalled = false;
+                  });
                 }
 
                 String weekStart = plan['currentWeek'][0]['weekStart'];
@@ -152,6 +177,9 @@ class WeekDays extends StatelessWidget {
             children: List.generate(7, (index) {
               dynamic day = plan['currentWeek'][index];
               List<String> weekStartString = day['weekStart'].split('-');
+              List<String> today =
+                  '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}'
+                      .split('-');
               DateTime weekStart = DateTime(
                 int.parse(weekStartString[2]),
                 int.parse(weekStartString[1]),
@@ -160,25 +188,28 @@ class WeekDays extends StatelessWidget {
                 0,
               );
 
+              DateTime todayDT = DateTime(
+                int.parse(today[2]),
+                int.parse(today[1]),
+                int.parse(today[0]),
+                0,
+                0,
+              );
+
               return Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    border: weekStart.add(Duration(days: index)).day ==
-                            DateTime.now().day
+                    border: weekStart.add(Duration(days: index)) == todayDT
                         ? Border.all(
                             width: 2,
                             color: Theme.of(context).colorScheme.tertiary,
                           )
                         : const Border(),
-                    color: day['isCompleted'] &&
+                    color: day['completed'] &&
                             plan['hifdhDays'][index] ==
                                 true //hifdh day marked as complete and is in plan
                         ? const Color.fromARGB(255, 60, 209, 107)
-                        : weekStart.add(Duration(days: index)).isBefore(
-                                    DateTime.now()
-                                        .subtract(const Duration(days: 1))) &&
-                                plan['hifdhDays'][index] ==
-                                    true //hifdh day has been passed and is in plan (not completed)
+                        : day['missed'] //hifdh has been missed(not completed)
                             ? Colors.red.shade300
                             : Theme.of(context)
                                 .colorScheme
@@ -194,12 +225,7 @@ class WeekDays extends StatelessWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
                       color: plan['hifdhDays'][index] == true &&
-                              (day['isCompleted'] ||
-                                  weekStart.add(Duration(days: index)).isBefore(
-                                        DateTime.now().subtract(
-                                          const Duration(days: 1),
-                                        ),
-                                      ))
+                              (day['completed'] || day['missed'])
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.inversePrimary,
                     ),

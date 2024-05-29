@@ -1,12 +1,14 @@
 class CurrentWeekDay {
   final String day;
-  final bool isCompleted;
+  final bool completed;
+  final bool missed;
   final String weekStart;
   final String planId;
 
   CurrentWeekDay({
     required this.day,
-    required this.isCompleted,
+    required this.completed,
+    required this.missed,
     required this.weekStart,
     required this.planId,
   });
@@ -14,7 +16,8 @@ class CurrentWeekDay {
   Map<String, dynamic> toMap() {
     return {
       'day': day,
-      'isCompleted': isCompleted,
+      'completed': completed,
+      'missed': missed,
       'weekStart': weekStart,
       'planId': planId,
     };

@@ -1,6 +1,6 @@
 class Review {
   final String review;
-  final DateTime date;
+  final String date;
   final List<int> ratings;
   final String planId;
 

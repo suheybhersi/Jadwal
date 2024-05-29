@@ -15,6 +15,8 @@ class PlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool hifdhMissedCalled = false;
+
     bool isLoading = false;
     return Scaffold(
       appBar: AppBar(
@@ -50,10 +52,8 @@ class PlanPage extends StatelessWidget {
             int hifdhIn = 0;
             String verses = '';
 
-            if (plan.isNotEmpty) {
+            if (plan.isNotEmpty && plan['hifdhs'].isNotEmpty) {
               completed = plan['hifdhs'].last['completed'];
-              Timestamp hifdhTimestamp = plan['hifdhs'].last['date'];
-              DateTime hifdhDate = hifdhTimestamp.toDate();
               firestoreService.hifdhIn(id);
               hifdhIn = plan['hifdhIn'];
               verses = plan['hifdhs'].last['hifdh'];
@@ -62,9 +62,50 @@ class PlanPage extends StatelessWidget {
                 isLoading = false;
               }
 
-              if (hifdhDate.day == DateTime.now().day && completed) {
+              String hifdhDate = plan['hifdhs'].last['date'];
+              String today =
+                  '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
+
+              DateTime hifdhDT = DateTime(
+                int.parse(hifdhDate.split('-')[2]),
+                int.parse(hifdhDate.split('-')[1]),
+                int.parse(hifdhDate.split('-')[0]),
+                0,
+                0,
+              );
+              DateTime todayDT = DateTime(
+                int.parse(today.split('-')[2]),
+                int.parse(today.split('-')[1]),
+                int.parse(today.split('-')[0]),
+                0,
+                0,
+              );
+
+              if (hifdhDate == today && completed) {
                 isLoading = true;
                 firestoreService.updateNextHifdh(id);
+              } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
+                print('yh its been missed g');
+                hifdhMissedCalled = true;
+                firestoreService.hifdhMissed(id).then((_) {
+                  // Reset the flag after the method completes
+                  hifdhMissedCalled = false;
+                });
+              }
+
+              String weekStart = plan['currentWeek'][0]['weekStart'];
+
+              DateTime currWeekStartDT = DateTime.now().subtract(
+                Duration(days: DateTime.now().weekday - 1),
+              );
+
+              String currWeekStart =
+                  '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+              if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
+                  currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
+                  currWeekStart.split('-')[2] != weekStart.split('-')[2])) {
+                firestoreService.updateCurrentWeek(id);
               }
 
               if (isLoading) {

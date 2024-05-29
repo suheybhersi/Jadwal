@@ -109,6 +109,7 @@ class FirestoreService extends ChangeNotifier {
           isEqualTo:
               '${currWeekStart.day}-${currWeekStart.month}-${currWeekStart.year}',
         )
+        .where('planId', isEqualTo: id)
         .get();
 
     if (plan['currentWeek'].isEmpty || week.docs.isEmpty) {
@@ -120,7 +121,8 @@ class FirestoreService extends ChangeNotifier {
       weekDays.forEach((element) async {
         final weekDay = CurrentWeekDay(
           day: element,
-          isCompleted: false,
+          completed: false,
+          missed: false,
           weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
           planId: id,
         );
@@ -148,6 +150,8 @@ class FirestoreService extends ChangeNotifier {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
     List<dynamic> hifdhs = planData['hifdhs'];
+    String endKey = '';
+    String nextKey = '';
 
     // Check if the plan has hifdhs i.e the plan has not just been made
     if (hifdhs.isNotEmpty) {
@@ -159,31 +163,17 @@ class FirestoreService extends ChangeNotifier {
           .get();
       hifdhSnapshot.docs[0].reference.update({'completed': true});
 
-      Timestamp reviewTimestamp = hifdh['date'];
-      DateTime reviewDate = reviewTimestamp.toDate();
+      String reviewDate = hifdh['date'];
+
       final newReview = Review(
           review: hifdh['hifdh'], date: reviewDate, ratings: [], planId: id);
       await reviewsCollection.add(newReview.toMap());
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
-
-      dynamic currentWeek = planData['currentWeek'];
-      dynamic weekDay = currentWeek[reviewDate.weekday - 1];
-
-      weekDay['isCompleted'] = true;
       plansCollection.doc(id).update({
         'reviews': planReviews,
         'hifdhs': hifdhs,
-        'currentWeek': currentWeek
       });
-
-      weeksCollection
-          .where('weekStart', isEqualTo: weekDay['weekStart'])
-          .get()
-          .then(
-            (value) =>
-                value.docs[0].reference.update({'weekDays': currentWeek}),
-          );
     }
 
     //calculate the hifdh start and end
@@ -202,16 +192,17 @@ class FirestoreService extends ChangeNotifier {
       total += verseData['length'];
     }
 
-    String endKey = verseData['key'];
+    endKey = verseData['key'];
     final nextVerse =
         await versesCollection.doc((int.parse(verseId) + 1).toString()).get();
     verseData = nextVerse.data() as Map<String, dynamic>;
-    String nextKey = verseData['key'];
+    nextKey = verseData['key'];
 
     // add new hifdh to database
-    var newHifdh = Hifdh(
+    Hifdh newHifdh = Hifdh(
       hifdh: '$key - $endKey',
-      date: DateTime.now(),
+      date:
+          '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}',
       completed: false,
       nextKey: nextKey,
       planId: id,
@@ -220,10 +211,10 @@ class FirestoreService extends ChangeNotifier {
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
 
     //calculate hifdh date
-    int today = DateTime.now().weekday;
+    DateTime today = DateTime.now();
     List<dynamic> hifdhDays = planData['hifdhDays'];
     bool calculated = false;
-    int count = today - 1;
+    int count = today.weekday - 1;
     int nextHifdh = 0;
     dynamic hifdh;
 
@@ -231,49 +222,83 @@ class FirestoreService extends ChangeNotifier {
       hifdh = hifdhs.last;
     }
 
-    while (calculated == false) {
+    while (!calculated) {
       if (hifdhDays[count] == true &&
           nextHifdh != planData['hifdhIn'] &&
           (nextHifdh != 0 ||
               (nextHifdh == 0 &&
                   (hifdh == null || hifdh['completed'] == false)))) {
         calculated = true;
-        break;
-      } else if (count == 6) {
-        count = 0;
       } else {
         count++;
+        nextHifdh++;
+        if (count > 6) {
+          count = 0;
+        }
       }
-      nextHifdh++;
     }
+    DateTime date = DateTime.now().add(Duration(days: nextHifdh));
+    String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
     //update hifdh date
-    await hifdhsCollection
-        .doc(newHifdhDoc.id)
-        .update({'date': DateTime.now().add(Duration(days: nextHifdh))});
-    newHifdh.date = DateTime.now().add(Duration(days: nextHifdh));
+    await hifdhsCollection.doc(newHifdhDoc.id).update({'date': nextHifdhDate});
+    newHifdh.date = nextHifdhDate;
     if (planData['hifdhs'].isEmpty) {
       //calculate time left until hifdh
       int hifdhIn = 0;
       final hifdhDoc = await hifdhsCollection.doc(newHifdhDoc.id).get();
       Map<String, dynamic> hifdhData = hifdhDoc.data() as Map<String, dynamic>;
-      Timestamp hifdhTimestamp = hifdhData['date'];
-      DateTime hifdhDate = hifdhTimestamp.toDate();
-      if (hifdhDate.day != DateTime.now().day) {
-        hifdhIn = hifdhDate.difference(DateTime.now()).inDays + 1;
+      String hifdhDate = hifdhData['date'];
+
+      String todayString = '${today.day}-${today.month}-${today.year}';
+
+      DateTime hifdhDT = DateTime(
+        int.parse(hifdhDate.split('-')[2]),
+        int.parse(hifdhDate.split('-')[1]),
+        int.parse(hifdhDate.split('-')[0]),
+        0,
+        0,
+      );
+      DateTime todayDT = DateTime(
+        int.parse(todayString.split('-')[2]),
+        int.parse(todayString.split('-')[1]),
+        int.parse(todayString.split('-')[0]),
+        0,
+        0,
+      );
+
+      if (hifdhDate != todayString) {
+        hifdhIn = hifdhDT.difference(todayDT).inDays;
       }
 
       List<dynamic> planHifdhs = planData['hifdhs'];
       planHifdhs = List.from(planHifdhs)..add(newHifdh.toMap());
+
+      print(hifdhIn);
 
       await plansCollection.doc(id).update({
         'hifdhIn': hifdhIn,
         'hifdhs': planHifdhs,
       }); //update plan with hifdhIn and newHifdh
     } else {
-      Timestamp hifdhTimestamp = planData['hifdhs'].last['date'];
-      DateTime hifdhDate = hifdhTimestamp.toDate();
+      String hifdhDate = planData['hifdhs'].last['date'];
+      String todayString = '${today.day}-${today.month}-${today.year}';
 
-      if (hifdhDate.day == DateTime.now().day) {
+      DateTime hifdhDT = DateTime(
+        int.parse(hifdhDate.split('-')[2]),
+        int.parse(hifdhDate.split('-')[1]),
+        int.parse(hifdhDate.split('-')[0]),
+        0,
+        0,
+      );
+      DateTime todayDT = DateTime(
+        int.parse(todayString.split('-')[2]),
+        int.parse(todayString.split('-')[1]),
+        int.parse(todayString.split('-')[0]),
+        0,
+        0,
+      );
+
+      if (hifdhDate == todayString || todayDT.isAfter(hifdhDT)) {
         updateNextHifdh(id);
       }
     }
@@ -282,6 +307,7 @@ class FirestoreService extends ChangeNotifier {
   Future<void> updateNextHifdh(String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
+    dynamic currentWeek = planData['currentWeek'];
 
     final hifdh = await hifdhsCollection.where('planId', isEqualTo: id).get();
     final hifdhData = hifdh.docs;
@@ -294,23 +320,115 @@ class FirestoreService extends ChangeNotifier {
 
       final hifdhSnapshot =
           await hifdhsCollection.doc(nextHifdh.docs.last.id).get();
-      //calculate time left until hifdh
-      int hifdhIn = 0;
-      Timestamp hifdhTimestamp = planData['hifdhs'].last['date'];
-      DateTime hifdhDate = hifdhTimestamp.toDate();
-      if (hifdhDate.day != DateTime.now().day) {
-        hifdhIn = hifdhDate.difference(DateTime.now()).inDays + 1;
-      }
+      String hifdhDate = planData['hifdhs'].last['date'];
+
+      DateTime hifdhDT = DateTime(
+        int.parse(hifdhDate.split('-')[2]),
+        int.parse(hifdhDate.split('-')[1]),
+        int.parse(hifdhDate.split('-')[0]),
+        0,
+        0,
+      );
+
+      dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
+
+      weekDay['completed'] = true;
+
+      weeksCollection
+          .where('weekStart', isEqualTo: weekDay['weekStart'])
+          .get()
+          .then(
+            (value) =>
+                value.docs[0].reference.update({'weekDays': currentWeek}),
+          );
 
       List<dynamic> planHifdhs = planData['hifdhs'];
       planHifdhs = List.from(planHifdhs)
         ..add(hifdhSnapshot.data() as Map<String, dynamic>);
 
       await plansCollection.doc(id).update({
-        'hifdhIn': hifdhIn,
+        'hifdhIn': 0,
         'hifdhs': planHifdhs,
+        'currentWeek': currentWeek
       }); //update plan with hifdhIn and newHifdh
     }
+  }
+
+  Future<void> hifdhMissed(String id) async {
+    /**
+     * * if a user last used the app on sunday and then goes back on tuesday(has hifdh on monday) monday isnt updated as missed
+     * * if more than one day is missed only the last day is shown to be missed whilst the others are just blank
+    */
+    final planSnapshot = await plansCollection.doc(id).get();
+    final planData = planSnapshot.data() as Map<String, dynamic>;
+    dynamic hifdhs = planData['hifdhs'];
+    dynamic currentWeek = planData['currentWeek'];
+    String hifdhDate = planData['hifdhs'].last['date'];
+    String today =
+        '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
+
+    DateTime hifdhDT = DateTime(
+      int.parse(hifdhDate.split('-')[2]),
+      int.parse(hifdhDate.split('-')[1]),
+      int.parse(hifdhDate.split('-')[0]),
+      0,
+      0,
+    );
+    DateTime todayDT = DateTime(
+      int.parse(today.split('-')[2]),
+      int.parse(today.split('-')[1]),
+      int.parse(today.split('-')[0]),
+      0,
+      0,
+    );
+
+    dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
+
+    weekDay['missed'] = true;
+
+    weeksCollection
+        .where('weekStart', isEqualTo: weekDay['weekStart'])
+        .get()
+        .then(
+          (value) => value.docs[0].reference.update({'weekDays': currentWeek}),
+        );
+
+    List<dynamic> hifdhDays = planData['hifdhDays'];
+    bool calculated = false;
+    int count = todayDT.weekday - 1;
+    int nextHifdh = 0;
+    dynamic hifdh;
+
+    if (hifdhs.isNotEmpty) {
+      hifdh = hifdhs.last;
+    }
+
+    while (!calculated) {
+      if (hifdhDays[count] == true &&
+          (nextHifdh != planData['hifdhIn'] || todayDT.isAfter(hifdhDT)) &&
+          (nextHifdh != 0 ||
+              (nextHifdh == 0 &&
+                  (hifdh == null || hifdh['completed'] == false)))) {
+        calculated = true;
+      } else {
+        count++;
+        nextHifdh++;
+        if (count > 6) {
+          count = 0;
+        }
+      }
+    }
+    DateTime date = DateTime.now().add(Duration(days: nextHifdh));
+    String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
+    hifdhs.last['date'] = nextHifdhDate;
+    plansCollection
+        .doc(id)
+        .update({'hifdhs': hifdhs, 'currentWeek': currentWeek});
+    final hifdhSnapshot = await hifdhsCollection
+        .where('hifdh', isEqualTo: hifdhs.last['hifdh'])
+        .where('planId', isEqualTo: id)
+        .get();
+    hifdhSnapshot.docs[0].reference.update({'date': nextHifdhDate});
   }
 
   Future<void> hifdhIn(String id) async {
@@ -319,10 +437,28 @@ class FirestoreService extends ChangeNotifier {
 
     //calculate time left until hifdh
     int hifdhIn = 0;
-    Timestamp hifdhTimestamp = planData['hifdhs'].last['date'];
-    DateTime hifdhDate = hifdhTimestamp.toDate();
-    if (hifdhDate.day != DateTime.now().day) {
-      hifdhIn = hifdhDate.difference(DateTime.now()).inDays + 1;
+
+    String hifdhDate = planData['hifdhs'].last['date'];
+    String today =
+        '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
+
+    DateTime hifdhDT = DateTime(
+      int.parse(hifdhDate.split('-')[2]),
+      int.parse(hifdhDate.split('-')[1]),
+      int.parse(hifdhDate.split('-')[0]),
+      0,
+      0,
+    );
+    DateTime todayDT = DateTime(
+      int.parse(today.split('-')[2]),
+      int.parse(today.split('-')[1]),
+      int.parse(today.split('-')[0]),
+      0,
+      0,
+    );
+
+    if (hifdhDate != today) {
+      hifdhIn = hifdhDT.difference(todayDT).inDays;
     }
 
     await plansCollection

@@ -1,6 +1,6 @@
 class Hifdh {
   final String hifdh;
-  DateTime date;
+  String date;
   final bool completed;
   final String nextKey;
   final String planId;
