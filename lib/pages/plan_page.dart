@@ -85,7 +85,6 @@ class PlanPage extends StatelessWidget {
                 isLoading = true;
                 firestoreService.updateNextHifdh(id);
               } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
-                print('yh its been missed g');
                 hifdhMissedCalled = true;
                 firestoreService.hifdhMissed(id).then((_) {
                   // Reset the flag after the method completes

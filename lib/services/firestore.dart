@@ -41,6 +41,7 @@ class FirestoreService extends ChangeNotifier {
       streak: 0,
       missedReviews: 0,
       currentWeek: [],
+      planCompleted: false,
     );
 
     /* * * * * * * * * * * M A K E   P L A N   A C T I V E   A S   S O O N   A S   N E W   P L A N   IS  A D D E D * * * * * * * * * * */
@@ -157,6 +158,7 @@ class FirestoreService extends ChangeNotifier {
     if (hifdhs.isNotEmpty) {
       dynamic hifdh = hifdhs.last;
       hifdh['completed'] = true;
+
       final hifdhSnapshot = await hifdhsCollection
           .where('hifdh', isEqualTo: hifdh['hifdh'])
           .where('planId', isEqualTo: id)
@@ -170,35 +172,94 @@ class FirestoreService extends ChangeNotifier {
       await reviewsCollection.add(newReview.toMap());
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
+      planData['streak'] += 1;
       plansCollection.doc(id).update({
+        'streak': planData['streak'],
         'reviews': planReviews,
         'hifdhs': hifdhs,
       });
     }
 
-    //calculate the hifdh start and end
+    /*-------------------------------C A L C U L A T E   H I F D H   S T A R T   A N D   E N D-------------------------------*/
+
     final verseSnapshot =
         await versesCollection.where('key', isEqualTo: key).get();
     String verseId = verseSnapshot.docs[0].reference.id;
-
     final verseDoc = await versesCollection.doc(verseId).get();
     Map<String, dynamic> verseData = verseDoc.data() as Map<String, dynamic>;
-    double total = double.parse(verseData['length'].toString());
 
-    while (length > total) {
-      verseId = (int.parse(verseId) + 1).toString();
-      final nextVerse = await versesCollection.doc(verseId).get();
-      verseData = nextVerse.data() as Map<String, dynamic>;
-      total += verseData['length'];
+    final endOfPlanVerseSnapshot =
+        await versesCollection.where('key', isEqualTo: planData['end']).get();
+    String endOfPlanVerse = endOfPlanVerseSnapshot.docs[0].reference.id;
+
+    if (verseId != '6236') {
+      final prevVerseDoc =
+          await versesCollection.doc((int.parse(verseId) - 1).toString()).get();
+      double total = double.parse(verseData['length'].toString());
+      Map<String, dynamic> prevVerseData = {};
+      if (prevVerseDoc.exists) {
+        prevVerseData = prevVerseDoc.data() as Map<String, dynamic>;
+      }
+
+      if ((prevVerseData != {} && prevVerseData['page'] == verseData['page']) ||
+          planData['lines'] % 15 != 0) {
+        double prevTotal = 0.0;
+        bool calculated = false;
+        dynamic prevVerseData = {};
+        while (!calculated) {
+          if (int.parse(verseId) > int.parse(endOfPlanVerse)) {
+            verseData = prevVerseData;
+            plansCollection.doc(id).update({'planCompleted': true});
+            break;
+          }
+          if (length < total) {
+            length - prevTotal > total - length
+                ? verseId = (int.parse(verseId) + 1).toString()
+                : verseData = prevVerseData;
+
+            calculated = true;
+            break;
+          }
+          verseId = (int.parse(verseId) + 1).toString();
+          if (verseId == '6237') {
+            break;
+          }
+          prevVerseData = verseData;
+          final nextVerse = await versesCollection.doc(verseId).get();
+          verseData = nextVerse.data() as Map<String, dynamic>;
+          prevTotal = total;
+          total += verseData['length'];
+        }
+      } else {
+        int pages =
+            int.parse(((planData['lines'] / 15).toString()).split('.')[0]);
+        dynamic tempVerseData = verseData;
+        while (tempVerseData['page'] !=
+            ((prevVerseData['page'] ?? 0) + pages + 1)) {
+          if (int.parse(verseId) > int.parse(endOfPlanVerse)) {
+            plansCollection.doc(id).update({'planCompleted': true});
+            break;
+          }
+          verseData = tempVerseData;
+          verseId = (int.parse(verseId) + 1).toString();
+          if (verseId == '6237') {
+            break;
+          }
+          final nextVerse = await versesCollection.doc(verseId).get();
+          tempVerseData = nextVerse.data() as Map<String, dynamic>;
+        }
+      }
+      endKey = verseData['key'];
+      if (verseId != '6237') {
+        final nextVerse = await versesCollection.doc(verseId).get();
+        verseData = nextVerse.data() as Map<String, dynamic>;
+        nextKey = verseData['key'];
+      } else {
+        nextKey = endKey;
+      }
     }
 
-    endKey = verseData['key'];
-    final nextVerse =
-        await versesCollection.doc((int.parse(verseId) + 1).toString()).get();
-    verseData = nextVerse.data() as Map<String, dynamic>;
-    nextKey = verseData['key'];
-
-    // add new hifdh to database
+    /*-----------------------------------A D D   N E W   H I F D H   T O   D A T A B A S E-----------------------------------*/
     Hifdh newHifdh = Hifdh(
       hifdh: '$key - $endKey',
       date:
@@ -210,7 +271,7 @@ class FirestoreService extends ChangeNotifier {
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
 
-    //calculate hifdh date
+    /*---------------------------------------C A L C U L A T E   H I F D H   D A T E-----------------------------------------*/
     DateTime today = DateTime.now();
     List<dynamic> hifdhDays = planData['hifdhDays'];
     bool calculated = false;
@@ -272,8 +333,6 @@ class FirestoreService extends ChangeNotifier {
 
       List<dynamic> planHifdhs = planData['hifdhs'];
       planHifdhs = List.from(planHifdhs)..add(newHifdh.toMap());
-
-      print(hifdhIn);
 
       await plansCollection.doc(id).update({
         'hifdhIn': hifdhIn,
@@ -358,7 +417,7 @@ class FirestoreService extends ChangeNotifier {
     /**
      * * if a user last used the app on sunday and then goes back on tuesday(has hifdh on monday) monday isnt updated as missed
      * * if more than one day is missed only the last day is shown to be missed whilst the others are just blank
-    */
+    **/
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
     dynamic hifdhs = planData['hifdhs'];
@@ -421,9 +480,12 @@ class FirestoreService extends ChangeNotifier {
     DateTime date = DateTime.now().add(Duration(days: nextHifdh));
     String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
     hifdhs.last['date'] = nextHifdhDate;
-    plansCollection
-        .doc(id)
-        .update({'hifdhs': hifdhs, 'currentWeek': currentWeek});
+    planData['streak'] = 0;
+    plansCollection.doc(id).update({
+      'hifdhs': hifdhs,
+      'currentWeek': currentWeek,
+      'streak': planData['streak']
+    });
     final hifdhSnapshot = await hifdhsCollection
         .where('hifdh', isEqualTo: hifdhs.last['hifdh'])
         .where('planId', isEqualTo: id)

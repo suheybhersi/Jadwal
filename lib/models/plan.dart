@@ -19,6 +19,7 @@ class Plan {
   final int streak;
   final int missedReviews;
   final List<CurrentWeekDay> currentWeek;
+  final bool planCompleted;
 
   Plan({
     required this.name,
@@ -37,6 +38,7 @@ class Plan {
     required this.streak,
     required this.missedReviews,
     required this.currentWeek,
+    required this.planCompleted,
   });
 
   Map<String, dynamic> toMap() {
@@ -57,6 +59,7 @@ class Plan {
       'streak': streak,
       'missedReviews': missedReviews,
       'currentWeek': currentWeek,
+      'planCompleted': planCompleted,
     };
   }
 }
