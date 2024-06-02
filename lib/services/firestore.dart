@@ -16,7 +16,7 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('reviews');
   final CollectionReference weeksCollection =
       FirebaseFirestore.instance.collection('weeks');
-
+/*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
     String name,
     String start,
@@ -44,8 +44,6 @@ class FirestoreService extends ChangeNotifier {
       planCompleted: false,
     );
 
-    /* * * * * * * * * * * M A K E   P L A N   A C T I V E   A S   S O O N   A S   N E W   P L A N   IS  A D D E D * * * * * * * * * * */
-
     final document = await plansCollection.add(newPlan.toMap());
 
     updateCurrentWeek(document.id);
@@ -54,12 +52,14 @@ class FirestoreService extends ChangeNotifier {
     updateActivePlan(document.id);
   }
 
+/*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
   Stream<QuerySnapshot> getPlansStream() {
     final plansStream =
         plansCollection.orderBy('active', descending: true).snapshots();
     return plansStream;
   }
 
+/*---------------------------------U P D A T E   A C T I V E   P L A N---------------------------------*/
   Future<void> updateActivePlan(String id) {
     return plansCollection.where('active', isEqualTo: true).get().then((value) {
       if (value.docs.isNotEmpty) {
@@ -73,6 +73,7 @@ class FirestoreService extends ChangeNotifier {
     });
   }
 
+/*----------------------------------------U P D A T E   P L A N----------------------------------------*/
   Future<void> updatePlan(
     String id,
     String name,
@@ -86,6 +87,7 @@ class FirestoreService extends ChangeNotifier {
     });
   }
 
+/*-------------------------------U P D A T E   D A I L Y   R E A D I N G-------------------------------*/
   Future<void> updateDailyReading(
     String id,
     int pages,
@@ -97,6 +99,7 @@ class FirestoreService extends ChangeNotifier {
     });
   }
 
+/*--------------------------------U P D A T E   C U R R E N T   W E E K--------------------------------*/
   Future<void> updateCurrentWeek(String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final plan = planSnapshot.data() as Map<String, dynamic>;
@@ -147,6 +150,7 @@ class FirestoreService extends ChangeNotifier {
     }
   }
 
+/*-----------------------------------C R E A T E   N E W   H I F D H-----------------------------------*/
   Future<void> createNewHifdh(String key, int length, String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
@@ -165,10 +169,25 @@ class FirestoreService extends ChangeNotifier {
           .get();
       hifdhSnapshot.docs[0].reference.update({'completed': true});
 
+      //create review for hifdh
       String reviewDate = hifdh['date'];
 
+      DateTime reviewDT = DateTime(
+        int.parse(reviewDate.split('-')[2]),
+        int.parse(reviewDate.split('-')[1]),
+        int.parse(reviewDate.split('-')[0]),
+        0,
+        0,
+      ).add(const Duration(days: 1));
+
+      reviewDate = '${reviewDT.day}-${reviewDT.month}-${reviewDT.year}';
+
       final newReview = Review(
-          review: hifdh['hifdh'], date: reviewDate, ratings: [], planId: id);
+          review: hifdh['hifdh'],
+          date: reviewDate,
+          ratings: [],
+          planId: id,
+          sm2: [0, 2.0, 1]);
       await reviewsCollection.add(newReview.toMap());
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
@@ -180,7 +199,7 @@ class FirestoreService extends ChangeNotifier {
       });
     }
 
-    /*-------------------------------C A L C U L A T E   H I F D H   S T A R T   A N D   E N D-------------------------------*/
+    /*C A L C U L A T E   H I F D H   S T A R T   A N D   E N D*/
 
     final verseSnapshot =
         await versesCollection.where('key', isEqualTo: key).get();
@@ -205,7 +224,7 @@ class FirestoreService extends ChangeNotifier {
           planData['lines'] % 15 != 0) {
         double prevTotal = 0.0;
         bool calculated = false;
-        dynamic prevVerseData = {};
+        Map<String, dynamic> prevVerseData = {};
         while (!calculated) {
           if (int.parse(verseId) > int.parse(endOfPlanVerse)) {
             verseData = prevVerseData;
@@ -259,7 +278,7 @@ class FirestoreService extends ChangeNotifier {
       }
     }
 
-    /*-----------------------------------A D D   N E W   H I F D H   T O   D A T A B A S E-----------------------------------*/
+    /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
     Hifdh newHifdh = Hifdh(
       hifdh: '$key - $endKey',
       date:
@@ -271,7 +290,7 @@ class FirestoreService extends ChangeNotifier {
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
 
-    /*---------------------------------------C A L C U L A T E   H I F D H   D A T E-----------------------------------------*/
+    /*C A L C U L A T E   H I F D H   D A T E*/
     DateTime today = DateTime.now();
     List<dynamic> hifdhDays = planData['hifdhDays'];
     bool calculated = false;
@@ -363,6 +382,7 @@ class FirestoreService extends ChangeNotifier {
     }
   }
 
+/*----------------------------------U P D A T E   N E X T   H I F D H----------------------------------*/
   Future<void> updateNextHifdh(String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
@@ -413,6 +433,105 @@ class FirestoreService extends ChangeNotifier {
     }
   }
 
+  Future<List<dynamic>> sm2(String id, List<dynamic> arr) async {
+    final reviewSnapshot = await reviewsCollection.doc(id).get();
+    final review = reviewSnapshot.data() as Map<String, dynamic>;
+
+    List<dynamic> ratings = review['ratings'];
+
+    int corrects = ratings.where((i) => i > 2).toList().length;
+    int wrongs = ratings.where((i) => i < 3).toList().length;
+
+    //add rating to ratings list
+
+    if (arr[0] >= 3) {
+      corrects++;
+      arr[1]++;
+      if (corrects == 3) {
+        print('success');
+        return ['success'];
+      }
+      if (arr[1] == 1) {
+        arr[3] = 3;
+      } else {
+        arr[3] = double.parse((arr[3] * arr[2]).toStringAsFixed(2));
+      }
+    } else {
+      wrongs++;
+      if (wrongs == 3) {
+        print('fail');
+        return ['fail'];
+      }
+      arr[1] = 0;
+      arr[3] = 1;
+    }
+    arr[2] =
+        arr[2] + ((0.1 - (5 - arr[0]) * (0.08 + (5 - arr[0]) * 0.02)) * 0.75);
+    if (arr[2] < 1.3) {
+      arr[2] = 1.3;
+    }
+    return ([arr[1], arr[2], arr[3].truncate()]);
+  }
+
+  Future<void> updateReview(String id, String review, String rating) async {
+    final planSnapshot = await plansCollection.doc(id).get();
+    final planData = planSnapshot.data() as Map<String, dynamic>;
+
+    final reviewQuery = await reviewsCollection
+        .where('planId', isEqualTo: id)
+        .where('review', isEqualTo: review)
+        .get();
+    String reviewId = reviewQuery.docs[0].id;
+    final reviewSnapshot = await reviewsCollection.doc(reviewId).get();
+    final reviewData = reviewSnapshot.data() as Map<String, dynamic>;
+    List<dynamic> prevSm2 = reviewData['sm2'];
+    prevSm2.insert(0, int.parse(rating));
+    List<dynamic> updatedSm2 = await sm2(reviewId, prevSm2);
+
+    List<dynamic> ratings = reviewData['ratings'];
+    ratings = List.from(ratings)..add(int.parse(rating));
+    Map<String, dynamic> rev =
+        planData['reviews'].where((rev) => rev['review'] == review).toList()[0];
+
+    if (updatedSm2.length == 1) {
+      if (updatedSm2[0] == 'success') {
+        //* A D D   T O   D A I L Y   R E A D I N G   L I S T
+      } else {
+        //* A D D   T O   H I F D H   L I S T
+      }
+      //remove review from review list
+      planData['reviews'].removeWhere((review) => review == rev);
+      await plansCollection.doc(id).update({
+        'reviews': planData['reviews'],
+      });
+      await reviewsCollection.doc(reviewId).delete();
+    } else {
+      String reviewST = reviewData['date'];
+      DateTime reviewDT = DateTime(
+        int.parse(reviewST.split('-')[2]),
+        int.parse(reviewST.split('-')[1]),
+        int.parse(reviewST.split('-')[0]),
+        0,
+        0,
+      );
+      DateTime newReviewDT = reviewDT.add(Duration(days: updatedSm2[2]));
+
+      await reviewsCollection.doc(reviewId).update({
+        'date': '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}',
+        'ratings': ratings,
+        'sm2': updatedSm2,
+      });
+
+      rev['date'] =
+          '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}';
+
+      await plansCollection.doc(id).update({
+        'reviews': planData['reviews'],
+      });
+    }
+  }
+
+/*---------------------------------------H I F D H   M I S S E D---------------------------------------*/
   Future<void> hifdhMissed(String id) async {
     /**
      * * if a user last used the app on sunday and then goes back on tuesday(has hifdh on monday) monday isnt updated as missed
@@ -493,6 +612,7 @@ class FirestoreService extends ChangeNotifier {
     hifdhSnapshot.docs[0].reference.update({'date': nextHifdhDate});
   }
 
+/*-------------------------------------------H I F D H   I N-------------------------------------------*/
   Future<void> hifdhIn(String id) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
@@ -528,6 +648,7 @@ class FirestoreService extends ChangeNotifier {
         .update({'hifdhIn': hifdhIn}); //update plan with hifdhIn
   }
 
+/*---------------------------------------D E L E T E   P L A N----------------------------------------*/
   Future<void> deletePlan(String id) async {
     await plansCollection.doc(id).delete();
     final hifdhsSnapshot =

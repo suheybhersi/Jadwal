@@ -70,6 +70,7 @@ class _PlansPageState extends State<PlansPage> {
           ),
         ),
       ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: StreamBuilder<QuerySnapshot>(

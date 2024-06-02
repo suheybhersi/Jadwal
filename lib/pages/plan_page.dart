@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/edit_daily_reading_form.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
+import 'package:hifdh_planner_app/components/review_tile.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -81,9 +82,21 @@ class PlanPage extends StatelessWidget {
                 0,
               );
 
-              if (hifdhDate == today && completed) {
+              if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
+                  completed) {
                 isLoading = true;
-                firestoreService.updateNextHifdh(id);
+                if (plan['planCompleted'] != true) {
+                  firestoreService.updateNextHifdh(id);
+                } else {
+                  isLoading = false;
+                  return const Center(
+                    child: Text(
+                      'Plan Completed',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 30),
+                    ),
+                  );
+                }
               } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
                 hifdhMissedCalled = true;
                 firestoreService.hifdhMissed(id).then((_) {
@@ -254,7 +267,7 @@ class PlanPage extends StatelessWidget {
                 IconButton(
                   onPressed: () {
                     if (!completed) {
-                      markAsComplete(
+                      markHifdhAsComplete(
                         plan['hifdhs'].last['nextKey'],
                         context,
                         plan['lines'],
@@ -293,9 +306,15 @@ class PlanPage extends StatelessWidget {
     int hifdhIn,
     bool completed,
   ) {
+    List<dynamic> reviews = plan['reviews']
+        .where((review) =>
+            review['date'] ==
+            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
+        .toList();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Container(
+        width: 350,
         padding:
             const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
         decoration: BoxDecoration(
@@ -308,7 +327,7 @@ class PlanPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 15),
               child: Container(
-                width: 195,
+                width: 175,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: const Color.fromARGB(255, 144, 135, 253),
@@ -317,7 +336,7 @@ class PlanPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      'Upcoming Reviews',
+                      "Today's Reviews",
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.grey.shade100,
@@ -328,140 +347,24 @@ class PlanPage extends StatelessWidget {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                plan['reviews'] == null ||
-                        plan['reviews'].isEmpty ||
-                        hifdhIn == -1
-                    ? Text(
-                        'None',
-                        style: TextStyle(
-                            color: Colors.grey.shade100,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            plan['reviews'].first['review'],
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.grey.shade100,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            hifdhIn == 0
-                                ? 'Today'
-                                : hifdhIn == 1
-                                    ? 'Tomorrow'
-                                    : 'In $hifdhIn days',
-                            style: TextStyle(
-                              color: Colors.grey.shade100,
-                              fontSize: 20,
-                            ),
-                          )
-                        ],
-                      ),
-                IconButton(
-                  onPressed: () {
-                    if (!completed) {
-                      markAsComplete(
-                        plan['hifdhs'].last['nextKey'],
-                        context,
-                        plan['lines'],
-                      );
-                    }
-                  },
-                  icon: completed
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Color.fromARGB(255, 60, 209, 107),
-                            size: 35,
-                          ),
-                        )
-                      : ImageIcon(
-                          const AssetImage('assets/unchecked.png'),
-                          size: 35,
-                          color: Colors.grey.shade100,
-                        ),
-                )
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                plan['reviews'] == null ||
-                        plan['reviews'].isEmpty ||
-                        hifdhIn == -1
-                    ? Text(
-                        'None',
-                        style: TextStyle(
-                            color: Colors.grey.shade100,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            plan['reviews'].first['review'],
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.grey.shade100,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            hifdhIn == 0
-                                ? 'Today'
-                                : hifdhIn == 1
-                                    ? 'Tomorrow'
-                                    : 'In $hifdhIn days',
-                            style: TextStyle(
-                              color: Colors.grey.shade100,
-                              fontSize: 20,
-                            ),
-                          )
-                        ],
-                      ),
-                IconButton(
-                  onPressed: () {
-                    if (!completed) {
-                      markAsComplete(
-                        plan['hifdhs'].last['nextKey'],
-                        context,
-                        plan['lines'],
-                      );
-                    }
-                  },
-                  icon: completed
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Color.fromARGB(255, 60, 209, 107),
-                            size: 35,
-                          ),
-                        )
-                      : ImageIcon(
-                          const AssetImage('assets/unchecked.png'),
-                          size: 35,
-                          color: Colors.grey.shade100,
-                        ),
-                )
-              ],
-            )
+            reviews == [] || reviews.isEmpty
+                ? Text(
+                    'None',
+                    style: TextStyle(
+                        color: Colors.grey.shade100,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800),
+                  )
+                : SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: reviews.length,
+                      itemBuilder: (context, index) {
+                        Map<String, dynamic> review = reviews[index];
+                        return ReviewTile(review: review, id: id);
+                      },
+                    ),
+                  )
           ],
         ),
       ),
@@ -568,7 +471,7 @@ class PlanPage extends StatelessWidget {
                 IconButton(
                   onPressed: () {
                     if (!completed) {
-                      markAsComplete(
+                      markHifdhAsComplete(
                         plan['hifdhs'].last['nextKey'],
                         context,
                         plan['lines'],
@@ -664,7 +567,7 @@ class PlanPage extends StatelessWidget {
                   IconButton(
                     onPressed: () {
                       if (!completed) {
-                        markAsComplete(
+                        markHifdhAsComplete(
                           plan['hifdhs'].last['nextKey'],
                           context,
                           plan['lines'],
@@ -782,10 +685,10 @@ class PlanPage extends StatelessWidget {
                 onPressed: () => editDailyReading(context, plan),
                 icon: const Icon(Icons.edit),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
+                  backgroundColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.secondary,
                   ),
-                  padding: MaterialStateProperty.all(
+                  padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(
                       vertical: 12,
                       horizontal: 20,
@@ -871,7 +774,7 @@ class PlanPage extends StatelessWidget {
     );
   }
 
-  void markAsComplete(String key, BuildContext context, int lines) {
+  void markHifdhAsComplete(String key, BuildContext context, int lines) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

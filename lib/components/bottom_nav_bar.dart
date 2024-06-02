@@ -23,7 +23,7 @@ class MyBottomNavBar extends StatelessWidget {
           indicatorColor: Provider.of<ThemeProvider>(context).isDarkMode
               ? Theme.of(context).colorScheme.secondary
               : Theme.of(context).colorScheme.tertiary,
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           selectedIndex: controller.selectedIndex.value,
           onDestinationSelected: (value) =>
               controller.selectedIndex.value = value,
