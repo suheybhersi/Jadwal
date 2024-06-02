@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
 import 'package:hifdh_planner_app/pages/plan_page.dart';
@@ -20,8 +19,7 @@ class PlanTile extends StatelessWidget {
       required this.id,
       required this.hifdhIn,
       required this.verses});
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService();
   void selectAsMainPlan(BuildContext context) {
     firestoreService.updateActivePlan(id);
     Navigator.pop(context);

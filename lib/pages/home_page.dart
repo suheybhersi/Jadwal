@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
@@ -10,17 +9,12 @@ import 'package:shimmer/shimmer.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
-  HomePage({super.key});
-
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService();
   int hifdhIn = -1;
   String verses = '';
   Map<String, dynamic> plan = {};
 
-  void signUserOut() {
-    FirebaseAuth.instance.signOut();
-  }
+  HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,23 +33,13 @@ class HomePage extends StatelessWidget {
                 color: Theme.of(context).colorScheme.inversePrimary,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Row(
-                children: [
-                  IconButton(
-                      onPressed: signUserOut,
-                      icon: Icon(
-                        Icons.logout,
-                        color: Theme.of(context).colorScheme.primary,
-                      )),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.person,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 30,
-                    ),
-                  ),
-                ],
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 30,
+                ),
               ),
             ),
           ],
@@ -259,11 +243,6 @@ class Upcoming extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<dynamic> reviews = plan['reviews']
-        .where((review) =>
-            review['date'] ==
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-        .toList();
     return Column(
       children: [
         Row(
@@ -413,7 +392,7 @@ class Upcoming extends StatelessWidget {
                               ),
                             ),
                           ),
-                          reviews == [] || reviews.isEmpty
+                          plan['reviews'] == null || plan['reviews'].isEmpty
                               ? Text(
                                   'None',
                                   style: TextStyle(
@@ -425,13 +404,24 @@ class Upcoming extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      reviews[0]['review'],
+                                      plan['reviews'].first['review'],
                                       style: TextStyle(
                                         fontSize: 20,
                                         color: Colors.grey.shade100,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
+                                    Text(
+                                      hifdhIn == 0
+                                          ? 'Today'
+                                          : hifdhIn == 1
+                                              ? 'Tomorrow'
+                                              : 'In $hifdhIn days',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade100,
+                                        fontSize: 20,
+                                      ),
+                                    )
                                   ],
                                 ),
                         ],

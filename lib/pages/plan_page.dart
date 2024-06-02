@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/edit_daily_reading_form.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
@@ -11,8 +10,7 @@ import 'package:shimmer/shimmer.dart';
 
 class PlanPage extends StatelessWidget {
   final String id;
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService();
 
   PlanPage({super.key, required this.id});
 

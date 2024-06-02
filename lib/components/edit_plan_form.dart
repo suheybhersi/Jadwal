@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
@@ -15,8 +14,7 @@ class EditPlanForm extends StatefulWidget {
 }
 
 class _EditPlanFormState extends State<EditPlanForm> {
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController linesController = TextEditingController();
 
