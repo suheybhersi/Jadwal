@@ -11,12 +11,6 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('users');
   final CollectionReference versesCollection =
       FirebaseFirestore.instance.collection('verses');
-  final CollectionReference hifdhsCollection =
-      FirebaseFirestore.instance.collection('hifdhs');
-  final CollectionReference reviewsCollection =
-      FirebaseFirestore.instance.collection('reviews');
-  final CollectionReference weeksCollection =
-      FirebaseFirestore.instance.collection('weeks');
 
   final FirebaseAuth auth;
   late String uid;
@@ -31,6 +25,12 @@ class FirestoreService extends ChangeNotifier {
 
   CollectionReference get plansCollection =>
       usersCollection.doc(uid).collection('plans');
+  CollectionReference get hifdhsCollection =>
+      usersCollection.doc(uid).collection('hifdhs');
+  CollectionReference get reviewsCollection =>
+      usersCollection.doc(uid).collection('reviews');
+  CollectionReference get weeksCollection =>
+      usersCollection.doc(uid).collection('weeks');
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
     String name,
@@ -142,9 +142,10 @@ class FirestoreService extends ChangeNotifier {
       DateTime weekStart = DateTime.now().subtract(
         Duration(days: DateTime.now().weekday - 1),
       );
-      weekDays.forEach((element) async {
+
+      for (int i = 0; i < weekDays.length; i++) {
         final weekDay = CurrentWeekDay(
-          day: element,
+          day: weekDays[i],
           completed: false,
           missed: false,
           weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
@@ -152,7 +153,7 @@ class FirestoreService extends ChangeNotifier {
         );
 
         currentWeek.add(weekDay.toMap());
-      });
+      }
 
       await weeksCollection.add({
         'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
@@ -680,16 +681,14 @@ class FirestoreService extends ChangeNotifier {
     final weeksSnapshot =
         await weeksCollection.where('planId', isEqualTo: id).get();
 
-    hifdhsSnapshot.docs.forEach((doc) async {
-      await doc.reference.delete();
-    });
-
-    reviewsSnapshot.docs.forEach((doc) async {
-      await doc.reference.delete();
-    });
-
-    weeksSnapshot.docs.forEach((doc) async {
-      await doc.reference.delete();
-    });
+    for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
+      await hifdhsSnapshot.docs[i].reference.delete();
+    }
+    for (int i = 0; i < reviewsSnapshot.docs.length; i++) {
+      await reviewsSnapshot.docs[i].reference.delete();
+    }
+    for (int i = 0; i < weeksSnapshot.docs.length; i++) {
+      await weeksSnapshot.docs[i].reference.delete();
+    }
   }
 }
