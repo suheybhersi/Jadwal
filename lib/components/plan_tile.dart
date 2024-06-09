@@ -231,12 +231,13 @@ class MyProgressIndicator extends StatelessWidget {
         CircularPercentIndicator(
           radius: 35,
           lineWidth: 12,
-          percent: 0.4,
+          percent: ((plan['completedLines'] / plan['totalLines'])),
           progressColor: Colors.blue,
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           circularStrokeCap: CircularStrokeCap.round,
           center: Text(
-            '40%',
+            (((plan['completedLines'] / plan['totalLines']) * 100))
+                .toStringAsFixed(0),
             style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).colorScheme.inversePrimary,

@@ -11,8 +11,8 @@ class Plan {
   final int pages;
   final List<bool> dailyReadingDays;
   final bool active;
-  final int totalAjza;
-  final int completedAjza;
+  final double totalLines;
+  final double completedLines;
   final List<Hifdh> hifdhs;
   final int hifdhIn;
   final List<Review> reviews;
@@ -30,8 +30,8 @@ class Plan {
     required this.pages,
     required this.dailyReadingDays,
     required this.active,
-    required this.totalAjza,
-    required this.completedAjza,
+    required this.totalLines,
+    required this.completedLines,
     required this.hifdhs,
     required this.hifdhIn,
     required this.reviews,
@@ -51,8 +51,8 @@ class Plan {
       'pages': pages,
       'dailyReadingDays': dailyReadingDays,
       'active': active,
-      'totalAjza': totalAjza,
-      'completedAjza': completedAjza,
+      'totalLines': totalLines,
+      'completedLines': completedLines,
       'hifdhs': hifdhs,
       'hifdhIn': hifdhIn,
       'reviews': reviews,

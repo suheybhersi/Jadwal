@@ -39,6 +39,52 @@ class FirestoreService extends ChangeNotifier {
     int lines,
     List<bool> days,
   ) async {
+    final startVerseSnapshot =
+        await versesCollection.where('key', isEqualTo: start).get();
+    String startVerseId = startVerseSnapshot.docs[0].reference.id;
+    final startVerseDoc = await versesCollection.doc(startVerseId).get();
+    Map<String, dynamic> startVerseData =
+        startVerseDoc.data() as Map<String, dynamic>;
+
+    final endVerseSnapshot =
+        await versesCollection.where('key', isEqualTo: end).get();
+    String endVerseId = endVerseSnapshot.docs[0].reference.id;
+    final endVerseDoc = await versesCollection.doc(endVerseId).get();
+    Map<String, dynamic> endVerseData =
+        endVerseDoc.data() as Map<String, dynamic>;
+
+    double totalLines = (startVerseData['page'] == endVerseData['page'])
+        ? 0
+        : ((endVerseData['page'] - startVerseData['page'] - 1) * 15).toDouble();
+    totalLines += startVerseData['length'];
+
+    startVerseId = (int.parse(startVerseId) + 1).toString();
+    dynamic tempVerseDoc = await versesCollection.doc(startVerseId).get();
+    Map<String, dynamic> tempVerseData =
+        tempVerseDoc.data() as Map<String, dynamic>;
+
+    while (startVerseData['page'] == tempVerseData['page']) {
+      totalLines += tempVerseData['length'];
+      startVerseId = (int.parse(startVerseId) + 1).toString();
+
+      tempVerseDoc = await versesCollection.doc(startVerseId).get();
+      tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+    }
+
+    if (startVerseData['page'] != endVerseData['page']) {
+      totalLines += endVerseData['length'];
+      endVerseId = (int.parse(endVerseId) - 1).toString();
+      tempVerseDoc = await versesCollection.doc(endVerseId).get();
+      tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+      while (endVerseData['page'] == tempVerseData['page']) {
+        totalLines += tempVerseData['length'];
+        endVerseId = (int.parse(endVerseId) - 1).toString();
+
+        tempVerseDoc = await versesCollection.doc(endVerseId).get();
+        tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+      }
+    }
+
     final newPlan = Plan(
       name: name,
       start: start,
@@ -48,8 +94,8 @@ class FirestoreService extends ChangeNotifier {
       dailyReadingDays: [false, false, false, false, false, false, false],
       pages: 0,
       active: false,
-      totalAjza: 0,
-      completedAjza: 0,
+      totalLines: totalLines,
+      completedLines: 0,
       hifdhs: [],
       hifdhIn: -1,
       reviews: [],
@@ -217,6 +263,7 @@ class FirestoreService extends ChangeNotifier {
         'streak': planData['streak'],
         'reviews': planReviews,
         'hifdhs': hifdhs,
+        'completedLines': planData['completedLines'] + length
       });
     }
 
