@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hifdh_planner_app/models/current_weekday.dart';
+import 'package:hifdh_planner_app/models/daily_reading.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/plan.dart';
 import 'package:hifdh_planner_app/models/review.dart';
@@ -27,6 +28,8 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('plans');
   CollectionReference get hifdhsCollection =>
       usersCollection.doc(uid).collection('hifdhs');
+  CollectionReference get dailyReadingCollection =>
+      usersCollection.doc(uid).collection('dailyReadings');
   CollectionReference get reviewsCollection =>
       usersCollection.doc(uid).collection('reviews');
   CollectionReference get weeksCollection =>
@@ -37,7 +40,11 @@ class FirestoreService extends ChangeNotifier {
     String start,
     String end,
     int lines,
-    List<bool> days,
+    int pages,
+    int dailyReadingFrom,
+    int dailyReadingTo,
+    List<bool> hifdhDays,
+    List<bool> dailyReadingDays,
   ) async {
     final startVerseSnapshot =
         await versesCollection.where('key', isEqualTo: start).get();
@@ -90,9 +97,12 @@ class FirestoreService extends ChangeNotifier {
       start: start,
       end: end,
       lines: lines,
-      hifdhDays: days,
-      dailyReadingDays: [false, false, false, false, false, false, false],
-      pages: 0,
+      hifdhDays: hifdhDays,
+      pages: pages,
+      dailyReadingFrom: dailyReadingFrom,
+      dailyReadingTo: dailyReadingTo,
+      dailyReadingDays: dailyReadingDays,
+      dailyReadings: [],
       active: false,
       totalLines: totalLines,
       completedLines: 0,
@@ -110,7 +120,74 @@ class FirestoreService extends ChangeNotifier {
     updateCurrentWeek(document.id);
 
     createNewHifdh(start, lines, document.id);
+
+    createNewDailyReading(document.id, dailyReadingFrom);
+
     updateActivePlan(document.id);
+  }
+
+  Future<void> createNewDailyReading(String id, int from) async {
+    final planSnapshot = await plansCollection.doc(id).get();
+    final planData = planSnapshot.data() as Map<String, dynamic>;
+    List<dynamic> dailyReadings = planData['dailyReadings'];
+    dynamic dailyReading;
+
+    if (dailyReadings.isNotEmpty) {
+      dailyReading = dailyReadings.last;
+      dailyReading['completed'] = true;
+
+      final dailyReadingSnapshot = await dailyReadingCollection
+          .where('dailyReading', isEqualTo: dailyReading['dailyReading'])
+          .where('planId', isEqualTo: id)
+          .get();
+      dailyReadingSnapshot.docs[0].reference.update({'completed': true});
+
+      await plansCollection.doc(id).update({
+        'dailyReadings': dailyReadings,
+      });
+    }
+
+    /*C A L C U L A T E   D A I L Y   R E A D I N G   D A T E*/
+    DateTime today = DateTime.now();
+    List<dynamic> dailyReadingDays = planData['dailyReadingDays'];
+    bool calculated = false;
+    int count = today.weekday - 1;
+    int nextDailyReading = 0;
+
+    while (!calculated) {
+      if (dailyReadingDays[count] == true &&
+          (nextDailyReading != 0 ||
+              (nextDailyReading == 0 && dailyReading == null))) {
+        calculated = true;
+      } else {
+        count++;
+        nextDailyReading++;
+        if (count > 6) {
+          count = 0;
+        }
+      }
+    }
+    DateTime date = DateTime.now().add(Duration(days: nextDailyReading));
+    String nextDailyReadingDate = '${date.day}-${date.month}-${date.year}';
+    dynamic nextStart = from + planData['pages'];
+
+    DailyReading newDailyReading = DailyReading(
+      dailyReading: '$from - ${nextStart - 1}',
+      date: nextDailyReadingDate,
+      completed: false,
+      nextStart: nextStart,
+      planId: id,
+    );
+
+    await dailyReadingCollection.add(newDailyReading.toMap());
+
+    List<dynamic> planDailyReadings = planData['dailyReadings'];
+    planDailyReadings = List.from(planDailyReadings)
+      ..add(newDailyReading.toMap());
+
+    await plansCollection.doc(id).update({
+      'dailyReadings': planDailyReadings,
+    }); //update plan with dailyReading
   }
 
 /*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
@@ -346,18 +423,6 @@ class FirestoreService extends ChangeNotifier {
       }
     }
 
-    /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
-    Hifdh newHifdh = Hifdh(
-      hifdh: '$key - $endKey',
-      date:
-          '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}',
-      completed: false,
-      nextKey: nextKey,
-      planId: id,
-    );
-
-    final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
-
     /*C A L C U L A T E   H I F D H   D A T E*/
     DateTime today = DateTime.now();
     List<dynamic> hifdhDays = planData['hifdhDays'];
@@ -387,9 +452,18 @@ class FirestoreService extends ChangeNotifier {
     }
     DateTime date = DateTime.now().add(Duration(days: nextHifdh));
     String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
-    //update hifdh date
-    await hifdhsCollection.doc(newHifdhDoc.id).update({'date': nextHifdhDate});
-    newHifdh.date = nextHifdhDate;
+
+    /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
+    Hifdh newHifdh = Hifdh(
+      hifdh: '$key - $endKey',
+      date: nextHifdhDate,
+      completed: false,
+      nextKey: nextKey,
+      planId: id,
+    );
+
+    final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
+
     if (planData['hifdhs'].isEmpty) {
       //calculate time left until hifdh
       int hifdhIn = 0;
@@ -723,6 +797,8 @@ class FirestoreService extends ChangeNotifier {
     await plansCollection.doc(id).delete();
     final hifdhsSnapshot =
         await hifdhsCollection.where('planId', isEqualTo: id).get();
+    final dailyReadingSnapshot =
+        await dailyReadingCollection.where('planId', isEqualTo: id).get();
     final reviewsSnapshot =
         await reviewsCollection.where('planId', isEqualTo: id).get();
     final weeksSnapshot =
@@ -730,6 +806,9 @@ class FirestoreService extends ChangeNotifier {
 
     for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
       await hifdhsSnapshot.docs[i].reference.delete();
+    }
+    for (int i = 0; i < dailyReadingSnapshot.docs.length; i++) {
+      await dailyReadingSnapshot.docs[i].reference.delete();
     }
     for (int i = 0; i < reviewsSnapshot.docs.length; i++) {
       await reviewsSnapshot.docs[i].reference.delete();

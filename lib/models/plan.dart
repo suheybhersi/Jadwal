@@ -1,4 +1,5 @@
 import 'package:hifdh_planner_app/models/current_weekday.dart';
+import 'package:hifdh_planner_app/models/daily_reading.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/review.dart';
 
@@ -9,7 +10,10 @@ class Plan {
   final int lines;
   final List<bool> hifdhDays;
   final int pages;
+  final int dailyReadingFrom;
+  final int dailyReadingTo;
   final List<bool> dailyReadingDays;
+  final List<DailyReading> dailyReadings;
   final bool active;
   final double totalLines;
   final double completedLines;
@@ -28,7 +32,10 @@ class Plan {
     required this.lines,
     required this.hifdhDays,
     required this.pages,
+    required this.dailyReadingFrom,
+    required this.dailyReadingTo,
     required this.dailyReadingDays,
+    required this.dailyReadings,
     required this.active,
     required this.totalLines,
     required this.completedLines,
@@ -49,7 +56,10 @@ class Plan {
       'lines': lines,
       'hifdhDays': hifdhDays,
       'pages': pages,
+      'dailyReadingFrom': dailyReadingFrom,
+      'dailyReadingTo': dailyReadingTo,
       'dailyReadingDays': dailyReadingDays,
+      'dailyReadings': dailyReadings,
       'active': active,
       'totalLines': totalLines,
       'completedLines': completedLines,

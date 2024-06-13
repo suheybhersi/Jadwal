@@ -28,24 +28,11 @@ class ReviewTile extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            // Text(
-            //   review['reviewIn'] == 0
-            //       ? 'Today'
-            //       : review['reviewIn'] == 1
-            //           ? 'Tomorrow'
-            //           : 'In ${review['reviewIn']} days',
-            //   style: TextStyle(
-            //     color: Colors.grey.shade100,
-            //     fontSize: 20,
-            //   ),
-            // )
           ],
         ),
         IconButton(
           onPressed: () {
-            // if (review['ratings'].isEmpty) {
             markReviewAsComplete(context, review['review']);
-            // }
           },
           icon: ImageIcon(
             const AssetImage('assets/unchecked.png'),
@@ -64,7 +51,6 @@ class ReviewTile extends StatelessWidget {
         content: Padding(
           padding: const EdgeInsets.only(bottom: 20.0),
           child: TextFormField(
-            // validator: (name) => name!.isEmpty ? 'give a rating...' : null,
             controller: ratingController,
             decoration: const InputDecoration(
                 hintText: 'Rating', border: OutlineInputBorder()),

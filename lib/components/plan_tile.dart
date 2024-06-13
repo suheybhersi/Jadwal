@@ -236,8 +236,7 @@ class MyProgressIndicator extends StatelessWidget {
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           circularStrokeCap: CircularStrokeCap.round,
           center: Text(
-            (((plan['completedLines'] / plan['totalLines']) * 100))
-                .toStringAsFixed(0),
+            '${(((plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}%',
             style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).colorScheme.inversePrimary,

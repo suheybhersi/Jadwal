@@ -375,6 +375,11 @@ class PlanPage extends StatelessWidget {
 
   Widget _buildDailyReading(BuildContext context, Map<String, dynamic> plan,
       int hifdhIn, bool completed, String verses) {
+    List<dynamic> dailyReadings = plan['dailyReadings']
+        .where((dailyReading) =>
+            dailyReading['date'] ==
+            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
+        .toList();
     return Column(
       children: [
         Padding(
@@ -423,9 +428,9 @@ class PlanPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                plan['hifdhs'] == null ||
-                        plan['hifdhs'].isEmpty ||
-                        hifdhIn == -1
+                dailyReadings == [] ||
+                        dailyReadings.isEmpty ||
+                        dailyReadings.last['completed'] == true
                     ? Text(
                         'None',
                         style: TextStyle(
@@ -440,7 +445,7 @@ class PlanPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            verses,
+                            'Pages ${dailyReadings.last['dailyReading']}',
                             style: TextStyle(
                               fontSize: 20,
                               color:
@@ -453,11 +458,7 @@ class PlanPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            hifdhIn == 0
-                                ? 'Today'
-                                : hifdhIn == 1
-                                    ? 'Tomorrow'
-                                    : 'In $hifdhIn days',
+                            'Today',
                             style: TextStyle(
                               color:
                                   Provider.of<ThemeProvider>(context).isDarkMode
@@ -470,34 +471,23 @@ class PlanPage extends StatelessWidget {
                           )
                         ],
                       ),
-                IconButton(
-                  onPressed: () {
-                    if (!completed) {
-                      markHifdhAsComplete(
-                        plan['hifdhs'].last['nextKey'],
-                        context,
-                        plan['lines'],
-                      );
-                    }
-                  },
-                  icon: completed
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Color.fromARGB(255, 60, 209, 107),
-                            size: 35,
-                          ),
-                        )
-                      : ImageIcon(
+                dailyReadings == [] ||
+                        dailyReadings.isEmpty ||
+                        dailyReadings.last['completed'] == true
+                    ? const SizedBox()
+                    : IconButton(
+                        onPressed: () {
+                          markDailyReadingAsComplete(
+                            plan['dailyReadings'].last['nextStart'],
+                            context,
+                          );
+                        },
+                        icon: ImageIcon(
                           const AssetImage('assets/unchecked.png'),
                           size: 35,
                           color: Colors.grey.shade100,
                         ),
-                )
+                      )
               ],
             ),
           ),
@@ -785,6 +775,28 @@ class PlanPage extends StatelessWidget {
           MaterialButton(
             onPressed: () {
               firestoreService.createNewHifdh(key, lines, id);
+              Navigator.pop(context);
+            },
+            child: const Text('Yes'),
+          ),
+          MaterialButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void markDailyReadingAsComplete(int nextStart, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: const Text('Mark as completed?'),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              firestoreService.createNewDailyReading(id, nextStart);
               Navigator.pop(context);
             },
             child: const Text('Yes'),

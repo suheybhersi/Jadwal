@@ -43,7 +43,7 @@ class _EditDailyReadingFormState extends State<EditDailyReadingForm> {
     return AlertDialog(
       scrollable: true,
       title: const Text(
-        'Edit plan',
+        'Edit daily reading',
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       content: Form(

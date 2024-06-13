@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/components/new_plan_form.dart';
+import 'package:hifdh_planner_app/components/my_stepper.dart';
+// import 'package:hifdh_planner_app/components/new_plan_form.dart';
 import 'package:hifdh_planner_app/components/plan_tile.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 
@@ -15,14 +16,10 @@ class PlansPage extends StatefulWidget {
 class _PlansPageState extends State<PlansPage> {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
-
-  List<bool> _selectedDays = List.generate(7, (index) => false);
-
-  void _createNewPlan(BuildContext context) {
-    _selectedDays = List.generate(7, (index) => false);
+  void newPlanStepper() {
     showDialog(
       context: context,
-      builder: (context) => NewPlanForm(selectedDays: _selectedDays),
+      builder: (context) => const MyStepper(),
     );
   }
 
@@ -61,7 +58,7 @@ class _PlansPageState extends State<PlansPage> {
               Theme.of(context).colorScheme.tertiary),
         ),
         onPressed: () {
-          _createNewPlan(context);
+          newPlanStepper();
         },
         child: Padding(
           padding: const EdgeInsets.all(5.0),

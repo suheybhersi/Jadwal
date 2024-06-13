@@ -264,6 +264,12 @@ class Upcoming extends StatelessWidget {
             review['date'] ==
             '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
         .toList();
+
+    List<dynamic> dailyReadings = plan['dailyReadings']
+        .where((dailyReading) =>
+            dailyReading['date'] ==
+            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
+        .toList();
     return Column(
       children: [
         Row(
@@ -425,7 +431,7 @@ class Upcoming extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      reviews[0]['review'],
+                                      reviews.first['review'],
                                       style: TextStyle(
                                         fontSize: 20,
                                         color: Colors.grey.shade100,
@@ -498,7 +504,9 @@ class Upcoming extends StatelessWidget {
                             ),
                           ),
                         ),
-                        plan['hifdhs'] == null || plan['hifdhs'].isEmpty
+                        dailyReadings == [] ||
+                                dailyReadings.isEmpty ||
+                                dailyReadings.last['completed'] == true
                             ? Text(
                                 'None',
                                 style: TextStyle(
@@ -515,7 +523,7 @@ class Upcoming extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    plan['hifdhs'].first['hifdh'],
+                                    'Pages ${dailyReadings.last['dailyReading']}',
                                     style: TextStyle(
                                       fontSize: 20,
                                       color: Provider.of<ThemeProvider>(context)
@@ -528,11 +536,7 @@ class Upcoming extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    hifdhIn == 0
-                                        ? 'Today'
-                                        : hifdhIn == 1
-                                            ? 'Tomorrow'
-                                            : 'In $hifdhIn days',
+                                    'Today',
                                     style: TextStyle(
                                       color: Provider.of<ThemeProvider>(context)
                                               .isDarkMode
@@ -748,7 +752,7 @@ class Statistics extends StatelessWidget {
                       horizontal: 0,
                     ),
                     lineHeight: 40,
-                    percent: 0.4,
+                    percent: ((plan['completedLines'] / plan['totalLines'])),
                     progressColor: Colors.blue,
                     backgroundColor:
                         Provider.of<ThemeProvider>(context).isDarkMode
@@ -758,7 +762,7 @@ class Statistics extends StatelessWidget {
                     trailing: Padding(
                       padding: const EdgeInsets.only(left: 10.0),
                       child: Text(
-                        '30%',
+                        '${(((plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}%',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
