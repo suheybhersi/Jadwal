@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 
@@ -7,7 +8,8 @@ class ReviewTile extends StatelessWidget {
   String id;
 
   ReviewTile({super.key, required this.review, required this.id});
-  final FirestoreService firestoreService = FirestoreService();
+  final FirestoreService firestoreService =
+      FirestoreService(FirebaseAuth.instance);
   final TextEditingController ratingController = TextEditingController();
 
   @override
@@ -41,27 +43,15 @@ class ReviewTile extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            if (review['ratings'].isEmpty) {
-              markReviewAsComplete(context, review['review']);
-            }
+            // if (review['ratings'].isEmpty) {
+            markReviewAsComplete(context, review['review']);
+            // }
           },
-          icon: review['ratings'].isNotEmpty
-              ? Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const ImageIcon(
-                    AssetImage('assets/checked.png'),
-                    color: Color.fromARGB(255, 60, 209, 107),
-                    size: 35,
-                  ),
-                )
-              : ImageIcon(
-                  const AssetImage('assets/unchecked.png'),
-                  size: 35,
-                  color: Colors.grey.shade100,
-                ),
+          icon: ImageIcon(
+            const AssetImage('assets/unchecked.png'),
+            size: 35,
+            color: Colors.grey.shade100,
+          ),
         )
       ],
     );

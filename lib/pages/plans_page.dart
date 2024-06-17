@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/new_plan_form.dart';
 import 'package:hifdh_planner_app/components/plan_tile.dart';
@@ -12,7 +13,8 @@ class PlansPage extends StatefulWidget {
 }
 
 class _PlansPageState extends State<PlansPage> {
-  final FirestoreService firestoreService = FirestoreService();
+  final FirestoreService firestoreService =
+      FirestoreService(FirebaseAuth.instance);
 
   List<bool> _selectedDays = List.generate(7, (index) => false);
 

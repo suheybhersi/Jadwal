@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hifdh_planner_app/models/current_weekday.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
@@ -6,8 +7,8 @@ import 'package:hifdh_planner_app/models/plan.dart';
 import 'package:hifdh_planner_app/models/review.dart';
 
 class FirestoreService extends ChangeNotifier {
-  final CollectionReference plansCollection =
-      FirebaseFirestore.instance.collection('plans');
+  final CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('users');
   final CollectionReference versesCollection =
       FirebaseFirestore.instance.collection('verses');
   final CollectionReference hifdhsCollection =
@@ -16,6 +17,20 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('reviews');
   final CollectionReference weeksCollection =
       FirebaseFirestore.instance.collection('weeks');
+
+  final FirebaseAuth auth;
+  late String uid;
+
+  FirestoreService(this.auth) {
+    final User? user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    uid = user.uid;
+  }
+
+  CollectionReference get plansCollection =>
+      usersCollection.doc(uid).collection('plans');
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
     String name,
@@ -54,6 +69,11 @@ class FirestoreService extends ChangeNotifier {
 
 /*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
   Stream<QuerySnapshot> getPlansStream() {
+    final User? user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    uid = user.uid;
     final plansStream =
         plansCollection.orderBy('active', descending: true).snapshots();
     return plansStream;
@@ -524,6 +544,8 @@ class FirestoreService extends ChangeNotifier {
 
       rev['date'] =
           '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}';
+      rev['ratings'] = ratings;
+      rev['sm2'] = updatedSm2;
 
       await plansCollection.doc(id).update({
         'reviews': planData['reviews'],
