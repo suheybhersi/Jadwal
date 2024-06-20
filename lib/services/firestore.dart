@@ -265,66 +265,17 @@ class FirestoreService extends ChangeNotifier {
       DateTime weekStart = DateTime.now().subtract(
         Duration(days: DateTime.now().weekday - 1),
       );
-      String weekStartString =
-          '${weekStart.day}-${weekStart.month}-${weekStart.year}';
-      weekStart = DateTime(
-        int.parse(weekStartString.split('-')[2]),
-        int.parse(weekStartString.split('-')[1]),
-        int.parse(weekStartString.split('-')[0]),
-        0,
-        0,
-      );
-      if (plan['currentWeek'].isEmpty) {
-        for (int i = 0; i < weekDays.length; i++) {
-          final weekDay = CurrentWeekDay(
-            day: weekDays[i],
-            completed: false,
-            missed: false,
-            weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-            planId: id,
-          );
 
-          currentWeek.add(weekDay.toMap());
-        }
-      } else if (week.docs.isEmpty) {
-        String lastHifdh = plan['hifdhs'].last['date'];
-
-        String todayString =
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
-
-        DateTime todayDT = DateTime(
-          int.parse(todayString.split('-')[2]),
-          int.parse(todayString.split('-')[1]),
-          int.parse(todayString.split('-')[0]),
-          0,
-          0,
+      for (int i = 0; i < weekDays.length; i++) {
+        final weekDay = CurrentWeekDay(
+          day: weekDays[i],
+          completed: false,
+          missed: false,
+          weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+          planId: id,
         );
 
-        for (int i = 0; i < weekDays.length; i++) {
-          final weekDay = CurrentWeekDay(
-            day: weekDays[i],
-            completed:
-                '${weekStart.add(Duration(days: i)).day}-${weekStart.add(Duration(days: i)).month}-${weekStart.add(Duration(days: i)).year}' ==
-                        lastHifdh
-                    ? plan['hifdhs'].last['completed']
-                    : false,
-            missed: plan['hifdhDays'][i] &&
-                    todayDT.isAfter(weekStart.add(Duration(days: i))) &&
-                    '${weekStart.add(Duration(days: i)).day}-${weekStart.add(Duration(days: i)).month}-${weekStart.add(Duration(days: i)).year}' !=
-                        lastHifdh
-                ? true
-                : plan['hifdhDays'][i] &&
-                        todayDT.isAfter(weekStart.add(Duration(days: i))) &&
-                        '${weekStart.add(Duration(days: i)).day}-${weekStart.add(Duration(days: i)).month}-${weekStart.add(Duration(days: i)).year}' ==
-                            lastHifdh
-                    ? !plan['hifdhs'].last['completed']
-                    : false,
-            weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-            planId: id,
-          );
-
-          currentWeek.add(weekDay.toMap());
-        }
+        currentWeek.add(weekDay.toMap());
       }
 
       await weeksCollection.add({
@@ -755,12 +706,7 @@ class FirestoreService extends ChangeNotifier {
 
     dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
 
-    for (int i = hifdhDT.weekday - 1; i < 7 && i < todayDT.weekday - 1; i++) {
-      weekDay = currentWeek[i];
-      if (planData['hifdhDays'][i]) {
-        weekDay['missed'] = true;
-      }
-    }
+    weekDay['missed'] = true;
 
     weeksCollection
         .where('weekStart', isEqualTo: weekDay['weekStart'])

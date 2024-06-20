@@ -19,7 +19,6 @@ class PlanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
-    bool currentWeekCalled = false;
 
     bool isLoading = false;
     return Scaffold(
@@ -118,14 +117,9 @@ class PlanPage extends StatelessWidget {
                   '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
 
               if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
-                      currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
-                      currWeekStart.split('-')[2] != weekStart.split('-')[2]) &&
-                  !currentWeekCalled) {
-                currentWeekCalled = true;
-                firestoreService.updateCurrentWeek(id).then((_) {
-                  // Reset the flag after the method completes
-                  currentWeekCalled = false;
-                });
+                  currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
+                  currWeekStart.split('-')[2] != weekStart.split('-')[2])) {
+                firestoreService.updateCurrentWeek(id);
               }
 
               if (isLoading) {
