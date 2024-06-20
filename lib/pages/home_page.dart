@@ -25,6 +25,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
+    bool currentWeekCalled = false;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -114,8 +116,19 @@ class HomePage extends StatelessWidget {
                   0,
                 );
 
-                if (hifdhDate == today && completed) {
-                  firestoreService.updateNextHifdh(id);
+                if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
+                    completed) {
+                  if (plan['planCompleted'] != true) {
+                    firestoreService.updateNextHifdh(id);
+                  } else {
+                    return const Center(
+                      child: Text(
+                        'Plan Completed',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 30),
+                      ),
+                    );
+                  }
                 } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
                   hifdhMissedCalled = true;
                   firestoreService.hifdhMissed(id).then((_) {
@@ -134,9 +147,16 @@ class HomePage extends StatelessWidget {
                     '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
 
                 if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
-                    currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
-                    currWeekStart.split('-')[2] != weekStart.split('-')[2])) {
-                  firestoreService.updateCurrentWeek(id);
+                        currWeekStart.split('-')[1] !=
+                            weekStart.split('-')[1] ||
+                        currWeekStart.split('-')[2] !=
+                            weekStart.split('-')[2]) &&
+                    !currentWeekCalled) {
+                  currentWeekCalled = true;
+                  firestoreService.updateCurrentWeek(id).then((_) {
+                    // Reset the flag after the method completes
+                    currentWeekCalled = false;
+                  });
                 }
                 return SingleChildScrollView(
                   child: Column(
