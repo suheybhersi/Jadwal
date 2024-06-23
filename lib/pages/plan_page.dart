@@ -20,6 +20,7 @@ class PlanPage extends StatelessWidget {
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
     bool currentWeekCalled = false;
+    bool updateHifdhCalled = false;
 
     bool isLoading = false;
     return Scaffold(
@@ -57,9 +58,24 @@ class PlanPage extends StatelessWidget {
             String verses = '';
 
             if (plan.isNotEmpty && plan['hifdhs'].isNotEmpty) {
+              String weekStart = plan['currentWeek'][0]['weekStart'];
+
+              DateTime currWeekStartDT = DateTime.now().subtract(
+                Duration(days: DateTime.now().weekday - 1),
+              );
+
+              String currWeekStart =
+                  '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+              if (currWeekStart != weekStart && !currentWeekCalled) {
+                currentWeekCalled = true;
+                firestoreService.updateCurrentWeek(id).then((_) {
+                  // Reset the flag after the method completes
+                  currentWeekCalled = false;
+                });
+              }
+
               completed = plan['hifdhs'].last['completed'];
-              firestoreService.hifdhIn(id);
-              hifdhIn = plan['hifdhIn'];
               verses = plan['hifdhs'].last['hifdh'];
 
               if (completed == false) {
@@ -85,11 +101,20 @@ class PlanPage extends StatelessWidget {
                 0,
               );
 
+              if (hifdhDT.difference(todayDT).inDays != plan['hifdhIn']) {
+                firestoreService.hifdhIn(id);
+              }
+              hifdhIn = plan['hifdhIn'];
+
               if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
                   completed) {
                 isLoading = true;
-                if (plan['planCompleted'] != true) {
-                  firestoreService.updateNextHifdh(id);
+                if (plan['planCompleted'] != true && !updateHifdhCalled) {
+                  updateHifdhCalled = true;
+                  firestoreService.updateNextHifdh(id).then((_) {
+                    // Reset the flag after the method completes
+                    updateHifdhCalled = false;
+                  });
                 } else {
                   isLoading = false;
                   return const Center(
@@ -105,26 +130,6 @@ class PlanPage extends StatelessWidget {
                 firestoreService.hifdhMissed(id).then((_) {
                   // Reset the flag after the method completes
                   hifdhMissedCalled = false;
-                });
-              }
-
-              String weekStart = plan['currentWeek'][0]['weekStart'];
-
-              DateTime currWeekStartDT = DateTime.now().subtract(
-                Duration(days: DateTime.now().weekday - 1),
-              );
-
-              String currWeekStart =
-                  '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
-
-              if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
-                      currWeekStart.split('-')[1] != weekStart.split('-')[1] ||
-                      currWeekStart.split('-')[2] != weekStart.split('-')[2]) &&
-                  !currentWeekCalled) {
-                currentWeekCalled = true;
-                firestoreService.updateCurrentWeek(id).then((_) {
-                  // Reset the flag after the method completes
-                  currentWeekCalled = false;
                 });
               }
 

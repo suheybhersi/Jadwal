@@ -26,6 +26,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
     bool currentWeekCalled = false;
+    bool updateHifdhCalled = false;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,12 +90,27 @@ class HomePage extends StatelessWidget {
               plan = activePlan.data() as Map<String, dynamic>;
 
               if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
-                bool completed = plan['hifdhs'].last['completed'];
-
                 String id = activePlan
                     .id; // Assuming you need the ID for further operations
-                firestoreService.hifdhIn(id);
-                hifdhIn = plan['hifdhIn'];
+
+                String weekStart = plan['currentWeek'][0]['weekStart'];
+
+                DateTime currWeekStartDT = DateTime.now().subtract(
+                  Duration(days: DateTime.now().weekday - 1),
+                );
+
+                String currWeekStart =
+                    '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+                if (currWeekStart != weekStart && !currentWeekCalled) {
+                  currentWeekCalled = true;
+                  firestoreService.updateCurrentWeek(id).then((_) {
+                    // Reset the flag after the method completes
+                    currentWeekCalled = false;
+                  });
+                }
+
+                bool completed = plan['hifdhs'].last['completed'];
                 verses = plan['hifdhs'].last['hifdh'];
 
                 String hifdhDate = plan['hifdhs'].last['date'];
@@ -116,10 +132,19 @@ class HomePage extends StatelessWidget {
                   0,
                 );
 
+                if (hifdhDT.difference(todayDT).inDays != plan['hifdhIn']) {
+                  firestoreService.hifdhIn(id);
+                }
+                hifdhIn = plan['hifdhIn'];
+
                 if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
                     completed) {
-                  if (plan['planCompleted'] != true) {
-                    firestoreService.updateNextHifdh(id);
+                  if (plan['planCompleted'] != true && !updateHifdhCalled) {
+                    updateHifdhCalled = true;
+                    firestoreService.updateNextHifdh(id).then((_) {
+                      // Reset the flag after the method completes
+                      updateHifdhCalled = false;
+                    });
                   } else {
                     return const Center(
                       child: Text(
@@ -137,27 +162,6 @@ class HomePage extends StatelessWidget {
                   });
                 }
 
-                String weekStart = plan['currentWeek'][0]['weekStart'];
-
-                DateTime currWeekStartDT = DateTime.now().subtract(
-                  Duration(days: DateTime.now().weekday - 1),
-                );
-
-                String currWeekStart =
-                    '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
-
-                if ((currWeekStart.split('-')[0] != weekStart.split('-')[0] ||
-                        currWeekStart.split('-')[1] !=
-                            weekStart.split('-')[1] ||
-                        currWeekStart.split('-')[2] !=
-                            weekStart.split('-')[2]) &&
-                    !currentWeekCalled) {
-                  currentWeekCalled = true;
-                  firestoreService.updateCurrentWeek(id).then((_) {
-                    // Reset the flag after the method completes
-                    currentWeekCalled = false;
-                  });
-                }
                 return SingleChildScrollView(
                   child: Column(
                     children: [

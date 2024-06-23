@@ -568,15 +568,31 @@ class FirestoreService extends ChangeNotifier {
       );
 
       if (hifdhDate == todayString || todayDT.isAfter(hifdhDT)) {
-        updateNextHifdh(id);
+        await updateNextHifdh(id);
       }
     }
   }
 
 /*----------------------------------U P D A T E   N E X T   H I F D H----------------------------------*/
   Future<void> updateNextHifdh(String id) async {
-    final planSnapshot = await plansCollection.doc(id).get();
-    final planData = planSnapshot.data() as Map<String, dynamic>;
+    var planSnapshot = await plansCollection.doc(id).get();
+    var planData = planSnapshot.data() as Map<String, dynamic>;
+
+    String weekStart = planData['currentWeek'][0]['weekStart'];
+
+    DateTime currWeekStartDT = DateTime.now().subtract(
+      Duration(days: DateTime.now().weekday - 1),
+    );
+
+    String currWeekStart =
+        '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+    if (currWeekStart != weekStart) {
+      await updateCurrentWeek(id);
+      planSnapshot = await plansCollection.doc(id).get();
+      planData = planSnapshot.data() as Map<String, dynamic>;
+    }
+
     dynamic currentWeek = planData['currentWeek'];
 
     final hifdh = await hifdhsCollection.where('planId', isEqualTo: id).get();
@@ -604,7 +620,7 @@ class FirestoreService extends ChangeNotifier {
 
       weekDay['completed'] = true;
 
-      weeksCollection
+      await weeksCollection
           .where('weekStart', isEqualTo: weekDay['weekStart'])
           .get()
           .then(
@@ -639,7 +655,6 @@ class FirestoreService extends ChangeNotifier {
       corrects++;
       arr[1]++;
       if (corrects == 3) {
-        print('success');
         return ['success'];
       }
       if (arr[1] == 1) {
@@ -650,7 +665,6 @@ class FirestoreService extends ChangeNotifier {
     } else {
       wrongs++;
       if (wrongs == 3) {
-        print('fail');
         return ['fail'];
       }
       arr[1] = 0;
@@ -726,10 +740,6 @@ class FirestoreService extends ChangeNotifier {
 
 /*---------------------------------------H I F D H   M I S S E D---------------------------------------*/
   Future<void> hifdhMissed(String id) async {
-    /**
-     * * if a user last used the app on sunday and then goes back on tuesday(has hifdh on monday) monday isnt updated as missed
-     * * if more than one day is missed only the last day is shown to be missed whilst the others are just blank
-    **/
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
     dynamic hifdhs = planData['hifdhs'];
