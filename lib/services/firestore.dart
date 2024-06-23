@@ -587,7 +587,23 @@ class FirestoreService extends ChangeNotifier {
     String currWeekStart =
         '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
 
-    if (currWeekStart != weekStart) {
+    String hifdhDate = planData['hifdhs'].last['date'];
+
+    DateTime hifdhDT = DateTime(
+      int.parse(hifdhDate.split('-')[2]),
+      int.parse(hifdhDate.split('-')[1]),
+      int.parse(hifdhDate.split('-')[0]),
+      0,
+      0,
+    );
+    DateTime hifdhWeekStartDT = hifdhDT.subtract(
+      Duration(days: hifdhDT.weekday - 1),
+    );
+
+    String hifdhWeekStart =
+        '${hifdhWeekStartDT.day}-${hifdhWeekStartDT.month}-${hifdhWeekStartDT.year}';
+
+    if (currWeekStart != weekStart && hifdhWeekStart == currWeekStart) {
       await updateCurrentWeek(id);
       planSnapshot = await plansCollection.doc(id).get();
       planData = planSnapshot.data() as Map<String, dynamic>;
@@ -606,15 +622,6 @@ class FirestoreService extends ChangeNotifier {
 
       final hifdhSnapshot =
           await hifdhsCollection.doc(nextHifdh.docs.last.id).get();
-      String hifdhDate = planData['hifdhs'].last['date'];
-
-      DateTime hifdhDT = DateTime(
-        int.parse(hifdhDate.split('-')[2]),
-        int.parse(hifdhDate.split('-')[1]),
-        int.parse(hifdhDate.split('-')[0]),
-        0,
-        0,
-      );
 
       dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
 
