@@ -515,32 +515,60 @@ class FirestoreService extends ChangeNotifier {
     /*C A L C U L A T E   H I F D H   D A T E*/
     DateTime today = DateTime.now();
     List<dynamic> hifdhDays = planData['hifdhDays'];
-    bool calculated = false;
-    int count = today.weekday - 1;
-    int nextHifdh = 0;
-    dynamic hifdh;
+    int i = today.weekday - 1;
+    int counter = 0;
+    DateTime date = DateTime.now();
 
     if (hifdhs.isNotEmpty) {
-      hifdh = hifdhs.last;
-    }
+      String hifdhDateString = planData['hifdhs'].last['date'];
+      DateTime hifdhDateDT = DateTime(
+        int.parse(hifdhDateString.split('-')[2]),
+        int.parse(hifdhDateString.split('-')[1]),
+        int.parse(hifdhDateString.split('-')[0]),
+        0,
+        0,
+      );
 
-    while (!calculated) {
-      if (hifdhDays[count] == true &&
-          nextHifdh != planData['hifdhIn'] &&
-          (nextHifdh != 0 ||
-              (nextHifdh == 0 &&
-                  (hifdh == null || hifdh['completed'] == false)))) {
-        calculated = true;
-      } else {
-        count++;
-        nextHifdh++;
-        if (count > 6) {
-          count = 0;
-        }
+      i = hifdhDateDT.weekday == 7 ? 0 : hifdhDateDT.weekday;
+      counter = 1;
+      date = hifdhDateDT;
+    }
+    while (!hifdhDays[i]) {
+      i++;
+      counter++;
+      if (i == 7) {
+        i = 0;
       }
     }
-    DateTime date = DateTime.now().add(Duration(days: nextHifdh));
+    date = date.add(Duration(days: counter));
     String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
+
+    // DateTime today = DateTime.now();
+    // List<dynamic> hifdhDays = planData['hifdhDays'];
+    // bool calculated = false;
+    // int count = today.weekday - 1;
+    // int nextHifdh = 0;
+    // dynamic hifdh;
+
+    // if (hifdhs.isNotEmpty) {
+    //   hifdh = hifdhs.last;
+    // }
+
+    // while (!calculated) {
+    //   if (hifdhDays[count] == true &&
+    //       nextHifdh != planData['hifdhIn'] &&
+    //       (nextHifdh != 0 ||
+    //           (nextHifdh == 0 &&
+    //               (hifdh == null || hifdh['completed'] == false)))) {
+    //     calculated = true;
+    //   } else {
+    //     count++;
+    //     nextHifdh++;
+    //     if (count > 6) {
+    //       count = 0;
+    //     }
+    //   }
+    // }
 
     /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
     Hifdh newHifdh = Hifdh(
