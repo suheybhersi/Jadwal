@@ -247,48 +247,89 @@ class FirestoreService extends ChangeNotifier {
     final planSnapshot = await plansCollection.doc(id).get();
     final plan = planSnapshot.data() as Map<String, dynamic>;
 
-    DateTime currWeekStart = DateTime.now().subtract(
+    List<String> weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    List<Map<String, dynamic>> currentWeek = [];
+    DateTime weekStart = DateTime.now().subtract(
       Duration(days: DateTime.now().weekday - 1),
+    );
+    String weekStartString =
+        '${weekStart.day}-${weekStart.month}-${weekStart.year}';
+    weekStart = DateTime(
+      int.parse(weekStartString.split('-')[2]),
+      int.parse(weekStartString.split('-')[1]),
+      int.parse(weekStartString.split('-')[0]),
+      0,
+      0,
     );
     final week = await weeksCollection
         .where(
           'weekStart',
-          isEqualTo:
-              '${currWeekStart.day}-${currWeekStart.month}-${currWeekStart.year}',
+          isEqualTo: weekStartString,
         )
         .where('planId', isEqualTo: id)
         .get();
 
-    if (plan['currentWeek'].isEmpty || week.docs.isEmpty) {
-      List<String> weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-      List<Map<String, dynamic>> currentWeek = [];
-      DateTime weekStart = DateTime.now().subtract(
-        Duration(days: DateTime.now().weekday - 1),
-      );
-      String weekStartString =
-          '${weekStart.day}-${weekStart.month}-${weekStart.year}';
-      weekStart = DateTime(
-        int.parse(weekStartString.split('-')[2]),
-        int.parse(weekStartString.split('-')[1]),
-        int.parse(weekStartString.split('-')[0]),
-        0,
-        0,
-      );
-      if (plan['currentWeek'].isEmpty) {
-        for (int i = 0; i < weekDays.length; i++) {
-          final weekDay = CurrentWeekDay(
-            day: weekDays[i],
-            completed: false,
-            missed: false,
-            weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-            planId: id,
-          );
+    if (plan['currentWeek'].isEmpty) {
+      for (int i = 0; i < weekDays.length; i++) {
+        final weekDay = CurrentWeekDay(
+          day: weekDays[i],
+          completed: false,
+          missed: false,
+          weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+          planId: id,
+        );
 
-          currentWeek.add(weekDay.toMap());
+        currentWeek.add(weekDay.toMap());
+      }
+
+      await weeksCollection.add({
+        'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+        'weekDays': currentWeek,
+        'planId': id,
+      });
+      await plansCollection.doc(id).update({'currentWeek': currentWeek});
+    } else if (week.docs.isEmpty) {
+      String hifdhDate = plan['hifdhs'].last['date'];
+
+      DateTime hifdhDT = DateTime(
+        int.parse(hifdhDate.split('-')[2]),
+        int.parse(hifdhDate.split('-')[1]),
+        int.parse(hifdhDate.split('-')[0]),
+        0,
+        0,
+      );
+
+      DateTime hifdhWeekStart = hifdhDT.subtract(
+        Duration(days: hifdhDT.weekday - 1),
+      );
+      if (weekStart.isBefore(hifdhWeekStart)) {
+        print("went to a previous week that doesn't exist");
+      } else {
+        List<dynamic> prevWeek = plan['currentWeek'];
+
+        //mark the rest of the previous week as missed
+
+        if ('${hifdhWeekStart.day}-${hifdhWeekStart.month}-${hifdhWeekStart.year}' ==
+            prevWeek[0]['weekStart']) {
+          dynamic weekDay = prevWeek[hifdhDT.weekday - 1];
+
+          for (int i = hifdhDT.weekday - 1; i < 7; i++) {
+            weekDay = prevWeek[i];
+            if (plan['hifdhDays'][i]) {
+              weekDay['missed'] = true;
+            }
+          }
+
+          weeksCollection
+              .where('weekStart', isEqualTo: weekDay['weekStart'])
+              .get()
+              .then(
+                (value) =>
+                    value.docs[0].reference.update({'weekDays': prevWeek}),
+              );
         }
-      } else if (week.docs.isEmpty) {
-        String lastHifdh = plan['hifdhs'].last['date'];
 
+        String lastHifdh = plan['hifdhs'].last['date'];
         String todayString =
             '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
 
@@ -299,7 +340,6 @@ class FirestoreService extends ChangeNotifier {
           0,
           0,
         );
-
         for (int i = 0; i < weekDays.length; i++) {
           final weekDay = CurrentWeekDay(
             day: weekDays[i],
@@ -325,14 +365,14 @@ class FirestoreService extends ChangeNotifier {
 
           currentWeek.add(weekDay.toMap());
         }
-      }
 
-      await weeksCollection.add({
-        'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-        'weekDays': currentWeek,
-        'planId': id,
-      });
-      await plansCollection.doc(id).update({'currentWeek': currentWeek});
+        await weeksCollection.add({
+          'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
+          'weekDays': currentWeek,
+          'planId': id,
+        });
+        await plansCollection.doc(id).update({'currentWeek': currentWeek});
+      }
     } else {
       String weekId = week.docs[0].id;
       final weekSnapshot = await weeksCollection.doc(weekId).get();
