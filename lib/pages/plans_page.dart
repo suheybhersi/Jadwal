@@ -26,6 +26,8 @@ class _PlansPageState extends State<PlansPage> {
   @override
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
+    bool currentWeekCalled = false;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -123,8 +125,21 @@ class _PlansPageState extends State<PlansPage> {
                             0,
                           );
 
-                          if (hifdhDate == today && completed) {
-                            firestoreService.updateNextHifdh(docID);
+                          if ((hifdhDate == today ||
+                                  todayDT.isAfter(hifdhDT)) &&
+                              completed) {
+                            if (plan['planCompleted'] != true) {
+                              firestoreService.updateNextHifdh(docID);
+                            } else {
+                              return const Center(
+                                child: Text(
+                                  'Plan Completed',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 30),
+                                ),
+                              );
+                            }
                           } else if (todayDT.isAfter(hifdhDT) &&
                               !hifdhMissedCalled) {
                             hifdhMissedCalled = true;
@@ -145,12 +160,17 @@ class _PlansPageState extends State<PlansPage> {
                               '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
 
                           if ((currWeekStart.split('-')[0] !=
-                                  weekStart.split('-')[0] ||
-                              currWeekStart.split('-')[1] !=
-                                  weekStart.split('-')[1] ||
-                              currWeekStart.split('-')[2] !=
-                                  weekStart.split('-')[2])) {
-                            firestoreService.updateCurrentWeek(docID);
+                                      weekStart.split('-')[0] ||
+                                  currWeekStart.split('-')[1] !=
+                                      weekStart.split('-')[1] ||
+                                  currWeekStart.split('-')[2] !=
+                                      weekStart.split('-')[2]) &&
+                              !currentWeekCalled) {
+                            currentWeekCalled = true;
+                            firestoreService.updateCurrentWeek(docID).then((_) {
+                              // Reset the flag after the method completes
+                              currentWeekCalled = false;
+                            });
                           }
                         }
 
