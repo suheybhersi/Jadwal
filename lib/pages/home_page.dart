@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-// import 'package:shimmer/shimmer.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
