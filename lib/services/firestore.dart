@@ -52,7 +52,6 @@ class FirestoreService extends ChangeNotifier {
     final startVerseDoc = await versesCollection.doc(startVerseId).get();
     Map<String, dynamic> startVerseData =
         startVerseDoc.data() as Map<String, dynamic>;
-
     final endVerseSnapshot =
         await versesCollection.where('key', isEqualTo: end).get();
     String endVerseId = endVerseSnapshot.docs[0].reference.id;
@@ -390,6 +389,9 @@ class FirestoreService extends ChangeNotifier {
     List<dynamic> hifdhs = planData['hifdhs'];
     String endKey = '';
     String nextKey = '';
+    String surah = '';
+    String verse = '';
+    double verseLength = 0;
 
     // Check if the plan has hifdhs i.e the plan has not just been made
     if (hifdhs.isNotEmpty) {
@@ -414,12 +416,18 @@ class FirestoreService extends ChangeNotifier {
       ).add(const Duration(days: 1));
 
       reviewDate = '${reviewDT.day}-${reviewDT.month}-${reviewDT.year}';
+      surah = hifdh['surah'];
+      verse = hifdh['verse'];
+      verseLength = double.parse(hifdh['length'].toString());
 
       final newReview = Review(
           review: hifdh['hifdh'],
           date: reviewDate,
           ratings: [],
           planId: id,
+          surah: surah,
+          verse: verse,
+          length: verseLength,
           sm2: [0, 2.0, 1]);
       await reviewsCollection.add(newReview.toMap());
       List<dynamic> planReviews = planData['reviews'];
@@ -440,6 +448,9 @@ class FirestoreService extends ChangeNotifier {
     String verseId = verseSnapshot.docs[0].reference.id;
     final verseDoc = await versesCollection.doc(verseId).get();
     Map<String, dynamic> verseData = verseDoc.data() as Map<String, dynamic>;
+    surah = verseData['surah'];
+    verse = verseData['text'];
+    verseLength = double.parse(verseData['length'].toString());
 
     final endOfPlanVerseSnapshot =
         await versesCollection.where('key', isEqualTo: planData['end']).get();
@@ -572,12 +583,14 @@ class FirestoreService extends ChangeNotifier {
 
     /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
     Hifdh newHifdh = Hifdh(
-      hifdh: '$key - $endKey',
-      date: nextHifdhDate,
-      completed: false,
-      nextKey: nextKey,
-      planId: id,
-    );
+        hifdh: '$key - $endKey',
+        date: nextHifdhDate,
+        completed: false,
+        nextKey: nextKey,
+        planId: id,
+        surah: surah,
+        verse: verse,
+        length: verseLength);
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
 

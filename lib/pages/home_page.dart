@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -15,7 +16,7 @@ class HomePage extends StatelessWidget {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
   int hifdhIn = -1;
-  String verses = '';
+
   Map<String, dynamic> plan = {};
 
   void signUserOut() {
@@ -111,7 +112,6 @@ class HomePage extends StatelessWidget {
                 }
 
                 bool completed = plan['hifdhs'].last['completed'];
-                verses = plan['hifdhs'].last['hifdh'];
 
                 String hifdhDate = plan['hifdhs'].last['date'];
                 String today =
@@ -166,7 +166,10 @@ class HomePage extends StatelessWidget {
                   child: Column(
                     children: [
                       WeekDays(plan: plan),
-                      Upcoming(plan: plan, verses: verses, hifdhIn: hifdhIn),
+                      Upcoming(
+                        plan: plan,
+                        hifdhIn: hifdhIn,
+                      ),
                       Statistics(plan: plan)
                     ],
                   ),
@@ -202,7 +205,7 @@ class WeekDays extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(0),
         ),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         child: Row(
@@ -273,12 +276,10 @@ class Upcoming extends StatelessWidget {
   const Upcoming({
     super.key,
     required this.plan,
-    required this.verses,
     required this.hifdhIn,
   });
 
   final Map<String, dynamic> plan;
-  final String verses;
   final int hifdhIn;
 
   @override
@@ -289,294 +290,510 @@ class Upcoming extends StatelessWidget {
             '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
         .toList();
 
-    List<dynamic> dailyReadings = plan['dailyReadings']
-        .where((dailyReading) =>
-            dailyReading['date'] ==
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-        .toList();
+    // List<dynamic> dailyReadings = plan['dailyReadings']
+    //     .where((dailyReading) =>
+    //         dailyReading['date'] ==
+    //         '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
+    //     .toList();
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Text(
-                'Upcoming',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 30,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    width: 165,
-                    height: 130,
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                          top: 20, left: 15, right: 15, bottom: 10),
-                      decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 86, 173, 254),
-                          borderRadius: BorderRadius.circular(30)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 15,
-                            ),
-                            child: Container(
-                              width: 85,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: const Color.fromARGB(255, 128, 193, 255),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(
-                                    Iconsax.note_text,
-                                    color: Colors.grey.shade100,
-                                    size: 20,
-                                  ),
-                                  Text(
-                                    'New',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey.shade100,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          plan['hifdhs'] == null ||
-                                  plan['hifdhs'].isEmpty ||
-                                  hifdhIn == -1
-                              ? Text(
-                                  'None',
-                                  style: TextStyle(
-                                      color: Colors.grey.shade100,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      verses,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.grey.shade100,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text(
-                                      hifdhIn == 0
-                                          ? 'Today'
-                                          : hifdhIn == 1
-                                              ? 'Tomorrow'
-                                              : 'In $hifdhIn days',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade100,
-                                        fontSize: 20,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                        ],
-                      ),
+              Container(
+                padding: EdgeInsets.only(
+                  top: 15,
+                  left: 15,
+                  right: 15,
+                  bottom: plan['hifdhs'] == null ||
+                          plan['hifdhs'].isEmpty ||
+                          hifdhIn == -1
+                      ? 15
+                      : 0,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 104, 107, 255),
+                  borderRadius: BorderRadius.circular(30),
+                  image: DecorationImage(
+                    image: AssetImage(
+                      plan['hifdhs'] == null ||
+                              plan['hifdhs'].isEmpty ||
+                              hifdhIn == -1
+                          ? ''
+                          : 'assets/newbg.png',
                     ),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.bottomCenter,
+                    // Adjust this to control how the image fits
                   ),
-                  SizedBox(
-                    width: 165,
-                    height: 130,
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                          top: 20, left: 15, right: 15, bottom: 10),
-                      decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 113, 100, 250),
-                          borderRadius: BorderRadius.circular(30)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                child: plan['hifdhs'] == null ||
+                        plan['hifdhs'].isEmpty ||
+                        hifdhIn == -1
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 15,
-                            ),
-                            child: Container(
-                              width: 105,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: const Color.fromARGB(255, 144, 135, 253),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(
-                                    Icons.refresh,
-                                    color: Colors.grey.shade100,
-                                    size: 20,
-                                  ),
-                                  Text(
-                                    'Review',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey.shade100,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          Text(
+                            'None',
+                            style: TextStyle(
+                                color: Colors.grey.shade100,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800),
                           ),
-                          reviews == [] || reviews.isEmpty
-                              ? Text(
-                                  'None',
+                          Container(
+                            width: 60,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: const Color.fromARGB(255, 134, 137, 255),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Text(
+                                  'New',
                                   style: TextStyle(
-                                      color: Colors.grey.shade100,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                    fontSize: 12,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Surah ${plan['hifdhs'].last['surah']}',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Container(
+                                width: 60,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color:
+                                      const Color.fromARGB(255, 134, 137, 255),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     Text(
-                                      reviews.first['review'],
+                                      'New',
                                       style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.grey.shade100,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                        fontFamily: 'Poppins',
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ],
                                 ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Verse ${plan['hifdhs'].last['hifdh'].split('-')[0].split(':')[1]}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade100,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 15,
+                                  right: 1,
+                                ),
+                                child: Text(
+                                  plan['hifdhs'].last['length'] >= 0.7
+                                      ? '...${plan['hifdhs'].last['verse'].substring(0, plan['hifdhs'].last['verse'].substring(0, 40).lastIndexOf(' '))}'
+                                      : plan['hifdhs'].last['verse'],
+                                  style: GoogleFonts.scheherazadeNew(
+                                    textStyle: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                    child: Text(
+                                      'Complete',
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 90, 92, 191),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
                         ],
                       ),
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(
                 height: 20,
               ),
               Container(
-                height: 130,
-                padding: const EdgeInsets.only(
-                    top: 20, left: 15, right: 15, bottom: 10),
+                padding: EdgeInsets.only(
+                    top: 15,
+                    left: 15,
+                    right: 15,
+                    bottom: reviews == [] || reviews.isEmpty ? 15 : 0),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: const Color.fromARGB(255, 98, 99, 150),
                   borderRadius: BorderRadius.circular(30),
+                  image: reviews == [] || reviews.isEmpty
+                      ? DecorationImage(image: AssetImage(''))
+                      : DecorationImage(
+                          image: AssetImage(
+                              'assets/reviewbg.png'), // Replace with the correct path to your PNG file
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                          // Adjust this to control how the image fits
+                        ),
                 ),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 15,
+                child: reviews == [] || reviews.isEmpty
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'None',
+                            style: TextStyle(
+                                color: Colors.grey.shade100,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800),
                           ),
-                          child: Container(
-                            width: 170,
+                          Container(
+                            width: 80,
+                            height: 20,
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
-                                color: Provider.of<ThemeProvider>(context)
-                                        .isDarkMode
-                                    ? Theme.of(context).colorScheme.secondary
-                                    : Colors.white),
+                                color: Color.fromARGB(255, 129, 130, 171)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Icon(
-                                  Iconsax.book,
-                                  color: Provider.of<ThemeProvider>(context)
-                                          .isDarkMode
-                                      ? Colors.grey.shade100
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .inversePrimary,
-                                  size: 20,
-                                ),
                                 Text(
-                                  'Daily Reading',
+                                  'Review',
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    color: Provider.of<ThemeProvider>(context)
-                                            .isDarkMode
-                                        ? Colors.grey.shade100
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .inversePrimary,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        dailyReadings == [] ||
-                                dailyReadings.isEmpty ||
-                                dailyReadings.last['completed'] == true
-                            ? Text(
-                                'None',
+                          )
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Surah ${reviews.first['surah']}',
                                 style: TextStyle(
-                                    color: Provider.of<ThemeProvider>(context)
-                                            .isDarkMode
-                                        ? Colors.grey.shade100
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .inversePrimary,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800),
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Pages ${dailyReadings.last['dailyReading']}',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: Provider.of<ThemeProvider>(context)
-                                              .isDarkMode
-                                          ? Colors.grey.shade100
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .inversePrimary,
-                                      fontWeight: FontWeight.w600,
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Container(
+                                width: 80,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Color.fromARGB(255, 129, 130, 171),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      'Review',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontFamily: 'Poppins',
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade100,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 15,
+                                  right: 1,
+                                ),
+                                child: Text(
+                                  reviews.first['length'] >= 0.7
+                                      ? '...${reviews.first['verse'].substring(0, reviews.first['verse'].substring(0, 40).lastIndexOf(' '))}'
+                                      : reviews.first['verse'],
+                                  style: GoogleFonts.scheherazadeNew(
+                                    textStyle: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  Text(
-                                    'Today',
-                                    style: TextStyle(
-                                      color: Provider.of<ThemeProvider>(context)
-                                              .isDarkMode
-                                          ? Colors.grey.shade100
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .inversePrimary,
-                                      fontSize: 20,
-                                    ),
-                                  )
-                                ],
+                                ),
                               ),
-                      ],
-                    ),
-                  ],
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                    child: Text(
+                                      'Complete',
+                                      style: TextStyle(
+                                        color: const Color.fromARGB(
+                                            255, 98, 99, 150),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Container(
+                padding: EdgeInsets.only(
+                    top: 15,
+                    left: 15,
+                    right: 15,
+                    bottom: reviews == [] || reviews.isEmpty ? 15 : 0),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 126, 169, 134),
+                  borderRadius: BorderRadius.circular(30),
+                  image: reviews == [] || reviews.isEmpty
+                      ? DecorationImage(image: AssetImage(''))
+                      : DecorationImage(
+                          image: AssetImage(
+                            'assets/dailybg.png',
+                          ), // Replace with the correct path to your PNG file
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+
+                          // Adjust this to control how the image fits
+                        ),
                 ),
+                child: reviews == [] || reviews.isEmpty
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'None',
+                            style: TextStyle(
+                                color: Colors.grey.shade100,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800),
+                          ),
+                          Container(
+                            width: 80,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Color.fromARGB(255, 173, 200, 177),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Text(
+                                  'Review',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Surah ${reviews.first['surah']}',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Container(
+                                width: 110,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Color.fromARGB(255, 173, 200, 177),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      'Daily Reading',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontFamily: 'Poppins',
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade100,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 15,
+                                  right: 1,
+                                ),
+                                child: Text(
+                                  reviews.first['length'] >= 0.7
+                                      ? '...${reviews.first['verse'].substring(0, reviews.first['verse'].substring(0, 40).lastIndexOf(' '))}'
+                                      : reviews.first['verse'],
+                                  style: GoogleFonts.scheherazadeNew(
+                                    textStyle: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.grey.shade100,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 4),
+                                    child: Text(
+                                      'Complete',
+                                      style: TextStyle(
+                                        color: const Color.fromARGB(
+                                            255, 98, 99, 150),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
               ),
             ],
           ),
