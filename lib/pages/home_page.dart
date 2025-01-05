@@ -12,6 +12,7 @@ class HomePage extends StatelessWidget {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
   int hifdhIn = -1;
+  final TextEditingController ratingController = TextEditingController();
 
   Map<String, dynamic> plan = {};
 
@@ -24,6 +25,7 @@ class HomePage extends StatelessWidget {
     bool hifdhMissedCalled = false;
     bool currentWeekCalled = false;
     bool updateHifdhCalled = false;
+    String id = '';
 
     return Scaffold(
       appBar: AppBar(
@@ -84,7 +86,7 @@ class HomePage extends StatelessWidget {
               plan = activePlan.data() as Map<String, dynamic>;
 
               if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
-                String id = activePlan
+                id = activePlan
                     .id; // Assuming you need the ID for further operations
 
                 String weekStart = plan['currentWeek'][0]['weekStart'];
@@ -164,6 +166,9 @@ class HomePage extends StatelessWidget {
                           Upcoming(
                             plan: plan,
                             hifdhIn: hifdhIn,
+                            markHifdhAsComplete: markHifdhAsComplete,
+                            markReviewAsComplete: markReviewAsComplete,
+                            id: id,
                           ),
                         ],
                       ),
@@ -185,6 +190,58 @@ class HomePage extends StatelessWidget {
                 fontSize: 24),
           ));
         },
+      ),
+    );
+  }
+
+  void markHifdhAsComplete(
+      String key, BuildContext context, int lines, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: const Text('Mark as completed?'),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              firestoreService.createNewHifdh(key, lines, id);
+              Navigator.pop(context);
+            },
+            child: const Text('Yes'),
+          ),
+          MaterialButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void markReviewAsComplete(BuildContext context, String review, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: TextFormField(
+            controller: ratingController,
+            decoration: const InputDecoration(
+                hintText: 'Rating', border: OutlineInputBorder()),
+          ),
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              firestoreService.updateReview(id, review, ratingController.text);
+              Navigator.pop(context);
+            },
+            child: const Text('Submit'),
+          ),
+          MaterialButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
       ),
     );
   }
@@ -215,7 +272,7 @@ class WeekDays extends StatelessWidget {
       scrollDirection: Axis.horizontal,
 
       child: Container(
-        width: 550,
+        width: 575,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -310,10 +367,17 @@ class Upcoming extends StatelessWidget {
     super.key,
     required this.plan,
     required this.hifdhIn,
+    required this.id,
+    required this.markHifdhAsComplete,
+    required this.markReviewAsComplete,
   });
 
   final Map<String, dynamic> plan;
   final int hifdhIn;
+  final String id;
+  final Function(String, BuildContext, int, String) markHifdhAsComplete;
+
+  final Function(BuildContext, String, String) markReviewAsComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -480,7 +544,16 @@ class Upcoming extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    if (!plan['hifdhs'].last['completed']) {
+                                      markHifdhAsComplete(
+                                        plan['hifdhs'].last['nextKey'],
+                                        context,
+                                        plan['lines'],
+                                        id,
+                                      );
+                                    }
+                                  },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     padding: EdgeInsets.zero,
@@ -490,9 +563,12 @@ class Upcoming extends StatelessWidget {
                                     padding: EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 4),
                                     child: Text(
-                                      'Complete',
+                                      plan['hifdhs'].last['completed']
+                                          ? 'Next - ${_getNextHifdhDate(plan['hifdhDays'], plan['currentWeek'][0]['weekStart'])}'
+                                          : 'Complete',
                                       style: TextStyle(
-                                        color: Color.fromARGB(255, 90, 92, 191),
+                                        color: const Color.fromARGB(
+                                            255, 134, 137, 255),
                                       ),
                                     ),
                                   ),
@@ -640,7 +716,10 @@ class Upcoming extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    markReviewAsComplete(
+                                        context, reviews.first['review'], id);
+                                  },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     padding: EdgeInsets.zero,
@@ -833,6 +912,39 @@ class Upcoming extends StatelessWidget {
         )
       ],
     );
+  }
+
+  String _getNextHifdhDate(List<dynamic> hifdhDays, String weekStart) {
+    // Parse the week start date
+    List<String> dateParts = weekStart.split('-');
+    DateTime weekStartDate = DateTime(
+      int.parse(dateParts[2]),
+      int.parse(dateParts[1]),
+      int.parse(dateParts[0]),
+    );
+
+    // Get today's date
+    DateTime today = DateTime.now();
+
+    // Find the next hifdh day
+    for (int i = today.weekday - 1; i < 7; i++) {
+      if (hifdhDays[i]) {
+        DateTime nextDate = weekStartDate.add(Duration(days: i));
+        if (nextDate.isAfter(today)) {
+          return '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}';
+        }
+      }
+    }
+
+    // If no hifdh day found in current week, check next week
+    for (int i = 0; i < today.weekday - 1; i++) {
+      if (hifdhDays[i]) {
+        DateTime nextDate = weekStartDate.add(Duration(days: i + 7));
+        return '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}';
+      }
+    }
+
+    return '--/--'; // Fallback if no next date found
   }
 }
 

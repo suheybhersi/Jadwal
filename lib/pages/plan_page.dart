@@ -7,7 +7,6 @@ import 'package:hifdh_planner_app/components/review_tile.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 
 class PlanPage extends StatelessWidget {
   final String id;
@@ -22,7 +21,6 @@ class PlanPage extends StatelessWidget {
     bool currentWeekCalled = false;
     bool updateHifdhCalled = false;
 
-    bool isLoading = false;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -78,10 +76,6 @@ class PlanPage extends StatelessWidget {
               completed = plan['hifdhs'].last['completed'];
               verses = plan['hifdhs'].last['hifdh'];
 
-              if (completed == false) {
-                isLoading = false;
-              }
-
               String hifdhDate = plan['hifdhs'].last['date'];
               String today =
                   '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
@@ -108,7 +102,6 @@ class PlanPage extends StatelessWidget {
 
               if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
                   completed) {
-                isLoading = true;
                 if (plan['planCompleted'] != true && !updateHifdhCalled) {
                   updateHifdhCalled = true;
                   firestoreService.updateNextHifdh(id).then((_) {
@@ -116,7 +109,6 @@ class PlanPage extends StatelessWidget {
                     updateHifdhCalled = false;
                   });
                 } else {
-                  isLoading = false;
                   return const Center(
                     child: Text(
                       'Plan Completed',
@@ -131,17 +123,6 @@ class PlanPage extends StatelessWidget {
                   // Reset the flag after the method completes
                   hifdhMissedCalled = false;
                 });
-              }
-
-              if (isLoading) {
-                return Column(
-                  children: [
-                    _buildPlanDetails(context, plan),
-                    _buildNextHifdhShimmer(context, completed, plan),
-                    _buildUpcomingReviewsShimmer(context),
-                    _buildDailyReadingShimmer(context, plan),
-                  ],
-                );
               }
             }
             return SingleChildScrollView(
@@ -503,256 +484,6 @@ class PlanPage extends StatelessWidget {
             ),
           ),
         )
-      ],
-    );
-  }
-
-  Widget _buildNextHifdhShimmer(
-      BuildContext context, bool completed, Map<String, dynamic> plan) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: 5.0,
-        bottom: 10,
-        left: 20,
-        right: 20,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
-            color: Colors.blue,
-          ),
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Next Hifdh',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Shimmer.fromColors(
-                    period: const Duration(milliseconds: 5000),
-                    baseColor: Colors.grey.shade500,
-                    highlightColor: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 150,
-                          height: 20,
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 100,
-                          height: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (!completed) {
-                        markHifdhAsComplete(
-                          plan['hifdhs'].last['nextKey'],
-                          context,
-                          plan['lines'],
-                        );
-                      }
-                    },
-                    icon: completed
-                        ? const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Colors.green,
-                            size: 30,
-                          )
-                        : const ImageIcon(
-                            AssetImage('assets/unchecked.png'),
-                            size: 30,
-                          ),
-                  )
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUpcomingReviewsShimmer(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: 5.0,
-        bottom: 10,
-        left: 20,
-        right: 20,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: 2,
-            color: Colors.green,
-          ),
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Upcoming Reviews',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                  Shimmer.fromColors(
-                    period: const Duration(milliseconds: 5000),
-                    baseColor: Colors.grey.shade500,
-                    highlightColor: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 150,
-                          height: 20,
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 100,
-                          height: 20,
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDailyReadingShimmer(
-      BuildContext context, Map<String, dynamic> plan) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20.0,
-            vertical: 10,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Daily Reading',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                ),
-              ),
-              IconButton(
-                onPressed: () => editDailyReading(context, plan),
-                icon: const Icon(Icons.edit),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.secondary,
-                  ),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(
-            top: 5.0,
-            bottom: 10,
-            left: 20,
-            right: 20,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-                border: Border.all(
-                  width: 2,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                borderRadius: BorderRadius.circular(25)),
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Shimmer.fromColors(
-                    period: const Duration(milliseconds: 5000),
-                    baseColor: Colors.grey.shade500,
-                    highlightColor: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 150,
-                          height: 20,
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[300],
-                          ),
-                          width: 100,
-                          height: 20,
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
