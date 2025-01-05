@@ -3,11 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
-import 'package:hifdh_planner_app/themes/theme_provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
+// import 'package:shimmer/shimmer.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
@@ -71,9 +68,6 @@ class HomePage extends StatelessWidget {
       body: StreamBuilder(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const YourContentPlaceholder();
-          }
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
             DocumentSnapshot? activePlan;
@@ -169,6 +163,9 @@ class HomePage extends StatelessWidget {
                       Upcoming(
                         plan: plan,
                         hifdhIn: hifdhIn,
+                      ),
+                      SizedBox(
+                        height: 20,
                       ),
                       Statistics(plan: plan)
                     ],
@@ -814,634 +811,67 @@ class Statistics extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Text(
-                'Statistics',
-                style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 30,
-                    color: Theme.of(context).colorScheme.inversePrimary),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 13, vertical: 15),
-                decoration: BoxDecoration(
-                  color: Provider.of<ThemeProvider>(context).isDarkMode
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 248, 130, 101),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const ImageIcon(
-                        AssetImage('assets/flame.png'),
-                        size: 35,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 7,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${plan['streak']}',
-                          style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
-                              height: 0),
-                        ),
-                        Text(
-                          'Hifdhs',
-                          style: TextStyle(
-                              height: 0,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.secondary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 13, vertical: 15),
-                decoration: BoxDecoration(
-                  color: Provider.of<ThemeProvider>(context).isDarkMode
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: plan['missedReviews'] == 0
-                            ? const Color.fromARGB(255, 60, 209, 107)
-                            : plan['missedReviews'] == 1
-                                ? const Color.fromARGB(255, 255, 193, 24)
-                                : Colors.red.shade400,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Icon(
-                        plan['missedReviews'] == 0
-                            ? Iconsax.emoji_happy5
-                            : plan['missedReviews'] == 1
-                                ? Iconsax.emoji_normal5
-                                : Iconsax.emoji_sad5,
-                        size: 45,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 7,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${plan['missedReviews']}',
-                          style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
-                              height: 0),
-                        ),
-                        Text(
-                          'Missed',
-                          style: TextStyle(
-                              height: 0,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.secondary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
-            decoration: BoxDecoration(
-                color: Provider.of<ThemeProvider>(context).isDarkMode
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.white,
-                // border: Border.all(
-                //   color: Theme.of(context).colorScheme.tertiary,
-                //   width: 2,
-                // ),
-                borderRadius: BorderRadius.circular(30)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.sports_soccer,
-                      color: Theme.of(context).colorScheme.inversePrimary,
-                      size: 45,
-                    ),
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    Text(
-                      'Goals',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: LinearPercentIndicator(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 0,
-                    ),
-                    lineHeight: 40,
-                    percent: ((plan['completedLines'] / plan['totalLines'])),
-                    progressColor: Colors.blue,
-                    backgroundColor:
-                        Provider.of<ThemeProvider>(context).isDarkMode
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.primary,
-                    barRadius: const Radius.circular(20),
-                    trailing: Padding(
-                      padding: const EdgeInsets.only(left: 10.0),
-                      child: Text(
-                        '${(((plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class YourContentPlaceholder extends StatelessWidget {
-  const YourContentPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Placeholder for WeekDays
-          Shimmer.fromColors(
-            period: const Duration(milliseconds: 1500),
-            baseColor: Colors.grey.shade500,
-            highlightColor: Colors.grey.shade200,
-            child: const WeekDaysPlaceholder(),
-          ),
-          // Placeholder for Upcoming
-          const UpcomingPlaceholder(),
-          // Placeholder for Statistics
-          const StatisticsPlaceholder(),
-        ],
-      ),
-    );
-  }
-}
-
-class WeekDaysPlaceholder extends StatelessWidget {
-  const WeekDaysPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-      child: Container(
-        width: double.infinity,
-        height: 60, // Adjust height as needed
-        decoration: BoxDecoration(
-          color: Colors.grey[300], // Placeholder color
-          borderRadius: BorderRadius.circular(40),
-        ),
-      ),
-    );
-  }
-}
-
-class UpcomingPlaceholder extends StatelessWidget {
-  const UpcomingPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Text(
-                'Upcoming',
-                style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 30,
-                    color: Theme.of(context).colorScheme.inversePrimary),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue, width: 2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Column(
-                  children: [
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 45,
-                            height: 45,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inversePrimary,
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 30),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 200,
-                                height: 20,
-                              ),
-                              const SizedBox(height: 5),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 150,
-                                height: 20,
-                              ),
-                            ],
-                          ),
-                        ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Memorisation Progress',
+                        style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 82, 95, 127)),
                       ),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.green, width: 2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Column(
-                  children: [
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 45,
-                            height: 45,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inversePrimary,
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 30),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 200,
-                                height: 20,
-                              ),
-                              const SizedBox(height: 5),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 150,
-                                height: 20,
-                              ),
-                            ],
-                          ),
-                        ],
+                      Text(
+                        '${(((plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}% Progress',
+                        style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: Color.fromARGB(255, 152, 163, 199)),
                       ),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      color: Theme.of(context).colorScheme.tertiary, width: 2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Column(
-                  children: [
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 45,
-                            height: 45,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inversePrimary,
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 30),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 200,
-                                height: 20,
-                              ),
-                              const SizedBox(height: 5),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[300],
-                                ),
-                                width: 150,
-                                height: 20,
-                              ),
-                            ],
-                          ),
-                        ],
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                        color: Color.fromARGB(255, 251, 241, 227),
+                        borderRadius: BorderRadius.circular(30)),
+                    padding: EdgeInsets.all(12),
+                    // height: 30,
+                    // width: 30,
+                    child: Image(
+                      image: AssetImage(
+                        'assets/trophy.png',
                       ),
-                    )
-                  ],
-                ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ],
               ),
+              Padding(
+                padding: const EdgeInsets.only(top: 25, bottom: 10),
+                child: LinearPercentIndicator(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 0,
+                  ),
+                  lineHeight: 10,
+                  percent: ((plan['completedLines'] / plan['totalLines'])),
+                  progressColor: Color.fromARGB(255, 113, 233, 175),
+                  backgroundColor: Color.fromARGB(255, 238, 240, 247),
+                  barRadius: const Radius.circular(20),
+                ),
+              )
             ],
           ),
         ),
       ],
-    );
-  }
-}
-
-class StatisticsPlaceholder extends StatelessWidget {
-  const StatisticsPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20.0),
-                child: Text(
-                  'Statistics',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 30,
-                      color: Theme.of(context).colorScheme.inversePrimary),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      color: Theme.of(context).colorScheme.tertiary, width: 2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Streak',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Colors.grey[300],
-                        ),
-                        width: 90,
-                        height: 30,
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      color: Theme.of(context).colorScheme.tertiary, width: 2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Missed',
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.tertiary),
-                    ),
-                    const SizedBox(height: 10),
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Colors.grey[300],
-                        ),
-                        width: 110,
-                        height: 30,
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
-            decoration: BoxDecoration(
-              border: Border.all(
-                  color: Theme.of(context).colorScheme.tertiary, width: 2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Goals',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Container(
-                        width: 230,
-                        height: 40, // Adjust height as needed
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300], // Placeholder color
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Shimmer.fromColors(
-                      period: const Duration(milliseconds: 1500),
-                      baseColor: Colors.grey.shade500,
-                      highlightColor: Colors.grey.shade200,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.grey[300],
-                        ),
-                        width: 40,
-                        height: 40,
-                        // Placeholder color
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    const Text(
-                      '%',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
