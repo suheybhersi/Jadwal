@@ -4,9 +4,7 @@ import 'package:hifdh_planner_app/pages/home_page.dart';
 import 'package:hifdh_planner_app/pages/plans_page.dart';
 import 'package:hifdh_planner_app/pages/progress_page.dart';
 import 'package:hifdh_planner_app/pages/schedule_page.dart';
-import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:provider/provider.dart';
 
 class MyBottomNavBar extends StatelessWidget {
   const MyBottomNavBar({super.key});
@@ -16,61 +14,103 @@ class MyBottomNavBar extends StatelessWidget {
     final controller = Get.put(NavigatorController());
 
     return Scaffold(
-      bottomNavigationBar: Obx(
-        () => NavigationBar(
-          height: 60,
-          elevation: 0,
-          indicatorColor: Provider.of<ThemeProvider>(context).isDarkMode
-              ? Theme.of(context).colorScheme.secondary
-              : Theme.of(context).colorScheme.tertiary,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          selectedIndex: controller.selectedIndex.value,
-          onDestinationSelected: (value) =>
-              controller.selectedIndex.value = value,
-          destinations: [
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: NavigationDestination(
-                icon: Icon(
-                  Iconsax.home,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  size: 30,
+      extendBody: false,
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                    color: const Color.fromARGB(255, 73, 121, 251));
+              }
+              return TextStyle(color: const Color.fromARGB(255, 127, 131, 141));
+            }),
+          ),
+        ),
+        child: Obx(
+          () => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    // offset: Offset(0, 5),
+                    blurRadius: 10,
+                    spreadRadius: -1,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: NavigationBar(
+                  height: 65,
+                  elevation: 0,
+                  surfaceTintColor: Colors.transparent,
+                  animationDuration: Duration.zero,
+                  indicatorColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  selectedIndex: controller.selectedIndex.value,
+                  onDestinationSelected: (value) =>
+                      controller.selectedIndex.value = value,
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  destinations: [
+                    NavigationDestination(
+                      icon: Icon(
+                        controller.selectedIndex.value == 0
+                            ? Iconsax.home_15
+                            : Iconsax.home,
+                        color: controller.selectedIndex.value == 0
+                            ? const Color.fromARGB(255, 73, 121, 251)
+                            : const Color.fromARGB(255, 127, 131, 141),
+                        size: 24,
+                      ),
+                      label: 'Home',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(
+                        controller.selectedIndex.value == 1
+                            ? Iconsax.clipboard_text5
+                            : Iconsax.clipboard_text,
+                        color: controller.selectedIndex.value == 1
+                            ? const Color.fromARGB(255, 73, 121, 251)
+                            : const Color.fromARGB(255, 127, 131, 141),
+                        size: 24,
+                      ),
+                      label: 'Plans',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(
+                        controller.selectedIndex.value == 2
+                            ? Iconsax.status_up5
+                            : Iconsax.status_up,
+                        color: controller.selectedIndex.value == 2
+                            ? const Color.fromARGB(255, 73, 121, 251)
+                            : const Color.fromARGB(255, 127, 131, 141),
+                        size: 24,
+                      ),
+                      label: 'Progress',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(
+                        controller.selectedIndex.value == 3
+                            ? Iconsax.profile_circle5
+                            : Iconsax.profile_circle,
+                        color: controller.selectedIndex.value == 3
+                            ? const Color.fromARGB(255, 73, 121, 251)
+                            : const Color.fromARGB(255, 127, 131, 141),
+                        size: 26,
+                      ),
+                      label: 'Profile',
+                    ),
+                  ],
                 ),
-                label: 'Home',
               ),
             ),
-            Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: NavigationDestination(
-                  icon: Icon(
-                    Iconsax.note,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    size: 30,
-                  ),
-                  label: 'Plans',
-                )),
-            Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: NavigationDestination(
-                  icon: ImageIcon(
-                    const AssetImage('assets/rise.png'),
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    size: 30,
-                  ),
-                  label: 'Progress',
-                )),
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: NavigationDestination(
-                icon: Icon(
-                  Iconsax.calendar,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  size: 30,
-                ),
-                label: 'Schedule',
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       body: Obx(() => controller.screens[controller.selectedIndex.value]),
@@ -82,21 +122,9 @@ class NavigatorController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
   final screens = [
-    Padding(
-      padding: const EdgeInsets.only(top: 50.0),
-      child: HomePage(),
-    ),
-    const Padding(
-      padding: EdgeInsets.only(top: 50.0),
-      child: PlansPage(),
-    ),
-    const Padding(
-      padding: EdgeInsets.only(top: 50.0),
-      child: ProgressPage(),
-    ),
-    const Padding(
-      padding: EdgeInsets.only(top: 50.0),
-      child: SchedulePage(),
-    ),
+    HomePage(),
+    PlansPage(),
+    ProgressPage(),
+    SchedulePage(),
   ];
 }
