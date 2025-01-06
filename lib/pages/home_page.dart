@@ -346,9 +346,20 @@ class WeekDays extends StatelessWidget {
                       height: 8,
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: day['completed']
+                          color: day['completed'] &&
+                                  (weekStart.add(Duration(days: index)) ==
+                                          todayDT ||
+                                      weekStart
+                                          .add(Duration(days: index))
+                                          .isBefore(todayDT))
                               ? const Color.fromARGB(255, 60, 209, 107)
-                              : day['missed'] //hifdh has been missed(not completed)
+                              : day['missed'] &&
+                                      (weekStart.add(Duration(days: index)) ==
+                                              todayDT ||
+                                          weekStart
+                                              .add(Duration(days: index))
+                                              .isBefore(
+                                                  todayDT)) //hifdh has been missed(not completed)
                                   ? Colors.red.shade300
                                   : Color.fromARGB(255, 254, 189, 89)),
                     )
@@ -524,7 +535,7 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  plan['hifdhs'].last['length'] >= 0.7
+                                  plan['hifdhs'].last['length'] >= 0.6
                                       ? '...${plan['hifdhs'].last['verse'].substring(0, plan['hifdhs'].last['verse'].substring(0, 40).lastIndexOf(' '))}'
                                       : plan['hifdhs'].last['verse'],
                                   style: GoogleFonts.scheherazadeNew(
@@ -696,7 +707,7 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  reviews.first['length'] >= 0.7
+                                  reviews.first['length'] >= 0.6
                                       ? '...${reviews.first['verse'].substring(0, reviews.first['verse'].substring(0, 40).lastIndexOf(' '))}'
                                       : reviews.first['verse'],
                                   style: GoogleFonts.scheherazadeNew(
@@ -863,7 +874,7 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  reviews.first['length'] >= 0.7
+                                  reviews.first['length'] >= 0.6
                                       ? '...${reviews.first['verse'].substring(0, reviews.first['verse'].substring(0, 40).lastIndexOf(' '))}'
                                       : reviews.first['verse'],
                                   style: GoogleFonts.scheherazadeNew(
@@ -926,20 +937,34 @@ class Upcoming extends StatelessWidget {
     // Get today's date
     DateTime today = DateTime.now();
 
-    // Find the next hifdh day
+    // Find the next incomplete hifdh day
     for (int i = today.weekday - 1; i < 7; i++) {
       if (hifdhDays[i]) {
         DateTime nextDate = weekStartDate.add(Duration(days: i));
-        if (nextDate.isAfter(today)) {
+        if (nextDate.isAfter(today) && !plan['currentWeek'][i]['completed']) {
           return '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}';
         }
       }
     }
 
-    // If no hifdh day found in current week, check next week
+    // If no incomplete hifdh day found in current week, check next week
+    bool foundFirst = false;
     for (int i = 0; i < today.weekday - 1; i++) {
       if (hifdhDays[i]) {
         DateTime nextDate = weekStartDate.add(Duration(days: i + 7));
+        List<String> dateParts = plan['hifdhs'].last['date'].split('-');
+        DateTime weekStartDateDT = DateTime(
+          int.parse(dateParts[2]),
+          int.parse(dateParts[1]),
+          int.parse(dateParts[0]),
+        );
+        if (!foundFirst &&
+            (weekStartDateDT.isAfter(nextDate) ||
+                weekStartDateDT == nextDate)) {
+          foundFirst = true;
+          continue;
+        }
+
         return '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}';
       }
     }
@@ -979,7 +1004,7 @@ class Statistics extends StatelessWidget {
                             color: Color.fromARGB(255, 82, 95, 127)),
                       ),
                       Text(
-                        '${(((plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}% Progress',
+                        '${((((plan['completedLines'] / plan['totalLines']) > 1 ? 1 : plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}% Progress',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 14,
@@ -1010,7 +1035,9 @@ class Statistics extends StatelessWidget {
                     horizontal: 0,
                   ),
                   lineHeight: 10,
-                  percent: ((plan['completedLines'] / plan['totalLines'])),
+                  percent: ((plan['completedLines'] / plan['totalLines']) > 1
+                      ? 1
+                      : (plan['completedLines'] / plan['totalLines'])),
                   progressColor: Color.fromARGB(255, 113, 233, 175),
                   backgroundColor: Color.fromARGB(255, 238, 240, 247),
                   barRadius: const Radius.circular(20),

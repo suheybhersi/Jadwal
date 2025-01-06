@@ -398,6 +398,28 @@ class FirestoreService extends ChangeNotifier {
       dynamic hifdh = hifdhs.last;
       hifdh['completed'] = true;
 
+      String hifdhDate = planData['hifdhs'].last['date'];
+
+      DateTime hifdhDT = DateTime(
+        int.parse(hifdhDate.split('-')[2]),
+        int.parse(hifdhDate.split('-')[1]),
+        int.parse(hifdhDate.split('-')[0]),
+        0,
+        0,
+      );
+      dynamic currentWeek = planData['currentWeek'];
+      dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
+
+      weekDay['completed'] = true;
+
+      await weeksCollection
+          .where('weekStart', isEqualTo: weekDay['weekStart'])
+          .get()
+          .then(
+            (value) =>
+                value.docs[0].reference.update({'weekDays': currentWeek}),
+          );
+
       final hifdhSnapshot = await hifdhsCollection
           .where('hifdh', isEqualTo: hifdh['hifdh'])
           .where('planId', isEqualTo: id)
@@ -437,7 +459,8 @@ class FirestoreService extends ChangeNotifier {
         'streak': planData['streak'],
         'reviews': planReviews,
         'hifdhs': hifdhs,
-        'completedLines': planData['completedLines'] + length
+        'completedLines': planData['completedLines'] + length,
+        'currentWeek': currentWeek
       });
     }
 
@@ -690,8 +713,6 @@ class FirestoreService extends ChangeNotifier {
       planData = planSnapshot.data() as Map<String, dynamic>;
     }
 
-    dynamic currentWeek = planData['currentWeek'];
-
     final hifdh = await hifdhsCollection.where('planId', isEqualTo: id).get();
     final hifdhData = hifdh.docs;
 
@@ -704,18 +725,6 @@ class FirestoreService extends ChangeNotifier {
       final hifdhSnapshot =
           await hifdhsCollection.doc(nextHifdh.docs.last.id).get();
 
-      dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
-
-      weekDay['completed'] = true;
-
-      await weeksCollection
-          .where('weekStart', isEqualTo: weekDay['weekStart'])
-          .get()
-          .then(
-            (value) =>
-                value.docs[0].reference.update({'weekDays': currentWeek}),
-          );
-
       List<dynamic> planHifdhs = planData['hifdhs'];
       planHifdhs = List.from(planHifdhs)
         ..add(hifdhSnapshot.data() as Map<String, dynamic>);
@@ -723,7 +732,6 @@ class FirestoreService extends ChangeNotifier {
       await plansCollection.doc(id).update({
         'hifdhIn': 0,
         'hifdhs': planHifdhs,
-        'currentWeek': currentWeek
       }); //update plan with hifdhIn and newHifdh
     }
   }
