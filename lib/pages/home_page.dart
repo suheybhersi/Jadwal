@@ -3,11 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:flutter/services.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
-  HomePage({super.key});
+  HomePage({super.key}) {
+    // Hide status bar
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
 
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
@@ -27,175 +32,170 @@ class HomePage extends StatelessWidget {
     bool updateHifdhCalled = false;
     String id = '';
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 35.0),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Welcome Suheyb,',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                        onPressed: signUserOut,
-                        icon: Icon(
-                          Icons.logout,
-                          color: Theme.of(context).colorScheme.primary,
-                        )),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.person,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 30,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-          backgroundColor: Colors.transparent,
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: StreamBuilder(
-          stream: firestoreService.getPlansStream(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List plansList = snapshot.data!.docs;
-              DocumentSnapshot? activePlan;
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: StreamBuilder(
+        stream: firestoreService.getPlansStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List plansList = snapshot.data!.docs;
+            DocumentSnapshot? activePlan;
 
-              // Find the active plan
-              for (var plan in plansList) {
-                if (plan.data()?['active'] == true) {
-                  activePlan = plan;
-                  break;
-                }
-              }
-
-              if (activePlan != null) {
-                // Extract data from the active plan
-                plan = activePlan.data() as Map<String, dynamic>;
-
-                if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
-                  id = activePlan
-                      .id; // Assuming you need the ID for further operations
-
-                  String weekStart = plan['currentWeek'][0]['weekStart'];
-
-                  DateTime currWeekStartDT = DateTime.now().subtract(
-                    Duration(days: DateTime.now().weekday - 1),
-                  );
-
-                  String currWeekStart =
-                      '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
-
-                  if (currWeekStart != weekStart && !currentWeekCalled) {
-                    currentWeekCalled = true;
-                    firestoreService.updateCurrentWeek(id).then((_) {
-                      // Reset the flag after the method completes
-                      currentWeekCalled = false;
-                    });
-                  }
-
-                  bool completed = plan['hifdhs'].last['completed'];
-
-                  String hifdhDate = plan['hifdhs'].last['date'];
-                  String today =
-                      '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
-
-                  DateTime hifdhDT = DateTime(
-                    int.parse(hifdhDate.split('-')[2]),
-                    int.parse(hifdhDate.split('-')[1]),
-                    int.parse(hifdhDate.split('-')[0]),
-                    0,
-                    0,
-                  );
-                  DateTime todayDT = DateTime(
-                    int.parse(today.split('-')[2]),
-                    int.parse(today.split('-')[1]),
-                    int.parse(today[0]),
-                    0,
-                    0,
-                  );
-
-                  if (hifdhDT.difference(todayDT).inDays != plan['hifdhIn']) {
-                    firestoreService.hifdhIn(id);
-                  }
-                  hifdhIn = plan['hifdhIn'];
-
-                  if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
-                      completed) {
-                    if (plan['planCompleted'] != true && !updateHifdhCalled) {
-                      updateHifdhCalled = true;
-                      firestoreService.updateNextHifdh(id).then((_) {
-                        // Reset the flag after the method completes
-                        updateHifdhCalled = false;
-                      });
-                    } else {
-                      return const Center(
-                        child: Text(
-                          'Plan Completed',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 30),
-                        ),
-                      );
-                    }
-                  } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
-                    hifdhMissedCalled = true;
-                    firestoreService.hifdhMissed(id).then((_) {
-                      // Reset the flag after the method completes
-                      hifdhMissedCalled = false;
-                    });
-                  }
-
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Column(
-                          children: [
-                            WeekDays(plan: plan),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Upcoming(
-                              plan: plan,
-                              hifdhIn: hifdhIn,
-                              markHifdhAsComplete: markHifdhAsComplete,
-                              markReviewAsComplete: markReviewAsComplete,
-                              id: id,
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Statistics(plan: plan)
-                      ],
-                    ),
-                  );
-                }
+            // Find the active plan
+            for (var plan in plansList) {
+              if (plan.data()?['active'] == true) {
+                activePlan = plan;
+                break;
               }
             }
-            return Center(
-                child: Text(
-              'No plans...',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontSize: 24),
-            ));
-          },
-        ),
+
+            if (activePlan != null) {
+              // Extract data from the active plan
+              plan = activePlan.data() as Map<String, dynamic>;
+
+              if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
+                id = activePlan
+                    .id; // Assuming you need the ID for further operations
+
+                String weekStart = plan['currentWeek'][0]['weekStart'];
+
+                DateTime currWeekStartDT = DateTime.now().subtract(
+                  Duration(days: DateTime.now().weekday - 1),
+                );
+
+                String currWeekStart =
+                    '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
+
+                if (currWeekStart != weekStart && !currentWeekCalled) {
+                  currentWeekCalled = true;
+                  firestoreService.updateCurrentWeek(id).then((_) {
+                    // Reset the flag after the method completes
+                    currentWeekCalled = false;
+                  });
+                }
+
+                bool completed = plan['hifdhs'].last['completed'];
+
+                String hifdhDate = plan['hifdhs'].last['date'];
+                String today =
+                    '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
+
+                DateTime hifdhDT = DateTime(
+                  int.parse(hifdhDate.split('-')[2]),
+                  int.parse(hifdhDate.split('-')[1]),
+                  int.parse(hifdhDate.split('-')[0]),
+                  0,
+                  0,
+                );
+                DateTime todayDT = DateTime(
+                  int.parse(today.split('-')[2]),
+                  int.parse(today.split('-')[1]),
+                  int.parse(today[0]),
+                  0,
+                  0,
+                );
+
+                if (hifdhDT.difference(todayDT).inDays != plan['hifdhIn']) {
+                  firestoreService.hifdhIn(id);
+                }
+                hifdhIn = plan['hifdhIn'];
+
+                if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
+                    completed) {
+                  if (plan['planCompleted'] != true && !updateHifdhCalled) {
+                    updateHifdhCalled = true;
+                    firestoreService.updateNextHifdh(id).then((_) {
+                      // Reset the flag after the method completes
+                      updateHifdhCalled = false;
+                    });
+                  } else {
+                    return const Center(
+                      child: Text(
+                        'Plan Completed',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 30),
+                      ),
+                    );
+                  }
+                } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
+                  hifdhMissedCalled = true;
+                  firestoreService.hifdhMissed(id).then((_) {
+                    // Reset the flag after the method completes
+                    hifdhMissedCalled = false;
+                  });
+                }
+
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, right: 20, top: 20.0, bottom: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hello',
+                                  style: GoogleFonts.poppins(
+                                    color: Color.fromARGB(255, 106, 106, 106),
+                                    fontSize: 16,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Text(
+                                  'Mohammed',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                                onPressed: signUserOut,
+                                icon: Icon(
+                                  Iconsax.setting_2,
+                                )),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          WeekDays(plan: plan),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Upcoming(
+                            plan: plan,
+                            hifdhIn: hifdhIn,
+                            markHifdhAsComplete: markHifdhAsComplete,
+                            markReviewAsComplete: markReviewAsComplete,
+                            id: id,
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Statistics(plan: plan)
+                    ],
+                  ),
+                );
+              }
+            }
+          }
+          return Center(
+              child: Text(
+            'No plans...',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+                fontSize: 24),
+          ));
+        },
       ),
     );
   }
