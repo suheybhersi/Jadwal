@@ -14,7 +14,6 @@ class Plan {
   final int dailyReadingTo;
   final List<bool> dailyReadingDays;
   final List<DailyReading> dailyReadings;
-  final bool active;
   final double totalLines;
   final double completedLines;
   final List<Hifdh> hifdhs;
@@ -36,7 +35,6 @@ class Plan {
     required this.dailyReadingTo,
     required this.dailyReadingDays,
     required this.dailyReadings,
-    required this.active,
     required this.totalLines,
     required this.completedLines,
     required this.hifdhs,
@@ -60,7 +58,6 @@ class Plan {
       'dailyReadingTo': dailyReadingTo,
       'dailyReadingDays': dailyReadingDays,
       'dailyReadings': dailyReadings,
-      'active': active,
       'totalLines': totalLines,
       'completedLines': completedLines,
       'hifdhs': hifdhs,

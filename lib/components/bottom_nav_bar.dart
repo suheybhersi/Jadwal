@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hifdh_planner_app/pages/home_page.dart';
-import 'package:hifdh_planner_app/pages/plans_page.dart';
+import 'package:hifdh_planner_app/pages/plan_page.dart';
 import 'package:hifdh_planner_app/pages/progress_page.dart';
 import 'package:hifdh_planner_app/pages/schedule_page.dart';
 import 'package:iconsax/iconsax.dart';
@@ -29,17 +29,16 @@ class MyBottomNavBar extends StatelessWidget {
         ),
         child: Obx(
           () => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 10),
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black12,
-                    // offset: Offset(0, 5),
-                    blurRadius: 10,
+                    blurRadius: 5,
                     spreadRadius: -1,
                   ),
                 ],
@@ -80,7 +79,7 @@ class MyBottomNavBar extends StatelessWidget {
                             : const Color.fromARGB(255, 127, 131, 141),
                         size: 24,
                       ),
-                      label: 'Plans',
+                      label: 'Plan',
                     ),
                     NavigationDestination(
                       icon: Icon(
@@ -123,7 +122,7 @@ class NavigatorController extends GetxController {
 
   final screens = [
     HomePage(),
-    PlansPage(),
+    PlanPage(),
     ProgressPage(),
     SchedulePage(),
   ];

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,22 +38,12 @@ class HomePage extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
-            DocumentSnapshot? activePlan;
-
-            // Find the active plan
-            for (var plan in plansList) {
-              if (plan.data()?['active'] == true) {
-                activePlan = plan;
-                break;
-              }
-            }
-
-            if (activePlan != null) {
-              // Extract data from the active plan
-              plan = activePlan.data() as Map<String, dynamic>;
+            if (plansList.isNotEmpty) {
+              Map<String, dynamic> plan =
+                  plansList[0].data() as Map<String, dynamic>;
 
               if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
-                id = activePlan
+                id = plansList[0]
                     .id; // Assuming you need the ID for further operations
 
                 String weekStart = plan['currentWeek'][0]['weekStart'];
@@ -130,7 +119,7 @@ class HomePage extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(
-                            left: 20, right: 20, top: 20.0, bottom: 15),
+                            left: 20, right: 10, top: 20.0, bottom: 15),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -156,10 +145,11 @@ class HomePage extends StatelessWidget {
                               ],
                             ),
                             IconButton(
-                                onPressed: signUserOut,
-                                icon: Icon(
-                                  Iconsax.setting_2,
-                                )),
+                              onPressed: signUserOut,
+                              icon: Icon(
+                                Iconsax.setting_2,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -485,7 +475,7 @@ class Upcoming extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Surah ${plan['hifdhs'].last['surah']}',
+                                'Surah ${plan['hifdhs'].last['surah'].split(' ')[0]}',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 20,
@@ -658,7 +648,7 @@ class Upcoming extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Surah ${reviews.first['surah']}',
+                                'Surah ${reviews.first['surah'].split(' ')[0]}',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 20,
@@ -825,7 +815,7 @@ class Upcoming extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Surah ${reviews.first['surah']}',
+                                'Surah ${reviews.first['surah'].split(' ')[0]}',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 20,

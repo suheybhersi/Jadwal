@@ -1,551 +1,413 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/components/edit_daily_reading_form.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
-import 'package:hifdh_planner_app/components/review_tile.dart';
+import 'package:hifdh_planner_app/components/my_stepper.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
-import 'package:hifdh_planner_app/themes/theme_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
-class PlanPage extends StatelessWidget {
-  final String id;
+class PlanPage extends StatefulWidget {
+  const PlanPage({super.key});
+
+  @override
+  State<PlanPage> createState() => _PlanPageState();
+}
+
+class _PlanPageState extends State<PlanPage> {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
-
-  PlanPage({super.key, required this.id});
+  void newPlanStepper() {
+    showDialog(
+      context: context,
+      builder: (context) => const MyStepper(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    bool hifdhMissedCalled = false;
-    bool currentWeekCalled = false;
-    bool updateHifdhCalled = false;
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.inversePrimary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.all(5),
-              child: Icon(
-                Icons.person,
-                color: Theme.of(context).colorScheme.primary,
-                size: 30,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: StreamBuilder(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
-            int documentIndex =
-                plansList.indexWhere((element) => element.id == id);
-            DocumentSnapshot document = plansList[documentIndex];
-            Map<String, dynamic> plan = document.data() as Map<String, dynamic>;
-            bool completed = false;
-            int hifdhIn = 0;
-            String verses = '';
 
-            if (plan.isNotEmpty && plan['hifdhs'].isNotEmpty) {
-              String weekStart = plan['currentWeek'][0]['weekStart'];
+            if (plansList.isNotEmpty) {
+              Map<String, dynamic> plan =
+                  plansList[0].data() as Map<String, dynamic>;
+              String id = plansList[0].id;
 
-              DateTime currWeekStartDT = DateTime.now().subtract(
-                Duration(days: DateTime.now().weekday - 1),
-              );
-
-              String currWeekStart =
-                  '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
-
-              if (currWeekStart != weekStart && !currentWeekCalled) {
-                currentWeekCalled = true;
-                firestoreService.updateCurrentWeek(id).then((_) {
-                  // Reset the flag after the method completes
-                  currentWeekCalled = false;
-                });
-              }
-
-              completed = plan['hifdhs'].last['completed'];
-              verses = plan['hifdhs'].last['hifdh'];
-
-              String hifdhDate = plan['hifdhs'].last['date'];
-              String today =
-                  '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
-
-              DateTime hifdhDT = DateTime(
-                int.parse(hifdhDate.split('-')[2]),
-                int.parse(hifdhDate.split('-')[1]),
-                int.parse(hifdhDate.split('-')[0]),
-                0,
-                0,
-              );
-              DateTime todayDT = DateTime(
-                int.parse(today.split('-')[2]),
-                int.parse(today.split('-')[1]),
-                int.parse(today.split('-')[0]),
-                0,
-                0,
-              );
-
-              if (hifdhDT.difference(todayDT).inDays != plan['hifdhIn']) {
-                firestoreService.hifdhIn(id);
-              }
-              hifdhIn = plan['hifdhIn'];
-
-              if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
-                  completed) {
-                if (plan['planCompleted'] != true && !updateHifdhCalled) {
-                  updateHifdhCalled = true;
-                  firestoreService.updateNextHifdh(id).then((_) {
-                    // Reset the flag after the method completes
-                    updateHifdhCalled = false;
-                  });
-                } else {
-                  return const Center(
-                    child: Text(
-                      'Plan Completed',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 30),
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    PlanPageHeader(
+                      onEditPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => EditPlanForm(
+                            plan: plan,
+                            id: id,
+                          ),
+                        );
+                      },
+                      onSettingsPressed: () {},
                     ),
-                  );
-                }
-              } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
-                hifdhMissedCalled = true;
-                firestoreService.hifdhMissed(id).then((_) {
-                  // Reset the flag after the method completes
-                  hifdhMissedCalled = false;
-                });
-              }
+                    PlanProgress(
+                      plan: plan,
+                    ),
+                    PreviousMemorisation(
+                      plan: plan,
+                    ),
+                    PreviousReviews(
+                      plan: plan,
+                    ),
+                  ],
+                ),
+              );
             }
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildPlanDetails(context, plan),
-                  _buildNextHifdh(context, plan, hifdhIn, completed, verses),
-                  _buildUpcomingReviews(context, plan, hifdhIn, completed),
-                  _buildDailyReading(context, plan, hifdhIn, completed, verses),
-                ],
-              ),
-            );
           }
-          return const SizedBox(); // Placeholder for when data is loading
+          return Center(
+            child: IconButton(
+              onPressed: newPlanStepper,
+              icon: const Icon(Iconsax.pen_add),
+            ),
+          );
         },
       ),
     );
   }
+}
 
-  Widget _buildPlanDetails(BuildContext context, Map<String, dynamic> plan) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                plan['name'],
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                ),
-              ),
-              IconButton(
-                onPressed: () => editPlan(context, plan),
-                icon: const Icon(Icons.edit),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.tertiary,
-                  ),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+class PlanPageHeader extends StatelessWidget {
+  final VoidCallback onEditPressed;
+  final VoidCallback onSettingsPressed;
 
-  Widget _buildNextHifdh(
-    BuildContext context,
-    Map<String, dynamic> plan,
-    int hifdhIn,
-    bool completed,
-    String verses,
-  ) {
+  const PlanPageHeader({
+    super.key,
+    required this.onEditPressed,
+    required this.onSettingsPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-      child: Container(
-        padding:
-            const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 86, 173, 254),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 15,
-              ),
-              child: Container(
-                width: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: const Color.fromARGB(255, 128, 193, 255),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      'Next Hifdh',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade100,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                plan['hifdhs'] == null ||
-                        plan['hifdhs'].isEmpty ||
-                        hifdhIn == -1
-                    ? Text(
-                        'None',
-                        style: TextStyle(
-                            color: Colors.grey.shade100,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            verses,
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.grey.shade100,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            hifdhIn == 0
-                                ? 'Today'
-                                : hifdhIn == 1
-                                    ? 'Tomorrow'
-                                    : 'In $hifdhIn days',
-                            style: TextStyle(
-                              color: Colors.grey.shade100,
-                              fontSize: 20,
-                            ),
-                          )
-                        ],
-                      ),
-                IconButton(
-                  onPressed: () {
-                    if (!completed) {
-                      markHifdhAsComplete(
-                        plan['hifdhs'].last['nextKey'],
-                        context,
-                        plan['lines'],
-                      );
-                    }
-                  },
-                  icon: completed
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const ImageIcon(
-                            AssetImage('assets/checked.png'),
-                            color: Color.fromARGB(255, 60, 209, 107),
-                            size: 35,
-                          ),
-                        )
-                      : ImageIcon(
-                          const AssetImage('assets/unchecked.png'),
-                          size: 35,
-                          color: Colors.grey.shade100,
-                        ),
-                )
-              ],
-            )
-          ],
-        ),
+      padding: const EdgeInsets.only(
+        left: 10,
+        right: 10,
+        top: 20.0,
+        bottom: 15,
       ),
-    );
-  }
-
-  Widget _buildUpcomingReviews(
-    BuildContext context,
-    Map<String, dynamic> plan,
-    int hifdhIn,
-    bool completed,
-  ) {
-    List<dynamic> reviews = plan['reviews']
-        .where((review) =>
-            review['date'] ==
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-        .toList();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-      child: Container(
-        width: 350,
-        padding:
-            const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 113, 100, 250),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Container(
-                width: 175,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: const Color.fromARGB(255, 144, 135, 253),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      "Today's Reviews",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade100,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            reviews == [] || reviews.isEmpty
-                ? Text(
-                    'None',
-                    style: TextStyle(
-                        color: Colors.grey.shade100,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800),
-                  )
-                : SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      itemCount: reviews.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> review = reviews[index];
-                        return ReviewTile(review: review, id: id);
-                      },
-                    ),
-                  )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDailyReading(BuildContext context, Map<String, dynamic> plan,
-      int hifdhIn, bool completed, String verses) {
-    List<dynamic> dailyReadings = plan['dailyReadings']
-        .where((dailyReading) =>
-            dailyReading['date'] ==
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-        .toList();
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20.0,
-            vertical: 10,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: onEditPressed,
+            icon: const Icon(Iconsax.edit_2),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Daily Reading',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                ),
-              ),
-              IconButton(
-                onPressed: () => editDailyReading(context, plan),
-                icon: const Icon(Icons.edit),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.tertiary,
-                  ),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-          child: Container(
-            padding:
-                const EdgeInsets.only(top: 20, left: 15, right: 15, bottom: 15),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                dailyReadings == [] ||
-                        dailyReadings.isEmpty ||
-                        dailyReadings.last['completed'] == true
-                    ? Text(
-                        'None',
-                        style: TextStyle(
-                            color: Provider.of<ThemeProvider>(context)
-                                    .isDarkMode
-                                ? Colors.grey.shade100
-                                : Theme.of(context).colorScheme.inversePrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pages ${dailyReadings.last['dailyReading']}',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color:
-                                  Provider.of<ThemeProvider>(context).isDarkMode
-                                      ? Colors.grey.shade100
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .inversePrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Today',
-                            style: TextStyle(
-                              color:
-                                  Provider.of<ThemeProvider>(context).isDarkMode
-                                      ? Colors.grey.shade100
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .inversePrimary,
-                              fontSize: 20,
-                            ),
-                          )
-                        ],
-                      ),
-                dailyReadings == [] ||
-                        dailyReadings.isEmpty ||
-                        dailyReadings.last['completed'] == true
-                    ? const SizedBox()
-                    : IconButton(
-                        onPressed: () {
-                          markDailyReadingAsComplete(
-                            plan['dailyReadings'].last['nextStart'],
-                            context,
-                          );
-                        },
-                        icon: ImageIcon(
-                          const AssetImage('assets/unchecked.png'),
-                          size: 35,
-                          color: Colors.grey.shade100,
-                        ),
-                      )
-              ],
+          Text(
+            'Plan',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
             ),
           ),
-        )
-      ],
-    );
-  }
-
-  void editPlan(BuildContext context, Map<String, dynamic> plan) {
-    showDialog(
-      context: context,
-      builder: (context) => EditPlanForm(
-        plan: plan,
-        id: id,
-      ),
-    );
-  }
-
-  void editDailyReading(BuildContext context, Map<String, dynamic> plan) {
-    showDialog(
-      context: context,
-      builder: (context) => EditDailyReadingForm(
-        plan: plan,
-        id: id,
-      ),
-    );
-  }
-
-  void markHifdhAsComplete(String key, BuildContext context, int lines) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: const Text('Mark as completed?'),
-        actions: [
-          MaterialButton(
-            onPressed: () {
-              firestoreService.createNewHifdh(key, lines, id);
-              Navigator.pop(context);
-            },
-            child: const Text('Yes'),
-          ),
-          MaterialButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          IconButton(
+            onPressed: onSettingsPressed,
+            icon: const Icon(Iconsax.setting_2),
           ),
         ],
       ),
     );
   }
+}
 
-  void markDailyReadingAsComplete(int nextStart, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: const Text('Mark as completed?'),
-        actions: [
-          MaterialButton(
-            onPressed: () {
-              firestoreService.createNewDailyReading(id, nextStart);
-              Navigator.pop(context);
-            },
-            child: const Text('Yes'),
+class PlanProgress extends StatelessWidget {
+  const PlanProgress({
+    super.key,
+    required this.plan,
+  });
+
+  final Map<String, dynamic> plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 35),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          width: 2.0,
+          color: Color.fromARGB(255, 114, 152, 255),
+        ),
+        image: DecorationImage(
+          image: AssetImage(
+            'assets/progressbg.png',
           ),
-          MaterialButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          fit: BoxFit.contain,
+          // Adjust this to control how the image fits
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Memorisation',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Text(
+                'Keep up your progress',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                  color: Color.fromARGB(255, 106, 106, 106),
+                ),
+              ),
+            ],
+          ),
+          CircularPercentIndicator(
+            radius: 35,
+            lineWidth: 8,
+            percent: ((plan['completedLines'] / plan['totalLines'])),
+            progressColor: Color.fromARGB(255, 73, 121, 251),
+            backgroundColor: Color.fromARGB(255, 219, 228, 254),
+            circularStrokeCap: CircularStrokeCap.round,
+            center: Text(
+              '${((((plan['completedLines'] / plan['totalLines']) > 1 ? 1 : (plan['completedLines'] / plan['totalLines'])) * 100)).toStringAsFixed(0)}%',
+              style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreviousMemorisation extends StatelessWidget {
+  final Map<String, dynamic> plan;
+
+  const PreviousMemorisation({
+    super.key,
+    required this.plan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<dynamic> hifdhs = (plan['hifdhs'] as List?)
+            ?.where((hifdh) => hifdh['completed'] == true)
+            .toList() ??
+        [];
+    hifdhs = hifdhs.reversed.toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Memorisation',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: hifdhs.length > 3 ? 3 : hifdhs.length,
+            itemBuilder: (context, index) {
+              final hifdh = hifdhs[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Color.fromARGB(255, 237, 242, 255),
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 240, 245, 255),
+                              borderRadius: BorderRadius.circular(30)),
+                          child: Image.asset(
+                            'assets/newicon.png',
+                            height: 24,
+                            width: 24,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 106, 106, 106),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreviousReviews extends StatelessWidget {
+  final Map<String, dynamic> plan;
+
+  const PreviousReviews({
+    super.key,
+    required this.plan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<dynamic> reviews = (plan['reviews'] as List?) ?? [];
+
+    reviews.sort((a, b) {
+      List<String> dateAParts = a['date'].split('-');
+      List<String> dateBParts = b['date'].split('-');
+      DateTime dateA = DateTime(int.parse(dateAParts[2]),
+          int.parse(dateAParts[1]), int.parse(dateAParts[0]));
+      DateTime dateB = DateTime(int.parse(dateBParts[2]),
+          int.parse(dateBParts[1]), int.parse(dateBParts[0]));
+      return dateA.compareTo(dateB);
+    });
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Reviews',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: reviews.length > 3 ? 3 : reviews.length,
+            itemBuilder: (context, index) {
+              final review = reviews[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Color.fromARGB(255, 237, 242, 255),
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 240, 255, 246),
+                              borderRadius: BorderRadius.circular(30)),
+                          child: Icon(
+                            Iconsax.refresh,
+                            color: const Color.fromARGB(255, 100, 163, 119),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 106, 106, 106),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Container(
+                          // padding: EdgeInsets.all(11),
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 78, 174, 252),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                              child: Text(
+                            '${review['ratings'].length}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          )),
+                        )),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

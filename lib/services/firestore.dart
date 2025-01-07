@@ -102,7 +102,6 @@ class FirestoreService extends ChangeNotifier {
       dailyReadingTo: dailyReadingTo,
       dailyReadingDays: dailyReadingDays,
       dailyReadings: [],
-      active: false,
       totalLines: totalLines,
       completedLines: 0,
       hifdhs: [],
@@ -121,8 +120,6 @@ class FirestoreService extends ChangeNotifier {
     createNewHifdh(start, lines, document.id);
 
     createNewDailyReading(document.id, dailyReadingFrom);
-
-    updateActivePlan(document.id);
   }
 
   Future<void> createNewDailyReading(String id, int from) async {
@@ -196,23 +193,8 @@ class FirestoreService extends ChangeNotifier {
       throw Exception('User not authenticated');
     }
     uid = user.uid;
-    final plansStream =
-        plansCollection.orderBy('active', descending: true).snapshots();
+    final plansStream = plansCollection.snapshots();
     return plansStream;
-  }
-
-/*---------------------------------U P D A T E   A C T I V E   P L A N---------------------------------*/
-  Future<void> updateActivePlan(String id) {
-    return plansCollection.where('active', isEqualTo: true).get().then((value) {
-      if (value.docs.isNotEmpty) {
-        return value.docs[0].reference
-            .update({'active': false}); // Deactivate current active plan
-      }
-    }).then((_) {
-      return plansCollection
-          .doc(id)
-          .update({'active': true}); // Activate the new plan
-    });
   }
 
 /*----------------------------------------U P D A T E   P L A N----------------------------------------*/
@@ -537,6 +519,7 @@ class FirestoreService extends ChangeNotifier {
         }
       }
       endKey = verseData['key'];
+      surah += ' ${verseData['surah']}';
       if (verseId != '6237') {
         final nextVerse = await versesCollection.doc(verseId).get();
         verseData = nextVerse.data() as Map<String, dynamic>;
