@@ -4,7 +4,8 @@ class Review {
   final List<int> ratings;
   final String planId;
   final String surah;
-  final String verse;
+  final String startVerse;
+  final String endVerse;
   final double length;
   final List<dynamic> sm2;
 
@@ -14,7 +15,8 @@ class Review {
     required this.ratings,
     required this.planId,
     required this.surah,
-    required this.verse,
+    required this.startVerse,
+    required this.endVerse,
     required this.length,
     required this.sm2,
   });
@@ -26,7 +28,8 @@ class Review {
       'ratings': ratings,
       'planId': planId,
       'surah': surah,
-      'verse': verse,
+      'startVerse': startVerse,
+      'endVerse': endVerse,
       'length': length,
       'sm2': sm2,
     };

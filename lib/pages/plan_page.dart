@@ -96,7 +96,7 @@ class PlanPageHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(
         left: 10,
-        right: 10,
+        right: 4,
         top: 20.0,
         bottom: 15,
       ),
@@ -135,7 +135,7 @@ class PlanProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 35),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -216,7 +216,7 @@ class PreviousMemorisation extends StatelessWidget {
     hifdhs = hifdhs.reversed.toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -224,14 +224,14 @@ class PreviousMemorisation extends StatelessWidget {
             'Memorisation',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 10),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: hifdhs.length > 3 ? 3 : hifdhs.length,
+            itemCount: hifdhs.length > 2 ? 2 : hifdhs.length,
             itemBuilder: (context, index) {
               final hifdh = hifdhs[index];
               return Container(
@@ -317,7 +317,7 @@ class PreviousReviews extends StatelessWidget {
       return dateA.compareTo(dateB);
     });
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -325,7 +325,7 @@ class PreviousReviews extends StatelessWidget {
             'Reviews',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 10),
@@ -361,7 +361,7 @@ class PreviousReviews extends StatelessWidget {
                           ),
                         ),
                         SizedBox(
-                          width: 20,
+                          width: 10,
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,13 +385,12 @@ class PreviousReviews extends StatelessWidget {
                       ],
                     ),
                     Padding(
-                        padding: const EdgeInsets.only(right: 5),
+                        padding: const EdgeInsets.only(right: 0),
                         child: Container(
-                          // padding: EdgeInsets.all(11),
-                          width: 26,
-                          height: 26,
+                          width: 24,
+                          height: 24,
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 78, 174, 252),
+                            color: const Color.fromARGB(255, 114, 171, 255),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Center(
@@ -399,7 +398,7 @@ class PreviousReviews extends StatelessWidget {
                             '${review['ratings'].length}',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),
                           )),

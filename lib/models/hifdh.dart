@@ -5,7 +5,8 @@ class Hifdh {
   final String nextKey;
   final String planId;
   final String surah;
-  final String verse;
+  final String startVerse;
+  final String endVerse;
   final double length;
 
   Hifdh({
@@ -15,7 +16,8 @@ class Hifdh {
     required this.nextKey,
     required this.planId,
     required this.surah,
-    required this.verse,
+    required this.startVerse,
+    required this.endVerse,
     required this.length,
   });
 
@@ -27,7 +29,8 @@ class Hifdh {
       'nextKey': nextKey,
       'planId': planId,
       'surah': surah,
-      'verse': verse,
+      'startVerse': startVerse,
+      'endVerse': endVerse,
       'length': length
     };
   }

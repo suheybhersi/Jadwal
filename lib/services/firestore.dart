@@ -284,7 +284,6 @@ class FirestoreService extends ChangeNotifier {
         Duration(days: hifdhDT.weekday - 1),
       );
       if (weekStart.isBefore(hifdhWeekStart)) {
-        print("went to a previous week that doesn't exist");
       } else {
         List<dynamic> prevWeek = plan['currentWeek'];
 
@@ -372,7 +371,8 @@ class FirestoreService extends ChangeNotifier {
     String endKey = '';
     String nextKey = '';
     String surah = '';
-    String verse = '';
+    String startVerse = '';
+    String endVerse = '';
     double verseLength = 0;
 
     // Check if the plan has hifdhs i.e the plan has not just been made
@@ -421,7 +421,8 @@ class FirestoreService extends ChangeNotifier {
 
       reviewDate = '${reviewDT.day}-${reviewDT.month}-${reviewDT.year}';
       surah = hifdh['surah'];
-      verse = hifdh['verse'];
+      startVerse = hifdh['startVerse'];
+      endVerse = hifdh['endVerse'];
       verseLength = double.parse(hifdh['length'].toString());
 
       final newReview = Review(
@@ -430,7 +431,8 @@ class FirestoreService extends ChangeNotifier {
           ratings: [],
           planId: id,
           surah: surah,
-          verse: verse,
+          startVerse: startVerse,
+          endVerse: endVerse,
           length: verseLength,
           sm2: [0, 2.0, 1]);
       await reviewsCollection.add(newReview.toMap());
@@ -454,7 +456,7 @@ class FirestoreService extends ChangeNotifier {
     final verseDoc = await versesCollection.doc(verseId).get();
     Map<String, dynamic> verseData = verseDoc.data() as Map<String, dynamic>;
     surah = verseData['surah'];
-    verse = verseData['text'];
+    startVerse = verseData['text'];
     verseLength = double.parse(verseData['length'].toString());
 
     final endOfPlanVerseSnapshot =
@@ -519,6 +521,7 @@ class FirestoreService extends ChangeNotifier {
         }
       }
       endKey = verseData['key'];
+      endVerse = verseData['text'];
       surah += ' ${verseData['surah']}';
       if (verseId != '6237') {
         final nextVerse = await versesCollection.doc(verseId).get();
@@ -595,7 +598,8 @@ class FirestoreService extends ChangeNotifier {
         nextKey: nextKey,
         planId: id,
         surah: surah,
-        verse: verse,
+        startVerse: startVerse,
+        endVerse: endVerse,
         length: verseLength);
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
