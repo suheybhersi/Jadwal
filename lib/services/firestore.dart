@@ -246,7 +246,7 @@ class FirestoreService extends ChangeNotifier {
     final planSnapshot = await plansCollection.doc(id).get();
     final plan = planSnapshot.data() as Map<String, dynamic>;
 
-    List<String> weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    List<String> weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     List<Map<String, dynamic>> currentWeek = [];
     DateTime weekStart = DateTime.now().subtract(
       Duration(days: DateTime.now().weekday - 1),

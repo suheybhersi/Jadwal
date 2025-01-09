@@ -120,7 +120,7 @@ class HomePage extends StatelessWidget {
                 DateTime todayDT = DateTime(
                   int.parse(today.split('-')[2]),
                   int.parse(today.split('-')[1]),
-                  int.parse(today.split('-')[0]),
+                  int.parse(today[0]),
                   0,
                   0,
                 );
@@ -158,10 +158,14 @@ class HomePage extends StatelessWidget {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      WeekDays(plan: plan),
-                      Upcoming(
-                        plan: plan,
-                        hifdhIn: hifdhIn,
+                      Column(
+                        children: [
+                          WeekDays(plan: plan),
+                          Upcoming(
+                            plan: plan,
+                            hifdhIn: hifdhIn,
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: 20,
@@ -196,73 +200,106 @@ class WeekDays extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+    final ScrollController scrollController = ScrollController();
+
+    // Only scroll to end if it's Thursday-Sunday
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      int currentDay = DateTime.now().weekday;
+      if (currentDay >= 4) {
+        scrollController.jumpTo(scrollController.position.maxScrollExtent);
+      }
+    });
+
+    return SingleChildScrollView(
+      controller: scrollController, // Add the controller here
+      scrollDirection: Axis.horizontal,
+
       child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(0),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        width: 550,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(7, (index) {
-              dynamic day = plan['currentWeek'][index];
-              List<String> weekStartString = day['weekStart'].split('-');
-              List<String> today =
-                  '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}'
-                      .split('-');
-              DateTime weekStart = DateTime(
-                int.parse(weekStartString[2]),
-                int.parse(weekStartString[1]),
-                int.parse(weekStartString[0]),
-                0,
-                0,
-              );
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(7, (index) {
+            dynamic day = plan['currentWeek'][index];
+            List<String> weekStartString = day['weekStart'].split('-');
+            List<String> today =
+                '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}'
+                    .split('-');
+            DateTime weekStart = DateTime(
+              int.parse(weekStartString[2]),
+              int.parse(weekStartString[1]),
+              int.parse(weekStartString[0]),
+              0,
+              0,
+            );
 
-              DateTime todayDT = DateTime(
-                int.parse(today[2]),
-                int.parse(today[1]),
-                int.parse(today[0]),
-                0,
-                0,
-              );
+            DateTime todayDT = DateTime(
+              int.parse(today[2]),
+              int.parse(today[1]),
+              int.parse(today[0]),
+              0,
+              0,
+            );
 
-              return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    border: weekStart.add(Duration(days: index)) == todayDT
-                        ? Border.all(
-                            width: 2,
-                            color: Theme.of(context).colorScheme.tertiary,
-                          )
-                        : const Border(),
-                    color: day['completed'] &&
-                            plan['hifdhDays'][index] ==
-                                true //hifdh day marked as complete and is in plan
-                        ? const Color.fromARGB(255, 60, 209, 107)
-                        : day['missed'] //hifdh has been missed(not completed)
-                            ? Colors.red.shade300
-                            : Theme.of(context)
-                                .colorScheme
-                                .primary, //hifdh day not part of plan || hifdh day has not been reached
-                  ),
-                  padding: EdgeInsets.symmetric(
-                      horizontal:
-                          day['day'] == 'M' || day['day'] == 'W' ? 12 : 15,
-                      vertical: 7),
-                  child: Text(
+            return Container(
+              width: 65,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: weekStart.add(Duration(days: index)) == todayDT
+                    ? const Border()
+                    : Border.all(
+                        width: 1,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                color: weekStart.add(Duration(days: index)) == todayDT
+                    ? Color.fromARGB(255, 73, 121, 251)
+                    : Colors.white,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
                     day['day'],
                     style: TextStyle(
-                      fontSize: 20,
+                        fontSize: 16,
+                        color: weekStart.add(Duration(days: index)) == todayDT
+                            ? Colors.white
+                            : Color.fromARGB(255, 106, 106, 106)),
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    '${weekStart.add(Duration(days: index)).day}',
+                    style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: plan['hifdhDays'][index] == true &&
-                              (day['completed'] || day['missed'])
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.inversePrimary,
+                      color: weekStart.add(Duration(days: index)) == todayDT
+                          ? Colors.white
+                          : Color.fromARGB(255, 26, 26, 26),
                     ),
-                  ));
-            })),
+                  ),
+                  SizedBox(
+                    height: 2,
+                  ),
+                  if (plan['hifdhDays'][index] == true)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: day['completed']
+                              ? const Color.fromARGB(255, 60, 209, 107)
+                              : day['missed'] //hifdh has been missed(not completed)
+                                  ? Colors.red.shade300
+                                  : Color.fromARGB(255, 254, 189, 89)),
+                    )
+                ],
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -311,18 +348,18 @@ class Upcoming extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 104, 107, 255),
                   borderRadius: BorderRadius.circular(30),
-                  image: DecorationImage(
-                    image: AssetImage(
-                      plan['hifdhs'] == null ||
-                              plan['hifdhs'].isEmpty ||
-                              hifdhIn == -1
-                          ? ''
-                          : 'assets/newbg.png',
-                    ),
-                    fit: BoxFit.contain,
-                    alignment: Alignment.bottomCenter,
-                    // Adjust this to control how the image fits
-                  ),
+                  image: plan['hifdhs'] == null ||
+                          plan['hifdhs'].isEmpty ||
+                          hifdhIn == -1
+                      ? null
+                      : DecorationImage(
+                          image: AssetImage(
+                            'assets/newbg.png',
+                          ),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                          // Adjust this to control how the image fits
+                        ),
                 ),
                 child: plan['hifdhs'] == null ||
                         plan['hifdhs'].isEmpty ||
@@ -479,7 +516,7 @@ class Upcoming extends StatelessWidget {
                   color: const Color.fromARGB(255, 98, 99, 150),
                   borderRadius: BorderRadius.circular(30),
                   image: reviews == [] || reviews.isEmpty
-                      ? DecorationImage(image: AssetImage(''))
+                      ? null
                       : DecorationImage(
                           image: AssetImage(
                               'assets/reviewbg.png'), // Replace with the correct path to your PNG file
@@ -640,7 +677,7 @@ class Upcoming extends StatelessWidget {
                   color: const Color.fromARGB(255, 126, 169, 134),
                   borderRadius: BorderRadius.circular(30),
                   image: reviews == [] || reviews.isEmpty
-                      ? DecorationImage(image: AssetImage(''))
+                      ? null
                       : DecorationImage(
                           image: AssetImage(
                             'assets/dailybg.png',
