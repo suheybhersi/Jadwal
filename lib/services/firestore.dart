@@ -10,6 +10,8 @@ import 'package:hifdh_planner_app/models/review.dart';
 class FirestoreService extends ChangeNotifier {
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
+  final CollectionReference surahsCollection =
+      FirebaseFirestore.instance.collection('surahs');
   final CollectionReference versesCollection =
       FirebaseFirestore.instance.collection('verses');
 
@@ -34,6 +36,8 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('reviews');
   CollectionReference get weeksCollection =>
       usersCollection.doc(uid).collection('weeks');
+  CollectionReference get surahsProgressCollection =>
+      usersCollection.doc(uid).collection('surahsProgress');
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
     String name,
@@ -436,6 +440,40 @@ class FirestoreService extends ChangeNotifier {
           length: verseLength,
           sm2: [0, 2.0, 1]);
       await reviewsCollection.add(newReview.toMap());
+
+      double totalLinesFirstSurah =
+          (planData['totalLinesFirstSurah']).toDouble();
+      double totalLinesSecondSurah =
+          (planData['totalLinesSecondSurah']).toDouble();
+
+      final firstSurahSnapshot = await surahsCollection
+          .where('surah', isEqualTo: hifdh['surah'].split(' ')[0])
+          .get();
+      String firstSurahId = firstSurahSnapshot.docs[0].reference.id;
+      final firstSurahDoc = await surahsCollection.doc(firstSurahId).get();
+      Map<String, dynamic> firstSurahData =
+          firstSurahDoc.data() as Map<String, dynamic>;
+      surahsCollection.doc(firstSurahId).update({
+        'completedLines': firstSurahData['completedLines'] +
+            (totalLinesSecondSurah == 0.0
+                ? planData['lines'].toDouble()
+                : totalLinesFirstSurah)
+      });
+
+      if (totalLinesSecondSurah != 0.0) {
+        final secondSurahSnapshot = await surahsCollection
+            .where('surah', isEqualTo: hifdh['surah'].split(' ')[1])
+            .get();
+        String secondSurahId = secondSurahSnapshot.docs[0].reference.id;
+        final secondSurahDoc = await surahsCollection.doc(secondSurahId).get();
+        Map<String, dynamic> secondSurahData =
+            secondSurahDoc.data() as Map<String, dynamic>;
+        surahsCollection.doc(secondSurahId).update({
+          'completedLines':
+              secondSurahData['completedLines'] + totalLinesSecondSurah
+        });
+      }
+
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
       planData['streak'] += 1;
@@ -488,6 +526,8 @@ class FirestoreService extends ChangeNotifier {
                 ? verseId = (int.parse(verseId) + 1).toString()
                 : verseData = prevVerseData;
 
+            // Check for next surah
+
             calculated = true;
             break;
           }
@@ -495,6 +535,7 @@ class FirestoreService extends ChangeNotifier {
           if (verseId == '6237') {
             break;
           }
+
           prevVerseData = verseData;
           final nextVerse = await versesCollection.doc(verseId).get();
           verseData = nextVerse.data() as Map<String, dynamic>;
@@ -512,6 +553,7 @@ class FirestoreService extends ChangeNotifier {
             break;
           }
           verseData = tempVerseData;
+
           verseId = (int.parse(verseId) + 1).toString();
           if (verseId == '6237') {
             break;
@@ -592,15 +634,16 @@ class FirestoreService extends ChangeNotifier {
 
     /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
     Hifdh newHifdh = Hifdh(
-        hifdh: '$key - $endKey',
-        date: nextHifdhDate,
-        completed: false,
-        nextKey: nextKey,
-        planId: id,
-        surah: surah,
-        startVerse: startVerse,
-        endVerse: endVerse,
-        length: verseLength);
+      hifdh: '$key - $endKey',
+      date: nextHifdhDate,
+      completed: false,
+      nextKey: nextKey,
+      planId: id,
+      surah: surah,
+      startVerse: startVerse,
+      endVerse: endVerse,
+      length: verseLength,
+    );
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());
 

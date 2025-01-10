@@ -532,7 +532,11 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  plan['hifdhs'].last['length'] >= 0.6
+                                  plan['hifdhs'].last['length'] >= 0.6 &&
+                                          plan['hifdhs']
+                                                  .last['surah']
+                                                  .split(' ')[0] !=
+                                              'Al-Fatiha'
                                       ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 40).lastIndexOf(' '))}'
                                       : plan['hifdhs'].last['startVerse'],
                                   style: GoogleFonts.scheherazadeNew(
@@ -700,7 +704,10 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  reviews.first['length'] >= 0.6
+                                  reviews.first['length'] >= 0.6 &&
+                                          reviews.first['surah']
+                                                  .split(' ')[0] !=
+                                              'Al-Fatiha'
                                       ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
                                       : reviews.first['startVerse'],
                                   style: GoogleFonts.scheherazadeNew(
@@ -867,7 +874,10 @@ class Upcoming extends StatelessWidget {
                                   right: 1,
                                 ),
                                 child: Text(
-                                  reviews.first['length'] >= 0.6
+                                  reviews.first['length'] >= 0.6 &&
+                                          reviews.first['surah']
+                                                  .split(' ')[0] !=
+                                              'Al-Fatiha'
                                       ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
                                       : reviews.first['startVerse'],
                                   style: GoogleFonts.scheherazadeNew(
