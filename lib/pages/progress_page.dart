@@ -7,65 +7,168 @@ import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class ProgressPage extends StatelessWidget {
-  ProgressPage({super.key});
-
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  const ProgressPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getSurahsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            List surahsList = snapshot.data!.docs;
+      body: ProgressContent(),
+    );
+  }
+}
 
-            if (surahsList.isNotEmpty) {
-              // Sort surahsList by 'id'
-              surahsList
-                  .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+class ProgressContent extends StatelessWidget {
+  final FirestoreService firestoreService =
+      FirestoreService(FirebaseAuth.instance);
 
-              List<Map<String, dynamic>> surahData = surahsList
-                  .map((doc) => doc.data() as Map<String, dynamic>)
-                  .toList();
+  final ValueNotifier<String> _searchQuery = ValueNotifier<String>('');
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
-              // Add a title before the ListView
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 14,
-                      top: 20.0,
-                      bottom: 15,
+  ProgressContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Only unfocus the TextField without causing a rebuild
+        if (_searchFocusNode.hasFocus) {
+          _searchFocusNode.unfocus();
+        }
+      },
+      behavior: HitTestBehavior
+          .opaque, // Ensures taps outside the TextField are detected
+      child: Column(
+        children: [
+          // Title and Settings
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 14,
+              top: 20.0,
+              bottom: 10,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Progress',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Iconsax.setting_2),
+                ),
+              ],
+            ),
+          ),
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ValueListenableBuilder<String>(
+              valueListenable: _searchQuery,
+              builder: (context, query, child) {
+                return TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  onChanged: (value) => _searchQuery.value = value,
+                  decoration: InputDecoration(
+                    filled: true, // Enables the background color
+                    fillColor:
+                        Colors.grey[200], // Sets the gray background color
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none, // Removes the border outline
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Progress',
+                    hintText: 'Search...',
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    suffixIcon: query.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear(); // Clears the TextField
+                              _searchQuery.value =
+                                  ''; // Resets the ValueNotifier
+                            },
+                          )
+                        : null,
+                  ),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.black, // Text color inside the search bar
+                  ),
+                );
+              },
+            ),
+          ),
+
+          SizedBox(
+            height: 10,
+          ),
+          // List of Surahs
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: firestoreService.getSurahsStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No data available.',
+                      style:
+                          GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
+                }
+
+                // Fetch and sort data
+                final surahsList = snapshot.data!.docs;
+                surahsList
+                    .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+
+                // Map Firestore data to a usable list
+                final allData = surahsList
+                    .map((doc) => doc.data() as Map<String, dynamic>)
+                    .toList();
+
+                return ValueListenableBuilder<String>(
+                  valueListenable: _searchQuery,
+                  builder: (context, query, child) {
+                    // Filter data based on search query
+                    final filteredData = query.isEmpty
+                        ? allData
+                        : allData
+                            .where((surah) => surah['surah']
+                                .toString()
+                                .toLowerCase()
+                                .contains(query.toLowerCase()))
+                            .toList();
+
+                    if (filteredData.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No results found.',
                           style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
+                            fontSize: 16,
+                            color: Colors.grey,
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Iconsax.setting_2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    // Ensure ListView takes available space
-                    child: ListView.builder(
-                      itemCount: surahData.length,
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: filteredData.length,
                       itemBuilder: (context, index) {
-                        final surah = surahData[index];
+                        final surah = filteredData[index];
                         final double progress =
                             surah['completedLines'] / surah['totalLines'];
+
                         return Container(
                           margin: EdgeInsets.symmetric(
                               horizontal: 20, vertical: 10),
@@ -78,6 +181,7 @@ class ProgressPage extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
+                              // Surah Number
                               Container(
                                 decoration: BoxDecoration(
                                     color: Color.fromARGB(255, 114, 152, 255),
@@ -88,7 +192,7 @@ class ProgressPage extends StatelessWidget {
                                   child: Text(
                                     '${index + 1}',
                                     style: GoogleFonts.poppins(
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
                                     ),
@@ -96,6 +200,7 @@ class ProgressPage extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(width: 10),
+                              // Surah Details
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +212,7 @@ class ProgressPage extends StatelessWidget {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    SizedBox(height: 10),
+                                    // SizedBox(height: 10),
                                     LinearPercentIndicator(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 0,
@@ -119,12 +224,21 @@ class ProgressPage extends StatelessWidget {
                                       backgroundColor:
                                           Color.fromARGB(255, 242, 243, 248),
                                       barRadius: const Radius.circular(20),
+                                      trailing: Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 10.0),
+                                        child: Text(
+                                          '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}%',
+                                          style:
+                                              GoogleFonts.poppins(fontSize: 16),
+                                        ),
+                                      ),
                                     ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}% Completed',
-                                      style: GoogleFonts.poppins(fontSize: 16),
-                                    ),
+                                    // SizedBox(height: 10),
+                                    // Text(
+                                    //   '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}% Completed',
+                                    //   style: GoogleFonts.poppins(fontSize: 16),
+                                    // ),
                                   ],
                                 ),
                               ),
@@ -132,14 +246,13 @@ class ProgressPage extends StatelessWidget {
                           ),
                         );
                       },
-                    ),
-                  ),
-                ],
-              );
-            }
-          }
-          return SizedBox();
-        },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
