@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const AuthPage(),
+      home: SafeArea(child: const AuthPage()),
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }

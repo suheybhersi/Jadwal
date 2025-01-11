@@ -1,81 +1,67 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:iconsax/iconsax.dart';
 
 class ProgressPage extends StatelessWidget {
-  const ProgressPage({super.key});
+  ProgressPage({super.key});
+
+  final FirestoreService firestoreService =
+      FirestoreService(FirebaseAuth.instance);
 
   @override
   Widget build(BuildContext context) {
-    // Sample data for demonstration
-    final List<Map<String, dynamic>> surahData = [
-      {'surah': 'Al-Fatiha', 'completedTasks': 7, 'totalTasks': 7, 'streak': 3},
-      {
-        'surah': 'Al-Baqarah',
-        'completedTasks': 20,
-        'totalTasks': 286,
-        'streak': 5
-      },
-      {
-        'surah': 'Al-Imran',
-        'completedTasks': 10,
-        'totalTasks': 200,
-        'streak': 2
-      },
-      // Add more Surah data as needed
-    ];
-
-    final double overallProgress = surahData.fold(
-            0.0,
-            (sum, item) =>
-                sum + (item['completedTasks'] / item['totalTasks'])) /
-        surahData.length;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Progress Page', style: GoogleFonts.poppins()),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your Overall Progress',
-              style: GoogleFonts.poppins(
-                  fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            LinearProgressIndicator(
-              value: overallProgress,
-              minHeight: 20,
-              backgroundColor: Colors.grey[300],
-              color: Colors.blue,
-            ),
-            SizedBox(height: 10),
-            Text(
-              '${(overallProgress * 100).toStringAsFixed(0)}% Completed',
-              style: GoogleFonts.poppins(fontSize: 18),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Streak: ${surahData.map((surah) => surah['streak']).reduce((a, b) => a + b)} days',
-              style: GoogleFonts.poppins(fontSize: 18),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Progress by Surah:',
-              style: GoogleFonts.poppins(
-                  fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: surahData.length,
-                itemBuilder: (context, index) {
-                  final surah = surahData[index];
-                  final double progress =
-                      surah['completedTasks'] / surah['totalTasks'];
-                  return Card(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: StreamBuilder<QuerySnapshot>(
+        stream: firestoreService.getSurahsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List surahsList = snapshot.data!.docs;
+
+            if (surahsList.isNotEmpty) {
+              // Sort surahsList by 'id'
+              surahsList
+                  .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+
+              List<Map<String, dynamic>> surahData = surahsList
+                  .map((doc) => doc.data() as Map<String, dynamic>)
+                  .toList();
+
+              // Add a title before the ListView
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 10,
+                      right: 4,
+                      top: 20.0,
+                      bottom: 15,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Iconsax.edit_2),
+                        ),
+                        Text(
+                          'Progress',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Iconsax.setting_2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Card(
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -83,42 +69,68 @@ class ProgressPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            surah['surah'],
+                            'Memorisation',
                             style: GoogleFonts.poppins(
                                 fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 10),
                           LinearProgressIndicator(
-                            value: progress,
+                            value: 0,
                             minHeight: 10,
                             backgroundColor: Colors.grey[300],
                             color: Colors.blue,
                           ),
                           SizedBox(height: 5),
                           Text(
-                            '${(progress * 100).toStringAsFixed(0)}% Completed',
-                            style: GoogleFonts.poppins(fontSize: 16),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            'Streak: ${surah['streak']} days',
+                            '${(0 > 1 ? 1 : 0 * 100).toStringAsFixed(0)}% Completed',
                             style: GoogleFonts.poppins(fontSize: 16),
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Navigate back to the previous page
-              },
-              child: Text('Back to Home', style: GoogleFonts.poppins()),
-            ),
-          ],
-        ),
+                  ),
+                  Expanded(
+                    // Ensure ListView takes available space
+                    child: ListView.builder(
+                      itemCount: surahData.length,
+                      itemBuilder: (context, index) {
+                        final surah = surahData[index];
+                        final double progress =
+                            surah['completedLines'] / surah['totalLines'];
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                surah['surah'],
+                                style: GoogleFonts.poppins(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 10),
+                              LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 10,
+                                backgroundColor: Colors.grey[300],
+                                color: Colors.blue,
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}% Completed',
+                                style: GoogleFonts.poppins(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            }
+          }
+          return SizedBox();
+        },
       ),
     );
   }

@@ -206,6 +206,16 @@ class FirestoreService extends ChangeNotifier {
     return plansStream;
   }
 
+  Stream<QuerySnapshot> getSurahsStream() {
+    final User? user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    uid = user.uid;
+    final surahsStream = surahsProgressCollection.snapshots();
+    return surahsStream;
+  }
+
 /*----------------------------------------U P D A T E   P L A N----------------------------------------*/
   Future<void> updatePlan(
     String id,
