@@ -1241,7 +1241,7 @@ class Statistics extends StatelessWidget {
                       ? 1
                       : (plan['completedLines'] / plan['totalLines'])),
                   progressColor: Color.fromARGB(255, 113, 233, 175),
-                  backgroundColor: Color.fromARGB(255, 238, 240, 247),
+                  backgroundColor: Color.fromARGB(255, 242, 243, 248),
                   barRadius: const Radius.circular(20),
                 ),
               )
