@@ -119,6 +119,11 @@ class FirestoreService extends ChangeNotifier {
 
     final document = await plansCollection.add(newPlan.toMap());
 
+    final surahsSnapshot = await surahsCollection.get();
+    for (var doc in surahsSnapshot.docs) {
+      await surahsProgressCollection.doc(doc.id).set(doc.data());
+    }
+
     updateCurrentWeek(document.id);
 
     createNewHifdh(start, lines, document.id);
@@ -441,39 +446,6 @@ class FirestoreService extends ChangeNotifier {
           sm2: [0, 2.0, 1]);
       await reviewsCollection.add(newReview.toMap());
 
-      double totalLinesFirstSurah =
-          (planData['totalLinesFirstSurah']).toDouble();
-      double totalLinesSecondSurah =
-          (planData['totalLinesSecondSurah']).toDouble();
-
-      final firstSurahSnapshot = await surahsCollection
-          .where('surah', isEqualTo: hifdh['surah'].split(' ')[0])
-          .get();
-      String firstSurahId = firstSurahSnapshot.docs[0].reference.id;
-      final firstSurahDoc = await surahsCollection.doc(firstSurahId).get();
-      Map<String, dynamic> firstSurahData =
-          firstSurahDoc.data() as Map<String, dynamic>;
-      surahsCollection.doc(firstSurahId).update({
-        'completedLines': firstSurahData['completedLines'] +
-            (totalLinesSecondSurah == 0.0
-                ? planData['lines'].toDouble()
-                : totalLinesFirstSurah)
-      });
-
-      if (totalLinesSecondSurah != 0.0) {
-        final secondSurahSnapshot = await surahsCollection
-            .where('surah', isEqualTo: hifdh['surah'].split(' ')[1])
-            .get();
-        String secondSurahId = secondSurahSnapshot.docs[0].reference.id;
-        final secondSurahDoc = await surahsCollection.doc(secondSurahId).get();
-        Map<String, dynamic> secondSurahData =
-            secondSurahDoc.data() as Map<String, dynamic>;
-        surahsCollection.doc(secondSurahId).update({
-          'completedLines':
-              secondSurahData['completedLines'] + totalLinesSecondSurah
-        });
-      }
-
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
       planData['streak'] += 1;
@@ -484,6 +456,35 @@ class FirestoreService extends ChangeNotifier {
         'completedLines': planData['completedLines'] + length,
         'currentWeek': currentWeek
       });
+
+      final surahSnapshot = await surahsProgressCollection
+          .where('surah', isEqualTo: surah.split(' ')[0])
+          .get();
+      String surahId = surahSnapshot.docs[0].reference.id;
+      final surahDoc = await surahsProgressCollection.doc(surahId).get();
+      Map<String, dynamic> surahData = surahDoc.data() as Map<String, dynamic>;
+      surahsProgressCollection
+          .doc(surahId)
+          .update({'completedLines': surahData['tempCompletedLines']});
+
+      if (surah.split(' ')[0] != surah.split(' ')[1]) {
+        final secondSurahSnapshot = await surahsProgressCollection
+            .where('surah', isEqualTo: surah.split(' ')[1])
+            .get();
+        String secondSurahId = secondSurahSnapshot.docs[0].reference.id;
+        int tempId = int.parse(surahId) + 1;
+        while (int.parse(secondSurahId) >= tempId) {
+          final nextSurahDoc =
+              await surahsProgressCollection.doc(tempId.toString()).get();
+          Map<String, dynamic> nextSurahData =
+              nextSurahDoc.data() as Map<String, dynamic>;
+          surahsProgressCollection
+              .doc(tempId.toString())
+              .update({'completedLines': nextSurahData['tempCompletedLines']});
+
+          tempId += 1;
+        }
+      }
     }
 
     /*C A L C U L A T E   H I F D H   S T A R T   A N D   E N D*/
@@ -505,6 +506,7 @@ class FirestoreService extends ChangeNotifier {
       final prevVerseDoc =
           await versesCollection.doc((int.parse(verseId) - 1).toString()).get();
       double total = double.parse(verseData['length'].toString());
+      double tempTotal = total;
       Map<String, dynamic> prevVerseData = {};
       if (prevVerseDoc.exists) {
         prevVerseData = prevVerseDoc.data() as Map<String, dynamic>;
@@ -522,11 +524,12 @@ class FirestoreService extends ChangeNotifier {
             break;
           }
           if (length < total) {
-            length - prevTotal > total - length
-                ? verseId = (int.parse(verseId) + 1).toString()
-                : verseData = prevVerseData;
-
-            // Check for next surah
+            if (length - prevTotal > total - length) {
+              verseId = (int.parse(verseId) + 1).toString();
+            } else {
+              tempTotal -= verseData['length'];
+              verseData = prevVerseData;
+            }
 
             calculated = true;
             break;
@@ -541,6 +544,22 @@ class FirestoreService extends ChangeNotifier {
           verseData = nextVerse.data() as Map<String, dynamic>;
           prevTotal = total;
           total += verseData['length'];
+
+          if (prevVerseData['surah'] != verseData['surah']) {
+            final surahSnapshot = await surahsProgressCollection
+                .where('surah', isEqualTo: prevVerseData['surah'])
+                .get();
+            String surahId = surahSnapshot.docs[0].reference.id;
+            final surahDoc = await surahsProgressCollection.doc(surahId).get();
+            Map<String, dynamic> surahData =
+                surahDoc.data() as Map<String, dynamic>;
+            surahsProgressCollection.doc(surahId).update({
+              'tempCompletedLines': surahData['completedLines'] + tempTotal
+            });
+            tempTotal = 0.0;
+          }
+
+          tempTotal += verseData['length'];
         }
       } else {
         int pages =
@@ -552,6 +571,22 @@ class FirestoreService extends ChangeNotifier {
             plansCollection.doc(id).update({'planCompleted': true});
             break;
           }
+
+          if (tempVerseData['surah'] != verseData['surah']) {
+            final surahSnapshot = await surahsProgressCollection
+                .where('surah', isEqualTo: verseData['surah'])
+                .get();
+            String surahId = surahSnapshot.docs[0].reference.id;
+            final surahDoc = await surahsProgressCollection.doc(surahId).get();
+            Map<String, dynamic> surahData =
+                surahDoc.data() as Map<String, dynamic>;
+            surahsProgressCollection.doc(surahId).update({
+              'tempCompletedLines': surahData['completedLines'] + tempTotal
+            });
+            tempTotal = 0.0;
+          }
+
+          tempTotal += verseData['length'];
           verseData = tempVerseData;
 
           verseId = (int.parse(verseId) + 1).toString();
@@ -562,6 +597,16 @@ class FirestoreService extends ChangeNotifier {
           tempVerseData = nextVerse.data() as Map<String, dynamic>;
         }
       }
+
+      final surahSnapshot = await surahsProgressCollection
+          .where('surah', isEqualTo: verseData['surah'])
+          .get();
+      String surahId = surahSnapshot.docs[0].reference.id;
+      final surahDoc = await surahsProgressCollection.doc(surahId).get();
+      Map<String, dynamic> surahData = surahDoc.data() as Map<String, dynamic>;
+      surahsProgressCollection.doc(surahId).update(
+          {'tempCompletedLines': surahData['completedLines'] + tempTotal});
+
       endKey = verseData['key'];
       endVerse = verseData['text'];
       surah += ' ${verseData['surah']}';
