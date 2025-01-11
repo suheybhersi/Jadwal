@@ -32,6 +32,10 @@ class _PlanPageState extends State<PlanPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
 

@@ -36,6 +36,9 @@ class HomePage extends StatelessWidget {
       body: StreamBuilder(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
             if (plansList.isNotEmpty) {
@@ -97,7 +100,7 @@ class HomePage extends StatelessWidget {
                       // Reset the flag after the method completes
                       updateHifdhCalled = false;
                     });
-                  } else {
+                  } else if (plan['planCompleted'] == true) {
                     return const Center(
                       child: Text(
                         'Plan Completed',
@@ -105,6 +108,8 @@ class HomePage extends StatelessWidget {
                             fontWeight: FontWeight.w700, fontSize: 30),
                       ),
                     );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
                   }
                 } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
                   hifdhMissedCalled = true;
@@ -178,13 +183,7 @@ class HomePage extends StatelessWidget {
               }
             }
           }
-          return Center(
-              child: Text(
-            'No plans...',
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.inversePrimary,
-                fontSize: 24),
-          ));
+          return Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -192,25 +191,48 @@ class HomePage extends StatelessWidget {
 
   void markHifdhAsComplete(
       String key, BuildContext context, int lines, String id) {
+    Navigator.of(context).pop();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: const Text('Mark as completed?'),
-        actions: [
-          MaterialButton(
-            onPressed: () {
-              firestoreService.createNewHifdh(key, lines, id);
-              Navigator.pop(context);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Yes'),
+      builder: (context) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            content: isLoading
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      CircularProgressIndicator(),
+                      SizedBox(width: 20),
+                      Text('Updating...'),
+                    ],
+                  )
+                : const Text('Mark as completed?'),
+            actions: isLoading
+                ? [] // No actions while loading
+                : [
+                    MaterialButton(
+                      onPressed: () async {
+                        setState(() => isLoading = true); // Show loading
+                        await firestoreService.createNewHifdh(key, lines, id);
+                        setState(() => isLoading = false); // Hide loading
+
+                        // Close both dialogs
+
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Yes'),
+                    ),
+                    MaterialButton(
+                      onPressed: () =>
+                          Navigator.pop(context), // Close the dialog
+                      child: const Text('Cancel'),
+                    ),
+                  ],
           ),
-          MaterialButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

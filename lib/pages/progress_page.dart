@@ -212,7 +212,6 @@ class ProgressContent extends StatelessWidget {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    // SizedBox(height: 10),
                                     LinearPercentIndicator(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 0,
@@ -228,17 +227,12 @@ class ProgressContent extends StatelessWidget {
                                         padding:
                                             const EdgeInsets.only(left: 10.0),
                                         child: Text(
-                                          '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}%',
+                                          '${(progress > 1 ? 100 : progress * 100).toStringAsFixed(0)}%',
                                           style:
                                               GoogleFonts.poppins(fontSize: 16),
                                         ),
                                       ),
                                     ),
-                                    // SizedBox(height: 10),
-                                    // Text(
-                                    //   '${(progress > 1 ? 1 : progress * 100).toStringAsFixed(0)}% Completed',
-                                    //   style: GoogleFonts.poppins(fontSize: 16),
-                                    // ),
                                   ],
                                 ),
                               ),
