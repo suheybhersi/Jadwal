@@ -44,6 +44,8 @@ dependencies:
   shimmer: ^3.0.0
   firebase_auth: ^5.3.1
   google_fonts: ^6.2.1
+  flutter_native_splash: ^2.4.4
+  smooth_page_indicator: ^1.2.0+3
 
 dev_dependencies:
   flutter_test:

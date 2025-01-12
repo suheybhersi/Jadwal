@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
-import 'package:hifdh_planner_app/pages/login_or_register_page.dart';
+import 'package:hifdh_planner_app/pages/onboarding.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
@@ -17,7 +17,7 @@ class AuthPage extends StatelessWidget {
               bottomNavigationBar: MyBottomNavBar(),
             );
           } else {
-            return const LoginOrRegisterPage();
+            return const OnboardingScreen();
           }
         },
       ),

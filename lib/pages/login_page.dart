@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (!mounted) return;
       Navigator.pop(context);
+      Navigator.of(context).pop();
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
