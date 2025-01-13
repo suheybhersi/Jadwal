@@ -128,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         value: true,
                         onChanged: (value) {},
                         checkColor: Colors.white,
-                        fillColor: MaterialStateProperty.all(
+                        fillColor: WidgetStateProperty.all(
                           Color.fromARGB(255, 49, 107, 253),
                         ),
                       ),
@@ -183,14 +183,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ButtonStyle(
-                      elevation: MaterialStateProperty.all(0),
-                      padding: MaterialStateProperty.all(
+                      elevation: WidgetStateProperty.all(0),
+                      padding: WidgetStateProperty.all(
                         EdgeInsets.symmetric(horizontal: 75, vertical: 16),
                       ),
-                      backgroundColor: MaterialStateProperty.all(
+                      backgroundColor: WidgetStateProperty.all(
                         Color.fromARGB(255, 73, 121, 251),
                       ),
-                      shape: MaterialStateProperty.all(
+                      shape: WidgetStateProperty.all(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                         ),

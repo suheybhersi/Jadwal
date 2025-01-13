@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                                   value: true,
                                   onChanged: (value) {},
                                   checkColor: Colors.white,
-                                  fillColor: MaterialStateProperty.all(
+                                  fillColor: WidgetStateProperty.all(
                                     Color.fromARGB(255, 49, 107, 253),
                                   ),
                                 ),
@@ -186,17 +186,17 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              elevation: MaterialStateProperty.all(0),
-                              padding: MaterialStateProperty.all(
+                              elevation: WidgetStateProperty.all(0),
+                              padding: WidgetStateProperty.all(
                                 EdgeInsets.symmetric(
                                   horizontal: 75,
                                   vertical: 16,
                                 ),
                               ),
-                              backgroundColor: MaterialStateProperty.all(
+                              backgroundColor: WidgetStateProperty.all(
                                 Color.fromARGB(255, 73, 121, 251),
                               ),
-                              shape: MaterialStateProperty.all(
+                              shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.0),
                                 ),
@@ -217,22 +217,22 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           child: OutlinedButton(
                             style: ButtonStyle(
-                              elevation: MaterialStateProperty.all(0),
-                              side: MaterialStateProperty.all(
+                              elevation: WidgetStateProperty.all(0),
+                              side: WidgetStateProperty.all(
                                 BorderSide(
                                   width: 1,
                                   color: Colors.grey.shade400,
                                 ),
                               ),
-                              padding: MaterialStateProperty.all(
+                              padding: WidgetStateProperty.all(
                                 EdgeInsets.symmetric(
                                   horizontal: 75,
                                   vertical: 16,
                                 ),
                               ),
                               backgroundColor:
-                                  MaterialStateProperty.all(Colors.transparent),
-                              shape: MaterialStateProperty.all(
+                                  WidgetStateProperty.all(Colors.transparent),
+                              shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20.0),
                                 ),
