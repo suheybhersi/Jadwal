@@ -37,8 +37,8 @@ class OnboardingScreen extends StatelessWidget {
             ],
           ),
           Positioned(
-            top: kToolbarHeight,
-            right: 16,
+            top: kToolbarHeight - 20,
+            right: 5,
             child: TextButton(
               onPressed: () => OnBoardingController.instance.skipPage(),
               child: Text(

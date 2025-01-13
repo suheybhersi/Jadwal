@@ -1048,6 +1048,8 @@ class FirestoreService extends ChangeNotifier {
         await reviewsCollection.where('planId', isEqualTo: id).get();
     final weeksSnapshot =
         await weeksCollection.where('planId', isEqualTo: id).get();
+        final surahsSnapshot =
+        await surahsProgressCollection.where('planId', isEqualTo: id).get();
 
     for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
       await hifdhsSnapshot.docs[i].reference.delete();
@@ -1060,6 +1062,9 @@ class FirestoreService extends ChangeNotifier {
     }
     for (int i = 0; i < weeksSnapshot.docs.length; i++) {
       await weeksSnapshot.docs[i].reference.delete();
+    }
+    for (int i = 0; i < surahsSnapshot.docs.length; i++) {
+      await surahsSnapshot.docs[i].reference.delete();
     }
   }
 }
