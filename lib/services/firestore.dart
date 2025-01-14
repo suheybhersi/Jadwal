@@ -212,6 +212,16 @@ class FirestoreService extends ChangeNotifier {
       throw Exception('User not authenticated');
     }
     uid = user.uid;
+    final surahsStream = surahsCollection.snapshots();
+    return surahsStream;
+  }
+
+  Stream<QuerySnapshot> getSurahProgressStream() {
+    final User? user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    uid = user.uid;
     final surahsStream = surahsProgressCollection.snapshots();
     return surahsStream;
   }
@@ -1048,7 +1058,7 @@ class FirestoreService extends ChangeNotifier {
         await reviewsCollection.where('planId', isEqualTo: id).get();
     final weeksSnapshot =
         await weeksCollection.where('planId', isEqualTo: id).get();
-        final surahsSnapshot =
+    final surahsSnapshot =
         await surahsProgressCollection.where('planId', isEqualTo: id).get();
 
     for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {

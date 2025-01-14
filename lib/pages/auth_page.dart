@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
+import 'package:hifdh_planner_app/pages/new_plan.dart';
 import 'package:hifdh_planner_app/pages/onboarding.dart';
+import 'package:hifdh_planner_app/services/firestore.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
@@ -13,8 +15,19 @@ class AuthPage extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return const Scaffold(
-              bottomNavigationBar: MyBottomNavBar(),
+            final FirestoreService firestoreService =
+                FirestoreService(FirebaseAuth.instance);
+            return StreamBuilder(
+              stream: firestoreService.getPlansStream(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  return const Scaffold(
+                    bottomNavigationBar: MyBottomNavBar(),
+                  );
+                } else {
+                  return const NewPlanScreen();
+                }
+              },
             );
           } else {
             return const OnboardingScreen();

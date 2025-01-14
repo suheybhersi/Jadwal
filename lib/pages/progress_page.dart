@@ -112,7 +112,7 @@ class ProgressContent extends StatelessWidget {
           // List of Surahs
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: firestoreService.getSurahsStream(),
+              stream: firestoreService.getSurahProgressStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());

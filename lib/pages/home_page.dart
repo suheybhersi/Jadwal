@@ -37,7 +37,17 @@ class HomePage extends StatelessWidget {
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Column(
+              children: [
+                Center(child: CircularProgressIndicator()),
+                IconButton(
+                  onPressed: signUserOut,
+                  icon: Icon(
+                    Iconsax.setting_2,
+                  ),
+                ),
+              ],
+            );
           }
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
@@ -183,7 +193,17 @@ class HomePage extends StatelessWidget {
               }
             }
           }
-          return Center(child: CircularProgressIndicator());
+          return Column(
+            children: [
+              Center(child: CircularProgressIndicator()),
+              IconButton(
+                onPressed: signUserOut,
+                icon: Icon(
+                  Iconsax.setting_2,
+                ),
+              ),
+            ],
+          );
         },
       ),
     );

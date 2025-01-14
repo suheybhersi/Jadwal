@@ -46,6 +46,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_native_splash: ^2.4.4
   smooth_page_indicator: ^1.2.0+3
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:
