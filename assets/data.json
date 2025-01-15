@@ -56133,6 +56133,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 7,
+                "surahNumber": 1,
                 "__collections__": {}
             },
             "2": {
@@ -56141,6 +56142,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 286,
+                "surahNumber": 2,
                 "__collections__": {}
             },
             "3": {
@@ -56149,6 +56151,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 200,
+                "surahNumber": 3,
                 "__collections__": {}
             },
             "4": {
@@ -56157,6 +56160,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 176,
+                "surahNumber": 4,
                 "__collections__": {}
             },
             "5": {
@@ -56165,6 +56169,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 120,
+                "surahNumber": 5,
                 "__collections__": {}
             },
             "6": {
@@ -56173,6 +56178,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 165,
+                "surahNumber": 6,
                 "__collections__": {}
             },
             "7": {
@@ -56181,6 +56187,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 206,
+                "surahNumber": 7,
                 "__collections__": {}
             },
             "8": {
@@ -56189,6 +56196,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 75,
+                "surahNumber": 8,
                 "__collections__": {}
             },
             "9": {
@@ -56197,6 +56205,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 129,
+                "surahNumber": 9,
                 "__collections__": {}
             },
             "10": {
@@ -56205,6 +56214,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 109,
+                "surahNumber": 10,
                 "__collections__": {}
             },
             "11": {
@@ -56213,6 +56223,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 123,
+                "surahNumber": 11,
                 "__collections__": {}
             },
             "12": {
@@ -56221,6 +56232,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 111,
+                "surahNumber": 12,
                 "__collections__": {}
             },
             "13": {
@@ -56229,6 +56241,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 43,
+                "surahNumber": 13,
                 "__collections__": {}
             },
             "14": {
@@ -56237,6 +56250,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
+                "surahNumber": 14,
                 "__collections__": {}
             },
             "15": {
@@ -56245,6 +56259,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 99,
+                "surahNumber": 15,
                 "__collections__": {}
             },
             "16": {
@@ -56253,6 +56268,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 128,
+                "surahNumber": 16,
                 "__collections__": {}
             },
             "17": {
@@ -56261,6 +56277,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 111,
+                "surahNumber": 17,
                 "__collections__": {}
             },
             "18": {
@@ -56269,6 +56286,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 110,
+                "surahNumber": 18,
                 "__collections__": {}
             },
             "19": {
@@ -56277,6 +56295,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 98,
+                "surahNumber": 19,
                 "__collections__": {}
             },
             "20": {
@@ -56285,6 +56304,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 135,
+                "surahNumber": 20,
                 "__collections__": {}
             },
             "21": {
@@ -56293,6 +56313,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 112,
+                "surahNumber": 21,
                 "__collections__": {}
             },
             "22": {
@@ -56301,6 +56322,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 78,
+                "surahNumber": 22,
                 "__collections__": {}
             },
             "23": {
@@ -56309,6 +56331,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 118,
+                "surahNumber": 23,
                 "__collections__": {}
             },
             "24": {
@@ -56317,6 +56340,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 64,
+                "surahNumber": 24,
                 "__collections__": {}
             },
             "25": {
@@ -56325,6 +56349,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 77,
+                "surahNumber": 25,
                 "__collections__": {}
             },
             "26": {
@@ -56333,6 +56358,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 227,
+                "surahNumber": 26,
                 "__collections__": {}
             },
             "27": {
@@ -56341,6 +56367,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 93,
+                "surahNumber": 27,
                 "__collections__": {}
             },
             "28": {
@@ -56349,6 +56376,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 88,
+                "surahNumber": 28,
                 "__collections__": {}
             },
             "29": {
@@ -56357,6 +56385,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 69,
+                "surahNumber": 29,
                 "__collections__": {}
             },
             "30": {
@@ -56365,6 +56394,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 60,
+                "surahNumber": 30,
                 "__collections__": {}
             },
             "31": {
@@ -56373,6 +56403,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 34,
+                "surahNumber": 31,
                 "__collections__": {}
             },
             "32": {
@@ -56381,6 +56412,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
+                "surahNumber": 32,
                 "__collections__": {}
             },
             "33": {
@@ -56389,6 +56421,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 73,
+                "surahNumber": 33,
                 "__collections__": {}
             },
             "34": {
@@ -56397,6 +56430,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 54,
+                "surahNumber": 34,
                 "__collections__": {}
             },
             "35": {
@@ -56405,6 +56439,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 45,
+                "surahNumber": 35,
                 "__collections__": {}
             },
             "36": {
@@ -56413,6 +56448,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 83,
+                "surahNumber": 36,
                 "__collections__": {}
             },
             "37": {
@@ -56421,6 +56457,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 182,
+                "surahNumber": 37,
                 "__collections__": {}
             },
             "38": {
@@ -56429,6 +56466,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 88,
+                "surahNumber": 38,
                 "__collections__": {}
             },
             "39": {
@@ -56437,6 +56475,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 75,
+                "surahNumber": 39,
                 "__collections__": {}
             },
             "40": {
@@ -56445,6 +56484,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 85,
+                "surahNumber": 40,
                 "__collections__": {}
             },
             "41": {
@@ -56453,6 +56493,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 54,
+                "surahNumber": 41,
                 "__collections__": {}
             },
             "42": {
@@ -56461,6 +56502,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 53,
+                "surahNumber": 42,
                 "__collections__": {}
             },
             "43": {
@@ -56469,6 +56511,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 89,
+                "surahNumber": 43,
                 "__collections__": {}
             },
             "44": {
@@ -56477,6 +56520,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 59,
+                "surahNumber": 44,
                 "__collections__": {}
             },
             "45": {
@@ -56485,6 +56529,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 37,
+                "surahNumber": 45,
                 "__collections__": {}
             },
             "46": {
@@ -56493,6 +56538,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 35,
+                "surahNumber": 46,
                 "__collections__": {}
             },
             "47": {
@@ -56501,6 +56547,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 38,
+                "surahNumber": 47,
                 "__collections__": {}
             },
             "48": {
@@ -56509,6 +56556,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
+                "surahNumber": 48,
                 "__collections__": {}
             },
             "49": {
@@ -56517,6 +56565,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 18,
+                "surahNumber": 49,
                 "__collections__": {}
             },
             "50": {
@@ -56525,6 +56574,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 45,
+                "surahNumber": 50,
                 "__collections__": {}
             },
             "51": {
@@ -56533,6 +56583,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 60,
+                "surahNumber": 51,
                 "__collections__": {}
             },
             "52": {
@@ -56541,6 +56592,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 49,
+                "surahNumber": 52,
                 "__collections__": {}
             },
             "53": {
@@ -56549,6 +56601,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 62,
+                "surahNumber": 53,
                 "__collections__": {}
             },
             "54": {
@@ -56557,6 +56610,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 55,
+                "surahNumber": 54,
                 "__collections__": {}
             },
             "55": {
@@ -56565,6 +56619,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 78,
+                "surahNumber": 55,
                 "__collections__": {}
             },
             "56": {
@@ -56573,6 +56628,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 96,
+                "surahNumber": 56,
                 "__collections__": {}
             },
             "57": {
@@ -56581,6 +56637,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
+                "surahNumber": 57,
                 "__collections__": {}
             },
             "58": {
@@ -56589,6 +56646,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 22,
+                "surahNumber": 58,
                 "__collections__": {}
             },
             "59": {
@@ -56597,6 +56655,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 24,
+                "surahNumber": 59,
                 "__collections__": {}
             },
             "60": {
@@ -56605,6 +56664,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 13,
+                "surahNumber": 60,
                 "__collections__": {}
             },
             "61": {
@@ -56613,6 +56673,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 14,
+                "surahNumber": 61,
                 "__collections__": {}
             },
             "62": {
@@ -56621,6 +56682,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
+                "surahNumber": 62,
                 "__collections__": {}
             },
             "63": {
@@ -56629,6 +56691,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
+                "surahNumber": 63,
                 "__collections__": {}
             },
             "64": {
@@ -56637,6 +56700,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 18,
+                "surahNumber": 64,
                 "__collections__": {}
             },
             "65": {
@@ -56645,6 +56709,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 12,
+                "surahNumber": 65,
                 "__collections__": {}
             },
             "66": {
@@ -56653,6 +56718,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 12,
+                "surahNumber": 66,
                 "__collections__": {}
             },
             "67": {
@@ -56661,6 +56727,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
+                "surahNumber": 67,
                 "__collections__": {}
             },
             "68": {
@@ -56669,6 +56736,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
+                "surahNumber": 68,
                 "__collections__": {}
             },
             "69": {
@@ -56677,6 +56745,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
+                "surahNumber": 69,
                 "__collections__": {}
             },
             "70": {
@@ -56685,6 +56754,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 44,
+                "surahNumber": 70,
                 "__collections__": {}
             },
             "71": {
@@ -56693,6 +56763,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 28,
+                "surahNumber": 71,
                 "__collections__": {}
             },
             "72": {
@@ -56701,6 +56772,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 28,
+                "surahNumber": 72,
                 "__collections__": {}
             },
             "73": {
@@ -56709,6 +56781,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 20,
+                "surahNumber": 73,
                 "__collections__": {}
             },
             "74": {
@@ -56717,6 +56790,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 56,
+                "surahNumber": 74,
                 "__collections__": {}
             },
             "75": {
@@ -56725,6 +56799,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 40,
+                "surahNumber": 75,
                 "__collections__": {}
             },
             "76": {
@@ -56733,6 +56808,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 31,
+                "surahNumber": 76,
                 "__collections__": {}
             },
             "77": {
@@ -56741,6 +56817,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 50,
+                "surahNumber": 77,
                 "__collections__": {}
             },
             "78": {
@@ -56749,6 +56826,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 40,
+                "surahNumber": 78,
                 "__collections__": {}
             },
             "79": {
@@ -56757,6 +56835,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 46,
+                "surahNumber": 79,
                 "__collections__": {}
             },
             "80": {
@@ -56765,6 +56844,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 42,
+                "surahNumber": 80,
                 "__collections__": {}
             },
             "81": {
@@ -56773,6 +56853,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
+                "surahNumber": 81,
                 "__collections__": {}
             },
             "82": {
@@ -56781,6 +56862,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
+                "surahNumber": 82,
                 "__collections__": {}
             },
             "83": {
@@ -56789,6 +56871,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 36,
+                "surahNumber": 83,
                 "__collections__": {}
             },
             "84": {
@@ -56797,6 +56880,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 25,
+                "surahNumber": 84,
                 "__collections__": {}
             },
             "85": {
@@ -56805,6 +56889,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 22,
+                "surahNumber": 85,
                 "__collections__": {}
             },
             "86": {
@@ -56813,6 +56898,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 17,
+                "surahNumber": 86,
                 "__collections__": {}
             },
             "87": {
@@ -56821,6 +56907,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
+                "surahNumber": 87,
                 "__collections__": {}
             },
             "88": {
@@ -56829,6 +56916,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 26,
+                "surahNumber": 88,
                 "__collections__": {}
             },
             "89": {
@@ -56837,6 +56925,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
+                "surahNumber": 89,
                 "__collections__": {}
             },
             "90": {
@@ -56845,6 +56934,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 20,
+                "surahNumber": 90,
                 "__collections__": {}
             },
             "91": {
@@ -56853,6 +56943,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 15,
+                "surahNumber": 91,
                 "__collections__": {}
             },
             "92": {
@@ -56861,6 +56952,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 21,
+                "surahNumber": 92,
                 "__collections__": {}
             },
             "93": {
@@ -56869,6 +56961,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
+                "surahNumber": 93,
                 "__collections__": {}
             },
             "94": {
@@ -56877,6 +56970,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
+                "surahNumber": 94,
                 "__collections__": {}
             },
             "95": {
@@ -56885,6 +56979,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
+                "surahNumber": 95,
                 "__collections__": {}
             },
             "96": {
@@ -56893,6 +56988,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
+                "surahNumber": 96,
                 "__collections__": {}
             },
             "97": {
@@ -56901,6 +56997,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
+                "surahNumber": 97,
                 "__collections__": {}
             },
             "98": {
@@ -56909,6 +57006,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
+                "surahNumber": 98,
                 "__collections__": {}
             },
             "99": {
@@ -56917,6 +57015,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
+                "surahNumber": 99,
                 "__collections__": {}
             },
             "100": {
@@ -56925,6 +57024,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
+                "surahNumber": 100,
                 "__collections__": {}
             },
             "101": {
@@ -56933,6 +57033,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
+                "surahNumber": 101,
                 "__collections__": {}
             },
             "102": {
@@ -56941,6 +57042,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
+                "surahNumber": 102,
                 "__collections__": {}
             },
             "103": {
@@ -56949,6 +57051,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
+                "surahNumber": 103,
                 "__collections__": {}
             },
             "104": {
@@ -56957,6 +57060,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 9,
+                "surahNumber": 104,
                 "__collections__": {}
             },
             "105": {
@@ -56965,6 +57069,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
+                "surahNumber": 105,
                 "__collections__": {}
             },
             "106": {
@@ -56973,6 +57078,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 4,
+                "surahNumber": 106,
                 "__collections__": {}
             },
             "107": {
@@ -56981,6 +57087,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 7,
+                "surahNumber": 107,
                 "__collections__": {}
             },
             "108": {
@@ -56989,6 +57096,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
+                "surahNumber": 108,
                 "__collections__": {}
             },
             "109": {
@@ -56997,6 +57105,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 6,
+                "surahNumber": 109,
                 "__collections__": {}
             },
             "110": {
@@ -57005,6 +57114,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
+                "surahNumber": 110,
                 "__collections__": {}
             },
             "111": {
@@ -57013,6 +57123,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
+                "surahNumber": 111,
                 "__collections__": {}
             },
             "112": {
@@ -57021,6 +57132,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 4,
+                "surahNumber": 112,
                 "__collections__": {}
             },
             "113": {
@@ -57029,6 +57141,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
+                "surahNumber": 113,
                 "__collections__": {}
             },
             "114": {
@@ -57037,6 +57150,7 @@
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 6,
+                "surahNumber": 114,
                 "__collections__": {}
             }
         }

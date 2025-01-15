@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
 import 'package:hifdh_planner_app/components/drop_down.dart';
 import 'package:hifdh_planner_app/components/verse_picker.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 
 class NewPlanScreen extends StatelessWidget {
@@ -17,77 +16,93 @@ class NewPlanScreen extends StatelessWidget {
     final FirestoreService firestoreService =
         FirestoreService(FirebaseAuth.instance);
 
-    // void _storeNewPlan(BuildContext context) {
-    //   firestoreService.addPlan();
-    // }
+    void storeNewPlan() {
+      //form key surah should be the surah number and verse should be the verse number
 
-    return StreamBuilder(
-      stream: firestoreService.getSurahsStream(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      String fromKey =
+          '${controller.selectedFromSurahData.value?['surahNumber']}:${controller.selectedFromVerse.value}';
+      String toKey =
+          '${controller.selectedToSurahData.value?['surahNumber']}:${controller.selectedToVerse.value}';
+      // firestoreService.addPlan(
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Text(
-              'No data available.',
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-            ),
+      // );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: Obx(() => controller.currentPageIndex.value != 0
+            ? IconButton(
+                onPressed: () => controller.pageController
+                    .jumpToPage(controller.currentPageIndex.value - 1),
+                icon: Icon(Icons.arrow_back),
+              )
+            : Container()),
+      ),
+      body: StreamBuilder(
+        stream: firestoreService.getSurahsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text(
+                'No data available.',
+                style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+              ),
+            );
+          }
+
+          final surahsList = snapshot.data!.docs;
+          surahsList.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+
+          // Map Firestore data to a usable list
+          final allData = surahsList
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+
+          List<String> surahNames =
+              allData.map((data) => data['surah'] as String).toList();
+
+          return Stack(
+            children: [
+              // PageView
+              PageView(
+                controller: controller.pageController,
+                onPageChanged: controller.updatePageIndicator,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  const IntroPage(),
+                  MemorisedPage(
+                    surahNames: surahNames,
+                    controller: controller,
+                    allData: allData,
+                    text: 'From what verse have you memorised?',
+                    pageKey: 'from',
+                  ),
+                  MemorisedPage(
+                    surahNames: surahNames,
+                    controller: controller,
+                    allData: allData,
+                    text: 'To what verse have you memorised?',
+                    pageKey: 'to',
+                  ),
+                  const PlanDetailsPage(),
+                  const ReviewPage(
+                    title: 'Review and Confirm',
+                    description:
+                        'Review your Hifdh plan and make sure everything is set before starting.',
+                  ),
+                ],
+              ),
+              // Bottom Navigation Section
+              BottomNavigation(
+                  controller: controller, onNextPressed: storeNewPlan),
+            ],
           );
-        }
-
-        final surahsList = snapshot.data!.docs;
-        surahsList.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
-
-        // Map Firestore data to a usable list
-        final allData = surahsList
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
-
-        List<String> surahNames =
-            allData.map((data) => data['surah'] as String).toList();
-
-        return Scaffold(
-          body: SafeArea(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // PageView
-                PageView(
-                  controller: controller.pageController,
-                  onPageChanged: controller.updatePageIndicator,
-                  children: [
-                    const IntroPage(),
-                    MemorisedPage(
-                      surahNames: surahNames,
-                      controller: controller,
-                      allData: allData,
-                      text: 'From what verse have you memorised?',
-                      pageKey: 'from',
-                    ),
-                    MemorisedPage(
-                      surahNames: surahNames,
-                      controller: controller,
-                      allData: allData,
-                      text: 'To what verse have you memorised?',
-                      pageKey: 'to',
-                    ),
-                    const PlanDetailsPage(),
-                    const ReviewPage(
-                      title: 'Review and Confirm',
-                      description:
-                          'Review your Hifdh plan and make sure everything is set before starting.',
-                    ),
-                  ],
-                ),
-                // Bottom Navigation Section
-                BottomNavigation(controller: controller),
-              ],
-            ),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }
@@ -96,10 +111,11 @@ class BottomNavigation extends StatelessWidget {
   const BottomNavigation({
     super.key,
     required this.controller,
+    required this.onNextPressed,
   });
 
   final NewPlanController controller;
-
+  final VoidCallback onNextPressed;
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -109,17 +125,6 @@ class BottomNavigation extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Smooth Page Indicator
-            SmoothPageIndicator(
-              controller: controller.pageController,
-              count: 5,
-              effect: const ExpandingDotsEffect(
-                activeDotColor: Color(0xFF2A2A2A),
-                dotColor: Color(0xFFDADADA),
-                dotHeight: 8,
-                dotWidth: 8,
-              ),
-            ),
             const SizedBox(height: 30),
             // Next Button
             Padding(
@@ -143,14 +148,21 @@ class BottomNavigation extends StatelessWidget {
                       ),
                     ),
                   ),
-                  onPressed: controller.nextPage,
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
+                  onPressed: () {
+                    controller.nextPage();
+                    if (controller.currentPageIndex.value == 4) {
+                      onNextPressed();
+                    }
+                  },
+                  child: Obx(() => Text(
+                        controller.currentPageIndex.value == 4
+                            ? 'Confirm'
+                            : 'Next',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      )),
                 ),
               ),
             ),
@@ -169,13 +181,12 @@ class IntroPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.book,
-            size: 40,
+            size: 50,
             color: Colors.blue.shade700,
           ),
           SizedBox(
@@ -185,7 +196,7 @@ class IntroPage extends StatelessWidget {
             'Lets get some details about your memorisation',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
-              fontSize: 20,
+              fontSize: 24,
               color: const Color.fromARGB(255, 31, 31, 31),
             ),
             textAlign: TextAlign.center,
@@ -196,7 +207,7 @@ class IntroPage extends StatelessWidget {
           Text(
             "We will ask you about how much you've already memorised, what your availability is like and how much you wish to do each day.",
             style: GoogleFonts.poppins(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w400,
               color: Colors.grey.shade600,
             ),
@@ -227,7 +238,7 @@ class MemorisedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -307,12 +318,11 @@ class PlanDetailsPage extends StatelessWidget {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
-
           Text(
             'Plan Details',
             style: GoogleFonts.poppins(
@@ -332,7 +342,7 @@ class PlanDetailsPage extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 40),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -409,7 +419,7 @@ class PlanDetailsPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 30),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -531,6 +541,7 @@ class ReviewPage extends StatelessWidget {
             color: Colors.blue.shade50,
             borderColor: Colors.blue.shade200,
             textColor: Colors.blue.shade700,
+            onEdit: () => controller.pageController.jumpToPage(1),
           ),
 
           const SizedBox(height: 20),
@@ -555,6 +566,7 @@ class ReviewPage extends StatelessWidget {
             color: Colors.green.shade50,
             borderColor: Colors.green.shade200,
             textColor: Colors.green.shade700,
+            onEdit: () => controller.pageController.jumpToPage(3),
           ),
 
           const SizedBox(height: 20),
@@ -567,6 +579,9 @@ class ReviewPage extends StatelessWidget {
             color: Colors.purple.shade50,
             borderColor: Colors.purple.shade200,
             textColor: Colors.purple.shade700,
+            onEdit: () {
+              controller.pageController.jumpToPage(3);
+            },
           ),
         ],
       ),
@@ -582,6 +597,7 @@ class SectionCard extends StatelessWidget {
     required this.color,
     required this.borderColor,
     required this.textColor,
+    required this.onEdit,
   });
 
   final String title;
@@ -589,6 +605,7 @@ class SectionCard extends StatelessWidget {
   final Color color;
   final Color borderColor;
   final Color textColor;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -612,15 +629,46 @@ class SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Title
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
+
+              // Edit Button
+
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: borderColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Edit',
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: textColor),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
+
+          // Content
           Text(
             content,
             style: GoogleFonts.poppins(
@@ -713,7 +761,8 @@ class NewPlanController extends GetxController {
             'Please fill out all fields and select at least one day.';
       }
     } else if (currentPageIndex.value == 4) {
-      Get.to(() => MyBottomNavBar());
+      // Get.to(() => MyBottomNavBar());
+      pageController.jumpToPage(0);
     }
   }
 }
