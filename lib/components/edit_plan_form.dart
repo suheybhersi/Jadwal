@@ -17,7 +17,6 @@ class EditPlanForm extends StatefulWidget {
 class _EditPlanFormState extends State<EditPlanForm> {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
-  final TextEditingController nameController = TextEditingController();
   final TextEditingController linesController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
@@ -26,7 +25,6 @@ class _EditPlanFormState extends State<EditPlanForm> {
   void updatePlan(BuildContext context, List<dynamic> selectedDays) {
     firestoreService.updatePlan(
       widget.id,
-      nameController.text.isEmpty ? widget.plan['name'] : nameController.text,
       linesController.text.isEmpty
           ? widget.plan['lines']
           : int.parse(linesController.text),
@@ -34,7 +32,6 @@ class _EditPlanFormState extends State<EditPlanForm> {
     );
 
     // Clear text fields and close dialog
-    nameController.clear();
     linesController.clear();
     Navigator.of(context).pop();
   }
@@ -53,16 +50,6 @@ class _EditPlanFormState extends State<EditPlanForm> {
         key: _formKey,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: TextFormField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  hintText: widget.plan['name'],
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
               child: TextFormField(

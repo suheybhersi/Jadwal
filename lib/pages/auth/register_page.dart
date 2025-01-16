@@ -134,46 +134,48 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     SizedBox(width: 5),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'I agree to the ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade600,
+                    Flexible(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'I agree to the ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: 'Privacy Policy',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ).apply(
-                              decoration: TextDecoration.underline,
-                              color: Color.fromARGB(255, 49, 107, 253),
-                              decorationColor:
-                                  Color.fromARGB(255, 49, 107, 253),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ).apply(
+                                decoration: TextDecoration.underline,
+                                color: Color.fromARGB(255, 49, 107, 253),
+                                decorationColor:
+                                    Color.fromARGB(255, 49, 107, 253),
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: ' and ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade600,
+                            TextSpan(
+                              text: ' and ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: 'Terms of Use',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ).apply(
-                              decoration: TextDecoration.underline,
-                              color: Color.fromARGB(255, 49, 107, 253),
-                              decorationColor:
-                                  Color.fromARGB(255, 49, 107, 253),
+                            TextSpan(
+                              text: 'Terms of Use',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ).apply(
+                                decoration: TextDecoration.underline,
+                                color: Color.fromARGB(255, 49, 107, 253),
+                                decorationColor:
+                                    Color.fromARGB(255, 49, 107, 253),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

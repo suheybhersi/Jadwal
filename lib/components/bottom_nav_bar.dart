@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hifdh_planner_app/pages/home_page.dart';
-import 'package:hifdh_planner_app/pages/plan_page.dart';
-import 'package:hifdh_planner_app/pages/progress_page.dart';
-import 'package:hifdh_planner_app/pages/schedule_page.dart';
+import 'package:hifdh_planner_app/pages/screens/home_page.dart';
+import 'package:hifdh_planner_app/pages/screens/plan_page.dart';
+import 'package:hifdh_planner_app/pages/screens/progress_page.dart';
 import 'package:iconsax/iconsax.dart';
 
 class MyBottomNavBar extends StatelessWidget {
@@ -124,6 +123,5 @@ class NavigatorController extends GetxController {
     HomePage(),
     PlanPage(),
     ProgressPage(),
-    SchedulePage(),
   ];
 }

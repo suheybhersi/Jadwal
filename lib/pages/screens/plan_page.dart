@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/components/edit_plan_form.dart';
-import 'package:hifdh_planner_app/components/my_stepper.dart';
+
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -18,12 +18,6 @@ class PlanPage extends StatefulWidget {
 class _PlanPageState extends State<PlanPage> {
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
-  void newPlanStepper() {
-    showDialog(
-      context: context,
-      builder: (context) => const MyStepper(),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,22 +56,36 @@ class _PlanPageState extends State<PlanPage> {
                     PlanProgress(
                       plan: plan,
                     ),
-                    PreviousMemorisation(
-                      plan: plan,
-                    ),
-                    PreviousReviews(
-                      plan: plan,
-                    ),
+                    plan['hifdhs']
+                            .where((hifdh) => hifdh['completed'] == true)
+                            .isNotEmpty
+                        ? Column(
+                            children: [
+                              PreviousMemorisation(
+                                plan: plan,
+                              ),
+                              PreviousReviews(
+                                plan: plan,
+                              ),
+                            ],
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Text(
+                              'No history found.',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               );
             }
           }
           return Center(
-            child: IconButton(
-              onPressed: newPlanStepper,
-              icon: const Icon(Iconsax.pen_add),
-            ),
+            child: Text('No plans found'),
           );
         },
       ),
@@ -101,7 +109,7 @@ class PlanPageHeader extends StatelessWidget {
       padding: const EdgeInsets.only(
         left: 10,
         right: 4,
-        top: 20.0,
+        top: 10.0,
         bottom: 15,
       ),
       child: Row(

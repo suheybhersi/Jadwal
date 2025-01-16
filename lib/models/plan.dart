@@ -1,19 +1,12 @@
 import 'package:hifdh_planner_app/models/current_weekday.dart';
-import 'package:hifdh_planner_app/models/daily_reading.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/review.dart';
 
 class Plan {
-  final String name;
   final String start;
   final String end;
   final int lines;
   final List<bool> hifdhDays;
-  final int pages;
-  final int dailyReadingFrom;
-  final int dailyReadingTo;
-  final List<bool> dailyReadingDays;
-  final List<DailyReading> dailyReadings;
   final double totalLines;
   final double completedLines;
   final List<Hifdh> hifdhs;
@@ -25,16 +18,10 @@ class Plan {
   final bool planCompleted;
 
   Plan({
-    required this.name,
     required this.start,
     required this.end,
     required this.lines,
     required this.hifdhDays,
-    required this.pages,
-    required this.dailyReadingFrom,
-    required this.dailyReadingTo,
-    required this.dailyReadingDays,
-    required this.dailyReadings,
     required this.totalLines,
     required this.completedLines,
     required this.hifdhs,
@@ -48,16 +35,10 @@ class Plan {
 
   Map<String, dynamic> toMap() {
     return {
-      'name': name,
       'start': start,
       'end': end,
       'lines': lines,
       'hifdhDays': hifdhDays,
-      'pages': pages,
-      'dailyReadingFrom': dailyReadingFrom,
-      'dailyReadingTo': dailyReadingTo,
-      'dailyReadingDays': dailyReadingDays,
-      'dailyReadings': dailyReadings,
       'totalLines': totalLines,
       'completedLines': completedLines,
       'hifdhs': hifdhs,

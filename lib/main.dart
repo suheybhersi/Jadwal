@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hifdh_planner_app/firebase_options.dart';
-import 'package:hifdh_planner_app/pages/auth_page.dart';
+import 'package:hifdh_planner_app/pages/auth/auth_page.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SafeArea(child: const AuthPage()),
+      home: AuthPage(),
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }

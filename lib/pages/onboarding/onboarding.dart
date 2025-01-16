@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/pages/login_or_register_page.dart';
+import 'package:hifdh_planner_app/pages/auth/login_or_register_page.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -50,19 +49,7 @@ class OnboardingScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: kBottomNavigationBarHeight + 20,
-            left: 25,
-            child: SmoothPageIndicator(
-              controller: controller.pageController,
-              onDotClicked: controller.dotNavigationClick,
-              count: 3,
-              effect: ExpandingDotsEffect(
-                  activeDotColor: const Color.fromARGB(255, 42, 42, 42),
-                  dotHeight: 6),
-            ),
-          ),
-          Positioned(
-            bottom: kBottomNavigationBarHeight,
+            bottom: kBottomNavigationBarHeight - 20,
             right: 16,
             child: ElevatedButton(
               onPressed: () => OnBoardingController.instance.nextPage(),
@@ -132,10 +119,6 @@ class OnBoardingController extends GetxController {
   Rx<int> currentPageIndex = 0.obs;
 
   void updatePageIndicator(index) => currentPageIndex.value = index;
-  void dotNavigationClick(index) {
-    currentPageIndex.value = index;
-    pageController.jumpTo(index);
-  }
 
   void nextPage() {
     if (currentPageIndex.value == 2) {

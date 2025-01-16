@@ -4,14 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:flutter/services.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
-  HomePage({super.key}) {
-    // Hide status bar
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  }
+  HomePage({super.key});
 
   final FirestoreService firestoreService =
       FirestoreService(FirebaseAuth.instance);
@@ -134,7 +130,7 @@ class HomePage extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(
-                            left: 20, right: 10, top: 20.0, bottom: 15),
+                            left: 20, right: 10, top: 10.0, bottom: 15),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

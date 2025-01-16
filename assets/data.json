@@ -56129,7 +56129,7 @@
         "surahs": {
             "1": {
                 "surah": "Al-Fatiha",
-                "totalLines": 7.0,
+                "totalLines": 7,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 7,
@@ -56138,7 +56138,7 @@
             },
             "2": {
                 "surah": "Al-Baqarah",
-                "totalLines": 711.1600000000001,
+                "totalLines": 711,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 286,
@@ -56147,7 +56147,7 @@
             },
             "3": {
                 "surah": "Ali-Imran",
-                "totalLines": 402.06,
+                "totalLines": 402,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 200,
@@ -56156,7 +56156,7 @@
             },
             "4": {
                 "surah": "An-Nisa",
-                "totalLines": 439.1099999999999,
+                "totalLines": 439,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 176,
@@ -56165,7 +56165,7 @@
             },
             "5": {
                 "surah": "Al-Ma'idah",
-                "totalLines": 323.0300000000001,
+                "totalLines": 323,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 120,
@@ -56174,7 +56174,7 @@
             },
             "6": {
                 "surah": "Al-An'am",
-                "totalLines": 343.09000000000003,
+                "totalLines": 343,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 165,
@@ -56183,7 +56183,7 @@
             },
             "7": {
                 "surah": "Al-A'raf",
-                "totalLines": 388.1699999999999,
+                "totalLines": 388,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 206,
@@ -56192,7 +56192,7 @@
             },
             "8": {
                 "surah": "Al-Anfal",
-                "totalLines": 148.01,
+                "totalLines": 148,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 75,
@@ -56201,7 +56201,7 @@
             },
             "9": {
                 "surah": "At-Tawbah",
-                "totalLines": 313.08000000000004,
+                "totalLines": 313,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 129,
@@ -56210,7 +56210,7 @@
             },
             "10": {
                 "surah": "Yunus",
-                "totalLines": 200.13000000000002,
+                "totalLines": 200,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 109,
@@ -56219,7 +56219,7 @@
             },
             "11": {
                 "surah": "Hud",
-                "totalLines": 210.10000000000008,
+                "totalLines": 210,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 123,
@@ -56228,7 +56228,7 @@
             },
             "12": {
                 "surah": "Yusuf",
-                "totalLines": 200.09,
+                "totalLines": 200,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 111,
@@ -56237,7 +56237,7 @@
             },
             "13": {
                 "surah": "Ar-Ra'd",
-                "totalLines": 90.0,
+                "totalLines": 90,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 43,
@@ -56246,7 +56246,7 @@
             },
             "14": {
                 "surah": "Ibrahim",
-                "totalLines": 100.96999999999998,
+                "totalLines": 101,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
@@ -56255,7 +56255,7 @@
             },
             "15": {
                 "surah": "Al-Hijr",
-                "totalLines": 79.22000000000003,
+                "totalLines": 79,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 99,
@@ -56264,7 +56264,7 @@
             },
             "16": {
                 "surah": "An-Nahl",
-                "totalLines": 217.02999999999997,
+                "totalLines": 217,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 128,
@@ -56273,7 +56273,7 @@
             },
             "17": {
                 "surah": "Al-Isra",
-                "totalLines": 172.08999999999997,
+                "totalLines": 172,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 111,
@@ -56282,7 +56282,7 @@
             },
             "18": {
                 "surah": "Al-Kahf",
-                "totalLines": 169.26000000000005,
+                "totalLines": 169,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 110,
@@ -56291,7 +56291,7 @@
             },
             "19": {
                 "surah": "Maryam",
-                "totalLines": 107.19999999999999,
+                "totalLines": 107,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 98,
@@ -56300,7 +56300,7 @@
             },
             "20": {
                 "surah": "Ta-Ha",
-                "totalLines": 144.29,
+                "totalLines": 144,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 135,
@@ -56309,7 +56309,7 @@
             },
             "21": {
                 "surah": "Al-Anbiya",
-                "totalLines": 147.17999999999998,
+                "totalLines": 147,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 112,
@@ -56318,7 +56318,7 @@
             },
             "22": {
                 "surah": "Al-Hajj",
-                "totalLines": 148.11999999999992,
+                "totalLines": 148,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 78,
@@ -56327,7 +56327,7 @@
             },
             "23": {
                 "surah": "Al-Mu'minun",
-                "totalLines": 118.32999999999997,
+                "totalLines": 118,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 118,
@@ -56336,7 +56336,7 @@
             },
             "24": {
                 "surah": "An-Nur",
-                "totalLines": 144.01999999999998,
+                "totalLines": 144,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 64,
@@ -56345,7 +56345,7 @@
             },
             "25": {
                 "surah": "Al-Furqan",
-                "totalLines": 107.19000000000003,
+                "totalLines": 107,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 77,
@@ -56354,7 +56354,7 @@
             },
             "26": {
                 "surah": "Ash-Shu'ara",
-                "totalLines": 148.20999999999998,
+                "totalLines": 148,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 227,
@@ -56363,7 +56363,7 @@
             },
             "27": {
                 "surah": "An-Naml",
-                "totalLines": 126.09999999999998,
+                "totalLines": 126,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 93,
@@ -56372,7 +56372,7 @@
             },
             "28": {
                 "surah": "Al-Qasas",
-                "totalLines": 163.03999999999988,
+                "totalLines": 163,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 88,
@@ -56381,7 +56381,7 @@
             },
             "29": {
                 "surah": "Al-Ankabut",
-                "totalLines": 120.06999999999998,
+                "totalLines": 120,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 69,
@@ -56390,7 +56390,7 @@
             },
             "30": {
                 "surah": "Ar-Rum",
-                "totalLines": 93.98000000000002,
+                "totalLines": 94,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 60,
@@ -56399,7 +56399,7 @@
             },
             "31": {
                 "surah": "Luqman",
-                "totalLines": 57.01,
+                "totalLines": 57,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 34,
@@ -56408,7 +56408,7 @@
             },
             "32": {
                 "surah": "As-Sajda",
-                "totalLines": 43.00000000000001,
+                "totalLines": 43,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
@@ -56417,7 +56417,7 @@
             },
             "33": {
                 "surah": "Al-Ahzab",
-                "totalLines": 149.00000000000006,
+                "totalLines": 149,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 73,
@@ -56426,7 +56426,7 @@
             },
             "34": {
                 "surah": "Saba",
-                "totalLines": 95.03,
+                "totalLines": 95,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 54,
@@ -56435,7 +56435,7 @@
             },
             "35": {
                 "surah": "Fatir",
-                "totalLines": 84.0,
+                "totalLines": 84,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 45,
@@ -56444,7 +56444,7 @@
             },
             "36": {
                 "surah": "Ya-Sin",
-                "totalLines": 84.12999999999998,
+                "totalLines": 84,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 83,
@@ -56453,7 +56453,7 @@
             },
             "37": {
                 "surah": "As-Saffat",
-                "totalLines": 103.03000000000003,
+                "totalLines": 103,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 182,
@@ -56462,7 +56462,7 @@
             },
             "38": {
                 "surah": "Sad",
-                "totalLines": 77.13000000000001,
+                "totalLines": 77,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 88,
@@ -56471,7 +56471,7 @@
             },
             "39": {
                 "surah": "Az-Zumar",
-                "totalLines": 132.07,
+                "totalLines": 132,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 75,
@@ -56480,7 +56480,7 @@
             },
             "40": {
                 "surah": "Ghafir",
-                "totalLines": 146.05,
+                "totalLines": 146,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 85,
@@ -56489,7 +56489,7 @@
             },
             "41": {
                 "surah": "Fussilat",
-                "totalLines": 88.06000000000003,
+                "totalLines": 88,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 54,
@@ -56498,7 +56498,7 @@
             },
             "42": {
                 "surah": "Ash-Shura",
-                "totalLines": 92.03,
+                "totalLines": 92,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 53,
@@ -56507,7 +56507,7 @@
             },
             "43": {
                 "surah": "Az-Zukhruf",
-                "totalLines": 98.98999999999995,
+                "totalLines": 99,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 89,
@@ -56516,7 +56516,7 @@
             },
             "44": {
                 "surah": "Ad-Dukhan",
-                "totalLines": 42.04,
+                "totalLines": 42,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 59,
@@ -56525,7 +56525,7 @@
             },
             "45": {
                 "surah": "Al-Jathiya",
-                "totalLines": 50.09,
+                "totalLines": 50,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 37,
@@ -56534,7 +56534,7 @@
             },
             "46": {
                 "surah": "Al-Ahqaf",
-                "totalLines": 66.03999999999999,
+                "totalLines": 66,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 35,
@@ -56543,7 +56543,7 @@
             },
             "47": {
                 "surah": "Muhammad",
-                "totalLines": 59.02,
+                "totalLines": 59,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 38,
@@ -56552,7 +56552,7 @@
             },
             "48": {
                 "surah": "Al-Fath",
-                "totalLines": 63.989999999999995,
+                "totalLines": 64,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
@@ -56561,7 +56561,7 @@
             },
             "49": {
                 "surah": "Al-Hujurat",
-                "totalLines": 36.99999999999999,
+                "totalLines": 37,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 18,
@@ -56570,7 +56570,7 @@
             },
             "50": {
                 "surah": "Qaf",
-                "totalLines": 39.1,
+                "totalLines": 39,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 45,
@@ -56579,7 +56579,7 @@
             },
             "51": {
                 "surah": "Adh-Dhariyat",
-                "totalLines": 39.05999999999999,
+                "totalLines": 39,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 60,
@@ -56588,7 +56588,7 @@
             },
             "52": {
                 "surah": "At-Tur",
-                "totalLines": 35.01999999999999,
+                "totalLines": 35,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 49,
@@ -56597,7 +56597,7 @@
             },
             "53": {
                 "surah": "An-Najm",
-                "totalLines": 37.11,
+                "totalLines": 37,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 62,
@@ -56606,7 +56606,7 @@
             },
             "54": {
                 "surah": "Al-Qamar",
-                "totalLines": 39.05000000000001,
+                "totalLines": 39,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 55,
@@ -56615,7 +56615,7 @@
             },
             "55": {
                 "surah": "Ar-Rahman",
-                "totalLines": 45.099999999999994,
+                "totalLines": 45,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 78,
@@ -56624,7 +56624,7 @@
             },
             "56": {
                 "surah": "Al-Waqia",
-                "totalLines": 46.980000000000004,
+                "totalLines": 47,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 96,
@@ -56633,7 +56633,7 @@
             },
             "57": {
                 "surah": "Al-Hadid",
-                "totalLines": 62.99999999999999,
+                "totalLines": 63,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
@@ -56642,7 +56642,7 @@
             },
             "58": {
                 "surah": "Al-Mujadila",
-                "totalLines": 48.989999999999995,
+                "totalLines": 49,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 22,
@@ -56651,7 +56651,7 @@
             },
             "59": {
                 "surah": "Al-Hashr",
-                "totalLines": 50.99,
+                "totalLines": 51,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 24,
@@ -56660,7 +56660,7 @@
             },
             "60": {
                 "surah": "Al-Mumtahina",
-                "totalLines": 35.0,
+                "totalLines": 35,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 13,
@@ -56669,7 +56669,7 @@
             },
             "61": {
                 "surah": "As-Saff",
-                "totalLines": 21.99,
+                "totalLines": 22,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 14,
@@ -56678,7 +56678,7 @@
             },
             "62": {
                 "surah": "Al-Jumu'a",
-                "totalLines": 19.01,
+                "totalLines": 19,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
@@ -56687,7 +56687,7 @@
             },
             "63": {
                 "surah": "Al-Munafiqoon",
-                "totalLines": 20.990000000000002,
+                "totalLines": 21,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
@@ -56696,7 +56696,7 @@
             },
             "64": {
                 "surah": "At-Taghabun",
-                "totalLines": 28.0,
+                "totalLines": 28,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 18,
@@ -56705,7 +56705,7 @@
             },
             "65": {
                 "surah": "At-Talaq",
-                "totalLines": 29.0,
+                "totalLines": 29,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 12,
@@ -56714,7 +56714,7 @@
             },
             "66": {
                 "surah": "At-Tahrim",
-                "totalLines": 28.009999999999998,
+                "totalLines": 28,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 12,
@@ -56723,7 +56723,7 @@
             },
             "67": {
                 "surah": "Al-Mulk",
-                "totalLines": 33.0,
+                "totalLines": 33,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
@@ -56732,7 +56732,7 @@
             },
             "68": {
                 "surah": "Al-Qalam",
-                "totalLines": 30.990000000000013,
+                "totalLines": 31,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
@@ -56741,7 +56741,7 @@
             },
             "69": {
                 "surah": "Al-Haqqa",
-                "totalLines": 28.0,
+                "totalLines": 28,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 52,
@@ -56750,7 +56750,7 @@
             },
             "70": {
                 "surah": "Al-Maarij",
-                "totalLines": 23.98,
+                "totalLines": 24,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 44,
@@ -56759,7 +56759,7 @@
             },
             "71": {
                 "surah": "Nuh",
-                "totalLines": 24.259999999999994,
+                "totalLines": 24,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 28,
@@ -56768,7 +56768,7 @@
             },
             "72": {
                 "surah": "Al-Jinn",
-                "totalLines": 27.990000000000002,
+                "totalLines": 28,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 28,
@@ -56777,7 +56777,7 @@
             },
             "73": {
                 "surah": "Al-Muzzammil",
-                "totalLines": 20.0,
+                "totalLines": 20,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 20,
@@ -56786,7 +56786,7 @@
             },
             "74": {
                 "surah": "Al-Muddathir",
-                "totalLines": 25.959999999999997,
+                "totalLines": 26,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 56,
@@ -56795,7 +56795,7 @@
             },
             "75": {
                 "surah": "Al-Qiyama",
-                "totalLines": 16.03,
+                "totalLines": 16,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 40,
@@ -56804,7 +56804,7 @@
             },
             "76": {
                 "surah": "Al-Insan",
-                "totalLines": 26.060000000000002,
+                "totalLines": 26,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 31,
@@ -56813,7 +56813,7 @@
             },
             "77": {
                 "surah": "Al-Mursalat",
-                "totalLines": 21.909999999999993,
+                "totalLines": 22,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 50,
@@ -56822,7 +56822,7 @@
             },
             "78": {
                 "surah": "An-Naba",
-                "totalLines": 19.979999999999997,
+                "totalLines": 20,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 40,
@@ -56831,7 +56831,7 @@
             },
             "79": {
                 "surah": "An-Nazi'at",
-                "totalLines": 19.979999999999997,
+                "totalLines": 20,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 46,
@@ -56840,7 +56840,7 @@
             },
             "80": {
                 "surah": "Abasa",
-                "totalLines": 13.990000000000002,
+                "totalLines": 14,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 42,
@@ -56849,7 +56849,7 @@
             },
             "81": {
                 "surah": "At-Takwir",
-                "totalLines": 11.950000000000003,
+                "totalLines": 12,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 29,
@@ -56858,7 +56858,7 @@
             },
             "82": {
                 "surah": "Al-Infitar",
-                "totalLines": 9.0,
+                "totalLines": 9,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
@@ -56867,7 +56867,7 @@
             },
             "83": {
                 "surah": "Al-Mutaffifin",
-                "totalLines": 18.99,
+                "totalLines": 19,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 36,
@@ -56876,7 +56876,7 @@
             },
             "84": {
                 "surah": "Al-Inshiqaq",
-                "totalLines": 11.980000000000002,
+                "totalLines": 12,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 25,
@@ -56885,7 +56885,7 @@
             },
             "85": {
                 "surah": "Al-Buruj",
-                "totalLines": 11.98,
+                "totalLines": 12,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 22,
@@ -56894,7 +56894,7 @@
             },
             "86": {
                 "surah": "At-Tariq",
-                "totalLines": 5.989999999999999,
+                "totalLines": 6,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 17,
@@ -56903,7 +56903,7 @@
             },
             "87": {
                 "surah": "Al-Ala",
-                "totalLines": 7.980000000000001,
+                "totalLines": 8,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
@@ -56912,7 +56912,7 @@
             },
             "88": {
                 "surah": "Al-Ghashiya",
-                "totalLines": 10.969999999999999,
+                "totalLines": 11,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 26,
@@ -56921,7 +56921,7 @@
             },
             "89": {
                 "surah": "Al-Fajr",
-                "totalLines": 16.130000000000003,
+                "totalLines": 16,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 30,
@@ -56930,7 +56930,7 @@
             },
             "90": {
                 "surah": "Al-Balad",
-                "totalLines": 8.97,
+                "totalLines": 9,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 20,
@@ -56939,7 +56939,7 @@
             },
             "91": {
                 "surah": "Ash-Shams",
-                "totalLines": 6.96,
+                "totalLines": 7,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 15,
@@ -56948,7 +56948,7 @@
             },
             "92": {
                 "surah": "Al-Lail",
-                "totalLines": 7.990000000000002,
+                "totalLines": 8,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 21,
@@ -56957,7 +56957,7 @@
             },
             "93": {
                 "surah": "Ad-Duhaa",
-                "totalLines": 5.0,
+                "totalLines": 5,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
@@ -56966,7 +56966,7 @@
             },
             "94": {
                 "surah": "Ash-Sharh",
-                "totalLines": 2.99,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
@@ -56975,7 +56975,7 @@
             },
             "95": {
                 "surah": "At-Tin",
-                "totalLines": 4.0,
+                "totalLines": 4,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
@@ -56984,7 +56984,7 @@
             },
             "96": {
                 "surah": "Al-Alaq",
-                "totalLines": 7.000000000000001,
+                "totalLines": 7,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 19,
@@ -56993,7 +56993,7 @@
             },
             "97": {
                 "surah": "Al-Qadr",
-                "totalLines": 3.0,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
@@ -57002,7 +57002,7 @@
             },
             "98": {
                 "surah": "Al-Bayyina",
-                "totalLines": 10.0,
+                "totalLines": 10,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
@@ -57011,7 +57011,7 @@
             },
             "99": {
                 "surah": "Az-Zalzala",
-                "totalLines": 5.01,
+                "totalLines": 5,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
@@ -57020,7 +57020,7 @@
             },
             "100": {
                 "surah": "Al-Adiyat",
-                "totalLines": 4.999999999999999,
+                "totalLines": 5,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
@@ -57029,7 +57029,7 @@
             },
             "101": {
                 "surah": "Al-Qaria",
-                "totalLines": 6.01,
+                "totalLines": 6,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 11,
@@ -57038,7 +57038,7 @@
             },
             "102": {
                 "surah": "At-Takathur",
-                "totalLines": 4.0,
+                "totalLines": 4,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 8,
@@ -57047,7 +57047,7 @@
             },
             "103": {
                 "surah": "Al-Asr",
-                "totalLines": 2.08,
+                "totalLines": 2,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
@@ -57056,7 +57056,7 @@
             },
             "104": {
                 "surah": "Al-Humaza",
-                "totalLines": 3.98,
+                "totalLines": 4,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 9,
@@ -57065,7 +57065,7 @@
             },
             "105": {
                 "surah": "Al-Fil",
-                "totalLines": 3.01,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
@@ -57074,7 +57074,7 @@
             },
             "106": {
                 "surah": "Quraish",
-                "totalLines": 3.05,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 4,
@@ -57083,7 +57083,7 @@
             },
             "107": {
                 "surah": "Al-Ma'un",
-                "totalLines": 4.01,
+                "totalLines": 4,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 7,
@@ -57092,7 +57092,7 @@
             },
             "108": {
                 "surah": "Al-Kawthar",
-                "totalLines": 2.0,
+                "totalLines": 2,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
@@ -57101,7 +57101,7 @@
             },
             "109": {
                 "surah": "Al-Kafiroon",
-                "totalLines": 3.0,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 6,
@@ -57110,7 +57110,7 @@
             },
             "110": {
                 "surah": "An-Nasr",
-                "totalLines": 3.0,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 3,
@@ -57119,7 +57119,7 @@
             },
             "111": {
                 "surah": "Al-Masad",
-                "totalLines": 3.01,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
@@ -57128,7 +57128,7 @@
             },
             "112": {
                 "surah": "Al-Ikhlas",
-                "totalLines": 2.0,
+                "totalLines": 2,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 4,
@@ -57137,7 +57137,7 @@
             },
             "113": {
                 "surah": "Al-Falaq",
-                "totalLines": 2.99,
+                "totalLines": 3,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 5,
@@ -57146,7 +57146,7 @@
             },
             "114": {
                 "surah": "An-Nas",
-                "totalLines": 4.05,
+                "totalLines": 4,
                 "tempCompletedLines": 0,
                 "completedLines": 0,
                 "verses": 6,

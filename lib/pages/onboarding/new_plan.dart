@@ -23,9 +23,12 @@ class NewPlanScreen extends StatelessWidget {
           '${controller.selectedFromSurahData.value?['surahNumber']}:${controller.selectedFromVerse.value}';
       String toKey =
           '${controller.selectedToSurahData.value?['surahNumber']}:${controller.selectedToVerse.value}';
-      // firestoreService.addPlan(
+      int lines = controller.selectedUnit.value == 'Lines'
+          ? int.parse(controller.inputController.text)
+          : int.parse(controller.inputController.text) * 15;
 
-      // );
+      firestoreService.addPlan(
+          fromKey, toKey, lines, controller.selectedDays.toList());
     }
 
     return Scaffold(
@@ -98,7 +101,9 @@ class NewPlanScreen extends StatelessWidget {
               ),
               // Bottom Navigation Section
               BottomNavigation(
-                  controller: controller, onNextPressed: storeNewPlan),
+                controller: controller,
+                onNextPressed: storeNewPlan,
+              ),
             ],
           );
         },
@@ -149,10 +154,10 @@ class BottomNavigation extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    controller.nextPage();
                     if (controller.currentPageIndex.value == 4) {
                       onNextPressed();
                     }
+                    controller.nextPage();
                   },
                   child: Obx(() => Text(
                         controller.currentPageIndex.value == 4
@@ -761,8 +766,7 @@ class NewPlanController extends GetxController {
             'Please fill out all fields and select at least one day.';
       }
     } else if (currentPageIndex.value == 4) {
-      // Get.to(() => MyBottomNavBar());
-      pageController.jumpToPage(0);
+      Get.to(() => MyBottomNavBar());
     }
   }
 }

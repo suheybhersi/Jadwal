@@ -45,9 +45,9 @@ class ProgressContent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(
               left: 20,
-              right: 14,
-              top: 20.0,
-              bottom: 10,
+              right: 10,
+              top: 10.0,
+              bottom: 15,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -166,8 +166,10 @@ class ProgressContent extends StatelessWidget {
                       itemCount: filteredData.length,
                       itemBuilder: (context, index) {
                         final surah = filteredData[index];
-                        final double progress =
-                            surah['completedLines'] / surah['totalLines'];
+                        // Calculate progress but round both to the nearest integer
+                        final completedLines = surah['completedLines'].round();
+                        final totalLines = surah['totalLines'];
+                        final double progress = completedLines / totalLines;
 
                         return Container(
                           margin: EdgeInsets.symmetric(
@@ -190,7 +192,7 @@ class ProgressContent extends StatelessWidget {
                                 width: 40,
                                 child: Center(
                                   child: Text(
-                                    '${index + 1}',
+                                    '${surah['surahNumber']}',
                                     style: GoogleFonts.poppins(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hifdh_planner_app/models/current_weekday.dart';
-import 'package:hifdh_planner_app/models/daily_reading.dart';
 import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/plan.dart';
 import 'package:hifdh_planner_app/models/review.dart';
@@ -30,8 +29,6 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('plans');
   CollectionReference get hifdhsCollection =>
       usersCollection.doc(uid).collection('hifdhs');
-  CollectionReference get dailyReadingCollection =>
-      usersCollection.doc(uid).collection('dailyReadings');
   CollectionReference get reviewsCollection =>
       usersCollection.doc(uid).collection('reviews');
   CollectionReference get weeksCollection =>
@@ -40,159 +37,134 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('surahsProgress');
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
-    String name,
-    String start,
-    String end,
+    String memorisedFrom,
+    String memorisedTo,
     int lines,
-    int pages,
-    int dailyReadingFrom,
-    int dailyReadingTo,
     List<bool> hifdhDays,
-    List<bool> dailyReadingDays,
   ) async {
-    final startVerseSnapshot =
-        await versesCollection.where('key', isEqualTo: start).get();
-    String startVerseId = startVerseSnapshot.docs[0].reference.id;
-    final startVerseDoc = await versesCollection.doc(startVerseId).get();
-    Map<String, dynamic> startVerseData =
-        startVerseDoc.data() as Map<String, dynamic>;
-    final endVerseSnapshot =
-        await versesCollection.where('key', isEqualTo: end).get();
-    String endVerseId = endVerseSnapshot.docs[0].reference.id;
-    final endVerseDoc = await versesCollection.doc(endVerseId).get();
-    Map<String, dynamic> endVerseData =
-        endVerseDoc.data() as Map<String, dynamic>;
+    //get memorisedFrom data
+    final memorisedFromSnapshot =
+        await versesCollection.where('key', isEqualTo: memorisedFrom).get();
+    String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
+    final memorisedFromDoc = await versesCollection.doc(memorisedFromId).get();
+    Map<String, dynamic> memorisedFromData =
+        memorisedFromDoc.data() as Map<String, dynamic>;
 
-    double totalLines = (startVerseData['page'] == endVerseData['page'])
-        ? 0
-        : ((endVerseData['page'] - startVerseData['page'] - 1) * 15).toDouble();
-    totalLines += startVerseData['length'];
+    //get memorisedTo data
+    final memorisedToSnapshot =
+        await versesCollection.where('key', isEqualTo: memorisedTo).get();
+    String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
+    final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
+    Map<String, dynamic> memorisedToData =
+        memorisedToDoc.data() as Map<String, dynamic>;
 
-    startVerseId = (int.parse(startVerseId) + 1).toString();
-    dynamic tempVerseDoc = await versesCollection.doc(startVerseId).get();
-    Map<String, dynamic> tempVerseData =
-        tempVerseDoc.data() as Map<String, dynamic>;
+    //get startVerseId
+    String startVerseId = (int.parse(memorisedToId) + 1).toString();
 
-    while (startVerseData['page'] == tempVerseData['page']) {
-      totalLines += tempVerseData['length'];
-      startVerseId = (int.parse(startVerseId) + 1).toString();
+    //get startKey
+    if (startVerseId != '6237') {
+      final startDoc =
+          await versesCollection.doc(startVerseId.toString()).get();
+      Map<String, dynamic> startVerseData =
+          startDoc.data() as Map<String, dynamic>;
+      String startKey = startVerseData['key'];
 
-      tempVerseDoc = await versesCollection.doc(startVerseId).get();
-      tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
-    }
+      //get endKey
+      String endKey = '114:6';
 
-    if (startVerseData['page'] != endVerseData['page']) {
-      totalLines += endVerseData['length'];
-      endVerseId = (int.parse(endVerseId) - 1).toString();
-      tempVerseDoc = await versesCollection.doc(endVerseId).get();
-      tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
-      while (endVerseData['page'] == tempVerseData['page']) {
-        totalLines += tempVerseData['length'];
-        endVerseId = (int.parse(endVerseId) - 1).toString();
+      //calculate memorisedLines
+      double memorisedLines =
+          (memorisedFromData['page'] == memorisedToData['page'])
+              ? 0
+              : ((memorisedToData['page'] - memorisedFromData['page'] - 1) * 15)
+                  .toDouble();
+      //if page 2 is included in memorisedFrom and memorisedTo, subtract 7 lines
+      if (memorisedFromData['page'] < 2 && memorisedToData['page'] > 2) {
+        memorisedLines -= 7;
+      }
+      memorisedLines += memorisedFromData['length'];
 
-        tempVerseDoc = await versesCollection.doc(endVerseId).get();
+      memorisedFromId = (int.parse(memorisedFromId) + 1).toString();
+      dynamic tempVerseDoc = await versesCollection.doc(memorisedFromId).get();
+      Map<String, dynamic> tempVerseData =
+          tempVerseDoc.data() as Map<String, dynamic>;
+
+      //calculate memorisedLines for first page
+      while (memorisedFromData['page'] == tempVerseData['page']) {
+        memorisedLines += tempVerseData['length'];
+        memorisedFromId = (int.parse(memorisedFromId) + 1).toString();
+
+        tempVerseDoc = await versesCollection.doc(memorisedFromId).get();
         tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
       }
-    }
 
-    final newPlan = Plan(
-      name: name,
-      start: start,
-      end: end,
-      lines: lines,
-      hifdhDays: hifdhDays,
-      pages: pages,
-      dailyReadingFrom: dailyReadingFrom,
-      dailyReadingTo: dailyReadingTo,
-      dailyReadingDays: dailyReadingDays,
-      dailyReadings: [],
-      totalLines: totalLines,
-      completedLines: 0,
-      hifdhs: [],
-      hifdhIn: -1,
-      reviews: [],
-      streak: 0,
-      missedReviews: 0,
-      currentWeek: [],
-      planCompleted: false,
-    );
+      //calculate memorisedLines for last page
+      if (memorisedFromData['page'] != memorisedToData['page']) {
+        memorisedLines += memorisedToData['length'];
+        memorisedToId = (int.parse(memorisedToId) - 1).toString();
+        tempVerseDoc = await versesCollection.doc(memorisedToId).get();
+        tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+        while (memorisedToData['page'] == tempVerseData['page']) {
+          memorisedLines += tempVerseData['length'];
+          memorisedToId = (int.parse(memorisedToId) - 1).toString();
 
-    final document = await plansCollection.add(newPlan.toMap());
-
-    final surahsSnapshot = await surahsCollection.get();
-    for (var doc in surahsSnapshot.docs) {
-      await surahsProgressCollection.doc(doc.id).set(doc.data());
-    }
-
-    updateCurrentWeek(document.id);
-
-    createNewHifdh(start, lines, document.id);
-
-    createNewDailyReading(document.id, dailyReadingFrom);
-  }
-
-  Future<void> createNewDailyReading(String id, int from) async {
-    final planSnapshot = await plansCollection.doc(id).get();
-    final planData = planSnapshot.data() as Map<String, dynamic>;
-    List<dynamic> dailyReadings = planData['dailyReadings'];
-    dynamic dailyReading;
-
-    if (dailyReadings.isNotEmpty) {
-      dailyReading = dailyReadings.last;
-      dailyReading['completed'] = true;
-
-      final dailyReadingSnapshot = await dailyReadingCollection
-          .where('dailyReading', isEqualTo: dailyReading['dailyReading'])
-          .where('planId', isEqualTo: id)
-          .get();
-      dailyReadingSnapshot.docs[0].reference.update({'completed': true});
-
-      await plansCollection.doc(id).update({
-        'dailyReadings': dailyReadings,
-      });
-    }
-
-    /*C A L C U L A T E   D A I L Y   R E A D I N G   D A T E*/
-    DateTime today = DateTime.now();
-    List<dynamic> dailyReadingDays = planData['dailyReadingDays'];
-    bool calculated = false;
-    int count = today.weekday - 1;
-    int nextDailyReading = 0;
-
-    while (!calculated) {
-      if (dailyReadingDays[count] == true &&
-          (nextDailyReading != 0 ||
-              (nextDailyReading == 0 && dailyReading == null))) {
-        calculated = true;
-      } else {
-        count++;
-        nextDailyReading++;
-        if (count > 6) {
-          count = 0;
+          tempVerseDoc = await versesCollection.doc(memorisedToId).get();
+          tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
         }
       }
+
+      //subtract extra lines from memorisedLines that were added originally
+      final lastSurahSnapshot = await versesCollection
+          .where('key', isEqualTo: memorisedToData['key'].split(':')[0] + ':1')
+          .get();
+      final lastSurahDoc = await versesCollection
+          .doc(lastSurahSnapshot.docs[0].reference.id)
+          .get();
+      final lastSurahData = lastSurahDoc.data() as Map<String, dynamic>;
+      int firstPageFromLastSurah = lastSurahData['page'];
+
+      if (memorisedToData['page'] == firstPageFromLastSurah) {
+        double extraLines =
+            ((double.parse(memorisedToData['key'].split(':')[0]) -
+                        double.parse(memorisedFromData['key'].split(':')[0])) -
+                    1) *
+                2;
+        memorisedLines -= extraLines;
+      } else {
+        double extraLines =
+            (double.parse(memorisedToData['key'].split(':')[0]) -
+                    double.parse(memorisedFromData['key'].split(':')[0])) *
+                2;
+        memorisedLines -= extraLines;
+      }
+
+      final newPlan = Plan(
+        start: startKey,
+        end: endKey,
+        lines: lines,
+        hifdhDays: hifdhDays,
+        totalLines: 8820,
+        completedLines: memorisedLines,
+        hifdhs: [],
+        hifdhIn: -1,
+        reviews: [],
+        streak: 0,
+        missedReviews: 0,
+        currentWeek: [],
+        planCompleted: false,
+      );
+
+      final document = await plansCollection.add(newPlan.toMap());
+
+      final surahsSnapshot = await surahsCollection.get();
+      for (var doc in surahsSnapshot.docs) {
+        await surahsProgressCollection.doc(doc.id).set(doc.data());
+      }
+
+      updateCurrentWeek(document.id);
+
+      createNewHifdh(startKey, lines, document.id);
     }
-    DateTime date = DateTime.now().add(Duration(days: nextDailyReading));
-    String nextDailyReadingDate = '${date.day}-${date.month}-${date.year}';
-    dynamic nextStart = from + planData['pages'];
-
-    DailyReading newDailyReading = DailyReading(
-      dailyReading: '$from - ${nextStart - 1}',
-      date: nextDailyReadingDate,
-      completed: false,
-      nextStart: nextStart,
-      planId: id,
-    );
-
-    await dailyReadingCollection.add(newDailyReading.toMap());
-
-    List<dynamic> planDailyReadings = planData['dailyReadings'];
-    planDailyReadings = List.from(planDailyReadings)
-      ..add(newDailyReading.toMap());
-
-    await plansCollection.doc(id).update({
-      'dailyReadings': planDailyReadings,
-    }); //update plan with dailyReading
   }
 
 /*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
@@ -229,26 +201,12 @@ class FirestoreService extends ChangeNotifier {
 /*----------------------------------------U P D A T E   P L A N----------------------------------------*/
   Future<void> updatePlan(
     String id,
-    String name,
     int lines,
     List<dynamic> days,
   ) {
     return plansCollection.doc(id).update({
-      'name': name,
       'lines': lines,
       'hifdhDays': days,
-    });
-  }
-
-/*-------------------------------U P D A T E   D A I L Y   R E A D I N G-------------------------------*/
-  Future<void> updateDailyReading(
-    String id,
-    int pages,
-    List<dynamic> days,
-  ) {
-    return plansCollection.doc(id).update({
-      'pages': pages,
-      'dailyReadingDays': days,
     });
   }
 
@@ -670,33 +628,6 @@ class FirestoreService extends ChangeNotifier {
     date = date.add(Duration(days: counter));
     String nextHifdhDate = '${date.day}-${date.month}-${date.year}';
 
-    // DateTime today = DateTime.now();
-    // List<dynamic> hifdhDays = planData['hifdhDays'];
-    // bool calculated = false;
-    // int count = today.weekday - 1;
-    // int nextHifdh = 0;
-    // dynamic hifdh;
-
-    // if (hifdhs.isNotEmpty) {
-    //   hifdh = hifdhs.last;
-    // }
-
-    // while (!calculated) {
-    //   if (hifdhDays[count] == true &&
-    //       nextHifdh != planData['hifdhIn'] &&
-    //       (nextHifdh != 0 ||
-    //           (nextHifdh == 0 &&
-    //               (hifdh == null || hifdh['completed'] == false)))) {
-    //     calculated = true;
-    //   } else {
-    //     count++;
-    //     nextHifdh++;
-    //     if (count > 6) {
-    //       count = 0;
-    //     }
-    //   }
-    // }
-
     /*A D D   N E W   H I F D H   T O   D A T A B A S E*/
     Hifdh newHifdh = Hifdh(
       hifdh: '$key - $endKey',
@@ -1052,8 +983,6 @@ class FirestoreService extends ChangeNotifier {
     await plansCollection.doc(id).delete();
     final hifdhsSnapshot =
         await hifdhsCollection.where('planId', isEqualTo: id).get();
-    final dailyReadingSnapshot =
-        await dailyReadingCollection.where('planId', isEqualTo: id).get();
     final reviewsSnapshot =
         await reviewsCollection.where('planId', isEqualTo: id).get();
     final weeksSnapshot =
@@ -1063,9 +992,6 @@ class FirestoreService extends ChangeNotifier {
 
     for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
       await hifdhsSnapshot.docs[i].reference.delete();
-    }
-    for (int i = 0; i < dailyReadingSnapshot.docs.length; i++) {
-      await dailyReadingSnapshot.docs[i].reference.delete();
     }
     for (int i = 0; i < reviewsSnapshot.docs.length; i++) {
       await reviewsSnapshot.docs[i].reference.delete();
