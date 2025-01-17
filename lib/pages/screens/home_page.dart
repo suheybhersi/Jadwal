@@ -125,66 +125,157 @@ class HomePage extends StatelessWidget {
                   });
                 }
 
-                return SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, right: 10, top: 10.0, bottom: 15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                List<dynamic> reviews = plan['reviews']
+                    .where((review) =>
+                        review['date'] ==
+                        '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
+                    .toList();
+
+                // return SingleChildScrollView(
+                //   child: Column(
+                //     children: [
+                //       Padding(
+                //         padding: const EdgeInsets.only(
+                //             left: 20, right: 10, top: 10.0, bottom: 15),
+                //         child: Row(
+                //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //           children: [
+                //             Column(
+                //               crossAxisAlignment: CrossAxisAlignment.start,
+                //               children: [
+                //                 Text(
+                //                   'Hello',
+                //                   style: GoogleFonts.poppins(
+                //                     color: Color.fromARGB(255, 106, 106, 106),
+                //                     fontSize: 16,
+                //                     letterSpacing: 0.5,
+                //                   ),
+                //                 ),
+                //                 Text(
+                //                   'Mohammed',
+                //                   style: GoogleFonts.poppins(
+                //                     fontWeight: FontWeight.bold,
+                //                     fontSize: 16,
+                //                     letterSpacing: 0.5,
+                //                   ),
+                //                 ),
+                //               ],
+                //             ),
+                //             IconButton(
+                //               onPressed: signUserOut,
+                //               icon: Icon(
+                //                 Iconsax.setting_2,
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
+                //       Column(
+                //         children: [
+                //           WeekDays(plan: plan),
+                //           SizedBox(
+                //             height: 10,
+                //           ),
+                //           Upcoming(
+                //             plan: plan,
+                //             hifdhIn: hifdhIn,
+                //             markHifdhAsComplete: markHifdhAsComplete,
+                //             markReviewAsComplete: markReviewAsComplete,
+                //             id: id,
+                //             reviews: reviews,
+                //           ),
+                //         ],
+                //       ),
+                //       SizedBox(
+                //         height: 10,
+                //       ),
+                //       reviews == [] || reviews.isEmpty
+                //           ? Statistics(plan: plan)
+                //           : Statistics(plan: plan)
+                //     ],
+                //   ),
+                // );
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
                               children: [
-                                Text(
-                                  'Hello',
-                                  style: GoogleFonts.poppins(
-                                    color: Color.fromARGB(255, 106, 106, 106),
-                                    fontSize: 16,
-                                    letterSpacing: 0.5,
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 20,
+                                      right: 10,
+                                      top: 10.0,
+                                      bottom: 15),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Hello',
+                                            style: GoogleFonts.poppins(
+                                              color: Color.fromARGB(
+                                                  255, 106, 106, 106),
+                                              fontSize: 16,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Mohammed',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      IconButton(
+                                        onPressed: signUserOut,
+                                        icon: Icon(
+                                          Iconsax.setting_2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                Text(
-                                  'Mohammed',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    letterSpacing: 0.5,
-                                  ),
+                                Column(
+                                  children: [
+                                    WeekDays(plan: plan),
+                                    Upcoming(
+                                      plan: plan,
+                                      hifdhIn: hifdhIn,
+                                      markHifdhAsComplete: markHifdhAsComplete,
+                                      markReviewAsComplete:
+                                          markReviewAsComplete,
+                                      id: id,
+                                      reviews: reviews,
+                                    ),
+                                  ],
                                 ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                if (reviews.isNotEmpty) Statistics(plan: plan),
                               ],
                             ),
-                            IconButton(
-                              onPressed: signUserOut,
-                              icon: Icon(
-                                Iconsax.setting_2,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      Column(
-                        children: [
-                          WeekDays(plan: plan),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Upcoming(
-                            plan: plan,
-                            hifdhIn: hifdhIn,
-                            markHifdhAsComplete: markHifdhAsComplete,
-                            markReviewAsComplete: markReviewAsComplete,
-                            id: id,
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Statistics(plan: plan)
-                    ],
-                  ),
+                        if (reviews.isEmpty)
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Statistics(plan: plan),
+                          )
+                      ],
+                    );
+                  },
                 );
               }
             }
@@ -210,6 +301,7 @@ class HomePage extends StatelessWidget {
     Navigator.of(context).pop();
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         bool isLoading = false;
 
@@ -416,6 +508,7 @@ class Upcoming extends StatelessWidget {
     required this.id,
     required this.markHifdhAsComplete,
     required this.markReviewAsComplete,
+    required this.reviews,
   });
 
   final Map<String, dynamic> plan;
@@ -424,15 +517,10 @@ class Upcoming extends StatelessWidget {
   final Function(String, BuildContext, int, String) markHifdhAsComplete;
 
   final Function(BuildContext, String, String) markReviewAsComplete;
+  final List<dynamic> reviews;
 
   @override
   Widget build(BuildContext context) {
-    List<dynamic> reviews = plan['reviews']
-        .where((review) =>
-            review['date'] ==
-            '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-        .toList();
-
     // List<dynamic> dailyReadings = plan['dailyReadings']
     //     .where((dailyReading) =>
     //         dailyReading['date'] ==

@@ -91,21 +91,24 @@ class FirestoreService extends ChangeNotifier {
 
       //calculate memorisedLines for first page
       while (memorisedFromData['page'] == tempVerseData['page']) {
-        memorisedLines += tempVerseData['length'];
+        memorisedLines += tempVerseData['length'].toDouble();
         memorisedFromId = (int.parse(memorisedFromId) + 1).toString();
 
         tempVerseDoc = await versesCollection.doc(memorisedFromId).get();
         tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
       }
 
+      double lastPageMemorisedLines = 0;
       //calculate memorisedLines for last page
       if (memorisedFromData['page'] != memorisedToData['page']) {
-        memorisedLines += memorisedToData['length'];
+        memorisedLines += memorisedToData['length'].toDouble();
+        lastPageMemorisedLines = memorisedToData['length'].toDouble();
         memorisedToId = (int.parse(memorisedToId) - 1).toString();
         tempVerseDoc = await versesCollection.doc(memorisedToId).get();
         tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
         while (memorisedToData['page'] == tempVerseData['page']) {
-          memorisedLines += tempVerseData['length'];
+          memorisedLines += tempVerseData['length'].toDouble();
+          lastPageMemorisedLines += tempVerseData['length'].toDouble();
           memorisedToId = (int.parse(memorisedToId) - 1).toString();
 
           tempVerseDoc = await versesCollection.doc(memorisedToId).get();
@@ -157,8 +160,78 @@ class FirestoreService extends ChangeNotifier {
       final document = await plansCollection.add(newPlan.toMap());
 
       final surahsSnapshot = await surahsCollection.get();
+      String memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+      String memorisedToSurah = memorisedToData['key'].split(':')[0];
+      //set tempCompletedLines to 0 for all surahs
       for (var doc in surahsSnapshot.docs) {
-        await surahsProgressCollection.doc(doc.id).set(doc.data());
+        if (int.parse(doc.id) >= int.parse(memorisedFromSurah) &&
+            int.parse(doc.id) < int.parse(memorisedToSurah)) {
+          await surahsProgressCollection.doc(doc.id).set(
+            {
+              'surah': (doc.data() as Map<String, dynamic>)['surah'],
+              'surahNumber':
+                  (doc.data() as Map<String, dynamic>)['surahNumber'],
+              'verses': (doc.data() as Map<String, dynamic>)['verses'],
+              'totalLines': (doc.data() as Map<String, dynamic>)['totalLines'],
+              'tempCompletedLines':
+                  (doc.data() as Map<String, dynamic>)['totalLines'],
+              'completedLines':
+                  (doc.data() as Map<String, dynamic>)['totalLines'],
+            },
+          );
+        } else if (int.parse(doc.id) == int.parse(memorisedToSurah)) {
+          final firstPageLastSurahSnapshot = await versesCollection
+              .where('key',
+                  isEqualTo: memorisedToData['key'].split(':')[0] + ':1')
+              .get();
+          String firstPageLastSurahId =
+              firstPageLastSurahSnapshot.docs[0].reference.id;
+          final firstPageLastSurahDoc =
+              await versesCollection.doc(firstPageLastSurahId).get();
+          Map<String, dynamic> firstPageLastSurahData =
+              firstPageLastSurahDoc.data() as Map<String, dynamic>;
+
+          double firstPageLastSurahMemorisedLines =
+              firstPageLastSurahData['length'].toDouble();
+
+          firstPageLastSurahId =
+              (int.parse(firstPageLastSurahId) + 1).toString();
+          dynamic tempVerseDoc =
+              await versesCollection.doc(firstPageLastSurahId).get();
+          Map<String, dynamic> tempVerseData =
+              tempVerseDoc.data() as Map<String, dynamic>;
+
+          //calculate memorisedLines for first page
+          while (firstPageLastSurahData['page'] == tempVerseData['page']) {
+            firstPageLastSurahMemorisedLines +=
+                tempVerseData['length'].toDouble();
+            firstPageLastSurahId =
+                (int.parse(firstPageLastSurahId) + 1).toString();
+
+            tempVerseDoc =
+                await versesCollection.doc(firstPageLastSurahId).get();
+            tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+          }
+
+          double memorisedToSurahCompletedLines = lastPageMemorisedLines +
+              firstPageLastSurahMemorisedLines +
+              ((memorisedToData['page'] - firstPageLastSurahData['page'] - 1) *
+                  15);
+
+          await surahsProgressCollection.doc(doc.id).set(
+            {
+              'surah': (doc.data() as Map<String, dynamic>)['surah'],
+              'surahNumber':
+                  (doc.data() as Map<String, dynamic>)['surahNumber'],
+              'verses': (doc.data() as Map<String, dynamic>)['verses'],
+              'totalLines': (doc.data() as Map<String, dynamic>)['totalLines'],
+              'tempCompletedLines': memorisedToSurahCompletedLines,
+              'completedLines': memorisedToSurahCompletedLines,
+            },
+          );
+        } else {
+          await surahsProgressCollection.doc(doc.id).set(doc.data());
+        }
       }
 
       updateCurrentWeek(document.id);
@@ -481,10 +554,10 @@ class FirestoreService extends ChangeNotifier {
     String endOfPlanVerse = endOfPlanVerseSnapshot.docs[0].reference.id;
 
     if (verseId != '6236') {
-      final prevVerseDoc =
-          await versesCollection.doc((int.parse(verseId) - 1).toString()).get();
       double total = double.parse(verseData['length'].toString());
       double tempTotal = total;
+      final prevVerseDoc =
+          await versesCollection.doc((int.parse(verseId) - 1).toString()).get();
       Map<String, dynamic> prevVerseData = {};
       if (prevVerseDoc.exists) {
         prevVerseData = prevVerseDoc.data() as Map<String, dynamic>;
@@ -531,9 +604,9 @@ class FirestoreService extends ChangeNotifier {
             final surahDoc = await surahsProgressCollection.doc(surahId).get();
             Map<String, dynamic> surahData =
                 surahDoc.data() as Map<String, dynamic>;
-            surahsProgressCollection.doc(surahId).update({
-              'tempCompletedLines': surahData['completedLines'] + tempTotal
-            });
+            surahsProgressCollection
+                .doc(surahId)
+                .update({'tempCompletedLines': surahData['totalLines']});
             tempTotal = 0.0;
           }
 
@@ -558,9 +631,9 @@ class FirestoreService extends ChangeNotifier {
             final surahDoc = await surahsProgressCollection.doc(surahId).get();
             Map<String, dynamic> surahData =
                 surahDoc.data() as Map<String, dynamic>;
-            surahsProgressCollection.doc(surahId).update({
-              'tempCompletedLines': surahData['completedLines'] + tempTotal
-            });
+            surahsProgressCollection
+                .doc(surahId)
+                .update({'tempCompletedLines': surahData['totalLines']});
             tempTotal = 0.0;
           }
 
