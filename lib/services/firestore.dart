@@ -126,7 +126,8 @@ class FirestoreService extends ChangeNotifier {
       final lastSurahData = lastSurahDoc.data() as Map<String, dynamic>;
       int firstPageFromLastSurah = lastSurahData['page'];
 
-      if (memorisedToData['page'] == firstPageFromLastSurah) {
+      if (memorisedToData['page'] == firstPageFromLastSurah &&
+          memorisedToData['page'] != 1) {
         double extraLines =
             ((double.parse(memorisedToData['key'].split(':')[0]) -
                         double.parse(memorisedFromData['key'].split(':')[0])) -
@@ -215,7 +216,11 @@ class FirestoreService extends ChangeNotifier {
 
           double memorisedToSurahCompletedLines = lastPageMemorisedLines +
               firstPageLastSurahMemorisedLines +
-              ((memorisedToData['page'] - firstPageLastSurahData['page'] - 1) *
+              ((memorisedToData['page'] -
+                      firstPageLastSurahData['page'] -
+                      (memorisedToData['page'] == firstPageLastSurahData['page']
+                          ? 0
+                          : 1)) *
                   15);
 
           await surahsProgressCollection.doc(doc.id).set(
@@ -567,7 +572,6 @@ class FirestoreService extends ChangeNotifier {
           planData['lines'] % 15 != 0) {
         double prevTotal = 0.0;
         bool calculated = false;
-        Map<String, dynamic> prevVerseData = {};
         while (!calculated) {
           if (int.parse(verseId) > int.parse(endOfPlanVerse)) {
             verseData = prevVerseData;
@@ -616,10 +620,17 @@ class FirestoreService extends ChangeNotifier {
         int pages =
             int.parse(((planData['lines'] / 15).toString()).split('.')[0]);
         dynamic tempVerseData = verseData;
-        while (tempVerseData['page'] !=
-            ((prevVerseData['page'] ?? 0) + pages + 1)) {
+        bool calculated = false;
+        while (!calculated) {
           if (int.parse(verseId) > int.parse(endOfPlanVerse)) {
             plansCollection.doc(id).update({'planCompleted': true});
+            break;
+          }
+
+          if (verseData['page'] == ((prevVerseData['page'] ?? 0) + pages + 1)) {
+            tempTotal -= verseData['length'];
+            verseData = tempVerseData;
+            calculated = true;
             break;
           }
 
@@ -637,15 +648,15 @@ class FirestoreService extends ChangeNotifier {
             tempTotal = 0.0;
           }
 
-          tempTotal += verseData['length'];
-          verseData = tempVerseData;
-
           verseId = (int.parse(verseId) + 1).toString();
           if (verseId == '6237') {
             break;
           }
+
+          tempVerseData = verseData;
           final nextVerse = await versesCollection.doc(verseId).get();
-          tempVerseData = nextVerse.data() as Map<String, dynamic>;
+          verseData = nextVerse.data() as Map<String, dynamic>;
+          tempTotal += verseData['length'];
         }
       }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hifdh_planner_app/pages/screens/home_page.dart';
 import 'package:hifdh_planner_app/pages/screens/plan_page.dart';
+import 'package:hifdh_planner_app/pages/screens/profile_page.dart';
 import 'package:hifdh_planner_app/pages/screens/progress_page.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -123,5 +124,6 @@ class NavigatorController extends GetxController {
     HomePage(),
     PlanPage(),
     ProgressPage(),
+    ProfilePage(),
   ];
 }

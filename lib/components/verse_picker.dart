@@ -140,7 +140,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                 ],
                               ),
                               child: Text(
-                                surahName,
+                                ' ${surahs[index]['surahNumber']}. ${surahName}',
                                 style: GoogleFonts.lato(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
@@ -173,7 +173,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'Verses',
                         style: GoogleFonts.lato(

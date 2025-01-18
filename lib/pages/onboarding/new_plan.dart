@@ -26,9 +26,11 @@ class NewPlanScreen extends StatelessWidget {
       int lines = controller.selectedUnit.value == 'Lines'
           ? int.parse(controller.inputController.text)
           : int.parse(controller.inputController.text) * 15;
-
-      firestoreService.addPlan(
-          fromKey, toKey, lines, controller.selectedDays.toList());
+      firestoreService
+          .addPlan(fromKey, toKey, lines, controller.selectedDays.toList())
+          .then((_) {
+        Get.to(() => SafeArea(child: MyBottomNavBar()));
+      });
     }
 
     return Scaffold(
@@ -765,8 +767,6 @@ class NewPlanController extends GetxController {
         planDetailsError.value =
             'Please fill out all fields and select at least one day.';
       }
-    } else if (currentPageIndex.value == 4) {
-      Get.to(() => MyBottomNavBar());
     }
   }
 }

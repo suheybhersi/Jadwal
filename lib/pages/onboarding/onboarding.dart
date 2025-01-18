@@ -19,20 +19,10 @@ class OnboardingScreen extends StatelessWidget {
             onPageChanged: controller.updatePageIndicator,
             children: [
               OnBoardingPage(
-                image: 'assets/quran.png',
-                title: 'Insert some text... 1',
-                subTitle: 'Stay on top of your memorisation',
+                image: 'assets/logo2.png',
+                title: 'Welcome to Jadwal',
+                subTitle: 'Your personal Quran Planner',
               ),
-              OnBoardingPage(
-                image: 'assets/quran.png',
-                title: 'Insert some text... 2',
-                subTitle: 'Stay on top of your memorisation',
-              ),
-              OnBoardingPage(
-                image: 'assets/quran.png',
-                title: 'Insert some text... 3',
-                subTitle: 'Stay on top of your memorisation',
-              )
             ],
           ),
           Positioned(
@@ -82,30 +72,36 @@ class OnBoardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         Image(
-          width: MediaQuery.of(Get.context!).size.width * 0.7,
-          height: MediaQuery.of(Get.context!).size.height * 0.6,
+          width: 300,
+          height: 300,
           image: AssetImage(image),
         ),
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            letterSpacing: 0.5,
-          ),
-        ),
-        SizedBox(
-          height: 16,
-        ),
-        Text(
-          subTitle,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            letterSpacing: 0.5,
-          ),
+        Column(
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                letterSpacing: 0.5,
+              ),
+            ),
+            SizedBox(
+              height: 8,
+            ),
+            Text(
+              subTitle,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                letterSpacing: 0.5,
+                color: Colors.grey,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -121,7 +117,7 @@ class OnBoardingController extends GetxController {
   void updatePageIndicator(index) => currentPageIndex.value = index;
 
   void nextPage() {
-    if (currentPageIndex.value == 2) {
+    if (currentPageIndex.value == 0) {
       Get.to(LoginOrRegisterPage());
     } else {
       int page = currentPageIndex.value + 1;
@@ -130,7 +126,7 @@ class OnBoardingController extends GetxController {
   }
 
   void skipPage() {
-    currentPageIndex.value = 2;
+    currentPageIndex.value = 0;
     // pageController.jumpToPage(2);
     Get.to(LoginOrRegisterPage());
   }

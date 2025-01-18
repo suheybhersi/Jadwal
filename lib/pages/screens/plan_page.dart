@@ -109,7 +109,7 @@ class PlanPageHeader extends StatelessWidget {
       padding: const EdgeInsets.only(
         left: 10,
         right: 4,
-        top: 10.0,
+        top: 0.0,
         bottom: 15,
       ),
       child: Row(

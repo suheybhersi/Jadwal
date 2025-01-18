@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                 Column(
                   children: [
                     const SizedBox(height: 24),
-                    Image(height: 150, image: AssetImage('assets/checked.png')),
+                    Image(height: 150, image: AssetImage('assets/logo2.png')),
                     SizedBox(height: 16),
                     Text(
                       'Welcome back',
