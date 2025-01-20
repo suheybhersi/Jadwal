@@ -140,7 +140,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                 ],
                               ),
                               child: Text(
-                                ' ${surahs[index]['surahNumber']}. ${surahName}',
+                                ' ${surahs[index]['surahNumber']}. $surahName',
                                 style: GoogleFonts.lato(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,

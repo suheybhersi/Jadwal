@@ -72,35 +72,37 @@ class NewPlanScreen extends StatelessWidget {
 
           return Stack(
             children: [
-              // PageView
-              PageView(
-                controller: controller.pageController,
-                onPageChanged: controller.updatePageIndicator,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  const IntroPage(),
-                  MemorisedPage(
-                    surahNames: surahNames,
-                    controller: controller,
-                    allData: allData,
-                    text: 'From what verse have you memorised?',
-                    pageKey: 'from',
-                  ),
-                  MemorisedPage(
-                    surahNames: surahNames,
-                    controller: controller,
-                    allData: allData,
-                    text: 'To what verse have you memorised?',
-                    pageKey: 'to',
-                  ),
-                  const PlanDetailsPage(),
-                  const ReviewPage(
-                    title: 'Review and Confirm',
-                    description:
-                        'Review your Hifdh plan and make sure everything is set before starting.',
-                  ),
-                ],
-              ),
+              Obx(() => PageView(
+                    controller: controller.pageController,
+                    onPageChanged: controller.updatePageIndicator,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      const IntroPage(),
+                      if (controller.hasMemorisedBefore.value) ...[
+                        MemorisedPage(
+                          surahNames: surahNames,
+                          controller: controller,
+                          allData: allData,
+                          text: 'From what verse have you memorised?',
+                          pageKey: 'from',
+                        ),
+                        MemorisedPage(
+                          surahNames: surahNames,
+                          controller: controller,
+                          allData: allData,
+                          text: 'To what verse have you memorised?',
+                          pageKey: 'to',
+                        ),
+                      ],
+                      const PlanDetailsPage(),
+                      const ReviewPage(
+                        title: 'Review and Confirm',
+                        description:
+                            'Review your Hifdh plan and make sure everything is set before starting.',
+                      ),
+                    ],
+                  )),
+
               // Bottom Navigation Section
               BottomNavigation(
                 controller: controller,
@@ -155,14 +157,24 @@ class BottomNavigation extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // onPressed: () {
+                  //   if (controller.currentPageIndex.value == 4) {
+                  //     onNextPressed();
+                  //   }
+                  //   controller.nextPage();
+                  // },
                   onPressed: () {
-                    if (controller.currentPageIndex.value == 4) {
+                    if (controller.currentPageIndex.value ==
+                        (controller.hasMemorisedBefore.value ? 4 : 2)) {
                       onNextPressed();
+                    } else {
+                      controller.nextPage();
                     }
-                    controller.nextPage();
                   },
+
                   child: Obx(() => Text(
-                        controller.currentPageIndex.value == 4
+                        (controller.currentPageIndex.value ==
+                                (controller.hasMemorisedBefore.value ? 4 : 2))
                             ? 'Confirm'
                             : 'Next',
                         style: const TextStyle(
@@ -187,38 +199,191 @@ class IntroPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<NewPlanController>();
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
       child: Column(
         children: [
-          Icon(
-            Icons.book,
-            size: 50,
-            color: Colors.blue.shade700,
+          Column(
+            children: [
+              Icon(
+                Icons.book,
+                size: 50,
+                color: Colors.blue.shade700,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                'Lets get some details about your memorisation',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                "We will ask you about how much you've already memorised, what your availability is like and how much you wish to do each day.",
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          SizedBox(
-            height: 20,
-          ),
-          Text(
-            'Lets get some details about your memorisation',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-              color: const Color.fromARGB(255, 31, 31, 31),
+          SizedBox(height: 40),
+
+          // Switch for "Memorised Quran Before"
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 5),
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade100,
+                  spreadRadius: 5,
+                  blurRadius: 15,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Text(
-            "We will ask you about how much you've already memorised, what your availability is like and how much you wish to do each day.",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey.shade600,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.history_edu,
+                        color: Colors.blue.shade700,
+                        size: 22,
+                      ),
+                    ),
+                    SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Previous Experience',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'Have you memorised before?',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Obx(() => Switch.adaptive(
+                      value: controller.hasMemorisedBefore.value,
+                      onChanged: (value) {
+                        controller.hasMemorisedBefore.value = value;
+                      },
+                      activeColor: Color.fromARGB(255, 73, 121, 251),
+                      inactiveThumbColor: Colors.white,
+                      activeTrackColor: Colors.blue.shade200,
+                      inactiveTrackColor: Colors.grey.shade200,
+                      trackOutlineColor:
+                          WidgetStateProperty.all(Colors.transparent),
+                    )),
+              ],
             ),
-            textAlign: TextAlign.center,
+          ),
+
+          SizedBox(height: 24),
+
+          // Switch for "Back to Front"
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 5),
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade100,
+                  spreadRadius: 5,
+                  blurRadius: 15,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.swap_horiz,
+                        color: Color.fromARGB(255, 73, 121, 251),
+                        size: 22,
+                      ),
+                    ),
+                    SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Back to Front',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'Memorise from surah An-Nas',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Obx(() => Switch.adaptive(
+                      value: controller.isBackToFront.value,
+                      onChanged: (value) {
+                        controller.isBackToFront.value = value;
+                      },
+                      activeColor: Color.fromARGB(255, 73, 121, 251),
+                      inactiveThumbColor: Colors.white,
+                      activeTrackColor: Colors.blue.shade200,
+                      inactiveTrackColor: Colors.grey.shade200,
+                      trackOutlineColor:
+                          WidgetStateProperty.all(Colors.transparent),
+                    )),
+              ],
+            ),
           ),
         ],
       ),
@@ -249,7 +414,6 @@ class MemorisedPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 20),
           // Page Title
           Text(
             text,
@@ -341,7 +505,7 @@ class PlanDetailsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Choose how many days you want to memorize on and customize your schedule.',
+            'Choose how many days you want to memorise on and customise your schedule.',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w400,
@@ -506,7 +670,7 @@ class ReviewPage extends StatelessWidget {
     final controller = Get.find<NewPlanController>();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -540,15 +704,27 @@ class ReviewPage extends StatelessWidget {
 
           const SizedBox(height: 30),
 
+          //section car for back to front
+          SectionCard(
+            title: 'Memorisation Direction',
+            content: controller.isBackToFront.value
+                ? 'Back to Front'
+                : 'Front to Back',
+            icon: Icons.arrow_back,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
+          ),
+
+          const SizedBox(height: 20),
           // Full-Width Section: Selected Range
           SectionCard(
             title: 'Previously Memorised',
-            content:
-                '${controller.selectedFromSurah.value} ${controller.selectedFromVerse.value} - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}',
-            color: Colors.blue.shade50,
-            borderColor: Colors.blue.shade200,
-            textColor: Colors.blue.shade700,
-            onEdit: () => controller.pageController.jumpToPage(1),
+            content: controller.hasMemorisedBefore.value
+                ? '${controller.selectedFromSurah.value} ${controller.selectedFromVerse.value} - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
+                : 'No previous memorisation',
+            icon: Icons.history,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
           ),
 
           const SizedBox(height: 20),
@@ -570,10 +746,9 @@ class ReviewPage extends StatelessWidget {
                       'Sun'
                     ][entry.key])
                 .join(', '),
-            color: Colors.green.shade50,
-            borderColor: Colors.green.shade200,
-            textColor: Colors.green.shade700,
-            onEdit: () => controller.pageController.jumpToPage(3),
+            icon: Icons.calendar_today,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 3 : 1),
           ),
 
           const SizedBox(height: 20),
@@ -583,11 +758,10 @@ class ReviewPage extends StatelessWidget {
             title: 'Amount per day',
             content:
                 '${controller.inputController.text} ${controller.selectedUnit.value}',
-            color: Colors.purple.shade50,
-            borderColor: Colors.purple.shade200,
-            textColor: Colors.purple.shade700,
+            icon: Icons.calculate,
             onEdit: () {
-              controller.pageController.jumpToPage(3);
+              controller.pageController
+                  .jumpToPage(controller.hasMemorisedBefore.value ? 3 : 1);
             },
           ),
         ],
@@ -601,17 +775,13 @@ class SectionCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.content,
-    required this.color,
-    required this.borderColor,
-    required this.textColor,
+    required this.icon, // Added an icon parameter
     required this.onEdit,
   });
 
   final String title;
   final String content;
-  final Color color;
-  final Color borderColor;
-  final Color textColor;
+  final IconData icon; // Icon for the card
   final VoidCallback? onEdit;
 
   @override
@@ -620,68 +790,80 @@ class SectionCard extends StatelessWidget {
       width: double.infinity, // Full width of parent
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-        ),
+        color: Colors.white, // Set to white for consistency
+        borderRadius: BorderRadius.circular(16), // Rounded corners
         boxShadow: [
           BoxShadow(
             color: Colors.grey.shade200,
-            blurRadius: 6,
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Title
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color.fromARGB(255, 73, 121, 251),
+                  size: 24,
                 ),
               ),
-
-              // Edit Button
-
-              GestureDetector(
-                onTap: onEdit,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: borderColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Edit',
+              const SizedBox(width: 15),
+              // Title and Content
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
                     style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: textColor),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    content,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-
-          // Content
-          Text(
-            content,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: textColor,
+          // Edit Button
+          GestureDetector(
+            onTap: onEdit,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100, // Light background for the button
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Edit',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blue.shade700, // Text color for the button
+                ),
+              ),
             ),
           ),
         ],
@@ -716,6 +898,9 @@ class NewPlanController extends GetxController {
   final RxString toPageError = ''.obs;
   final RxString planDetailsError = ''.obs;
 
+  final RxBool isBackToFront = false.obs;
+  final RxBool hasMemorisedBefore = false.obs;
+
   // Update "From" selection
   void updateSelectedFromSurah(
       String? surahName, Map<String, dynamic> surahData) {
@@ -745,24 +930,24 @@ class NewPlanController extends GetxController {
   void nextPage() {
     if (currentPageIndex.value == 0) {
       pageController.jumpToPage(1);
-    } else if (currentPageIndex.value == 1) {
+    } else if (currentPageIndex.value == 1 && hasMemorisedBefore.value) {
       if (selectedFromSurah.value != null && selectedFromVerse.value != null) {
         fromPageError.value = '';
         pageController.jumpToPage(2);
       } else {
         fromPageError.value = 'Please select a Surah and Verse to proceed.';
       }
-    } else if (currentPageIndex.value == 2) {
+    } else if (currentPageIndex.value == 2 && hasMemorisedBefore.value) {
       if (selectedToSurah.value != null && selectedToVerse.value != null) {
         toPageError.value = '';
         pageController.jumpToPage(3);
       } else {
         toPageError.value = 'Please select a Surah and Verse to proceed.';
       }
-    } else if (currentPageIndex.value == 3) {
+    } else if (currentPageIndex.value == (hasMemorisedBefore.value ? 3 : 1)) {
       if (inputController.text.isNotEmpty && selectedDays.contains(true)) {
         planDetailsError.value = '';
-        pageController.jumpToPage(4);
+        pageController.jumpToPage(hasMemorisedBefore.value ? 4 : 2);
       } else {
         planDetailsError.value =
             'Please fill out all fields and select at least one day.';
