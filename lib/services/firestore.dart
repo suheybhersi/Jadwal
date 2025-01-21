@@ -37,47 +37,43 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('surahsProgress');
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
+    bool backToFront,
     String memorisedFrom,
     String memorisedTo,
     int lines,
     List<bool> hifdhDays,
   ) async {
-    //get memorisedFrom data
-    final memorisedFromSnapshot =
-        await versesCollection.where('key', isEqualTo: memorisedFrom).get();
-    String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
-    final memorisedFromDoc = await versesCollection.doc(memorisedFromId).get();
-    Map<String, dynamic> memorisedFromData =
-        memorisedFromDoc.data() as Map<String, dynamic>;
+    double memorisedLines = 0;
+    double lastPageMemorisedLines = 0;
+    Map<String, dynamic> memorisedFromData = {};
+    Map<String, dynamic> memorisedToData = {};
+    String startVerseId = '';
+    String startKey = '';
+    String endKey = '114:6';
 
-    //get memorisedTo data
-    final memorisedToSnapshot =
-        await versesCollection.where('key', isEqualTo: memorisedTo).get();
-    String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
-    final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
-    Map<String, dynamic> memorisedToData =
-        memorisedToDoc.data() as Map<String, dynamic>;
+    /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
+    if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
+      startVerseId = '1';
+    } else {
+      //get memorisedFrom data
+      final memorisedFromSnapshot =
+          await versesCollection.where('key', isEqualTo: memorisedFrom).get();
+      String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
+      final memorisedFromDoc =
+          await versesCollection.doc(memorisedFromId).get();
+      memorisedFromData = memorisedFromDoc.data() as Map<String, dynamic>;
 
-    //get startVerseId
-    String startVerseId = (int.parse(memorisedToId) + 1).toString();
-
-    //get startKey
-    if (startVerseId != '6237') {
-      final startDoc =
-          await versesCollection.doc(startVerseId.toString()).get();
-      Map<String, dynamic> startVerseData =
-          startDoc.data() as Map<String, dynamic>;
-      String startKey = startVerseData['key'];
-
-      //get endKey
-      String endKey = '114:6';
-
+      //get memorisedTo data
+      final memorisedToSnapshot =
+          await versesCollection.where('key', isEqualTo: memorisedTo).get();
+      String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
+      final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
+      memorisedToData = memorisedToDoc.data() as Map<String, dynamic>;
       //calculate memorisedLines
-      double memorisedLines =
-          (memorisedFromData['page'] == memorisedToData['page'])
-              ? 0
-              : ((memorisedToData['page'] - memorisedFromData['page'] - 1) * 15)
-                  .toDouble();
+      memorisedLines = (memorisedFromData['page'] == memorisedToData['page'])
+          ? 0
+          : ((memorisedToData['page'] - memorisedFromData['page'] - 1) * 15)
+              .toDouble();
       //if page 2 is included in memorisedFrom and memorisedTo, subtract 7 lines
       if (memorisedFromData['page'] < 2 && memorisedToData['page'] > 2) {
         memorisedLines -= 7;
@@ -98,7 +94,6 @@ class FirestoreService extends ChangeNotifier {
         tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
       }
 
-      double lastPageMemorisedLines = 0;
       //calculate memorisedLines for last page
       if (memorisedFromData['page'] != memorisedToData['page']) {
         memorisedLines += memorisedToData['length'].toDouble();
@@ -142,7 +137,20 @@ class FirestoreService extends ChangeNotifier {
         memorisedLines -= extraLines;
       }
 
+      //get startVerseId
+      startVerseId = (int.parse(memorisedToId) + 1).toString();
+    }
+
+    /*-------------------------------------C R E A T E   P L A N---------------------------------------*/
+    if (startVerseId != '6237') {
+      final startDoc =
+          await versesCollection.doc(startVerseId.toString()).get();
+      Map<String, dynamic> startVerseData =
+          startDoc.data() as Map<String, dynamic>;
+      startKey = startVerseData['key'];
+
       final newPlan = Plan(
+        backToFront: backToFront,
         start: startKey,
         end: endKey,
         lines: lines,
@@ -161,11 +169,19 @@ class FirestoreService extends ChangeNotifier {
       final document = await plansCollection.add(newPlan.toMap());
 
       final surahsSnapshot = await surahsCollection.get();
-      String memorisedFromSurah = memorisedFromData['key'].split(':')[0];
-      String memorisedToSurah = memorisedToData['key'].split(':')[0];
+      String memorisedFromSurah = '';
+      String memorisedToSurah = '';
+
+      if (memorisedFrom != 'null:null' && memorisedTo != 'null:null') {
+        memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+        memorisedToSurah = memorisedToData['key'].split(':')[0];
+      }
+
       //set tempCompletedLines to 0 for all surahs
       for (var doc in surahsSnapshot.docs) {
-        if (int.parse(doc.id) >= int.parse(memorisedFromSurah) &&
+        if (memorisedFromSurah == '' && memorisedToSurah == '') {
+          await surahsProgressCollection.doc(doc.id).set(doc.data());
+        } else if (int.parse(doc.id) >= int.parse(memorisedFromSurah) &&
             int.parse(doc.id) < int.parse(memorisedToSurah)) {
           await surahsProgressCollection.doc(doc.id).set(
             {

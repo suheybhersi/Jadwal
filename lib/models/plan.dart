@@ -3,6 +3,7 @@ import 'package:hifdh_planner_app/models/hifdh.dart';
 import 'package:hifdh_planner_app/models/review.dart';
 
 class Plan {
+  final bool backToFront;
   final String start;
   final String end;
   final int lines;
@@ -18,6 +19,7 @@ class Plan {
   final bool planCompleted;
 
   Plan({
+    required this.backToFront,
     required this.start,
     required this.end,
     required this.lines,
@@ -35,6 +37,7 @@ class Plan {
 
   Map<String, dynamic> toMap() {
     return {
+      'backToFront': backToFront,
       'start': start,
       'end': end,
       'lines': lines,

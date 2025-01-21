@@ -27,7 +27,8 @@ class NewPlanScreen extends StatelessWidget {
           ? int.parse(controller.inputController.text)
           : int.parse(controller.inputController.text) * 15;
       firestoreService
-          .addPlan(fromKey, toKey, lines, controller.selectedDays.toList())
+          .addPlan(controller.isBackToFront.value, fromKey, toKey, lines,
+              controller.selectedDays.toList())
           .then((_) {
         Get.to(() => SafeArea(child: MyBottomNavBar()));
       });
@@ -242,8 +243,7 @@ class IntroPage extends StatelessWidget {
 
           // Switch for "Memorised Quran Before"
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 5),
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+            padding: EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -316,8 +316,7 @@ class IntroPage extends StatelessWidget {
 
           // Switch for "Back to Front"
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 5),
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -670,7 +669,7 @@ class ReviewPage extends StatelessWidget {
     final controller = Get.find<NewPlanController>();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -710,9 +709,8 @@ class ReviewPage extends StatelessWidget {
             content: controller.isBackToFront.value
                 ? 'Back to Front'
                 : 'Front to Back',
-            icon: Icons.arrow_back,
-            onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
+            icon: Icons.swap_horiz,
+            onEdit: () => controller.pageController.jumpToPage(0),
           ),
 
           const SizedBox(height: 20),
@@ -723,8 +721,7 @@ class ReviewPage extends StatelessWidget {
                 ? '${controller.selectedFromSurah.value} ${controller.selectedFromVerse.value} - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
                 : 'No previous memorisation',
             icon: Icons.history,
-            onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
+            onEdit: () => controller.pageController.jumpToPage(0),
           ),
 
           const SizedBox(height: 20),
@@ -788,7 +785,7 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity, // Full width of parent
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
       decoration: BoxDecoration(
         color: Colors.white, // Set to white for consistency
         borderRadius: BorderRadius.circular(16), // Rounded corners
