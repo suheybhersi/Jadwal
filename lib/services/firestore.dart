@@ -49,215 +49,428 @@ class FirestoreService extends ChangeNotifier {
     Map<String, dynamic> memorisedToData = {};
     String startVerseId = '';
     String startKey = '';
-    String endKey = '114:6';
-
-    /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
-    if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
-      startVerseId = '1';
-    } else {
-      //get memorisedFrom data
-      final memorisedFromSnapshot =
-          await versesCollection.where('key', isEqualTo: memorisedFrom).get();
-      String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
-      final memorisedFromDoc =
-          await versesCollection.doc(memorisedFromId).get();
-      memorisedFromData = memorisedFromDoc.data() as Map<String, dynamic>;
-
-      //get memorisedTo data
-      final memorisedToSnapshot =
-          await versesCollection.where('key', isEqualTo: memorisedTo).get();
-      String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
-      final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
-      memorisedToData = memorisedToDoc.data() as Map<String, dynamic>;
-      //calculate memorisedLines
-      memorisedLines = (memorisedFromData['page'] == memorisedToData['page'])
-          ? 0
-          : ((memorisedToData['page'] - memorisedFromData['page'] - 1) * 15)
-              .toDouble();
-      //if page 2 is included in memorisedFrom and memorisedTo, subtract 7 lines
-      if (memorisedFromData['page'] < 2 && memorisedToData['page'] > 2) {
-        memorisedLines -= 7;
-      }
-      memorisedLines += memorisedFromData['length'];
-
-      memorisedFromId = (int.parse(memorisedFromId) + 1).toString();
-      dynamic tempVerseDoc = await versesCollection.doc(memorisedFromId).get();
-      Map<String, dynamic> tempVerseData =
-          tempVerseDoc.data() as Map<String, dynamic>;
-
-      //calculate memorisedLines for first page
-      while (memorisedFromData['page'] == tempVerseData['page']) {
-        memorisedLines += tempVerseData['length'].toDouble();
-        memorisedFromId = (int.parse(memorisedFromId) + 1).toString();
-
-        tempVerseDoc = await versesCollection.doc(memorisedFromId).get();
-        tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
-      }
-
-      //calculate memorisedLines for last page
-      if (memorisedFromData['page'] != memorisedToData['page']) {
-        memorisedLines += memorisedToData['length'].toDouble();
-        lastPageMemorisedLines = memorisedToData['length'].toDouble();
-        memorisedToId = (int.parse(memorisedToId) - 1).toString();
-        tempVerseDoc = await versesCollection.doc(memorisedToId).get();
-        tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
-        while (memorisedToData['page'] == tempVerseData['page']) {
-          memorisedLines += tempVerseData['length'].toDouble();
-          lastPageMemorisedLines += tempVerseData['length'].toDouble();
-          memorisedToId = (int.parse(memorisedToId) - 1).toString();
-
-          tempVerseDoc = await versesCollection.doc(memorisedToId).get();
-          tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
-        }
-      }
-
-      //subtract extra lines from memorisedLines that were added originally
-      final lastSurahSnapshot = await versesCollection
-          .where('key', isEqualTo: memorisedToData['key'].split(':')[0] + ':1')
-          .get();
-      final lastSurahDoc = await versesCollection
-          .doc(lastSurahSnapshot.docs[0].reference.id)
-          .get();
-      final lastSurahData = lastSurahDoc.data() as Map<String, dynamic>;
-      int firstPageFromLastSurah = lastSurahData['page'];
-
-      if (memorisedToData['page'] == firstPageFromLastSurah &&
-          memorisedToData['page'] != 1) {
-        double extraLines =
-            ((double.parse(memorisedToData['key'].split(':')[0]) -
-                        double.parse(memorisedFromData['key'].split(':')[0])) -
-                    1) *
-                2;
-        memorisedLines -= extraLines;
+    double lastSurahMemorisedLines = 0;
+    if (!backToFront) {
+      /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
+      if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
+        startVerseId = '1';
       } else {
-        double extraLines =
-            (double.parse(memorisedToData['key'].split(':')[0]) -
-                    double.parse(memorisedFromData['key'].split(':')[0])) *
-                2;
-        memorisedLines -= extraLines;
-      }
+        //get memorisedFrom data
+        final memorisedFromSnapshot =
+            await versesCollection.where('key', isEqualTo: memorisedFrom).get();
+        String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
+        final memorisedFromDoc =
+            await versesCollection.doc(memorisedFromId).get();
+        memorisedFromData = memorisedFromDoc.data() as Map<String, dynamic>;
 
-      //get startVerseId
-      startVerseId = (int.parse(memorisedToId) + 1).toString();
-    }
+        //get memorisedTo data
+        final memorisedToSnapshot =
+            await versesCollection.where('key', isEqualTo: memorisedTo).get();
+        String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
+        final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
+        memorisedToData = memorisedToDoc.data() as Map<String, dynamic>;
 
-    /*-------------------------------------C R E A T E   P L A N---------------------------------------*/
-    if (startVerseId != '6237') {
-      final startDoc =
-          await versesCollection.doc(startVerseId.toString()).get();
-      Map<String, dynamic> startVerseData =
-          startDoc.data() as Map<String, dynamic>;
-      startKey = startVerseData['key'];
+        String memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+        String memorisedToSurah = memorisedToData['key'].split(':')[0];
 
-      final newPlan = Plan(
-        backToFront: backToFront,
-        start: startKey,
-        end: endKey,
-        lines: lines,
-        hifdhDays: hifdhDays,
-        totalLines: 8820,
-        completedLines: memorisedLines,
-        hifdhs: [],
-        hifdhIn: -1,
-        reviews: [],
-        streak: 0,
-        missedReviews: 0,
-        currentWeek: [],
-        planCompleted: false,
-      );
-
-      final document = await plansCollection.add(newPlan.toMap());
-
-      final surahsSnapshot = await surahsCollection.get();
-      String memorisedFromSurah = '';
-      String memorisedToSurah = '';
-
-      if (memorisedFrom != 'null:null' && memorisedTo != 'null:null') {
-        memorisedFromSurah = memorisedFromData['key'].split(':')[0];
-        memorisedToSurah = memorisedToData['key'].split(':')[0];
-      }
-
-      //set tempCompletedLines to 0 for all surahs
-      for (var doc in surahsSnapshot.docs) {
-        if (memorisedFromSurah == '' && memorisedToSurah == '') {
-          await surahsProgressCollection.doc(doc.id).set(doc.data());
-        } else if (int.parse(doc.id) >= int.parse(memorisedFromSurah) &&
-            int.parse(doc.id) < int.parse(memorisedToSurah)) {
-          await surahsProgressCollection.doc(doc.id).set(
-            {
-              'surah': (doc.data() as Map<String, dynamic>)['surah'],
-              'surahNumber':
-                  (doc.data() as Map<String, dynamic>)['surahNumber'],
-              'verses': (doc.data() as Map<String, dynamic>)['verses'],
-              'totalLines': (doc.data() as Map<String, dynamic>)['totalLines'],
-              'tempCompletedLines':
-                  (doc.data() as Map<String, dynamic>)['totalLines'],
-              'completedLines':
-                  (doc.data() as Map<String, dynamic>)['totalLines'],
-            },
-          );
-        } else if (int.parse(doc.id) == int.parse(memorisedToSurah)) {
-          final firstPageLastSurahSnapshot = await versesCollection
+        if (memorisedFromSurah != memorisedToSurah) {
+          // Get last full surah data
+          final lastFullSurahSnapshot = await versesCollection
               .where('key',
-                  isEqualTo: memorisedToData['key'].split(':')[0] + ':1')
+                  isEqualTo:
+                      '${(int.parse(memorisedToData['key'].split(':')[0]) - 1)}:1')
               .get();
-          String firstPageLastSurahId =
-              firstPageLastSurahSnapshot.docs[0].reference.id;
-          final firstPageLastSurahDoc =
-              await versesCollection.doc(firstPageLastSurahId).get();
-          Map<String, dynamic> firstPageLastSurahData =
-              firstPageLastSurahDoc.data() as Map<String, dynamic>;
+          String lastFullSurahId = lastFullSurahSnapshot.docs[0].reference.id;
+          dynamic lastFullSurahDoc =
+              await versesCollection.doc(lastFullSurahId).get();
+          Map<String, dynamic> lastFullSurahData =
+              lastFullSurahDoc.data() as Map<String, dynamic>;
 
-          double firstPageLastSurahMemorisedLines =
-              firstPageLastSurahData['length'].toDouble();
+          // calculate completed lines for full surahs
 
-          firstPageLastSurahId =
-              (int.parse(firstPageLastSurahId) + 1).toString();
-          dynamic tempVerseDoc =
-              await versesCollection.doc(firstPageLastSurahId).get();
-          Map<String, dynamic> tempVerseData =
-              tempVerseDoc.data() as Map<String, dynamic>;
+          String lastFullSurah = lastFullSurahData['key'].split(':')[0];
 
-          //calculate memorisedLines for first page
-          while (firstPageLastSurahData['page'] == tempVerseData['page']) {
-            firstPageLastSurahMemorisedLines +=
-                tempVerseData['length'].toDouble();
+          while (int.parse(memorisedFromSurah) >= int.parse(lastFullSurah)) {
+            lastFullSurahDoc = await surahsCollection.doc(lastFullSurah).get();
+            lastFullSurahData = lastFullSurahDoc.data() as Map<String, dynamic>;
+            memorisedLines += lastFullSurahData['totalLines'].toDouble();
+
+            lastFullSurah = (int.parse(lastFullSurah) + 1).toString();
+          }
+        }
+
+        String tempKey = '${memorisedToData['key'].split(':')[0]}:1';
+        dynamic tempSnapshot =
+            await versesCollection.where('key', isEqualTo: tempKey).get();
+        String tempId = tempSnapshot.docs[0].reference.id;
+        dynamic tempDoc = await versesCollection.doc(tempId).get();
+        Map<String, dynamic> tempData = tempDoc.data() as Map<String, dynamic>;
+
+        memorisedLines += tempData['length'];
+        lastSurahMemorisedLines += tempData['length'];
+
+        tempId = (int.parse(tempId) + 1).toString();
+        tempDoc = await versesCollection.doc(tempId).get();
+        tempData = tempDoc.data() as Map<String, dynamic>;
+        int tempPage = tempData['page'];
+
+        //calculate memorisedLines for first page
+        while (tempData['page'] == tempPage &&
+            tempId != (int.parse(memorisedToId) + 1).toString()) {
+          memorisedLines += tempData['length'].toDouble();
+          lastSurahMemorisedLines += tempData['length'].toDouble();
+          tempId = (int.parse(tempId) + 1).toString();
+
+          tempDoc = await versesCollection.doc(tempId).get();
+          tempData = tempDoc.data() as Map<String, dynamic>;
+        }
+
+        if (tempData['page'] != tempPage) {
+          //calculate memorisedLines for middle pages
+          memorisedLines +=
+              ((memorisedToData['page'] - tempPage - 1) * 15).toDouble();
+          lastSurahMemorisedLines +=
+              ((memorisedToData['page'] - tempPage - 1) * 15).toDouble();
+
+          //calculate memorisedLines for last page
+          memorisedLines += memorisedToData['length'].toDouble();
+          lastSurahMemorisedLines += memorisedToData['length'].toDouble();
+          lastPageMemorisedLines = memorisedToData['length'].toDouble();
+          tempId = memorisedToId;
+          tempId = (int.parse(tempId) - 1).toString();
+          tempDoc = await versesCollection.doc(tempId).get();
+          tempData = tempDoc.data() as Map<String, dynamic>;
+          while (memorisedToData['page'] == tempData['page']) {
+            memorisedLines += tempData['length'].toDouble();
+            lastSurahMemorisedLines += tempData['length'].toDouble();
+            lastPageMemorisedLines += tempData['length'].toDouble();
+            tempId = (int.parse(tempId) - 1).toString();
+
+            tempDoc = await versesCollection.doc(tempId).get();
+            tempData = tempDoc.data() as Map<String, dynamic>;
+          }
+        }
+
+        //get startVerseId
+        startVerseId = (int.parse(memorisedToId) + 1).toString();
+
+        tempDoc = await versesCollection.doc(startVerseId).get();
+        tempData = tempDoc.data() as Map<String, dynamic>;
+        startKey = tempData['key'];
+      }
+
+      /*-------------------------------------C R E A T E   P L A N---------------------------------------*/
+      if (startVerseId != '6237') {
+        final newPlan = Plan(
+          backToFront: backToFront,
+          start: startKey,
+          lines: lines,
+          hifdhDays: hifdhDays,
+          totalLines: 8820,
+          completedLines: memorisedLines,
+          hifdhs: [],
+          hifdhIn: -1,
+          reviews: [],
+          streak: 0,
+          missedReviews: 0,
+          currentWeek: [],
+          planCompleted: false,
+        );
+
+        final document = await plansCollection.add(newPlan.toMap());
+
+        final surahsSnapshot = await surahsCollection.get();
+        String memorisedFromSurah = '';
+        String memorisedToSurah = '';
+
+        if (memorisedFrom != 'null:null' && memorisedTo != 'null:null') {
+          memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+          memorisedToSurah = memorisedToData['key'].split(':')[0];
+        }
+
+        //set tempCompletedLines to 0 for all surahs
+        for (var doc in surahsSnapshot.docs) {
+          if (memorisedFromSurah == '' && memorisedToSurah == '') {
+            await surahsProgressCollection.doc(doc.id).set(doc.data());
+          } else if (int.parse(doc.id) >= int.parse(memorisedFromSurah) &&
+              int.parse(doc.id) < int.parse(memorisedToSurah)) {
+            await surahsProgressCollection.doc(doc.id).set(
+              {
+                'surah': (doc.data() as Map<String, dynamic>)['surah'],
+                'surahNumber':
+                    (doc.data() as Map<String, dynamic>)['surahNumber'],
+                'verses': (doc.data() as Map<String, dynamic>)['verses'],
+                'totalLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'tempCompletedLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'completedLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+              },
+            );
+          } else if (int.parse(doc.id) == int.parse(memorisedToSurah)) {
+            final firstPageLastSurahSnapshot = await versesCollection
+                .where('key',
+                    isEqualTo: memorisedToData['key'].split(':')[0] + ':1')
+                .get();
+            String firstPageLastSurahId =
+                firstPageLastSurahSnapshot.docs[0].reference.id;
+            final firstPageLastSurahDoc =
+                await versesCollection.doc(firstPageLastSurahId).get();
+            Map<String, dynamic> firstPageLastSurahData =
+                firstPageLastSurahDoc.data() as Map<String, dynamic>;
+
+            double firstPageLastSurahMemorisedLines =
+                firstPageLastSurahData['length'].toDouble();
+
             firstPageLastSurahId =
                 (int.parse(firstPageLastSurahId) + 1).toString();
-
-            tempVerseDoc =
+            dynamic tempVerseDoc =
                 await versesCollection.doc(firstPageLastSurahId).get();
-            tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+            Map<String, dynamic> tempVerseData =
+                tempVerseDoc.data() as Map<String, dynamic>;
+
+            //calculate memorisedLines for first page
+            while (firstPageLastSurahData['page'] == tempVerseData['page']) {
+              firstPageLastSurahMemorisedLines +=
+                  tempVerseData['length'].toDouble();
+              firstPageLastSurahId =
+                  (int.parse(firstPageLastSurahId) + 1).toString();
+
+              tempVerseDoc =
+                  await versesCollection.doc(firstPageLastSurahId).get();
+              tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+            }
+
+            double memorisedToSurahCompletedLines = lastPageMemorisedLines +
+                firstPageLastSurahMemorisedLines +
+                ((memorisedToData['page'] -
+                        firstPageLastSurahData['page'] -
+                        (memorisedToData['page'] ==
+                                firstPageLastSurahData['page']
+                            ? 0
+                            : 1)) *
+                    15);
+
+            await surahsProgressCollection.doc(doc.id).set(
+              {
+                'surah': (doc.data() as Map<String, dynamic>)['surah'],
+                'surahNumber':
+                    (doc.data() as Map<String, dynamic>)['surahNumber'],
+                'verses': (doc.data() as Map<String, dynamic>)['verses'],
+                'totalLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'tempCompletedLines': memorisedToSurahCompletedLines,
+                'completedLines': memorisedToSurahCompletedLines,
+              },
+            );
+          } else {
+            await surahsProgressCollection.doc(doc.id).set(doc.data());
           }
+        }
 
-          double memorisedToSurahCompletedLines = lastPageMemorisedLines +
-              firstPageLastSurahMemorisedLines +
-              ((memorisedToData['page'] -
-                      firstPageLastSurahData['page'] -
-                      (memorisedToData['page'] == firstPageLastSurahData['page']
-                          ? 0
-                          : 1)) *
-                  15);
+        updateCurrentWeek(document.id);
 
-          await surahsProgressCollection.doc(doc.id).set(
-            {
-              'surah': (doc.data() as Map<String, dynamic>)['surah'],
-              'surahNumber':
-                  (doc.data() as Map<String, dynamic>)['surahNumber'],
-              'verses': (doc.data() as Map<String, dynamic>)['verses'],
-              'totalLines': (doc.data() as Map<String, dynamic>)['totalLines'],
-              'tempCompletedLines': memorisedToSurahCompletedLines,
-              'completedLines': memorisedToSurahCompletedLines,
-            },
-          );
+        createNewHifdh(startKey, lines, document.id);
+      }
+    } else {
+      /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
+      if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
+        startVerseId = '6236'; // Start from last verse
+      } else {
+        // Get memorisedFrom data
+        final memorisedFromSnapshot =
+            await versesCollection.where('key', isEqualTo: memorisedFrom).get();
+        String memorisedFromId = memorisedFromSnapshot.docs[0].reference.id;
+        final memorisedFromDoc =
+            await versesCollection.doc(memorisedFromId).get();
+        memorisedFromData = memorisedFromDoc.data() as Map<String, dynamic>;
+
+        // Get memorisedTo data
+        final memorisedToSnapshot =
+            await versesCollection.where('key', isEqualTo: memorisedTo).get();
+        String memorisedToId = memorisedToSnapshot.docs[0].reference.id;
+        final memorisedToDoc = await versesCollection.doc(memorisedToId).get();
+        memorisedToData = memorisedToDoc.data() as Map<String, dynamic>;
+
+        String memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+        String memorisedToSurah = memorisedToData['key'].split(':')[0];
+
+        if (memorisedFromSurah != memorisedToSurah) {
+          // Get last full surah data
+          final lastFullSurahSnapshot = await versesCollection
+              .where('key',
+                  isEqualTo:
+                      '${(int.parse(memorisedToData['key'].split(':')[0]) + 1)}:1')
+              .get();
+          String lastFullSurahId = lastFullSurahSnapshot.docs[0].reference.id;
+          dynamic lastFullSurahDoc =
+              await versesCollection.doc(lastFullSurahId).get();
+          Map<String, dynamic> lastFullSurahData =
+              lastFullSurahDoc.data() as Map<String, dynamic>;
+
+          // calculate completed lines for full surahs
+
+          String lastFullSurah = lastFullSurahData['key'].split(':')[0];
+
+          while (int.parse(memorisedFromSurah) >= int.parse(lastFullSurah)) {
+            lastFullSurahDoc = await surahsCollection.doc(lastFullSurah).get();
+            lastFullSurahData = lastFullSurahDoc.data() as Map<String, dynamic>;
+            memorisedLines += lastFullSurahData['totalLines'].toDouble();
+
+            lastFullSurah = (int.parse(lastFullSurah) + 1).toString();
+          }
+        }
+
+        String tempKey = '${memorisedToData['key'].split(':')[0]}:1';
+        dynamic tempSnapshot =
+            await versesCollection.where('key', isEqualTo: tempKey).get();
+        String tempId = tempSnapshot.docs[0].reference.id;
+        dynamic tempDoc = await versesCollection.doc(tempId).get();
+        Map<String, dynamic> tempData = tempDoc.data() as Map<String, dynamic>;
+
+        memorisedLines += tempData['length'];
+        lastSurahMemorisedLines += tempData['length'];
+
+        tempId = (int.parse(tempId) + 1).toString();
+        tempDoc = await versesCollection.doc(tempId).get();
+        tempData = tempDoc.data() as Map<String, dynamic>;
+        int tempPage = tempData['page'];
+
+        //calculate memorisedLines for first page
+        while (tempData['page'] == tempPage &&
+            tempId != (int.parse(memorisedToId) + 1).toString()) {
+          memorisedLines += tempData['length'].toDouble();
+          lastSurahMemorisedLines += tempData['length'].toDouble();
+          tempId = (int.parse(tempId) + 1).toString();
+
+          tempDoc = await versesCollection.doc(tempId).get();
+          tempData = tempDoc.data() as Map<String, dynamic>;
+        }
+
+        if (tempData['page'] != tempPage) {
+          //calculate memorisedLines for middle pages
+          memorisedLines +=
+              ((memorisedToData['page'] - tempPage - 1) * 15).toDouble();
+          lastSurahMemorisedLines +=
+              ((memorisedToData['page'] - tempPage - 1) * 15).toDouble();
+
+          //calculate memorisedLines for last page
+          memorisedLines += memorisedToData['length'].toDouble();
+          lastSurahMemorisedLines += memorisedToData['length'].toDouble();
+          lastPageMemorisedLines = memorisedToData['length'].toDouble();
+          tempId = memorisedToId;
+          tempId = (int.parse(tempId) - 1).toString();
+          tempDoc = await versesCollection.doc(tempId).get();
+          tempData = tempDoc.data() as Map<String, dynamic>;
+          while (memorisedToData['page'] == tempData['page']) {
+            memorisedLines += tempData['length'].toDouble();
+            lastSurahMemorisedLines += tempData['length'].toDouble();
+            lastPageMemorisedLines += tempData['length'].toDouble();
+            tempId = (int.parse(tempId) - 1).toString();
+
+            tempDoc = await versesCollection.doc(tempId).get();
+            tempData = tempDoc.data() as Map<String, dynamic>;
+          }
+        }
+
+        //get startVerseId
+        startVerseId = (int.parse(memorisedToId) + 1).toString();
+
+        tempDoc = await versesCollection.doc(startVerseId).get();
+        tempData = tempDoc.data() as Map<String, dynamic>;
+        if (tempData['surah'] == memorisedToData['surah']) {
+          startKey = tempData['key'];
         } else {
-          await surahsProgressCollection.doc(doc.id).set(doc.data());
+          tempDoc = await versesCollection
+              .where('key',
+                  isEqualTo:
+                      '${int.parse(memorisedToData['key'].split(':')[0]) - 1}:1')
+              .get();
+          startVerseId = tempDoc.docs[0].reference.id;
+          tempDoc = await versesCollection.doc(startVerseId).get();
+          tempData = tempDoc.data() as Map<String, dynamic>;
+          startKey = tempData['key'];
         }
       }
 
-      updateCurrentWeek(document.id);
+      /*-------------------------------------C R E A T E   P L A N---------------------------------------*/
+      if (startVerseId != '0') {
+        final newPlan = Plan(
+          backToFront: backToFront,
+          start: startKey,
+          lines: lines,
+          hifdhDays: hifdhDays,
+          totalLines: 8820,
+          completedLines: memorisedLines,
+          hifdhs: [],
+          hifdhIn: -1,
+          reviews: [],
+          streak: 0,
+          missedReviews: 0,
+          currentWeek: [],
+          planCompleted: false,
+        );
 
-      createNewHifdh(startKey, lines, document.id);
+        final document = await plansCollection.add(newPlan.toMap());
+
+        final surahsSnapshot = await surahsCollection.get();
+        String memorisedFromSurah = '';
+        String memorisedToSurah = '';
+
+        if (memorisedFrom != 'null:null' && memorisedTo != 'null:null') {
+          memorisedFromSurah = memorisedFromData['key'].split(':')[0];
+          memorisedToSurah = memorisedToData['key'].split(':')[0];
+        }
+
+        //set tempCompletedLines to 0 for all surahs
+        for (var doc in surahsSnapshot.docs) {
+          if (memorisedFromSurah == '' && memorisedToSurah == '') {
+            await surahsProgressCollection.doc(doc.id).set(doc.data());
+          } else if (int.parse(doc.id) <= int.parse(memorisedFromSurah) &&
+              int.parse(doc.id) > int.parse(memorisedToSurah)) {
+            await surahsProgressCollection.doc(doc.id).set(
+              {
+                'surah': (doc.data() as Map<String, dynamic>)['surah'],
+                'surahNumber':
+                    (doc.data() as Map<String, dynamic>)['surahNumber'],
+                'verses': (doc.data() as Map<String, dynamic>)['verses'],
+                'totalLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'tempCompletedLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'completedLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+              },
+            );
+          } else if (int.parse(doc.id) == int.parse(memorisedToSurah)) {
+            await surahsProgressCollection.doc(doc.id).set(
+              {
+                'surah': (doc.data() as Map<String, dynamic>)['surah'],
+                'surahNumber':
+                    (doc.data() as Map<String, dynamic>)['surahNumber'],
+                'verses': (doc.data() as Map<String, dynamic>)['verses'],
+                'totalLines':
+                    (doc.data() as Map<String, dynamic>)['totalLines'],
+                'tempCompletedLines': lastSurahMemorisedLines >
+                        (doc.data() as Map<String, dynamic>)['totalLines']
+                    ? (doc.data() as Map<String, dynamic>)['totalLines']
+                    : lastSurahMemorisedLines,
+                'completedLines': lastSurahMemorisedLines >
+                        (doc.data() as Map<String, dynamic>)['totalLines']
+                    ? (doc.data() as Map<String, dynamic>)['totalLines']
+                    : lastSurahMemorisedLines,
+              },
+            );
+          } else {
+            await surahsProgressCollection.doc(doc.id).set(doc.data());
+          }
+        }
+
+        updateCurrentWeek(document.id);
+
+        createNewHifdh(startKey, lines, document.id);
+      }
     }
   }
 

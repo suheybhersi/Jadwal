@@ -587,7 +587,7 @@ class Upcoming extends StatelessWidget {
                                                   .last['surah']
                                                   .split(' ')[0] !=
                                               'Al-Fatiha'
-                                      ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 40).lastIndexOf(' '))}'
+                                      ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 35).lastIndexOf(' '))}'
                                       : plan['hifdhs'].last['startVerse'],
                                   style: GoogleFonts.scheherazadeNew(
                                     textStyle: TextStyle(

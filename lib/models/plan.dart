@@ -5,7 +5,6 @@ import 'package:hifdh_planner_app/models/review.dart';
 class Plan {
   final bool backToFront;
   final String start;
-  final String end;
   final int lines;
   final List<bool> hifdhDays;
   final double totalLines;
@@ -21,7 +20,6 @@ class Plan {
   Plan({
     required this.backToFront,
     required this.start,
-    required this.end,
     required this.lines,
     required this.hifdhDays,
     required this.totalLines,
@@ -39,7 +37,6 @@ class Plan {
     return {
       'backToFront': backToFront,
       'start': start,
-      'end': end,
       'lines': lines,
       'hifdhDays': hifdhDays,
       'totalLines': totalLines,
