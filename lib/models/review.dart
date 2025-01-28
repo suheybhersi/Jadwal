@@ -8,6 +8,7 @@ class Review {
   final String endVerse;
   final double length;
   final List<dynamic> sm2;
+  final List<dynamic> versesList;
 
   Review({
     required this.review,
@@ -19,6 +20,7 @@ class Review {
     required this.endVerse,
     required this.length,
     required this.sm2,
+    required this.versesList,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class Review {
       'endVerse': endVerse,
       'length': length,
       'sm2': sm2,
+      'versesList': versesList,
     };
   }
 }

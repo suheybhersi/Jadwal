@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:hifdh_planner_app/pages/screens/quiz_page.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatelessWidget {
@@ -193,11 +194,10 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (reviews.isEmpty)
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Statistics(plan: plan),
-                          )
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Statistics(plan: plan),
+                        )
                       ],
                     );
                   },
@@ -268,31 +268,17 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void markReviewAsComplete(BuildContext context, String review, String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: TextFormField(
-            controller: ratingController,
-            decoration: const InputDecoration(
-                hintText: 'Rating', border: OutlineInputBorder()),
-          ),
+  void markReviewAsComplete(
+      BuildContext context, List<dynamic> reviews, String id) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizPage(
+          reviewTitle: reviews.first['review'],
+          versesList: reviews.first['versesList'],
+          id: id,
+          updateReview: firestoreService.updateReview,
         ),
-        actions: [
-          MaterialButton(
-            onPressed: () {
-              firestoreService.updateReview(id, review, ratingController.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Submit'),
-          ),
-          MaterialButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
       ),
     );
   }
@@ -440,7 +426,7 @@ class Upcoming extends StatelessWidget {
   final String id;
   final Function(String, BuildContext, int, String) markHifdhAsComplete;
 
-  final Function(BuildContext, String, String) markReviewAsComplete;
+  final Function(BuildContext, List<dynamic>, String) markReviewAsComplete;
   final List<dynamic> reviews;
 
   @override
@@ -793,181 +779,9 @@ class Upcoming extends StatelessWidget {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          markReviewAsComplete(context,
-                                              reviews.first['review'], id);
+                                          markReviewAsComplete(
+                                              context, reviews, id);
                                         },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          padding: EdgeInsets.zero,
-                                          minimumSize: Size.zero,
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 4),
-                                          child: Text(
-                                            'Complete',
-                                            style: TextStyle(
-                                              color: const Color.fromARGB(
-                                                  255, 98, 99, 150),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                    ),
-              const SizedBox(
-                height: 20,
-              ),
-              reviews.isEmpty
-                  ? Container()
-                  : Container(
-                      padding: EdgeInsets.only(
-                          top: 15,
-                          left: 15,
-                          right: 15,
-                          bottom: reviews == [] || reviews.isEmpty ? 15 : 0),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 126, 169, 134),
-                        borderRadius: BorderRadius.circular(30),
-                        image: reviews == [] || reviews.isEmpty
-                            ? null
-                            : DecorationImage(
-                                image: AssetImage(
-                                  'assets/dailybg.png',
-                                ), // Replace with the correct path to your PNG file
-                                fit: BoxFit.contain,
-                                alignment: Alignment.bottomCenter,
-
-                                // Adjust this to control how the image fits
-                              ),
-                      ),
-                      child: reviews == [] || reviews.isEmpty
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'None',
-                                  style: TextStyle(
-                                      color: Colors.grey.shade100,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800),
-                                ),
-                                Container(
-                                  width: 80,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: Color.fromARGB(255, 173, 200, 177),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Text(
-                                        'Review',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontFamily: 'Poppins',
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Surah ${reviews.first['surah'].split(' ')[0]}',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 20,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 110,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        color:
-                                            Color.fromARGB(255, 173, 200, 177),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          Text(
-                                            'Daily Reading',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontFamily: 'Poppins',
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey.shade100,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 15,
-                                        right: 1,
-                                      ),
-                                      child: Text(
-                                        reviews.first['length'] >= 0.6 &&
-                                                reviews.first['surah']
-                                                        .split(' ')[0] !=
-                                                    'Al-Fatiha'
-                                            ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
-                                            : reviews.first['startVerse'],
-                                        style: GoogleFonts.scheherazadeNew(
-                                          textStyle: TextStyle(
-                                            fontSize: 24,
-                                            color: Colors.grey.shade100,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 5),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      TextButton(
-                                        onPressed: () {},
                                         style: TextButton.styleFrom(
                                           backgroundColor: Colors.white,
                                           padding: EdgeInsets.zero,

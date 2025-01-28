@@ -672,6 +672,7 @@ class FirestoreService extends ChangeNotifier {
     String startVerse = '';
     String endVerse = '';
     double verseLength = 0;
+    List<String> versesList = [];
 
     // Check if the plan has hifdhs i.e the plan has not just been made
     if (hifdhs.isNotEmpty) {
@@ -724,15 +725,17 @@ class FirestoreService extends ChangeNotifier {
       verseLength = double.parse(hifdh['length'].toString());
 
       final newReview = Review(
-          review: hifdh['hifdh'],
-          date: reviewDate,
-          ratings: [],
-          planId: id,
-          surah: surah,
-          startVerse: startVerse,
-          endVerse: endVerse,
-          length: verseLength,
-          sm2: [0, 2.0, 1]);
+        review: hifdh['hifdh'],
+        date: reviewDate,
+        ratings: [],
+        planId: id,
+        surah: surah,
+        startVerse: startVerse,
+        endVerse: endVerse,
+        length: verseLength,
+        sm2: [0, 2.0, 1],
+        versesList: hifdh['versesList'],
+      );
       await reviewsCollection.add(newReview.toMap());
 
       List<dynamic> planReviews = planData['reviews'];
@@ -891,6 +894,7 @@ class FirestoreService extends ChangeNotifier {
           }
 
           prevVerseData = verseData;
+          versesList.add(prevVerseData['text']);
           final nextVerse = await versesCollection.doc(verseId).get();
           verseData = nextVerse.data() as Map<String, dynamic>;
           prevTotal = total;
@@ -1097,6 +1101,7 @@ class FirestoreService extends ChangeNotifier {
       startVerse: startVerse,
       endVerse: endVerse,
       length: verseLength,
+      versesList: versesList,
     );
 
     final newHifdhDoc = await hifdhsCollection.add(newHifdh.toMap());

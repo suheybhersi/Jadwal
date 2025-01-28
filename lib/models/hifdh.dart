@@ -8,6 +8,7 @@ class Hifdh {
   final String startVerse;
   final String endVerse;
   final double length;
+  final List<dynamic> versesList;
 
   Hifdh({
     required this.hifdh,
@@ -19,6 +20,7 @@ class Hifdh {
     required this.startVerse,
     required this.endVerse,
     required this.length,
+    required this.versesList,
   });
 
   Map<String, dynamic> toMap() {
@@ -31,7 +33,8 @@ class Hifdh {
       'surah': surah,
       'startVerse': startVerse,
       'endVerse': endVerse,
-      'length': length
+      'length': length,
+      'versesList': versesList,
     };
   }
 }
