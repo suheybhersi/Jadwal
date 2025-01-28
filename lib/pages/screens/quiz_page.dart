@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
@@ -24,6 +28,13 @@ class _QuizPageState extends State<QuizPage> {
   int currentQuestionIndex = -1;
   int score = 0;
   late List<Map<String, dynamic>> questions = [];
+
+  final AudioRecorder recorder = AudioRecorder();
+  AudioPlayer audioPlayer = AudioPlayer();
+
+  bool isRecording = false;
+  String? recordingPath;
+  bool isPlaying = false;
 
   @override
   void initState() {
@@ -347,14 +358,6 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Widget _buildWhatComesNextQuestion(Map<String, dynamic> question) {
-    // Helper function to truncate the verse
-    String truncateVerse(String verse, int maxLength) {
-      if (verse.length > maxLength) {
-        return '${verse.substring(0, maxLength)}...';
-      }
-      return verse;
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -376,15 +379,15 @@ class _QuizPageState extends State<QuizPage> {
         ),
         const SizedBox(height: 15),
 
-        // Display Verse with Truncation
+        // Display Verse
         Container(
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.shade50,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            truncateVerse(question['verse'], 60), // Truncate verse to 50 chars
+            question['verse'],
             style: GoogleFonts.scheherazadeNew(
               fontSize: 22,
               height: 1.5,
@@ -396,39 +399,66 @@ class _QuizPageState extends State<QuizPage> {
 
         const SizedBox(height: 20),
 
-        // Options
-        ...question['options'].map<Widget>((option) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: ElevatedButton(
-              onPressed: () {
-                if (option == question['correctAnswer']) {
-                  score++;
-                }
+        // Record Button
+        ElevatedButton(
+          onPressed: () async {
+            if (isRecording) {
+              String? filePath = await recorder.stop();
+              if (filePath != null) {
                 setState(() {
-                  currentQuestionIndex++;
+                  isRecording = false;
+                  recordingPath = filePath;
                 });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blue.shade700,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.blue),
+              }
+            } else {
+              if (await recorder.hasPermission()) {
+                final Directory appDocumentsDirectory =
+                    await getApplicationDocumentsDirectory();
+                final path = '${appDocumentsDirectory.path}/recording.m4a';
+                await recorder.start(const RecordConfig(), path: path);
+                setState(() {
+                  isRecording = true;
+                  recordingPath = null;
+                });
+              }
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue.shade700,
+            shape: CircleBorder(),
+            padding: const EdgeInsets.all(10),
+          ),
+          child: Icon(isRecording ? Icons.stop : Icons.mic, size: 30),
+        ),
+
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+            children: [
+              if (recordingPath != null)
+                MaterialButton(
+                  onPressed: () async {
+                    if (audioPlayer.playing) {
+                      audioPlayer.stop();
+                      setState(() {
+                        isPlaying = false;
+                      });
+                    } else {
+                      setState(() {
+                        isPlaying = true;
+                      });
+                      await audioPlayer.setFilePath(recordingPath!);
+                      await audioPlayer.play();
+                    }
+                  },
+                  color: Colors.blue.shade700,
+                  child: Text(isPlaying ? 'Stop' : 'Play Recording',
+                      style: const TextStyle(color: Colors.white)),
                 ),
-              ),
-              child: Text(
-                truncateVerse(option, 60),
-                style: GoogleFonts.scheherazadeNew(
-                  fontSize: 20,
-                ),
-                textDirection: TextDirection.rtl,
-              ),
-            ),
-          );
-        }).toList(),
+              if (recordingPath == null) Text('No recording'),
+            ],
+          ),
+        )
       ],
     );
   }
