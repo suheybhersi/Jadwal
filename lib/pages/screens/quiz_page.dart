@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hifdh_planner_app/pages/screens/api_key.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:http/http.dart' as http;
+import 'package:hifdh_planner_app/components/build_verse_question.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
@@ -13,12 +17,12 @@ class QuizPage extends StatefulWidget {
   final Function(String, String, String) updateReview;
 
   const QuizPage({
-    Key? key,
+    super.key,
     required this.versesList,
     required this.reviewTitle,
     required this.id,
     required this.updateReview,
-  }) : super(key: key);
+  });
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -35,6 +39,29 @@ class _QuizPageState extends State<QuizPage> {
   bool isRecording = false;
   String? recordingPath;
   bool isPlaying = false;
+  String text = '';
+
+  List<String> chosenWords = [];
+
+  Future<String> convertSpeechToText(String filePath) async {
+    var url = Uri.https('api.openai.com', 'v1/audio/transcriptions');
+    var request = http.MultipartRequest('POST', url);
+    request.headers.addAll({
+      'Authorization': 'Bearer $apiSecretKey',
+    });
+    request.fields['model'] = 'whisper-1';
+    request.fields['language'] = 'ar';
+
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    var response = await request.send();
+    var newResponse = await http.Response.fromStream(response);
+
+    // Decode the response body explicitly with UTF-8
+    final responseData = json.decode(utf8.decode(newResponse.bodyBytes));
+
+    // Return the text value from the JSON response
+    return responseData['text'];
+  }
 
   @override
   void initState() {
@@ -49,7 +76,8 @@ class _QuizPageState extends State<QuizPage> {
 
     for (int i = 0; i < words.length; i++) {
       if (specialChars.any((char) => words[i].contains(char)) && i > 0) {
-        processedWords[processedWords.length - 1] += " ${words[i]}";
+        processedWords[processedWords.length - 1] =
+            "${words[i]} ${processedWords[processedWords.length - 1]}";
       } else {
         processedWords.add(words[i]);
       }
@@ -118,9 +146,8 @@ class _QuizPageState extends State<QuizPage> {
         i < fillInTheBlankQuestions.length && generatedQuestions.length < 20;
         i++) {
       // Get first word of the current fill_blank question
-      String fillBlankFirstWord = splitVerseManuallyWithSpecialChars(
-              fillInTheBlankQuestions[i]['verse'])
-          .first;
+      String fillBlankFirstWord =
+          fillInTheBlankQuestions[i]['verse'].split(' ').first;
 
       // Check for matches with drag_drop and what_next questions
       bool hasMatchingQuestion = generatedQuestions.any((q) {
@@ -146,8 +173,8 @@ class _QuizPageState extends State<QuizPage> {
       // Check for matches with drag_drop and what_next questions
       bool hasMatchingQuestion = generatedQuestions.any((q) {
         if (q['type'] == 'fill_blank') {
-          return fillInTheBlankQuestions[i]['correctAnswer'] ==
-              q['correctAnswer'];
+          return fillInTheBlankQuestions[i]['correctAnswers']
+              .contains(q['correctAnswers'].first);
         }
         return false;
       });
@@ -162,17 +189,56 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Map<String, dynamic> _generateFillInTheBlankQuestion(String verse) {
-    List<String> words = splitVerseManuallyWithSpecialChars(verse);
-    int missingIndex = Random().nextInt(words.length);
-    String missingWord = words[missingIndex];
-    words[missingIndex] = '____';
+    List<String> words = verse.split(' ');
+
+    // Determine number of blanks based on verse length
+    int numberOfBlanks = words.length >= 18
+        ? 3
+        : words.length >= 10
+            ? 2
+            : 1;
+
+    // Keep track of missing words and their indices
+    List<String> missingWords = [];
+    List<int> missingIndices = [];
+    const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
+
+    // Generate unique random indices for blanks
+    while (missingIndices.length < numberOfBlanks) {
+      int index = Random().nextInt(words.length);
+
+      if (specialChars.contains(words[index])) {
+        continue;
+      }
+
+      if (!missingIndices.contains(index)) {
+        missingIndices.add(index);
+      }
+    }
+
+    missingIndices.sort();
+    for (int i = 0; i < missingIndices.length; i++) {
+      missingWords.add(words[missingIndices[i]]);
+    }
+
+    // Create verse with blanks
+    List<String> verseWithBlanks = List.from(words);
+    for (int i = 0; i < missingIndices.length; i++) {
+      verseWithBlanks[missingIndices[i]] = '____';
+    }
 
     return {
       'type': 'fill_blank',
-      'question': "Fill in the missing word:",
-      'verse': words.join(' '),
-      'options': [missingWord, ...getRandomWords(verse)]..shuffle(),
-      'correctAnswer': missingWord,
+      'question': numberOfBlanks > 1
+          ? "Fill in the missing words:"
+          : "Fill in the missing word:",
+      'verse': verseWithBlanks.join(' '),
+      'options': [
+        ...missingWords,
+        ...getRandomWords(missingWords, verse, numberOfBlanks)
+      ]..shuffle(),
+      'correctAnswers': missingWords,
+      'missingIndices': missingIndices,
     };
   }
 
@@ -201,13 +267,15 @@ class _QuizPageState extends State<QuizPage> {
     };
   }
 
-  List<String> getRandomWords(String currentVerse) {
+  List<String> getRandomWords(
+      List<String> missingWords, String currentVerse, int numberOfBlanks) {
     List<String> allWords = widget.versesList
         .where((verse) => verse != currentVerse)
         .expand((verse) => splitVerseManuallyWithSpecialChars(verse))
         .toList();
+    allWords.removeWhere((word) => missingWords.contains(word));
     allWords.shuffle();
-    return allWords.take(3).toList();
+    return allWords.take(numberOfBlanks == 3 ? 5 : 3 * numberOfBlanks).toList();
   }
 
   List<String> getRandomVerses(int index) {
@@ -232,15 +300,11 @@ class _QuizPageState extends State<QuizPage> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
           child: currentQuestion['type'] == 'fill_blank'
               ? _buildFillInTheBlankQuestion(currentQuestion)
               : currentQuestion['type'] == 'what_next'
                   ? _buildWhatComesNextQuestion(currentQuestion)
-                  : _buildClickToSelectQuestion(currentQuestion),
-        ),
-      ),
+                  : _buildVerseQuestion(currentQuestion)),
     );
   }
 
@@ -248,33 +312,91 @@ class _QuizPageState extends State<QuizPage> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.quiz, size: 50, color: Colors.blue.shade700),
+              // App Bar with centered title
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BackButton(),
+                      const SizedBox(width: 48), // Balance for back button
+                    ],
+                  ),
+                  Text(
+                    'Review Quiz',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              // Quiz Icon with a subtle shadow and animation
+              Icon(
+                Icons.quiz,
+                size: 100,
+                color: Colors.blue.shade700,
+              ),
+
               const SizedBox(height: 20),
+
+              // Quiz Information
               Text(
-                'Review Quiz',
+                'Review Quiz for:',
                 style: GoogleFonts.poppins(
-                    fontSize: 26, fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  color: Colors.grey.shade700,
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
               Text(
-                'Test your memorization for: "${widget.reviewTitle}"',
+                widget.reviewTitle,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade900,
+                ),
               ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    currentQuestionIndex++;
-                  });
-                },
-                child: const Text('Start Quiz',
-                    style: TextStyle(fontSize: 18, color: Colors.white)),
+
+              const Spacer(),
+
+              // Start Button with gradient and hover effect
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade700,
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => setState(() => currentQuestionIndex = 0),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    'Start Quiz',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -296,63 +418,251 @@ class _QuizPageState extends State<QuizPage> {
 
   Widget _buildFillInTheBlankQuestion(Map<String, dynamic> question) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LinearProgressIndicator(
-          value: (currentQuestionIndex + 1) / questions.length,
-          backgroundColor: Colors.grey.shade200,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-        ),
-        const SizedBox(height: 30),
-        Text(
-          question['question'],
-          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 15),
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            question['verse'],
-            style: GoogleFonts.scheherazadeNew(fontSize: 22, height: 1.5),
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-          ),
-        ),
-        const SizedBox(height: 20),
-        ...question['options'].map<Widget>((option) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: ElevatedButton(
-              onPressed: () {
-                if (option == question['correctAnswer']) {
-                  score++;
-                }
-                setState(() {
-                  currentQuestionIndex++;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blue.shade700,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.blue),
+        // Header with back button and progress
+        Padding(
+          padding:
+              const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    currentQuestionIndex--;
+                    chosenWords = [];
+                  });
+                },
+              ),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: (currentQuestionIndex + 1) / questions.length,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              child: Text(
-                option,
-                style: GoogleFonts.scheherazadeNew(fontSize: 20),
-                textDirection: TextDirection.rtl,
+              const SizedBox(width: 10),
+              Text(
+                '${currentQuestionIndex + 1}/${questions.length}',
+                style: GoogleFonts.poppins(fontSize: 14),
               ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  question['question'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Verse container with highlighted blanks and tappable words
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blue.shade100),
+                  ),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    textDirection: TextDirection.rtl,
+                    children:
+                        splitVerseManuallyWithSpecialChars(question['verse'])
+                            .map<Widget>((word) {
+                      bool isBlank = word == '____';
+                      bool isFilledWord =
+                          !isBlank && chosenWords.contains(word);
+
+                      if (isFilledWord) {
+                        return GestureDetector(
+                          onTap: () {
+                            List<String> words =
+                                splitVerseManuallyWithSpecialChars(
+                                    question['verse']);
+                            int wordIndex = words.indexOf(word);
+                            words[wordIndex] = '____';
+                            setState(() {
+                              question['verse'] = words.join(' ');
+                              question['options'].add(word);
+                              chosenWords.remove(word);
+                            });
+                          },
+                          child: Text(
+                            word,
+                            style: GoogleFonts.scheherazadeNew(
+                              fontSize: 24,
+                              height: 1.6,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Text(
+                          word,
+                          style: GoogleFonts.scheherazadeNew(
+                            fontSize: 24,
+                            height: 1.6,
+                            color: Colors.grey.shade900,
+                          ),
+                        );
+                      }
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
-          );
-        }).toList(),
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Options box with fixed height and two columns
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: GridView.count(
+                        physics: NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 2.5,
+                        children: question['options'].map<Widget>((option) {
+                          bool isSelected =
+                              question['verse'].split(' ').contains(option);
+                          return ElevatedButton(
+                            onPressed: () {
+                              List<String> words = question['verse'].split(' ');
+                              int blankIndex = words.indexOf('____');
+                              if (blankIndex != -1) {
+                                if (isSelected) {
+                                  words[blankIndex] = '____';
+                                  setState(() {
+                                    question['verse'] = words.join(' ');
+                                    question['options'].add(option);
+                                    chosenWords.remove(option);
+                                  });
+                                } else {
+                                  words[blankIndex] = option;
+                                  setState(() {
+                                    question['verse'] = words.join(' ');
+                                    question['options'].remove(option);
+                                    chosenWords.add(option);
+                                  });
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue.shade700,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: Colors.blue.shade200),
+                              ),
+                            ),
+                            child: Text(
+                              option,
+                              style: GoogleFonts.scheherazadeNew(
+                                fontSize: 20,
+                                height: 1.4,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    if (!question['verse'].contains('____'))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            bool allCorrect =
+                                chosenWords.isEmpty ? true : false;
+
+                            if (question['correctAnswers'].length ==
+                                chosenWords.length) {
+                              allCorrect = true;
+                              for (int i = 0;
+                                  i < question['correctAnswers'].length;
+                                  i++) {
+                                if (question['correctAnswers'][i] !=
+                                    chosenWords[i]) {
+                                  allCorrect = false;
+                                  break;
+                                }
+                              }
+                            }
+
+                            if (allCorrect) {
+                              setState(() {
+                                score++;
+                                currentQuestionIndex++;
+                                chosenWords = [];
+                              });
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Some answers are incorrect. Try again!'),
+                                  duration: Duration(seconds: 2),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade700,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 24,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Next',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -361,11 +671,31 @@ class _QuizPageState extends State<QuizPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Progress Bar
-        LinearProgressIndicator(
-          value: (currentQuestionIndex + 1) / questions.length,
-          backgroundColor: Colors.grey.shade200,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+        Padding(
+          padding:
+              const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => currentQuestionIndex--),
+              ),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: (currentQuestionIndex + 1) / questions.length,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${currentQuestionIndex + 1}/${questions.length}',
+                style: GoogleFonts.poppins(fontSize: 14),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 30),
 
@@ -393,7 +723,6 @@ class _QuizPageState extends State<QuizPage> {
               height: 1.5,
             ),
             textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
           ),
         ),
 
@@ -405,20 +734,30 @@ class _QuizPageState extends State<QuizPage> {
             if (isRecording) {
               String? filePath = await recorder.stop();
               if (filePath != null) {
+                String transcription = await convertSpeechToText(filePath);
                 setState(() {
                   isRecording = false;
                   recordingPath = filePath;
+                  text = transcription;
                 });
               }
             } else {
               if (await recorder.hasPermission()) {
                 final Directory appDocumentsDirectory =
                     await getApplicationDocumentsDirectory();
-                final path = '${appDocumentsDirectory.path}/recording.m4a';
-                await recorder.start(const RecordConfig(), path: path);
+                final path = '${appDocumentsDirectory.path}/recording.wav';
+                // Configure recording options
+                final RecordConfig config = RecordConfig(
+                  sampleRate: 44100, // High quality
+                  bitRate: 128000, // Optional: High bitrate for better quality
+                  encoder: AudioEncoder.wav,
+                );
+
+                await recorder.start(config, path: path);
+
                 setState(() {
                   isRecording = true;
-                  recordingPath = null;
+                  recordingPath = path; // Save the path for later use
                 });
               }
             }
@@ -431,188 +770,85 @@ class _QuizPageState extends State<QuizPage> {
           child: Icon(isRecording ? Icons.stop : Icons.mic, size: 30),
         ),
 
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            children: [
-              if (recordingPath != null)
-                MaterialButton(
-                  onPressed: () async {
-                    if (audioPlayer.playing) {
-                      audioPlayer.stop();
-                      setState(() {
-                        isPlaying = false;
-                      });
-                    } else {
-                      setState(() {
-                        isPlaying = true;
-                      });
-                      await audioPlayer.setFilePath(recordingPath!);
-                      await audioPlayer.play();
-                    }
-                  },
-                  color: Colors.blue.shade700,
-                  child: Text(isPlaying ? 'Stop' : 'Play Recording',
-                      style: const TextStyle(color: Colors.white)),
-                ),
-              if (recordingPath == null) Text('No recording'),
-            ],
+        // SizedBox(
+        //   width: MediaQuery.of(context).size.width,
+        //   child: Column(
+        //     children: [
+        //       if (recordingPath != null)
+        //         MaterialButton(
+        //           onPressed: () async {
+        //             if (audioPlayer.playing) {
+        //               audioPlayer.stop();
+        //               setState(() {
+        //                 isPlaying = false;
+        //               });
+        //             } else {
+        //               setState(() {
+        //                 isPlaying = true;
+        //               });
+        //               await audioPlayer.setFilePath(recordingPath!);
+        //               await audioPlayer.play();
+        //             }
+        //           },
+        //           color: Colors.blue.shade700,
+        //           child: Text(isPlaying ? 'Stop' : 'Play Recording',
+        //               style: const TextStyle(color: Colors.white)),
+        //         ),
+        //       if (recordingPath == null) Text('No recording'),
+        //     ],
+        //   ),
+        // ),
+
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: ElevatedButton(
+            onPressed: () async {
+              if (text == question['correctAnswer']) {
+                setState(() {
+                  score++;
+                });
+              }
+              setState(() {
+                text = '';
+                currentQuestionIndex++;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Next',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
-        )
+        ),
+
+        Text(text, style: GoogleFonts.notoNaskhArabic(fontSize: 20)),
       ],
     );
   }
 
-  Widget _buildClickToSelectQuestion(Map<String, dynamic> question) {
-    List<String> correctOrder = [
-      question['firstWord'],
-      ...question['correctOrder']
-    ];
-    List<String> shuffledWords = List.from(question['shuffledWords']);
-    List<String> selectedWords = [question['firstWord']];
-
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(
-              value: (currentQuestionIndex + 1) / questions.length,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            const SizedBox(height: 30),
-            Text(
-              question['question'],
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.start,
-                    runAlignment: WrapAlignment.start,
-                    children: selectedWords.map((word) {
-                      return GestureDetector(
-                        onTap: () {
-                          // Allow removal of words except the first word
-                          if (word != question['firstWord']) {
-                            setState(() {
-                              selectedWords.remove(word);
-                              shuffledWords.add(word);
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            word,
-                            style: GoogleFonts.scheherazadeNew(
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.start,
-                    runAlignment: WrapAlignment.start,
-                    children: shuffledWords.map((word) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            shuffledWords.remove(word);
-                            selectedWords.add(word);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.blue.shade200),
-                          ),
-                          child: Text(
-                            word,
-                            style: GoogleFonts.scheherazadeNew(
-                              fontSize: 20,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: () {
-                    bool isCorrect =
-                        selectedWords.join(' ') == correctOrder.join(' ');
-                    if (isCorrect) {
-                      setState(() {
-                        score++;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Correct!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-
-                      setState(() {
-                        currentQuestionIndex++;
-                      });
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Incorrect, try again!'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Check Answer',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
+  Widget _buildVerseQuestion(Map<String, dynamic> question) {
+    return BuildVerseQuestion(
+      currentQuestionIndex: currentQuestionIndex,
+      questions: questions,
+      onNextQuestion: (int index) {
+        setState(() {
+          score++;
+          currentQuestionIndex = index;
+        });
+      },
+      onPreviousQuestion: () {
+        setState(() {
+          currentQuestionIndex--;
+        });
       },
     );
   }

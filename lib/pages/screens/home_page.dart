@@ -189,7 +189,6 @@ class HomePage extends StatelessWidget {
                                 SizedBox(
                                   height: 10,
                                 ),
-                                if (reviews.isNotEmpty) Statistics(plan: plan),
                               ],
                             ),
                           ),
@@ -274,7 +273,8 @@ class HomePage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => QuizPage(
-          reviewTitle: reviews.first['review'],
+          reviewTitle:
+              '${reviews.first['surah'].split(' ')[0]}  ${reviews.first['review'].split('-')[0].split(':')[1]}-${reviews.first['surah'].split(' ')[0] == reviews.first['surah'].split(' ')[1] ? '' : reviews.first['surah'].split(' ')[1]} ${reviews.first['review'].split('-')[1].split(':')[1]}',
           versesList: reviews.first['versesList'],
           id: id,
           updateReview: firestoreService.updateReview,
