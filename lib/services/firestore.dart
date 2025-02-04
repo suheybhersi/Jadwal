@@ -847,76 +847,77 @@ class FirestoreService extends ChangeNotifier {
       Map<String, dynamic> prevVerseData =
           prevVerseDoc.data() as Map<String, dynamic>;
 
-      if ((prevVerseData['page'] == verseData['page']) ||
-          planData['lines'] % 15 != 0) {
-        double prevTotal = 0.0;
-        bool calculated = false;
-        while (!calculated) {
-          if (int.parse(verseId) == 6237 || int.parse(verseId) == 0) {
-            verseData = prevVerseData;
-            plansCollection.doc(id).update({'planCompleted': true});
-            break;
-          }
-          if (length < total) {
-            if (length - prevTotal > total - length) {
-              verseId = (int.parse(verseId) + 1).toString();
-            } else {
-              tempTotal -= verseData['length'];
-              verseData = prevVerseData;
-            }
-
-            calculated = true;
-            break;
-          }
-
-          verseId = (int.parse(verseId) + 1).toString();
-
-          if (planData['backToFront']) {
-            if (verseId == '6237') {
-              verseId = '6226';
-            } else {
-              dynamic tempDoc = await versesCollection.doc(verseId).get();
-              Map<String, dynamic> tempData =
-                  tempDoc.data() as Map<String, dynamic>;
-              if (tempData['surah'] != verseData['surah']) {
-                final tempDoc = await versesCollection
-                    .where('key',
-                        isEqualTo:
-                            '${int.parse(verseData['key'].split(':')[0]) - 1}:1')
-                    .get();
-                verseId = tempDoc.docs[0].reference.id;
-              }
-            }
-          } else {
-            if (verseId == '6237') {
-              break;
-            }
-          }
-
-          prevVerseData = verseData;
-          versesList.add(prevVerseData['text']);
-          final nextVerse = await versesCollection.doc(verseId).get();
-          verseData = nextVerse.data() as Map<String, dynamic>;
-          prevTotal = total;
-          total += verseData['length'];
-
-          if (prevVerseData['surah'] != verseData['surah']) {
-            final surahSnapshot = await surahsProgressCollection
-                .where('surah', isEqualTo: prevVerseData['surah'])
-                .get();
-            String surahId = surahSnapshot.docs[0].reference.id;
-            final surahDoc = await surahsProgressCollection.doc(surahId).get();
-            Map<String, dynamic> surahData =
-                surahDoc.data() as Map<String, dynamic>;
-            surahsProgressCollection
-                .doc(surahId)
-                .update({'tempCompletedLines': surahData['totalLines']});
-            tempTotal = 0.0;
-          }
-
-          tempTotal += verseData['length'];
+      // if ((prevVerseData['page'] == verseData['page']) ||
+      //     planData['lines'] % 15 != 0) {
+      double prevTotal = 0.0;
+      bool calculated = false;
+      while (!calculated) {
+        if (int.parse(verseId) == 6237 || int.parse(verseId) == 0) {
+          verseData = prevVerseData;
+          plansCollection.doc(id).update({'planCompleted': true});
+          break;
         }
+        if (length < total) {
+          if (length - prevTotal > total - length) {
+            verseId = (int.parse(verseId) + 1).toString();
+          } else {
+            tempTotal -= verseData['length'];
+            verseData = prevVerseData;
+          }
+
+          calculated = true;
+          break;
+        }
+
+        verseId = (int.parse(verseId) + 1).toString();
+
+        if (planData['backToFront']) {
+          if (verseId == '6237') {
+            verseId = '6226';
+          } else {
+            dynamic tempDoc = await versesCollection.doc(verseId).get();
+            Map<String, dynamic> tempData =
+                tempDoc.data() as Map<String, dynamic>;
+            if (tempData['surah'] != verseData['surah']) {
+              final tempDoc = await versesCollection
+                  .where('key',
+                      isEqualTo:
+                          '${int.parse(verseData['key'].split(':')[0]) - 1}:1')
+                  .get();
+              verseId = tempDoc.docs[0].reference.id;
+            }
+          }
+        } else {
+          if (verseId == '6237') {
+            break;
+          }
+        }
+
+        prevVerseData = verseData;
+        versesList.add(prevVerseData['text']);
+        final nextVerse = await versesCollection.doc(verseId).get();
+        verseData = nextVerse.data() as Map<String, dynamic>;
+        prevTotal = total;
+        total += verseData['length'];
+
+        if (prevVerseData['surah'] != verseData['surah']) {
+          final surahSnapshot = await surahsProgressCollection
+              .where('surah', isEqualTo: prevVerseData['surah'])
+              .get();
+          String surahId = surahSnapshot.docs[0].reference.id;
+          final surahDoc = await surahsProgressCollection.doc(surahId).get();
+          Map<String, dynamic> surahData =
+              surahDoc.data() as Map<String, dynamic>;
+          surahsProgressCollection
+              .doc(surahId)
+              .update({'tempCompletedLines': surahData['totalLines']});
+          tempTotal = 0.0;
+        }
+
+        tempTotal += verseData['length'];
       }
+      // }
+
       // else {
       //   int pages =
       //       int.parse(((planData['lines'] / 15).toString()).split('.')[0]);
