@@ -22,7 +22,7 @@ class AuthPage extends StatelessWidget {
               final FirestoreService firestoreService =
                   FirestoreService(FirebaseAuth.instance);
               return StreamBuilder(
-                stream: firestoreService.getPlansStream(),
+                stream: firestoreService.getHifdhsStream(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
                     return const Scaffold(

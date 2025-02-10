@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
 import 'package:hifdh_planner_app/components/drop_down.dart';
 import 'package:hifdh_planner_app/components/verse_picker.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
@@ -16,9 +15,8 @@ class NewPlanScreen extends StatelessWidget {
     final FirestoreService firestoreService =
         FirestoreService(FirebaseAuth.instance);
 
-    void storeNewPlan() {
-      //form key surah should be the surah number and verse should be the verse number
-
+    Future<void> storeNewPlan() async {
+      controller.isCreatingPlan.value = true;
       String fromKey =
           '${controller.selectedFromSurahData.value?['surahNumber']}:${controller.selectedFromVerse.value}';
       String toKey =
@@ -26,17 +24,21 @@ class NewPlanScreen extends StatelessWidget {
       int lines = controller.selectedUnit.value == 'Lines'
           ? int.parse(controller.inputController.text)
           : int.parse(controller.inputController.text) * 15;
-      firestoreService
-          .addPlan(controller.isBackToFront.value, fromKey, toKey, lines,
-              controller.selectedDays.toList())
-          .then((_) {
-        Get.to(() => SafeArea(child: MyBottomNavBar()));
-      });
+
+      await firestoreService.addPlan(controller.isBackToFront.value, fromKey,
+          toKey, lines, controller.selectedDays.toList());
+
+      // Check if hifdhs list has values before setting planCreated to true
+      final hifdhs = await firestoreService.getHifdhsStream().first;
+      if (hifdhs.docs.isNotEmpty) {
+        controller.planCreated.value = true;
+      }
     }
 
     return Scaffold(
       appBar: AppBar(
-        leading: Obx(() => controller.currentPageIndex.value != 0
+        leading: Obx(() => controller.currentPageIndex.value != 0 &&
+                !controller.isCreatingPlan.value
             ? IconButton(
                 onPressed: () => controller.pageController
                     .jumpToPage(controller.currentPageIndex.value - 1),
@@ -44,74 +46,119 @@ class NewPlanScreen extends StatelessWidget {
               )
             : Container()),
       ),
-      body: StreamBuilder(
-        stream: firestoreService.getSurahsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Obx(() {
+        if (controller.isCreatingPlan.value) {
+          return CreatingPlanPage(
+            isCompleted: controller.planCreated,
+          );
+        }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text(
-                'No data available.',
-                style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
+        return StreamBuilder(
+          stream: firestoreService.getSurahsStream(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final surahsList = snapshot.data!.docs;
-          surahsList.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(
+                child: Text(
+                  'No data available.',
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                ),
+              );
+            }
 
-          // Map Firestore data to a usable list
-          final allData = surahsList
-              .map((doc) => doc.data() as Map<String, dynamic>)
-              .toList();
+            final surahsList = snapshot.data!.docs;
+            surahsList
+                .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
 
-          List<String> surahNames =
-              allData.map((data) => data['surah'] as String).toList();
+            // Map Firestore data to a usable list
+            final allData = surahsList
+                .map((doc) => doc.data() as Map<String, dynamic>)
+                .toList();
 
-          return Stack(
-            children: [
-              Obx(() => PageView(
-                    controller: controller.pageController,
-                    onPageChanged: controller.updatePageIndicator,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      const IntroPage(),
-                      if (controller.hasMemorisedBefore.value) ...[
-                        MemorisedPage(
-                          surahNames: surahNames,
-                          controller: controller,
-                          allData: allData,
-                          text: 'From what verse have you memorised?',
-                          pageKey: 'from',
-                        ),
-                        MemorisedPage(
-                          surahNames: surahNames,
-                          controller: controller,
-                          allData: allData,
-                          text: 'To what verse have you memorised?',
-                          pageKey: 'to',
+            List<String> surahNames =
+                allData.map((data) => data['surah'] as String).toList();
+
+            return Stack(
+              children: [
+                Obx(() => PageView(
+                      controller: controller.pageController,
+                      onPageChanged: controller.updatePageIndicator,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        const IntroPage(),
+                        if (controller.hasMemorisedBefore.value) ...[
+                          MemorisedPage(
+                            surahNames: surahNames,
+                            controller: controller,
+                            allData: allData,
+                            text: 'From what verse have you memorised?',
+                            pageKey: 'from',
+                          ),
+                          MemorisedPage(
+                            surahNames: surahNames,
+                            controller: controller,
+                            allData: allData,
+                            text: 'To what verse have you memorised?',
+                            pageKey: 'to',
+                          ),
+                        ],
+                        const PlanDetailsPage(),
+                        const ReviewPage(
+                          title: 'Review and Confirm',
+                          description:
+                              'Review your Hifdh plan and make sure everything is set before starting.',
                         ),
                       ],
-                      const PlanDetailsPage(),
-                      const ReviewPage(
-                        title: 'Review and Confirm',
-                        description:
-                            'Review your Hifdh plan and make sure everything is set before starting.',
-                      ),
-                    ],
-                  )),
+                    )),
 
-              // Bottom Navigation Section
-              BottomNavigation(
-                controller: controller,
-                onNextPressed: storeNewPlan,
+                // Bottom Navigation Section
+                BottomNavigation(
+                  controller: controller,
+                  onNextPressed: storeNewPlan,
+                ),
+              ],
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+
+class CreatingPlanPage extends StatelessWidget {
+  final RxBool isCompleted;
+
+  const CreatingPlanPage({
+    super.key,
+    required this.isCompleted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Color.fromARGB(255, 73, 121, 251),
+            ),
+            SizedBox(height: 30),
+            Text(
+              'Creating your plan...',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
               ),
-            ],
-          );
-        },
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -158,12 +205,6 @@ class BottomNavigation extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // onPressed: () {
-                  //   if (controller.currentPageIndex.value == 4) {
-                  //     onNextPressed();
-                  //   }
-                  //   controller.nextPage();
-                  // },
                   onPressed: () {
                     if (controller.currentPageIndex.value ==
                         (controller.hasMemorisedBefore.value ? 4 : 2)) {
@@ -172,7 +213,6 @@ class BottomNavigation extends StatelessWidget {
                       controller.nextPage();
                     }
                   },
-
                   child: Obx(() => Text(
                         (controller.currentPageIndex.value ==
                                 (controller.hasMemorisedBefore.value ? 4 : 2))
@@ -897,6 +937,9 @@ class NewPlanController extends GetxController {
 
   final RxBool isBackToFront = false.obs;
   final RxBool hasMemorisedBefore = false.obs;
+
+  final RxBool isCreatingPlan = false.obs;
+  final RxBool planCreated = false.obs;
 
   // Update "From" selection
   void updateSelectedFromSurah(

@@ -509,6 +509,16 @@ class FirestoreService extends ChangeNotifier {
     return surahsStream;
   }
 
+  Stream<QuerySnapshot> getHifdhsStream() {
+    final User? user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    uid = user.uid;
+    final hifdhsStream = hifdhsCollection.snapshots();
+    return hifdhsStream;
+  }
+
 /*----------------------------------------U P D A T E   P L A N----------------------------------------*/
   Future<void> updatePlan(
     String id,
