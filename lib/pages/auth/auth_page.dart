@@ -14,28 +14,33 @@ class AuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final FirestoreService firestoreService =
-                FirestoreService(FirebaseAuth.instance);
-            return StreamBuilder(
-              stream: firestoreService.getHifdhsStream(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  return const Scaffold(
-                    bottomNavigationBar: MyBottomNavBar(),
-                  );
-                } else {
-                  return const NewPlanScreen();
-                }
-              },
-            );
-          } else {
-            return const OnboardingScreen();
-          }
-        },
+      body: SafeArea(
+        bottom: false,
+        left: false,
+        right: false,
+        child: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final FirestoreService firestoreService =
+                  FirestoreService(FirebaseAuth.instance);
+              return StreamBuilder(
+                stream: firestoreService.getHifdhsStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    return const Scaffold(
+                      bottomNavigationBar: MyBottomNavBar(),
+                    );
+                  } else {
+                    return const NewPlanScreen();
+                  }
+                },
+              );
+            } else {
+              return const OnboardingScreen();
+            }
+          },
+        ),
       ),
     );
   }
