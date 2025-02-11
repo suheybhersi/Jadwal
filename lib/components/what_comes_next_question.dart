@@ -8,7 +8,6 @@ import 'package:record/record.dart';
 import 'dart:math' show max, min;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:hifdh_planner_app/pages/screens/api_keys.dart';
 import 'dart:convert';
 
 class WhatComesNextQuestion extends StatefulWidget {
@@ -42,6 +41,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
+
+  String? apiSecretKey = Platform.environment['apiSecretKey'];
 
   @override
   void dispose() {
