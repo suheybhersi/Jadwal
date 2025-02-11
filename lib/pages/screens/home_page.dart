@@ -431,11 +431,6 @@ class Upcoming extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // List<dynamic> dailyReadings = plan['dailyReadings']
-    //     .where((dailyReading) =>
-    //         dailyReading['date'] ==
-    //         '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
-    //     .toList();
     return Column(
       children: [
         Padding(
@@ -861,9 +856,6 @@ class Upcoming extends StatelessWidget {
 
   void newDraggableBottomSheet(
       BuildContext context, Map<String, dynamic> hifdh) {
-    // String verseNumber =
-    //     '( ${hifdh['hifdh'].split('-')[1].split(':')[1].replaceAllMapped(RegExp(r'[0-9]'), (m) => '٠١٢٣٤٥٦٧٨٩'[int.parse(m[0]!)])} )';
-
     Widget makeDissmissable({required Widget child}) => GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).pop(),
@@ -922,103 +914,242 @@ class Upcoming extends StatelessWidget {
                         children: [
                           Container(
                             margin: EdgeInsets.only(left: 20),
-                            padding: EdgeInsets.all(10),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 240, 240, 240),
-                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color.fromARGB(255, 73, 121, 251),
+                                  Color.fromARGB(255, 86, 145, 255),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromARGB(255, 73, 121, 251)
+                                      .withOpacity(0.25),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  'Surah ${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Surah ${hifdh['surah'].split(' ')[0]}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 15),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Color.fromARGB(255, 73, 121, 251)
+                                  .withOpacity(0.15),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Text(
+                              '${hifdh['startVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[0].split(':')[1]).replaceAll(' ', '')}﴾',
+                              style: GoogleFonts.scheherazadeNew(
+                                textStyle: TextStyle(
+                                  fontSize: 22,
+                                  height: 2.0,
+                                  letterSpacing: 0.5,
+                                  wordSpacing: 2,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromARGB(255, 51, 51, 51),
+                                ),
+                              ),
+                              textAlign: TextAlign.justify,
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 20),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Expanded(
-                              // Changed from SizedBox to Expanded
-                              child: Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: Text(
-                                  hifdh['startVerse'],
-                                  style: GoogleFonts.scheherazadeNew(
-                                    textStyle: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                              child: Container(
+                                height: 2,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 73, 121, 251),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color.fromARGB(255, 73, 121, 251),
+                                    Color.fromARGB(255, 86, 145, 255),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color.fromARGB(255, 73, 121, 251)
+                                        .withOpacity(0.25),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
                                   ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.arrow_downward_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Container(
+                                height: 2,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 73, 121, 251),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Icon(
-                        Iconsax.arrow_down,
-                        size: 40,
-                      ),
-                      SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Container(
                             margin: EdgeInsets.only(left: 20),
-                            padding: EdgeInsets.all(10),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 240, 240, 240),
-                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color.fromARGB(255, 86, 145, 255),
+                                  Color.fromARGB(255, 73, 121, 251),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromARGB(255, 73, 121, 251)
+                                      .withOpacity(0.25),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  'Surah ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Surah ${hifdh['surah'].split(' ')[1]}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 15),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              // Changed from SizedBox to Expanded
-                              child: Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: Text(
-                                  hifdh['endVerse'],
-                                  style: GoogleFonts.scheherazadeNew(
-                                    textStyle: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Color.fromARGB(255, 73, 121, 251)
+                                  .withOpacity(0.15),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Text(
+                              '${hifdh['endVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[1].split(':')[1]).replaceAll(' ', '')}﴾',
+                              style: GoogleFonts.scheherazadeNew(
+                                textStyle: TextStyle(
+                                  fontSize: 22,
+                                  height: 2.0,
+                                  letterSpacing: 0.5,
+                                  wordSpacing: 2,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromARGB(255, 51, 51, 51),
                                 ),
                               ),
+                              textAlign: TextAlign.justify,
+                              textDirection: TextDirection.rtl,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                       SizedBox(height: 50),
@@ -1058,6 +1189,16 @@ class Upcoming extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _convertToArabicNumbers(String number) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    for (int i = 0; i < english.length; i++) {
+      number = number.replaceAll(english[i], arabic[i]);
+    }
+    return number;
   }
 }
 

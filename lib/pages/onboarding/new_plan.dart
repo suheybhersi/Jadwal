@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hifdh_planner_app/components/drop_down.dart';
 import 'package:hifdh_planner_app/components/verse_picker.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
+import 'dart:async';
 
 class NewPlanScreen extends StatelessWidget {
   const NewPlanScreen({super.key});
@@ -17,8 +18,7 @@ class NewPlanScreen extends StatelessWidget {
 
     Future<void> storeNewPlan() async {
       controller.isCreatingPlan.value = true;
-      String fromKey =
-          '${controller.selectedFromSurahData.value?['surahNumber']}:${controller.selectedFromVerse.value}';
+      String fromKey = '${controller.isBackToFront.value ? '114' : '1'}:1';
       String toKey =
           '${controller.selectedToSurahData.value?['surahNumber']}:${controller.selectedToVerse.value}';
       int lines = controller.selectedUnit.value == 'Lines'
@@ -94,15 +94,7 @@ class NewPlanScreen extends StatelessWidget {
                             surahNames: surahNames,
                             controller: controller,
                             allData: allData,
-                            text: 'From what verse have you memorised?',
-                            pageKey: 'from',
-                          ),
-                          MemorisedPage(
-                            surahNames: surahNames,
-                            controller: controller,
-                            allData: allData,
                             text: 'To what verse have you memorised?',
-                            pageKey: 'to',
                           ),
                         ],
                         const PlanDetailsPage(),
@@ -207,7 +199,7 @@ class BottomNavigation extends StatelessWidget {
                   ),
                   onPressed: () {
                     if (controller.currentPageIndex.value ==
-                        (controller.hasMemorisedBefore.value ? 4 : 2)) {
+                        (controller.hasMemorisedBefore.value ? 3 : 2)) {
                       onNextPressed();
                     } else {
                       controller.nextPage();
@@ -215,7 +207,7 @@ class BottomNavigation extends StatelessWidget {
                   },
                   child: Obx(() => Text(
                         (controller.currentPageIndex.value ==
-                                (controller.hasMemorisedBefore.value ? 4 : 2))
+                                (controller.hasMemorisedBefore.value ? 3 : 2))
                             ? 'Confirm'
                             : 'Next',
                         style: const TextStyle(
@@ -437,14 +429,12 @@ class MemorisedPage extends StatelessWidget {
     required this.controller,
     required this.allData,
     required this.text,
-    required this.pageKey,
   });
 
   final List<String> surahNames;
   final NewPlanController controller;
   final List<Map<String, dynamic>> allData;
   final String text;
-  final String pageKey; // Key to distinguish between "from" and "to" pages
 
   @override
   Widget build(BuildContext context) {
@@ -469,12 +459,8 @@ class MemorisedPage extends StatelessWidget {
           Obx(
             () {
               // Determine which data to use based on pageKey
-              final selectedSurahData = pageKey == 'from'
-                  ? controller.selectedFromSurahData.value
-                  : controller.selectedToSurahData.value;
-              final selectedVerse = pageKey == 'from'
-                  ? controller.selectedFromVerse.value
-                  : controller.selectedToVerse.value;
+              final selectedSurahData = controller.selectedToSurahData.value;
+              final selectedVerse = controller.selectedToVerse.value;
 
               // Get the initial index for the Surah
               final initialSurahIndex = selectedSurahData != null
@@ -490,22 +476,14 @@ class MemorisedPage extends StatelessWidget {
                   final selectedSurah = allData
                       .firstWhere((surah) => surah['surah'] == surahName);
 
-                  if (pageKey == 'from') {
-                    controller.updateSelectedFromSurah(
-                        surahName, selectedSurah);
-                    controller.updateSelectedFromVerse(verseNumber);
-                  } else {
-                    controller.updateSelectedToSurah(surahName, selectedSurah);
-                    controller.updateSelectedToVerse(verseNumber);
-                  }
+                  controller.updateSelectedToSurah(surahName, selectedSurah);
+                  controller.updateSelectedToVerse(verseNumber);
                 },
               );
             },
           ),
           Obx(() {
-            final errorMessage = pageKey == 'from'
-                ? controller.fromPageError.value
-                : controller.toPageError.value;
+            final errorMessage = controller.toPageError.value;
             return errorMessage.isNotEmpty
                 ? Text(
                     errorMessage,
@@ -528,167 +506,327 @@ class PlanDetailsPage extends StatelessWidget {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          Text(
-            'Plan Details',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 26,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Choose how many days you want to memorise on and customise your schedule.',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey.shade600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Header Section with Icon
+              Icon(
+                Icons.calendar_month,
+                size: 50,
+                color: Color.fromARGB(255, 73, 121, 251),
+              ),
+              const SizedBox(height: 20),
+
+              // Title Section
               Text(
-                'Amount to memorise per day',
+                'Plan Details',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26,
                   color: Colors.black87,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 15),
-
-          // Text Field and Dropdown Row
-          Row(
-            children: [
-              // TextField for Input
-              Expanded(
-                child: TextField(
-                  controller: controller.inputController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Enter amount',
-                    hintStyle: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // Dropdown
-              Expanded(
-                child: Obx(() {
-                  return MyDropDown(
-                    items: ['Lines', 'Pages'],
-                    value: controller.selectedUnit.value,
-                    onChanged: (value) {
-                      if (value != null) {
-                        controller.selectedUnit.value = value;
-                      }
-                    },
-                    text: 'Select Unit',
-                  );
-                }),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 30),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
+              const SizedBox(height: 12),
               Text(
-                'Select Days',
+                'Choose how many days you want to memorise and customize your schedule.',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  fontSize: 15,
+                  height: 1.5,
+                  color: Colors.grey.shade600,
                 ),
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            alignment: WrapAlignment.center,
-            children: List.generate(7, (index) {
-              return GestureDetector(
-                onTap: () {
-                  controller.selectedDays[index] =
-                      !controller.selectedDays[index];
-                },
-                child: Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: controller.selectedDays[index]
-                          ? const Color.fromARGB(255, 73, 121, 251)
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      days[index],
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: controller.selectedDays[index]
-                            ? Colors.white
-                            : Colors.black87,
-                      ),
-                    ),
+
+              const SizedBox(height: 40),
+
+              // Daily Amount Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.blue.shade50,
+                    width: 1,
                   ),
                 ),
-              );
-            }),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Amount',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'How much would you like to memorize?',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTapDown: (TapDownDetails details) {
+                                    Timer? timer;
+                                    timer = Timer.periodic(
+                                        const Duration(milliseconds: 50),
+                                        (timer) {
+                                      final currentValue = int.tryParse(
+                                              controller
+                                                  .inputController.text) ??
+                                          0;
+                                      if (currentValue > 0) {
+                                        controller.inputController.text =
+                                            (currentValue - 1).toString();
+                                        controller.update(); // Trigger update
+                                      }
+                                    });
+                                    controller.activeTimer = timer;
+                                  },
+                                  onTapUp: (_) {
+                                    controller.activeTimer?.cancel();
+                                    controller.update();
+                                  },
+                                  onTapCancel: () {
+                                    controller.activeTimer?.cancel();
+                                    controller.update();
+                                  },
+                                  child: IconButton(
+                                    onPressed: () {
+                                      final currentValue = int.tryParse(
+                                              controller
+                                                  .inputController.text) ??
+                                          0;
+                                      if (currentValue > 0) {
+                                        controller.inputController.text =
+                                            (currentValue - 1).toString();
+                                        controller.update(); // Trigger update
+                                      }
+                                    },
+                                    icon: Icon(
+                                      Icons.remove,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Obx(() => Text(
+                                        controller.inputValue.value,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                      )),
+                                ),
+                                GestureDetector(
+                                  onTapDown: (TapDownDetails details) {
+                                    Timer? timer;
+                                    timer = Timer.periodic(
+                                        const Duration(milliseconds: 50),
+                                        (timer) {
+                                      final currentValue = int.tryParse(
+                                              controller
+                                                  .inputController.text) ??
+                                          0;
+                                      controller.inputController.text =
+                                          (currentValue + 1).toString();
+                                      controller.update(); // Trigger update
+                                    });
+                                    controller.activeTimer = timer;
+                                  },
+                                  onTapUp: (_) {
+                                    controller.activeTimer?.cancel();
+                                    controller.update();
+                                  },
+                                  onTapCancel: () {
+                                    controller.activeTimer?.cancel();
+                                    controller.update();
+                                  },
+                                  child: IconButton(
+                                    onPressed: () {
+                                      final currentValue = int.tryParse(
+                                              controller
+                                                  .inputController.text) ??
+                                          0;
+                                      controller.inputController.text =
+                                          (currentValue + 1).toString();
+                                      controller.update(); // Trigger update
+                                    },
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Obx(() {
+                            return MyDropDown(
+                              items: ['Lines', 'Pages'],
+                              value: controller.selectedUnit.value,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  controller.selectedUnit.value = value;
+                                }
+                              },
+                              text: 'Unit',
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Days Selection Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.blue.shade50,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Schedule',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'Select your memorization days',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: List.generate(7, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              controller.selectedDays[index] =
+                                  !controller.selectedDays[index];
+                            },
+                            child: Obx(
+                              () => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: controller.selectedDays[index]
+                                      ? const Color.fromARGB(255, 73, 121, 251)
+                                      : Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: controller.selectedDays[index]
+                                        ? Colors.transparent
+                                        : Colors.grey.shade300,
+                                  ),
+                                  boxShadow: controller.selectedDays[index]
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color.fromARGB(
+                                                    255, 73, 121, 251)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            spreadRadius: 0,
+                                          )
+                                        ]
+                                      : [],
+                                ),
+                                child: Text(
+                                  days[index],
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: controller.selectedDays[index]
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Error Message
+              Obx(() {
+                return controller.planDetailsError.value.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          controller.planDetailsError.value,
+                          style: GoogleFonts.poppins(
+                            color: Colors.red,
+                            fontSize: 13,
+                          ),
+                        ),
+                      )
+                    : Container();
+              }),
+            ],
           ),
-          Obx(() {
-            return controller.planDetailsError.value.isNotEmpty
-                ? Text(
-                    controller.planDetailsError.value,
-                    style: TextStyle(color: Colors.red),
-                  )
-                : Container();
-          }),
-        ],
+        ),
       ),
     );
   }
@@ -758,7 +896,7 @@ class ReviewPage extends StatelessWidget {
           SectionCard(
             title: 'Previously Memorised',
             content: controller.hasMemorisedBefore.value
-                ? '${controller.selectedFromSurah.value} ${controller.selectedFromVerse.value} - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
+                ? '${controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha'} 1 - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
                 : 'No previous memorisation',
             icon: Icons.history,
             onEdit: () => controller.pageController.jumpToPage(0),
@@ -917,21 +1055,15 @@ class NewPlanController extends GetxController {
   final inputController = TextEditingController();
   final RxString selectedUnit = 'Lines'.obs;
 
-  // Separate state for "From" and "To" pages
-  final Rxn<Map<String, dynamic>> selectedFromSurahData =
-      Rxn<Map<String, dynamic>>();
   final Rxn<Map<String, dynamic>> selectedToSurahData =
       Rxn<Map<String, dynamic>>();
 
-  final Rxn<String> selectedFromSurah = Rxn<String>();
   final Rxn<String> selectedToSurah = Rxn<String>();
 
-  final Rxn<int> selectedFromVerse = Rxn<int>();
   final Rxn<int> selectedToVerse = Rxn<int>();
 
   final RxList<bool> selectedDays = List.generate(7, (index) => false).obs;
 
-  final RxString fromPageError = ''.obs;
   final RxString toPageError = ''.obs;
   final RxString planDetailsError = ''.obs;
 
@@ -941,16 +1073,25 @@ class NewPlanController extends GetxController {
   final RxBool isCreatingPlan = false.obs;
   final RxBool planCreated = false.obs;
 
-  // Update "From" selection
-  void updateSelectedFromSurah(
-      String? surahName, Map<String, dynamic> surahData) {
-    selectedFromSurah.value = surahName;
-    selectedFromSurahData.value = surahData;
-    selectedFromVerse.value = null; // Clear verse when surah changes
+  // Add this new reactive variable
+  final RxString inputValue = '0'.obs;
+
+  Timer? activeTimer;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Listen to changes in the text controller
+    inputController.addListener(() {
+      inputValue.value = inputController.text;
+    });
   }
 
-  void updateSelectedFromVerse(int? verse) {
-    selectedFromVerse.value = verse;
+  @override
+  void onClose() {
+    activeTimer?.cancel();
+    inputController.dispose();
+    super.onClose();
   }
 
   // Update "To" selection
@@ -971,23 +1112,16 @@ class NewPlanController extends GetxController {
     if (currentPageIndex.value == 0) {
       pageController.jumpToPage(1);
     } else if (currentPageIndex.value == 1 && hasMemorisedBefore.value) {
-      if (selectedFromSurah.value != null && selectedFromVerse.value != null) {
-        fromPageError.value = '';
-        pageController.jumpToPage(2);
-      } else {
-        fromPageError.value = 'Please select a Surah and Verse to proceed.';
-      }
-    } else if (currentPageIndex.value == 2 && hasMemorisedBefore.value) {
       if (selectedToSurah.value != null && selectedToVerse.value != null) {
         toPageError.value = '';
-        pageController.jumpToPage(3);
+        pageController.jumpToPage(2);
       } else {
         toPageError.value = 'Please select a Surah and Verse to proceed.';
       }
-    } else if (currentPageIndex.value == (hasMemorisedBefore.value ? 3 : 1)) {
+    } else if (currentPageIndex.value == (hasMemorisedBefore.value ? 2 : 1)) {
       if (inputController.text.isNotEmpty && selectedDays.contains(true)) {
         planDetailsError.value = '';
-        pageController.jumpToPage(hasMemorisedBefore.value ? 4 : 2);
+        pageController.jumpToPage(hasMemorisedBefore.value ? 3 : 2);
       } else {
         planDetailsError.value =
             'Please fill out all fields and select at least one day.';
