@@ -46,7 +46,7 @@ class MyBottomNavBar extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: NavigationBar(
-                  height: 65,
+                  // height: 65,
                   elevation: 0,
                   surfaceTintColor: Colors.transparent,
                   animationDuration: Duration.zero,
