@@ -7,9 +7,9 @@ workflows:
       app_store_connect: codemagic
     environment:
       ios_signing:
-        provisioning_profile:
+        provisioning_profiles:
           - jadwal_app_store_profile
-        certificate:
+        certificates:
           - Distribution_certificate
       vars:
         API_KEY: $API_KEY
