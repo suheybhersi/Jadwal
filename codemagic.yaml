@@ -1,9 +1,86 @@
 workflows:
-  your-workflow-name:
+  ios-workflow:
+    name: iOS Workflow
     environment:
       vars:
-        API_KEY: $API_KEY # This references the env variable you set in Codemagic UI
+        API_KEY: $API_KEY
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.jadwal.app
     scripts:
-      - name: Build Flutter app
+      - name: Set up code signing settings
         script: |
-          flutter build <platform> --dart-define=API_KEY=$API_KEY
+          keychain initialize
+          app-store-connect fetch-signing-files "com.jadwal.app" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter build iOS
+        script: |
+          flutter build ios --release --dart-define=API_KEY=$API_KEY \
+            --no-codesign
+      - name: Build iOS app
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/Runner.xcworkspace" \
+            --scheme "Runner"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+
+  android-workflow:
+    name: Android Workflow
+    environment:
+      vars:
+        API_KEY: $API_KEY
+      java: 11
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Build AAB
+        script: |
+          flutter build appbundle --release --dart-define=API_KEY=$API_KEY
+      - name: Build APK
+        script: |
+          flutter build apk --release --dart-define=API_KEY=$API_KEY
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+
+  web-workflow:
+    name: Web Workflow
+    environment:
+      vars:
+        API_KEY: $API_KEY
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter build web
+        script: |
+          flutter build web --release --dart-define=API_KEY=$API_KEY
+    artifacts:
+      - build/web/*
+
+publishing:
+  email:
+    recipients:
+      - your.email@example.com
