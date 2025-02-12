@@ -8,7 +8,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.suheyb.jadwal
+        bundle_identifier: jadwal
       vars:
         API_KEY: $API_KEY
       flutter: stable
