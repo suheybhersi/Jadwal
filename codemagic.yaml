@@ -8,12 +8,12 @@ workflows:
       cocoapods: default
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.jadwal.app
+        bundle_identifier: com.suheyb.jadwal
     scripts:
       - name: Set up code signing settings
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "com.jadwal.app" \
+          app-store-connect fetch-signing-files "com.suheyb.jadwal" \
             --type IOS_APP_STORE \
             --create
           keychain add-certificates
