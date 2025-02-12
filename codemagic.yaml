@@ -21,7 +21,7 @@ workflows:
         script: flutter packages pub get
       - name: Flutter build ipa and automatic versioning
         script: |
-          flutter build ipa-export-options-plist=/Users/builder/export_options.plist
+          flutter build ipa --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
