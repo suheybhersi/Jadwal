@@ -275,161 +275,166 @@ class _QuizPageState extends State<QuizPage> {
 
     return Scaffold(
       body: SafeArea(
-          child: currentQuestion['type'] == 'fill_blank'
-              ? FillBlankQuestion(
-                  question: currentQuestion,
-                  currentQuestionIndex: currentQuestionIndex,
-                  totalQuestions: questions.length,
-                  onNext: (bool wasCorrect) {
-                    if (wasCorrect) {
-                      setState(() => score++);
-                    }
-                    setState(() => currentQuestionIndex++);
-                  },
-                  onClose: () => Navigator.pop(context),
-                )
-              : currentQuestion['type'] == 'what_next'
-                  ? WhatComesNextQuestion(
-                      question: currentQuestion,
-                      currentQuestionIndex: currentQuestionIndex,
-                      totalQuestions: questions.length,
-                      onNext: (bool wasCorrect) {
-                        if (wasCorrect) {
-                          setState(() => score++);
-                        }
-                        setState(() => currentQuestionIndex++);
-                      },
-                      onClose: () => Navigator.pop(context),
-                    )
-                  : BuildVerseQuestion(
-                      currentQuestionIndex: currentQuestionIndex,
-                      questions: questions,
-                      onNextQuestion: (int index) {
-                        setState(() {
-                          score++;
-                          currentQuestionIndex = index;
-                        });
-                      },
-                      answeredQuestions: answeredQuestions,
-                      onClose: () => Navigator.pop(context),
-                    )),
+        child: currentQuestion['type'] == 'fill_blank'
+            ? FillBlankQuestion(
+                question: currentQuestion,
+                currentQuestionIndex: currentQuestionIndex,
+                totalQuestions: questions.length,
+                onNext: (bool wasCorrect) {
+                  if (wasCorrect) {
+                    setState(() => score++);
+                  }
+                  setState(() => currentQuestionIndex++);
+                },
+                onClose: () => Navigator.pop(context),
+              )
+            : currentQuestion['type'] == 'what_next'
+                ? WhatComesNextQuestion(
+                    question: currentQuestion,
+                    currentQuestionIndex: currentQuestionIndex,
+                    totalQuestions: questions.length,
+                    onNext: (bool wasCorrect) {
+                      if (wasCorrect) {
+                        setState(() => score++);
+                      }
+                      setState(() => currentQuestionIndex++);
+                    },
+                    onClose: () => Navigator.pop(context),
+                  )
+                : BuildVerseQuestion(
+                    currentQuestionIndex: currentQuestionIndex,
+                    questions: questions,
+                    onNextQuestion: (int index) {
+                      setState(() {
+                        score++;
+                        currentQuestionIndex = index;
+                      });
+                    },
+                    answeredQuestions: answeredQuestions,
+                    onClose: () => Navigator.pop(context),
+                  ),
+      ),
     );
   }
 
   Widget _buildIntroScreen() {
     return Scaffold(
-      body: Column(
-        children: [
-          // Header with Close Button
-          Padding(
-            padding:
-                const EdgeInsets.only(left: 4, right: 20, top: 10, bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with Close Button
+            Padding(
+              padding: const EdgeInsets.only(left: 4, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // Title
-                  Text(
-                    'Welcome to the Quiz!',
-                    style: GoogleFonts.poppins(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    color: Colors.grey.shade600,
                   ),
-                  const SizedBox(height: 10),
-
-                  // Subtitle
-                  Text(
-                    'Test your knowledge and see how well you do. Complete all questions and challenge yourself!',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-
-                  // Updated box with verses
                 ],
               ),
             ),
-          ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      'Welcome to the Quiz!',
+                      style: GoogleFonts.poppins(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
 
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blue.shade100),
+                    // Subtitle
+                    Text(
+                      'Test your knowledge and see how well you do. Complete all questions and challenge yourself!',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+
+                    // Updated box with verses
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  Icon(Icons.school, size: 60, color: Colors.blue.shade700),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.reviewTitle,
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.school, size: 60, color: Colors.blue.shade700),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.reviewTitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Start Button at bottom
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => setState(() => currentQuestionIndex = 0),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Start Quiz',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.blue.shade700,
+                      color: Colors.white,
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // Start Button at bottom
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => setState(() => currentQuestionIndex = 0),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Start Quiz',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildResultScreen() {
     return Scaffold(
-      body: Center(
-        child: Text(
-          'Quiz Completed! Your Score: $score/${questions.length}',
-          style: GoogleFonts.poppins(fontSize: 24),
-          textAlign: TextAlign.center,
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'Quiz Completed! Your Score: $score/${questions.length}',
+            style: GoogleFonts.poppins(fontSize: 24),
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );

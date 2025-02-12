@@ -65,8 +65,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
     return Column(
       children: [
         Padding(
-          padding:
-              const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
+          padding: const EdgeInsets.only(left: 4, right: 20, bottom: 20),
           child: Row(
             children: [
               IconButton(

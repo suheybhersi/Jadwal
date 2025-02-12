@@ -9,6 +9,7 @@ import 'dart:math' show max, min;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class WhatComesNextQuestion extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -42,7 +43,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
 
-  String? apiSecretKey = Platform.environment['apiSecretKey'];
+  String? apiSecretKey = dotenv.env['API_KEY'];
 
   @override
   void dispose() {

@@ -7,10 +7,12 @@ import 'package:hifdh_planner_app/pages/auth/auth_page.dart';
 import 'package:hifdh_planner_app/services/firestore.dart';
 import 'package:hifdh_planner_app/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await dotenv.load(fileName: ".env");
 
   runApp(
     MultiProvider(
