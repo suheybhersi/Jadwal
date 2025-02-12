@@ -1,0 +1,9 @@
+workflows:
+  your-workflow-name:
+    environment:
+      vars:
+        API_KEY: $API_KEY # This references the env variable you set in Codemagic UI
+    scripts:
+      - name: Build Flutter app
+        script: |
+          flutter build <platform> --dart-define=API_KEY=$API_KEY
