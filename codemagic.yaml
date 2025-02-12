@@ -5,8 +5,6 @@ workflows:
     max_build_duration: 60
     environment:
       ios_signing:
-        distribution_type: development
-        bundle_identifier: com.suheyb.jadwal
         provisioning_profiles:
           - jadwal_development_profile
         certificates:
