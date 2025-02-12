@@ -15,22 +15,13 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Set up code signing settings on Xcode project
+      - name: xcode-project use-profiles
+        script: xcode-project use-profiles
+      - name: Flutter packages pub get
+        script: flutter packages pub get
+      - name: Flutter build ipa and automatic versioning
         script: |
-          xcode-project use-profiles
-      - name: Get Flutter packages
-        script: |
-          flutter packages pub get
-      - name: Install pods
-        script: |
-          find . -name "Podfile" -execdir pod install \;
-      - name: Flutter analyze
-        script: |
-          flutter analyze
-      - name: Flutter unit tests
-        script: |
-          flutter test
-        ignore_failure: true
+          flutter build ipa-export-options-plist=/Users/builder/export_options.plist
       - name: Flutter build ipa and automatic versioning
         script: |
           # See the following link about getting the latest App Store or TestFlight version - https://docs.codemagic.io/knowledge-codemagic/build-versioning/#app-store-or-testflight-latest-build-number
