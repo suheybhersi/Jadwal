@@ -7,8 +7,10 @@ workflows:
       app_store_connect: codemagic
     environment:
       ios_signing:
-        distribution_type: development
-        bundle_identifier: com.suheyb.jadwal
+        provisioning_profile:
+          - jadwal_app_store_profile
+        certificate:
+          - Distribution_certificate
       vars:
         API_KEY: $API_KEY
       flutter: stable
@@ -40,8 +42,6 @@ workflows:
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
     publishing:
       email:
         recipients:
@@ -49,6 +49,3 @@ workflows:
         notify:
           success: true # To receive a notification when a build succeeds
           failure: true # To not receive a notification when a build fails
-
-      app_store_connect:
-        auth: integration
