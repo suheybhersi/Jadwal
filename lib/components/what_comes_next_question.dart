@@ -43,7 +43,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
 
-  String? apiSecretKey = dotenv.env['API_KEY'];
+  String? API_KEY = dotenv.env['API_KEY'];
 
   @override
   void dispose() {
@@ -107,7 +107,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     var url = Uri.https('api.openai.com', 'v1/audio/transcriptions');
     var request = http.MultipartRequest('POST', url);
     request.headers.addAll({
-      'Authorization': 'Bearer $apiSecretKey',
+      'Authorization': 'Bearer $API_KEY',
     });
     request.fields['model'] = 'whisper-1';
     request.fields['language'] = 'ar';
