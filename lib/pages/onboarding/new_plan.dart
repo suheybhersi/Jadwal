@@ -46,76 +46,79 @@ class NewPlanScreen extends StatelessWidget {
               )
             : Container()),
       ),
-      body: Obx(() {
-        if (controller.isCreatingPlan.value) {
-          return CreatingPlanPage(
-            isCompleted: controller.planCreated,
-          );
-        }
+      body: SafeArea(
+        child: Obx(() {
+          if (controller.isCreatingPlan.value) {
+            return CreatingPlanPage(
+              isCompleted: controller.planCreated,
+            );
+          }
 
-        return StreamBuilder(
-          stream: firestoreService.getSurahsStream(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+          return StreamBuilder(
+            stream: firestoreService.getSurahsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(
-                child: Text(
-                  'No data available.',
-                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-                ),
-              );
-            }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No data available.',
+                    style:
+                        GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                  ),
+                );
+              }
 
-            final surahsList = snapshot.data!.docs;
-            surahsList
-                .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+              final surahsList = snapshot.data!.docs;
+              surahsList
+                  .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
 
-            // Map Firestore data to a usable list
-            final allData = surahsList
-                .map((doc) => doc.data() as Map<String, dynamic>)
-                .toList();
+              // Map Firestore data to a usable list
+              final allData = surahsList
+                  .map((doc) => doc.data() as Map<String, dynamic>)
+                  .toList();
 
-            List<String> surahNames =
-                allData.map((data) => data['surah'] as String).toList();
+              List<String> surahNames =
+                  allData.map((data) => data['surah'] as String).toList();
 
-            return Stack(
-              children: [
-                Obx(() => PageView(
-                      controller: controller.pageController,
-                      onPageChanged: controller.updatePageIndicator,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        const IntroPage(),
-                        if (controller.hasMemorisedBefore.value) ...[
-                          MemorisedPage(
-                            surahNames: surahNames,
-                            controller: controller,
-                            allData: allData,
-                            text: 'To what verse have you memorised?',
+              return Stack(
+                children: [
+                  Obx(() => PageView(
+                        controller: controller.pageController,
+                        onPageChanged: controller.updatePageIndicator,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          const IntroPage(),
+                          if (controller.hasMemorisedBefore.value) ...[
+                            MemorisedPage(
+                              surahNames: surahNames,
+                              controller: controller,
+                              allData: allData,
+                              text: 'To what verse have you memorised?',
+                            ),
+                          ],
+                          const PlanDetailsPage(),
+                          const ReviewPage(
+                            title: 'Review and Confirm',
+                            description:
+                                'Review your Hifdh plan and make sure everything is set before starting.',
                           ),
                         ],
-                        const PlanDetailsPage(),
-                        const ReviewPage(
-                          title: 'Review and Confirm',
-                          description:
-                              'Review your Hifdh plan and make sure everything is set before starting.',
-                        ),
-                      ],
-                    )),
+                      )),
 
-                // Bottom Navigation Section
-                BottomNavigation(
-                  controller: controller,
-                  onNextPressed: storeNewPlan,
-                ),
-              ],
-            );
-          },
-        );
-      }),
+                  // Bottom Navigation Section
+                  BottomNavigation(
+                    controller: controller,
+                    onNextPressed: storeNewPlan,
+                  ),
+                ],
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 }

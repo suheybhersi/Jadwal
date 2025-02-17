@@ -122,7 +122,7 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
           ),
         ),
       ),
-      body: _screens[_selectedIndex],
+      body: SafeArea(child: _screens[_selectedIndex]),
     );
   }
 }
