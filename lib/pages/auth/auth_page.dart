@@ -23,7 +23,11 @@ class AuthPage extends StatelessWidget {
             stream: firestoreService.getHifdhsStream(),
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                return const MyBottomNavBar();
+                return MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: const MyBottomNavBar(),
+                );
               } else {
                 return const NewPlanScreen();
               }

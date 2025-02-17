@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -48,10 +46,7 @@ class NewPlanScreen extends StatelessWidget {
               )
             : Container()),
       ),
-      body: Padding(
-        padding: Platform.isIOS
-            ? EdgeInsets.zero
-            : EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      body: SafeArea(
         child: Obx(() {
           if (controller.isCreatingPlan.value) {
             return CreatingPlanPage(
