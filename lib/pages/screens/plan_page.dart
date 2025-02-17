@@ -109,7 +109,6 @@ class PlanPageHeader extends StatelessWidget {
       padding: const EdgeInsets.only(
         left: 10,
         right: 4,
-        top: 0.0,
         bottom: 15,
       ),
       child: Row(
@@ -118,6 +117,7 @@ class PlanPageHeader extends StatelessWidget {
           IconButton(
             onPressed: onEditPressed,
             icon: const Icon(Iconsax.edit_2),
+            iconSize: 23,
           ),
           Text(
             'Plan',

@@ -29,7 +29,7 @@ class AuthPage extends StatelessWidget {
                   body: Padding(
                     padding: EdgeInsets.only(
                       top: Platform.isIOS
-                          ? MediaQuery.of(context).padding.top - 20
+                          ? MediaQuery.of(context).padding.top - 10
                           : MediaQuery.of(context).padding.top,
                       bottom: 5,
                     ),
