@@ -122,10 +122,7 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
           ),
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-        child: _screens[_selectedIndex],
-      ),
+      body: _screens[_selectedIndex],
     );
   }
 }

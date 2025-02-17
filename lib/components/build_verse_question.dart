@@ -295,6 +295,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                     alignment: WrapAlignment.center,
                     children: shuffledWords.map((word) {
                       final bool isUsed = usedWords.contains(word);
+                      //Todo: make sure to take into account the same word appearing multiple times in the verse
                       return Draggable<Map<String, dynamic>>(
                         data: (isUsed || isChecking)
                             ? null
