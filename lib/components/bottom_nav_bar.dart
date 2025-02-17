@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/pages/screens/home_page.dart';
 import 'package:hifdh_planner_app/pages/screens/plan_page.dart';
@@ -122,7 +124,12 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
           ),
         ),
       ),
-      body: SafeArea(child: _screens[_selectedIndex]),
+      body: Padding(
+        padding: Platform.isIOS
+            ? EdgeInsets.zero
+            : EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        child: _screens[_selectedIndex],
+      ),
     );
   }
 }
