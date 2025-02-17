@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
@@ -26,8 +28,10 @@ class AuthPage extends StatelessWidget {
                 return Scaffold(
                   body: Padding(
                     padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top,
-                      bottom: MediaQuery.of(context).padding.bottom,
+                      top: Platform.isIOS
+                          ? MediaQuery.of(context).padding.top - 20
+                          : MediaQuery.of(context).padding.top,
+                      bottom: 5,
                     ),
                     child: MediaQuery.removePadding(
                       context: context,
