@@ -116,8 +116,7 @@ class PlanPageHeader extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onEditPressed,
-            icon: const Icon(Iconsax.edit_2),
-            iconSize: 23,
+            icon: const Icon(Iconsax.edit),
           ),
           Text(
             'Plan',
