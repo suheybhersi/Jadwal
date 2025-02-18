@@ -22,15 +22,19 @@ class BuildVerseQuestion extends StatefulWidget {
 }
 
 class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
-  late List<String> selectedWords;
-  late Set<String> usedWords;
-  late List<String> correctOrder;
-  late List<String> shuffledWords;
+  List<String> selectedWords = [];
+  Map<String, List<int>> usedWordIndices = {}; // Track indices of used words
+  List<String> correctOrder = [];
+  List<String> shuffledWords = [];
   bool isChecking = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeState();
+  }
+
+  void _initializeState() {
     Map<String, dynamic> question =
         widget.questions[widget.currentQuestionIndex];
 
@@ -38,35 +42,34 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     if (widget.answeredQuestions.containsKey(widget.currentQuestionIndex)) {
       selectedWords =
           List.from(widget.answeredQuestions[widget.currentQuestionIndex]!);
-      usedWords = Set.from(selectedWords);
+      usedWordIndices = _getUsedWordIndices(selectedWords);
     } else {
       selectedWords = [question['firstWord']];
-      usedWords = {question['firstWord']};
+      usedWordIndices = {
+        question['firstWord']: [shuffledWords.indexOf(question['firstWord'])]
+      };
     }
 
     correctOrder = [question['firstWord'], ...question['correctOrder']];
     shuffledWords = List.from(question['shuffledWords']);
   }
 
+  Map<String, List<int>> _getUsedWordIndices(List<String> selectedWords) {
+    Map<String, List<int>> usedIndices = {};
+    for (var word in selectedWords) {
+      if (!usedIndices.containsKey(word)) {
+        usedIndices[word] = [];
+      }
+      usedIndices[word]!.add(shuffledWords.indexOf(word));
+    }
+    return usedIndices;
+  }
+
   @override
   void didUpdateWidget(BuildVerseQuestion oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentQuestionIndex != widget.currentQuestionIndex) {
-      // Reset state for new question
-      Map<String, dynamic> question =
-          widget.questions[widget.currentQuestionIndex];
-
-      if (widget.answeredQuestions.containsKey(widget.currentQuestionIndex)) {
-        selectedWords =
-            List.from(widget.answeredQuestions[widget.currentQuestionIndex]!);
-        usedWords = Set.from(selectedWords);
-      } else {
-        selectedWords = [question['firstWord']];
-        usedWords = {question['firstWord']};
-      }
-
-      correctOrder = [question['firstWord'], ...question['correctOrder']];
-      shuffledWords = List.from(question['shuffledWords']);
+      _initializeState();
     }
   }
 
@@ -79,6 +82,21 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     return correctOrder[index] == word;
   }
 
+  void _removeWord(String word, int selectedIndex) {
+    setState(() {
+      // Remove the word from selectedWords
+      selectedWords.removeAt(selectedIndex);
+
+      // Remove the corresponding index from usedWordIndices
+      if (usedWordIndices.containsKey(word)) {
+        usedWordIndices[word]!.removeAt(0); // Remove the first occurrence
+        if (usedWordIndices[word]!.isEmpty) {
+          usedWordIndices.remove(word);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Map<String, dynamic> question =
@@ -86,6 +104,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
     return Column(
       children: [
+        // Progress and Close Button
         Padding(
           padding:
               const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
@@ -117,8 +136,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
           ),
         ),
 
-        // Question text
-
+        // Question Text
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -144,8 +162,12 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                   onAcceptWithDetails: (details) {
                     if (!isChecking && details.data['source'] == 'options') {
                       final word = details.data['word'] as String;
+                      final wordIndex = details.data['index'] as int;
                       setState(() {
-                        usedWords.add(word);
+                        if (!usedWordIndices.containsKey(word)) {
+                          usedWordIndices[word] = [];
+                        }
+                        usedWordIndices[word]!.add(wordIndex);
                         selectedWords.add(word);
                       });
                     }
@@ -236,10 +258,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                       child: GestureDetector(
                                         onTap: () {
                                           if (word != question['firstWord']) {
-                                            setState(() {
-                                              selectedWords.remove(word);
-                                              usedWords.remove(word);
-                                            });
+                                            _removeWord(word, index);
                                           }
                                         },
                                         child: Container(
@@ -278,14 +297,14 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
         const Spacer(),
 
-        // Bottom section with options
+        // Bottom Section with Options
         Container(
           decoration: const BoxDecoration(
             color: Colors.white,
           ),
           child: Column(
             children: [
-              // Available words area
+              // Available Words Area
               if (!isChecking)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -293,14 +312,17 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                     spacing: 8,
                     runSpacing: 12,
                     alignment: WrapAlignment.center,
-                    children: shuffledWords.map((word) {
-                      final bool isUsed = usedWords.contains(word);
-                      //Todo: make sure to take into account the same word appearing multiple times in the verse
+                    children: shuffledWords.asMap().entries.map((entry) {
+                      final wordIndex = entry.key;
+                      final word = entry.value;
+                      final bool isUsed =
+                          usedWordIndices[word]?.contains(wordIndex) ?? false;
                       return Draggable<Map<String, dynamic>>(
                         data: (isUsed || isChecking)
                             ? null
                             : {
                                 'word': word,
+                                'index': wordIndex,
                                 'source': 'options',
                               },
                         feedback: (isUsed || isChecking)
@@ -369,7 +391,10 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                               ? null
                               : () {
                                   setState(() {
-                                    usedWords.add(word);
+                                    if (!usedWordIndices.containsKey(word)) {
+                                      usedWordIndices[word] = [];
+                                    }
+                                    usedWordIndices[word]!.add(wordIndex);
                                     selectedWords.add(word);
                                   });
                                 },
@@ -451,7 +476,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                   ),
                 ),
 
-              // Check Answer/Next button
+              // Check Answer/Next Button
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: ElevatedButton(
@@ -509,7 +534,11 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                           isChecking = false;
                           // Reset the words if incorrect
                           selectedWords = [question['firstWord']];
-                          usedWords = {question['firstWord']};
+                          usedWordIndices = {
+                            question['firstWord']: [
+                              shuffledWords.indexOf(question['firstWord'])
+                            ]
+                          };
                         });
                       }
                       widget.onNextQuestion(widget.currentQuestionIndex + 1);
