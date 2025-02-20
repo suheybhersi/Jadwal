@@ -572,6 +572,7 @@ class Upcoming extends StatelessWidget {
                                       : plan['hifdhs'].last['startVerse'],
                                   style: GoogleFonts.scheherazadeNew(
                                     textStyle: TextStyle(
+                                      letterSpacing: 0,
                                       fontSize: 24,
                                       color: Colors.grey.shade100,
                                       fontWeight: FontWeight.w500,
@@ -758,6 +759,7 @@ class Upcoming extends StatelessWidget {
                                             : reviews.first['startVerse'],
                                         style: GoogleFonts.scheherazadeNew(
                                           textStyle: TextStyle(
+                                            letterSpacing: 0,
                                             fontSize: 24,
                                             color: Colors.grey.shade100,
                                             fontWeight: FontWeight.w500,
@@ -993,7 +995,7 @@ class Upcoming extends StatelessWidget {
                                 textStyle: TextStyle(
                                   fontSize: 22,
                                   height: 2.0,
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                   wordSpacing: 2,
                                   fontWeight: FontWeight.w500,
                                   color: Color.fromARGB(255, 51, 51, 51),
@@ -1140,7 +1142,7 @@ class Upcoming extends StatelessWidget {
                                 textStyle: TextStyle(
                                   fontSize: 22,
                                   height: 2.0,
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                   wordSpacing: 2,
                                   fontWeight: FontWeight.w500,
                                   color: Color.fromARGB(255, 51, 51, 51),

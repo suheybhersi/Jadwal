@@ -113,7 +113,7 @@ class _QuizPageState extends State<QuizPage> {
         i++) {
       // Get first word of the current fill_blank question
       String fillBlankFirstWord =
-          fillInTheBlankQuestions[i]['verse'].split(' ').first;
+          fillInTheBlankQuestions[i]['verseWords'].first;
 
       // Check for matches with drag_drop and what_next questions
       bool hasMatchingQuestion = generatedQuestions.any((q) {
@@ -155,7 +155,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Map<String, dynamic> _generateFillInTheBlankQuestion(String verse) {
-    List<String> words = verse.split(' ');
+    List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
     // Create a map to track word frequencies
     Map<String, int> wordFrequency = {};
@@ -173,16 +173,13 @@ class _QuizPageState extends State<QuizPage> {
     // Keep track of missing words and their indices
     List<String> missingWords = [];
     List<int> missingIndices = [];
-    const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
 
     // Generate unique random indices for blanks
     while (missingIndices.length < numberOfBlanks) {
       int index = Random().nextInt(words.length);
 
       // Skip if word is a special character or already selected or appears multiple times
-      if (specialChars.contains(words[index]) ||
-          missingIndices.contains(index) ||
-          wordFrequency[words[index]]! > 1) {
+      if (missingIndices.contains(index) || wordFrequency[words[index]]! > 1) {
         continue;
       }
 
@@ -206,7 +203,7 @@ class _QuizPageState extends State<QuizPage> {
       'question': numberOfBlanks > 1
           ? "Fill in the missing words:"
           : "Fill in the missing word:",
-      'verse': verseWithBlanks.join(' '),
+      'verseWords': verseWithBlanks,
       'options': [
         ...missingWords,
         ...getRandomWords(missingWords, verse, numberOfBlanks)

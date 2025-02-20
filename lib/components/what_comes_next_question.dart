@@ -682,6 +682,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                           child: Text(
                             text,
                             style: GoogleFonts.scheherazadeNew(
+                              letterSpacing: 0,
                               fontSize: 24,
                               height: 1.6,
                             ),

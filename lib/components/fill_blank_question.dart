@@ -25,29 +25,12 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
   List<String> chosenWords = [];
   bool isChecking = false;
 
-  List<String> splitVerseManuallyWithSpecialChars(String verse) {
-    const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
-    List<String> words = verse.split(" ");
-    List<String> processedWords = [];
-
-    for (int i = 0; i < words.length; i++) {
-      if (specialChars.any((char) => words[i].contains(char)) && i > 0) {
-        processedWords[processedWords.length - 1] =
-            "${words[i]} ${processedWords[processedWords.length - 1]}";
-      } else {
-        processedWords.add(words[i]);
-      }
-    }
-
-    return processedWords;
-  }
-
   bool isWordCorrect(String word, int index) {
     return widget.question['correctAnswers'][index] == word;
   }
 
   void updateChosenWordsOrder() {
-    List<String> words = widget.question['verse'].split(' ');
+    List<String> words = widget.question['verseWords'];
     List<String> newChosenWords = [];
 
     // Rebuild chosenWords list in verse order
@@ -124,9 +107,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                     spacing: 8,
                     runSpacing: 8,
                     textDirection: TextDirection.rtl,
-                    children: splitVerseManuallyWithSpecialChars(
-                            widget.question['verse'])
-                        .map<Widget>((word) {
+                    children: widget.question['verseWords'].map<Widget>((word) {
                       bool isBlank = word == '____';
                       bool isFilledWord = chosenWords.contains(word);
 
@@ -137,10 +118,10 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                               : () {
                                   setState(() {
                                     List<String> words =
-                                        widget.question['verse'].split(' ');
+                                        widget.question['verseWords'];
                                     int wordIndex = words.indexOf(word);
                                     words[wordIndex] = '____';
-                                    widget.question['verse'] = words.join(' ');
+                                    widget.question['verseWords'] = words;
                                     widget.question['options'].add(word);
                                     chosenWords.remove(word);
                                   });
@@ -148,6 +129,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                           child: Text(
                             word,
                             style: GoogleFonts.scheherazadeNew(
+                              letterSpacing: 0,
                               fontSize: 24,
                               height: 1.6,
                               color: isFilledWord && isChecking
@@ -167,6 +149,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                         return Text(
                           word,
                           style: GoogleFonts.scheherazadeNew(
+                            letterSpacing: 0,
                             fontSize: 24,
                             height: 1.6,
                             color: isFilledWord && isChecking
@@ -212,13 +195,12 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                                 ? null
                                 : () {
                                     List<String> words =
-                                        widget.question['verse'].split(' ');
+                                        widget.question['verseWords'];
                                     int blankIndex = words.indexOf('____');
                                     if (blankIndex != -1) {
                                       words[blankIndex] = option;
                                       setState(() {
-                                        widget.question['verse'] =
-                                            words.join(' ');
+                                        widget.question['verseWords'] = words;
                                         widget.question['options']
                                             .remove(option);
                                         chosenWords.add(option);
@@ -244,6 +226,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                             child: Text(
                               option,
                               style: GoogleFonts.scheherazadeNew(
+                                letterSpacing: 0,
                                 fontSize: 20,
                                 height: 1.4,
                               ),
@@ -253,7 +236,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion> {
                         }).toList(),
                       ),
                     ),
-                    if (!widget.question['verse'].contains('____'))
+                    if (!widget.question['verseWords'].contains('____'))
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: ElevatedButton(

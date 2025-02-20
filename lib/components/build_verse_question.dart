@@ -199,6 +199,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                   child: Text(
                                     word,
                                     style: GoogleFonts.scheherazadeNew(
+                                      letterSpacing: 0,
                                       fontSize: 20,
                                       color: Colors.black87,
                                     ),
@@ -247,6 +248,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                           child: Text(
                                             word,
                                             style: GoogleFonts.scheherazadeNew(
+                                              letterSpacing: 0,
                                               fontSize: 20,
                                               color: Colors.black87,
                                             ),
@@ -276,6 +278,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                           child: Text(
                                             word,
                                             style: GoogleFonts.scheherazadeNew(
+                                              letterSpacing: 0,
                                               fontSize: 20,
                                               color: Colors.black87,
                                             ),
@@ -341,6 +344,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                   child: Text(
                                     word,
                                     style: GoogleFonts.scheherazadeNew(
+                                      letterSpacing: 0,
                                       fontSize: 20,
                                       color: Colors.black87,
                                     ),
@@ -362,6 +366,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                 child: Text(
                                   word,
                                   style: GoogleFonts.scheherazadeNew(
+                                    letterSpacing: 0,
                                     fontSize: 20,
                                     color: Colors.grey.shade400,
                                   ),
@@ -381,6 +386,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                 child: Text(
                                   word,
                                   style: GoogleFonts.scheherazadeNew(
+                                    letterSpacing: 0,
                                     fontSize: 20,
                                     color: Colors.grey.shade400,
                                   ),
@@ -415,6 +421,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                             child: Text(
                               word,
                               style: GoogleFonts.scheherazadeNew(
+                                letterSpacing: 0,
                                 fontSize: 20,
                                 color: isUsed
                                     ? Colors.grey.shade400
@@ -465,6 +472,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                           Text(
                             correctOrder.join(' '),
                             style: GoogleFonts.scheherazadeNew(
+                              letterSpacing: 0,
                               fontSize: 24,
                               height: 1.6,
                             ),
