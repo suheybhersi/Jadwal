@@ -1,4 +1,4 @@
-package com.example.hifdh_planner_app
+package com.example.jadwal
 
 import io.flutter.embedding.android.FlutterActivity
 

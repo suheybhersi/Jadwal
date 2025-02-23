@@ -2,28 +2,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "hifdh_planner",
+            "name": "Jadwal",
             "request": "launch",
             "type": "dart"
         },
-        {
-            "name": "hifdh_planner (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "hifdh_planner (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-        },
-        {
-            "name": "Jadwal (Flutter SM A528B)",
-            "program": "lib/main.dart",
-            "deviceId": "R5CR81CWG9F",
-            "request": "launch",
-            "type": "dart"
-        }
     ]
 }

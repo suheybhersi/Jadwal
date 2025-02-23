@@ -1,9 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/components/build_verse_question.dart';
-import 'package:hifdh_planner_app/components/what_comes_next_question.dart';
-import 'package:hifdh_planner_app/components/fill_blank_question.dart';
+import 'package:jadwal/components/build_verse_question.dart';
+import 'package:jadwal/components/what_comes_next_question.dart';
+import 'package:jadwal/components/fill_blank_question.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;

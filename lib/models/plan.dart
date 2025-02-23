@@ -1,6 +1,6 @@
-import 'package:hifdh_planner_app/models/current_weekday.dart';
-import 'package:hifdh_planner_app/models/hifdh.dart';
-import 'package:hifdh_planner_app/models/review.dart';
+import 'package:jadwal/models/current_weekday.dart';
+import 'package:jadwal/models/hifdh.dart';
+import 'package:jadwal/models/review.dart';
 
 class Plan {
   final bool backToFront;

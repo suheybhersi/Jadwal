@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/pages/screens/home_page.dart';
-import 'package:hifdh_planner_app/pages/screens/plan_page.dart';
-import 'package:hifdh_planner_app/pages/screens/profile_page.dart';
-import 'package:hifdh_planner_app/pages/screens/progress_page.dart';
+import 'package:jadwal/pages/screens/home_page.dart';
+import 'package:jadwal/pages/screens/plan_page.dart';
+import 'package:jadwal/pages/screens/profile_page.dart';
+import 'package:jadwal/pages/screens/progress_page.dart';
 import 'package:iconsax/iconsax.dart';
 
 class MyBottomNavBar extends StatefulWidget {

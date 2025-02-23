@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/components/bottom_nav_bar.dart';
-import 'package:hifdh_planner_app/pages/onboarding/new_plan.dart';
-import 'package:hifdh_planner_app/pages/onboarding/onboarding.dart';
-import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:jadwal/components/bottom_nav_bar.dart';
+import 'package:jadwal/pages/onboarding/new_plan.dart';
+import 'package:jadwal/pages/onboarding/onboarding.dart';
+import 'package:jadwal/services/firestore.dart';
 import 'package:flutter/services.dart';
 
 class AuthPage extends StatelessWidget {

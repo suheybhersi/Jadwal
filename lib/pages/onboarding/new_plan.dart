@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/components/drop_down.dart';
-import 'package:hifdh_planner_app/components/verse_picker.dart';
-import 'package:hifdh_planner_app/services/firestore.dart';
+import 'package:jadwal/components/drop_down.dart';
+import 'package:jadwal/components/verse_picker.dart';
+import 'package:jadwal/services/firestore.dart';
 import 'dart:async';
 
 class NewPlanScreen extends StatelessWidget {

@@ -50,19 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDWkifyVuraPzB_i8hgnK9L8YG1JQZA-II',
-    appId: '1:524256100703:android:e99b0f7aa6afd1471636ea',
-    messagingSenderId: '524256100703',
-    projectId: 'hifdh-planner-app-519c6',
-    storageBucket: 'hifdh-planner-app-519c6.appspot.com',
+    apiKey: 'AIzaSyDkYKdGag3BHHR0JuekYlg_pizJbqZAPqU',
+    appId: '1:1040296089716:android:1287912e8e10f6f8b51921',
+    messagingSenderId: '1040296089716',
+    projectId: 'jadwal-dca2a',
+    storageBucket: 'jadwal-dca2a.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDvXFOM64eqPMwj5ye1QW_HxYqutK5VDi8',
-    appId: '1:524256100703:ios:63c947495d227e461636ea',
-    messagingSenderId: '524256100703',
-    projectId: 'hifdh-planner-app-519c6',
-    storageBucket: 'hifdh-planner-app-519c6.appspot.com',
-    iosBundleId: 'com.example.hifdhPlannerApp',
+    apiKey: 'AIzaSyDBBfnoHeOmC_yWn0OXtV92cgs52lzi43I',
+    appId: '1:1040296089716:ios:11b14f7c8c2269a8b51921',
+    messagingSenderId: '1040296089716',
+    projectId: 'jadwal-dca2a',
+    storageBucket: 'jadwal-dca2a.firebasestorage.app',
+    iosBundleId: 'com.suheyb.jadwal',
   );
+
 }

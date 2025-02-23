@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/pages/auth/login_page.dart';
-import 'package:hifdh_planner_app/pages/auth/register_page.dart';
+import 'package:jadwal/pages/auth/login_page.dart';
+import 'package:jadwal/pages/auth/register_page.dart';
 
 class LoginOrRegisterPage extends StatefulWidget {
   const LoginOrRegisterPage({super.key});

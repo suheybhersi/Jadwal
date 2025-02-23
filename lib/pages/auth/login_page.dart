@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/components/my_textfield.dart';
-import 'package:hifdh_planner_app/components/square_tile.dart';
+import 'package:jadwal/components/my_textfield.dart';
+import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
 
 class LoginPage extends StatefulWidget {

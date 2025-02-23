@@ -1,4 +1,4 @@
-import 'package:hifdh_planner_app/models/current_weekday.dart';
+import 'package:jadwal/models/current_weekday.dart';
 
 class Week {
   final String weekStart;

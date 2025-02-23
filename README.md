@@ -1,4 +1,4 @@
-# hifdh_planner
+# Jadwal
 
 A new Flutter project.
 

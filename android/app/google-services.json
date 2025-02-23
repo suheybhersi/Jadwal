@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "524256100703",
-    "project_id": "hifdh-planner-app-519c6",
-    "storage_bucket": "hifdh-planner-app-519c6.appspot.com"
+    "project_number": "1040296089716",
+    "project_id": "jadwal-dca2a",
+    "storage_bucket": "jadwal-dca2a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:524256100703:android:e99b0f7aa6afd1471636ea",
+        "mobilesdk_app_id": "1:1040296089716:android:1287912e8e10f6f8b51921",
         "android_client_info": {
-          "package_name": "com.example.hifdh_planner_app"
+          "package_name": "com.example.jadwal"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDWkifyVuraPzB_i8hgnK9L8YG1JQZA-II"
+          "current_key": "AIzaSyDkYKdGag3BHHR0JuekYlg_pizJbqZAPqU"
         }
       ],
       "services": {

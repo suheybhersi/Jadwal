@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hifdh_planner_app/models/current_weekday.dart';
-import 'package:hifdh_planner_app/models/hifdh.dart';
-import 'package:hifdh_planner_app/models/plan.dart';
-import 'package:hifdh_planner_app/models/review.dart';
+import 'package:jadwal/models/current_weekday.dart';
+import 'package:jadwal/models/hifdh.dart';
+import 'package:jadwal/models/plan.dart';
+import 'package:jadwal/models/review.dart';
 
 class FirestoreService extends ChangeNotifier {
   final CollectionReference usersCollection =

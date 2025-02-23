@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hifdh_planner_app/services/firestore.dart';
-import 'package:hifdh_planner_app/themes/theme_provider.dart';
+import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable

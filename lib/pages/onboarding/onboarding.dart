@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hifdh_planner_app/pages/auth/login_or_register_page.dart';
+import 'package:jadwal/pages/auth/login_or_register_page.dart';
 import 'package:iconsax/iconsax.dart';
 
 class OnboardingScreen extends StatelessWidget {
