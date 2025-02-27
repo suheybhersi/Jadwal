@@ -1,15 +1,27 @@
+// Core Flutter imports
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
+import 'dart:math' show max, min;
+
+// Flutter packages
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Audio-related packages
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
-import 'dart:math' show max, min;
+
+// File/storage-related packages
+import 'package:path_provider/path_provider.dart';
+
+// Network & API packages
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// Local imports
+// import '../utils/arabic_text_processor.dart'; // Placeholder for future refactoring
 
 class WhatComesNextQuestion extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -42,15 +54,35 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
+  // Timer for maximum recording duration
+  Timer? _recordingDurationTimer;
 
   String? apiKey = dotenv.env['API_KEY'];
 
+  List<Map<String, dynamic>> comparison = [];
+
+  // Cache for normalized texts to avoid repeated processing of the same strings
+  final Map<String, String> _normalizationCache = {};
+
+  // Add these new state variables at the top of the class
+  bool isRecitationCorrect = false;
+  String feedbackMessage = '';
+  int incorrectWordCount = 0;
+  bool hasSubmittedAnswer = false;
+
   @override
   void dispose() {
-    cleanupRecordingFile();
+    // Ensure timers are cancelled
     _amplitudeTimer?.cancel();
+    _recordingDurationTimer?.cancel();
+
+    // Properly dispose of audio resources
     recorder.dispose();
-    audioPlayer.dispose();
+    audioPlayer.stop().then((_) => audioPlayer.dispose());
+
+    // Clean up any recording files
+    cleanupRecordingFile();
+
     super.dispose();
   }
 
@@ -60,6 +92,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         final file = File(recordingPath!);
         if (await file.exists()) {
           await file.delete();
+          print('Recording file deleted: $recordingPath');
         }
         recordingPath = null;
       } catch (e) {
@@ -87,7 +120,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       try {
         final amplitude = await recorder.getAmplitude();
         double normalizedValue = 0.0;
-        normalizedValue = ((amplitude.current + 160) / 160).clamp(0.0, 1.0);
+        normalizedValue = ((amplitude.current + 80) / 80).clamp(0.0, 1.0);
 
         setState(() {
           amplitudes.removeAt(0);
@@ -104,49 +137,89 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   }
 
   Future<String> convertSpeechToText(String filePath) async {
-    var url = Uri.https('api.openai.com', 'v1/audio/transcriptions');
-    var request = http.MultipartRequest('POST', url);
-    request.headers.addAll({
-      'Authorization': 'Bearer $apiKey',
-    });
-    request.fields['model'] = 'whisper-1';
-    request.fields['language'] = 'ar';
+    try {
+      var url = Uri.https('api.openai.com', 'v1/audio/transcriptions');
 
-    request.files.add(http.MultipartFile.fromBytes(
-      'file',
-      File(filePath).readAsBytesSync(),
-      filename: 'recording.wav',
-      contentType: MediaType('audio', 'wav'),
-    ));
-    var response = await request.send();
-    var newResponse = await http.Response.fromStream(response);
+      // Validate API key exists
+      if (apiKey == null || apiKey!.isEmpty) {
+        throw Exception(
+            'API key is missing. Please check your environment variables.');
+      }
 
-    // Decode the response body explicitly with UTF-8
-    final responseData = json.decode(utf8.decode(newResponse.bodyBytes));
+      var request = http.MultipartRequest('POST', url);
+      request.headers.addAll({
+        'Authorization': 'Bearer $apiKey',
+      });
+      request.fields['model'] = 'whisper-1';
+      request.fields['language'] = 'ar';
 
-    // Return the text value from the JSON response
-    return responseData['text'];
+      // Check if file exists before reading
+      final file = File(filePath);
+      if (!await file.exists()) {
+        throw Exception('Recording file not found: $filePath');
+      }
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'file',
+        file.readAsBytesSync(),
+        filename: 'recording.wav',
+        contentType: MediaType('audio', 'wav'),
+      ));
+
+      // Add timeout for network requests
+      var streamedResponse = await request.send().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception(
+              'Network request timed out. Please check your internet connection.');
+        },
+      );
+
+      var newResponse = await http.Response.fromStream(streamedResponse);
+
+      // Check for API errors
+      if (newResponse.statusCode != 200) {
+        final error = json.decode(utf8.decode(newResponse.bodyBytes));
+        throw Exception(
+            'API Error (${newResponse.statusCode}): ${error['error']?['message'] ?? 'Unknown error'}');
+      }
+
+      // Decode the response body explicitly with UTF-8
+      final responseData = json.decode(utf8.decode(newResponse.bodyBytes));
+
+      // Return the text value from the JSON response
+      return responseData['text'] ?? '';
+    } catch (e) {
+      print('Speech-to-text conversion error: $e');
+      return 'Error: Unable to convert speech to text. ${e.toString()}';
+    }
   }
 
   String normaliseArabicText(String text) {
-    // Remove diacritical marks (Harakat, Shadda, Sakt, etc.)
+    // Check cache first to avoid redundant processing
+    if (_normalizationCache.containsKey(text)) {
+      return _normalizationCache[text]!;
+    }
+
+    // Define regex patterns once for better performance
     final harakatRegex = RegExp(
         r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+'); // Tanween, Fatha, Kasra, Damma, etc.
-    //take out madd and special
-    text = text.replaceAll(harakatRegex, '');
+    final alifVariationsRegex = RegExp(r'[آٱـٰ]');
+    final tatweelRegex = RegExp(r'[ٓـ]');
 
-    // Normalize Alif variations
-    text = text.replaceAll(RegExp(r'[آٱ]'), 'ا');
+    // Process the text with more efficient chaining of replacements
+    String normalized = text
+        .replaceAll(harakatRegex, '') // Remove diacritics and special marks
+        .replaceAll(alifVariationsRegex, 'ا') // Normalize alif variations
+        .replaceAll('ءا', 'ا') // Normalize hamza+alif
+        .replaceAll('ي', 'ى') // Normalize Ya and Alif Maqsura
+        .replaceAll(tatweelRegex, '') // Remove tatweel characters
+        .trim(); // Remove extra spaces
 
-    // Normalize Ya at end of word (convert ى to ي)
-    text = text.replaceAll('ي', 'ى');
-    text = text.replaceAll('ٓ', '');
-    //tatweel
-    text = text.replaceAll('ـ', '');
-    //remove extra spaces
-    text = text.trim();
+    // Cache the result for future use
+    _normalizationCache[text] = normalized;
 
-    return text;
+    return normalized;
   }
 
   List<Map<String, dynamic>> findDifferences(
@@ -154,20 +227,60 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     String processedCorrect = normaliseArabicText(correct);
     String processedTranscribed = normaliseArabicText(transcribed);
 
+    // If the processed texts are identical after normalization, return no differences
+    if (processedCorrect == processedTranscribed) {
+      return [];
+    }
+
     int lenCorrect = processedCorrect.length;
     int lenTranscribed = processedTranscribed.length;
     int lengthDifference = (lenCorrect - lenTranscribed).abs();
     List<Map<String, dynamic>> differences = [];
 
-    // If difference in length is greater than 1, mark as incorrect
-    if (lengthDifference > 1) {
+    // Special case: If the only difference is a missing alif ('ا') at index 3 or 4, ignore it
+    // This handles the أُولَئِكَ vs أُو۟لَـٰٓئِكَ case
+    if (lengthDifference == 1) {
+      // Check if longer word has an alif at the position where the shorter word is missing it
+      if (lenCorrect > lenTranscribed) {
+        // Find where the first difference occurs
+        int diffIndex = -1;
+        for (int i = 0; i < lenTranscribed; i++) {
+          if (processedCorrect[i] != processedTranscribed[i]) {
+            diffIndex = i;
+            break;
+          }
+        }
+
+        // If difference is at index 3 or 4 (common positions for alif in demonstrative pronouns)
+        // and the difference is just an alif, ignore it
+        if ((diffIndex == 3 || diffIndex == 4) &&
+            processedCorrect[diffIndex] == 'ا') {
+          if (processedCorrect.substring(0, diffIndex) +
+                  processedCorrect.substring(diffIndex + 1) ==
+              processedTranscribed) {
+            return []; // Consider them matching if only difference is a missing alif at position 3 or 4
+          }
+        }
+      }
+    }
+
+    // Added more leniency for differences - increase from 1 to 2
+    // This allows for minor variations like added/omitted characters that are common in Arabic
+    if (lengthDifference > 2) {
       return [
         {"error": "Word is too different to be corrected"}
       ];
     }
 
-    // If difference is exactly 1, find the missing/extra character
-    if (lengthDifference == 1) {
+    // For special cases with added/missing alif or other common variations,
+    // we'll use a simple comparison check
+    // Simple equality check instead of semantic similarity
+    if (processedCorrect == processedTranscribed) {
+      return []; // Consider them matching if they're identical after normalization
+    }
+
+    // If difference is exactly 1 or 2, find the missing/extra character
+    if (lengthDifference <= 2) {
       if (processedCorrect[lenCorrect - 1] !=
               processedTranscribed[lenTranscribed - 1] &&
           lenCorrect > lenTranscribed &&
@@ -195,6 +308,17 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 processedCorrect.substring(i + 1) ==
                     processedTranscribed.substring(i)) {
               // Missing character in transcribed
+
+              // Special case: if the missing character is an alif, we'll ignore it
+              if (processedCorrect[i] == 'ا') {
+                // Additional check: if this is the only difference, ignore it
+                if (processedCorrect.substring(0, i) +
+                        processedCorrect.substring(i + 1) ==
+                    processedTranscribed) {
+                  return []; // No differences to report
+                }
+              }
+
               differences.add({
                 "index": i,
                 "incorrect": "",
@@ -288,109 +412,93 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     return differences.reversed.toList(); // Reverse to maintain correct order
   }
 
-  /// Construct the final transcribed word, keeping Harakat intact
-  String applyCorrections(String correct,
+  /// Construct the final transcribed word, keeping Harakat intact and adding error information
+  Map<String, dynamic> applyCorrections(String correct,
       List<Map<String, dynamic>> differences, String transcribed) {
-    // If there are no differences, return the original transcribed text
+    // If there are no differences, return the original transcribed text with no errors
     if (differences.isEmpty) {
-      return correct;
+      return {
+        'text': correct,
+        'isError': false,
+      };
     }
-
-    List<String> finalTranscribedChars = correct.split('');
 
     // Handle error case
     if (differences.length == 1 && differences[0]["error"] != null) {
-      return transcribed;
+      return {
+        'text': transcribed,
+        'isError': true,
+      };
     }
 
     // Handle single difference
     if (differences.length == 1) {
       int index = differences[0]["index"] ?? 0;
-      if (index >= finalTranscribedChars.length) {
-        return transcribed;
-      }
-
       String? incorrect = differences[0]["incorrect"] as String?;
       String? correctChar = differences[0]["correct"] as String?;
 
+      // If it's a substitution (both incorrect and correct are non-empty)
       if (incorrect != null &&
           correctChar != null &&
           incorrect.isNotEmpty &&
           correctChar.isNotEmpty) {
-        for (int i = 0; i < finalTranscribedChars.length; i++) {
-          if (index == 0) {
-            finalTranscribedChars[i] = incorrect;
-            break;
+        // Create a copy of the original text
+        List<String> correctChars = correct.split('');
+        List<String> result = [];
+
+        // Map the normalized index to the actual index in the text with diacritics
+        int actualIndex = 0;
+        int normalizedIndex = 0;
+        const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
+        final harakatRegex =
+            RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
+
+        for (int i = 0; i < correctChars.length; i++) {
+          String char = correctChars[i];
+
+          // If not a special character or diacritic, increment normalized index
+          if (!specialChars.contains(char) && !harakatRegex.hasMatch(char)) {
+            if (normalizedIndex == index) {
+              // Found the position to replace
+              result.add(incorrect);
+              actualIndex = i + 1;
+              break;
+            }
+            normalizedIndex++;
           }
-          //if the character is one of the special characters or harakat skip else -1 from the index
-          const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
-          final harakatRegex =
-              RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
-          if (!specialChars.contains(finalTranscribedChars[i]) &&
-              !harakatRegex.hasMatch(finalTranscribedChars[i])) {
-            index = index - 1;
-          }
+          result.add(char);
         }
+
+        // Add the rest of the characters after the replaced one
+        if (actualIndex < correctChars.length) {
+          result.addAll(correctChars.sublist(actualIndex));
+        }
+
+        return {
+          'text': result.join(),
+          'isError': true,
+        };
       }
 
-      return finalTranscribedChars.join();
+      // For other cases (insertions or deletions), return the transcribed text
+      return {
+        'text': transcribed,
+        'isError': true,
+      };
     }
-//Todo: Handle missing word since each word will be in the wrong place
+
     // If there are multiple differences, return the transcribed text
     if (differences.length > 1) {
-      return transcribed;
+      return {
+        'text': transcribed,
+        'isError': true,
+      };
     }
 
-    return correct;
-  }
-
-  /// Main function to compare two verses word by word
-  List<Map<String, dynamic>> compareVerses(String correct, String transcribed) {
-    if (correct.isEmpty || transcribed.isEmpty) {
-      return [];
-    }
-
-    List<String> correctWords = splitVerseManuallyWithSpecialChars(correct);
-    List<String> transcribedWords =
-        splitVerseManuallyWithSpecialChars(transcribed);
-
-    if (correctWords.isEmpty) {
-      return [];
-    }
-
-    int length = correctWords.length;
-    List<Map<String, dynamic>> comparison = [];
-
-    for (int i = 0; i < length; i++) {
-      String actualWord = (i < correctWords.length) ? correctWords[i] : "";
-      String processedWord = normaliseArabicText(actualWord);
-      String processedTranscribedWord = (i < transcribedWords.length)
-          ? normaliseArabicText(transcribedWords[i])
-          : "";
-
-      List<Map<String, dynamic>> differences = [];
-      if (i < transcribedWords.length) {
-        differences = findDifferences(processedWord, processedTranscribedWord);
-      } else {
-        differences = [
-          {"error": "Missing word in transcription"}
-        ];
-      }
-
-      // Construct the final transcribed word based on differences
-      String finalTranscribedWord = applyCorrections(actualWord, differences,
-          i < transcribedWords.length ? transcribedWords[i] : "");
-
-      comparison.add({
-        "actual_word": actualWord,
-        "processed_word": processedWord,
-        "processed_transcribed_word": processedTranscribedWord,
-        "final_transcribed_word": finalTranscribedWord,
-        "differences": differences
-      });
-    }
-
-    return comparison;
+    return {
+      'text': correct,
+      'isError': false,
+    };
   }
 
   List<String> splitVerseManuallyWithSpecialChars(String verse) {
@@ -409,6 +517,351 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
     return processedWords;
   }
+
+  // Helper function to check if a word should be split (starts with يا variants)
+  bool shouldSplitYaMadd(String word) {
+    // Normalize by removing diacritics
+    final harakatRegex =
+        RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
+    String normalized = word.replaceAll(harakatRegex, '');
+
+    if (normalized.length < 2) return false;
+
+    // Check for ya-alif patterns
+    if ((normalized[0] == 'ي' || normalized[0] == 'ى') &&
+        (normalized[1] == 'ا' ||
+            normalized[1] == 'ٰ' ||
+            normalized[1] == 'ـ')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Find the split point for a ya-madd word
+  int findYaMaddSplitPoint(String word) {
+    final harakatRegex =
+        RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
+    int splitPoint = 0;
+    int realCharCount = 0;
+
+    // Find after the second non-diacritic character
+    for (int i = 0; i < word.length; i++) {
+      if (!harakatRegex.hasMatch(word[i])) {
+        realCharCount++;
+        if (realCharCount == 2) {
+          // Found the second core character (typically alif)
+          // The split point should be right after it and any diacritics
+          for (int j = i + 1; j < word.length; j++) {
+            if (!harakatRegex.hasMatch(word[j])) {
+              // Found the first non-diacritic after alif
+              return j;
+            }
+          }
+          return i + 1; // Default to right after alif if no clear point
+        }
+      }
+    }
+
+    return splitPoint;
+  }
+
+  // Process words starting with يـٰ or similar to يا and split into two words
+  List<String> preprocessYaMadd(List<String> words) {
+    List<String> result = [];
+
+    for (String word in words) {
+      if (shouldSplitYaMadd(word) && word.length > 2) {
+        int splitPoint = findYaMaddSplitPoint(word);
+
+        // Add "يا" as a separate word
+        result.add("يا");
+
+        // Add the rest of the word if there's content after the split point
+        if (splitPoint < word.length) {
+          result.add(word.substring(splitPoint));
+        }
+      } else {
+        // No need to split this word
+        result.add(word);
+      }
+    }
+
+    return result;
+  }
+
+  /// Main function to compare two verses word by word
+  List<Map<String, dynamic>> compareVerses(String correct, String transcribed) {
+    if (correct.isEmpty || transcribed.isEmpty) {
+      return [];
+    }
+
+    // Split the verse into words
+    List<String> originalCorrectWords =
+        splitVerseManuallyWithSpecialChars(correct);
+
+    // Create a record of which words should be split and their original form
+    List<bool> wordShouldBeSplit = originalCorrectWords
+        .map((word) => shouldSplitYaMadd(word) && word.length > 2)
+        .toList();
+
+    // Split words starting with يـٰ for comparison purposes
+    List<String> correctWords = preprocessYaMadd(originalCorrectWords.toList());
+
+    // Process transcribed words similarly
+    List<String> originalTranscribedWords =
+        splitVerseManuallyWithSpecialChars(transcribed);
+    List<String> transcribedWords = preprocessYaMadd(originalTranscribedWords);
+
+    if (correctWords.isEmpty) return [];
+
+    // Perform word alignment to handle extra/missing words
+    List<Map<String, dynamic>> alignmentResult =
+        alignWords(correctWords, transcribedWords);
+
+    // Build a mapping from split index to original index
+    Map<int, int> splitToOriginalIndex = {};
+    int splitIdx = 0;
+    for (int i = 0; i < wordShouldBeSplit.length; i++) {
+      if (wordShouldBeSplit[i]) {
+        // This word was split into two
+        splitToOriginalIndex[splitIdx] = i;
+        splitToOriginalIndex[splitIdx + 1] = i;
+        splitIdx += 2;
+      } else {
+        // This word wasn't split
+        splitToOriginalIndex[splitIdx] = i;
+        splitIdx += 1;
+      }
+    }
+
+    // Create split comparison based on the alignment
+    List<Map<String, dynamic>> splitComparison = [];
+
+    for (var alignedPair in alignmentResult) {
+      int correctIndex = alignedPair['correctIndex'];
+      int transcribedIndex = alignedPair['transcribedIndex'];
+      bool isInsertion = alignedPair['operation'] == 'insertion';
+      bool isDeletion = alignedPair['operation'] == 'deletion';
+      bool isSubstitution = alignedPair['operation'] == 'substitution';
+      bool isMatch = alignedPair['operation'] == 'match';
+
+      String actualWord = "";
+      String processedWord = "";
+      String processedTranscribedWord = "";
+      List<Map<String, dynamic>> differences = [];
+
+      if (correctIndex >= 0 && correctIndex < correctWords.length) {
+        actualWord = correctWords[correctIndex];
+        processedWord = normaliseArabicText(actualWord);
+      }
+
+      if (transcribedIndex >= 0 && transcribedIndex < transcribedWords.length) {
+        processedTranscribedWord =
+            normaliseArabicText(transcribedWords[transcribedIndex]);
+      }
+
+      // Find character-level differences
+      if (isMatch || isSubstitution) {
+        // For matches and substitutions, compare the words normally
+        differences = findDifferences(processedWord, processedTranscribedWord);
+      } else if (isInsertion) {
+        // Extra word in transcription
+        differences = [
+          {"error": "Extra word in transcription"}
+        ];
+      } else if (isDeletion) {
+        // Missing word in transcription
+        differences = [
+          {"error": "Missing word in transcription"}
+        ];
+      }
+
+      Map<String, dynamic> correctionResult;
+      if (isMatch || isSubstitution) {
+        correctionResult = applyCorrections(
+            actualWord,
+            differences,
+            transcribedIndex >= 0 && transcribedIndex < transcribedWords.length
+                ? transcribedWords[transcribedIndex]
+                : "");
+      } else {
+        // For insertion/deletion, mark as error
+        correctionResult = {
+          'text': isDeletion
+              ? actualWord
+              : (transcribedIndex < transcribedWords.length
+                  ? transcribedWords[transcribedIndex]
+                  : ""),
+          'isError': true,
+        };
+      }
+
+      int originalIndex = -1;
+      if (correctIndex >= 0 &&
+          correctIndex < correctWords.length &&
+          splitToOriginalIndex.containsKey(correctIndex)) {
+        originalIndex = splitToOriginalIndex[correctIndex]!;
+      }
+
+      splitComparison.add({
+        "actual_word": actualWord,
+        "original_index": originalIndex,
+        "processed_word": processedWord,
+        "processed_transcribed_word": processedTranscribedWord,
+        "final_transcribed_word": correctionResult['text'],
+        "isError": correctionResult['isError'],
+        "differences": differences,
+        "operation": alignedPair['operation'],
+      });
+    }
+
+    // Recombine split words into their original form
+    List<Map<String, dynamic>> finalComparison = [];
+    int i = 0;
+
+    while (i < splitComparison.length) {
+      int originalIndex = splitComparison[i]["original_index"];
+
+      // Skip entries with invalid original index (extras in transcription)
+      if (originalIndex == -1) {
+        finalComparison.add(splitComparison[i]);
+        i += 1;
+        continue;
+      }
+
+      // Check if this word was split (by checking if the next word has the same original index)
+      bool wasSplit = i < splitComparison.length - 1 &&
+          splitComparison[i + 1]["original_index"] == originalIndex &&
+          originalIndex != -1;
+
+      if (wasSplit) {
+        // Get the original word
+        String originalWord = originalCorrectWords[originalIndex];
+
+        // Determine if there was an error in either part
+        bool hasError =
+            splitComparison[i]["isError"] || splitComparison[i + 1]["isError"];
+
+        finalComparison.add({
+          "actual_word": originalWord,
+          "processed_word": normaliseArabicText(originalWord),
+          "processed_transcribed_word": splitComparison[i]
+                  ["processed_transcribed_word"] +
+              splitComparison[i + 1]["processed_transcribed_word"],
+          "final_transcribed_word":
+              originalWord, // Use original word with diacritics
+          "isError": hasError,
+          "differences":
+              [] // No need for detailed differences in the combined word
+        });
+
+        i += 2; // Skip both parts of the split word
+      } else {
+        // This word wasn't split, just include it as is
+        finalComparison.add(splitComparison[i]);
+        i += 1;
+      }
+    }
+
+    return finalComparison;
+  }
+
+  // This function aligns words between correct and transcribed verses using dynamic programming
+  List<Map<String, dynamic>> alignWords(
+      List<String> correctWords, List<String> transcribedWords) {
+    int correctLen = correctWords.length;
+    int transcribedLen = transcribedWords.length;
+
+    // Create a DP table to find the minimum edit distance
+    List<List<int>> dp = List.generate(
+        correctLen + 1, (i) => List.generate(transcribedLen + 1, (j) => 0));
+
+    // Initialize the DP table
+    for (int i = 0; i <= correctLen; i++) {
+      dp[i][0] = i;
+    }
+
+    for (int j = 0; j <= transcribedLen; j++) {
+      dp[0][j] = j;
+    }
+
+    // Fill the DP table
+    for (int i = 1; i <= correctLen; i++) {
+      for (int j = 1; j <= transcribedLen; j++) {
+        String correctWord = normaliseArabicText(correctWords[i - 1]);
+        String transcribedWord = normaliseArabicText(transcribedWords[j - 1]);
+
+        if (correctWord == transcribedWord) {
+          dp[i][j] = dp[i - 1][j - 1]; // Match
+        } else {
+          // Calculate costs for insertion, deletion, and substitution
+          int insertCost = dp[i][j - 1] + 1;
+          int deleteCost = dp[i - 1][j] + 1;
+          int substituteCost = dp[i - 1][j - 1] + 1;
+
+          // Choose the minimum cost operation
+          dp[i][j] = [insertCost, deleteCost, substituteCost].reduce(min);
+        }
+      }
+    }
+
+    // Backtrack to find the alignment
+    List<Map<String, dynamic>> alignment = [];
+    int i = correctLen;
+    int j = transcribedLen;
+
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0) {
+        String correctWord = normaliseArabicText(correctWords[i - 1]);
+        String transcribedWord = normaliseArabicText(transcribedWords[j - 1]);
+
+        if (correctWord == transcribedWord) {
+          // Match
+          alignment.add({
+            'correctIndex': i - 1,
+            'transcribedIndex': j - 1,
+            'operation': 'match'
+          });
+          i--;
+          j--;
+          continue;
+        }
+      }
+
+      if (j > 0 && (i == 0 || dp[i][j] == dp[i][j - 1] + 1)) {
+        // Insertion (extra word in transcribed)
+        alignment.add({
+          'correctIndex': -1,
+          'transcribedIndex': j - 1,
+          'operation': 'insertion'
+        });
+        j--;
+      } else if (i > 0 && (j == 0 || dp[i][j] == dp[i - 1][j] + 1)) {
+        // Deletion (missing word in transcribed)
+        alignment.add({
+          'correctIndex': i - 1,
+          'transcribedIndex': -1,
+          'operation': 'deletion'
+        });
+        i--;
+      } else if (i > 0 && j > 0) {
+        // Substitution
+        alignment.add({
+          'correctIndex': i - 1,
+          'transcribedIndex': j - 1,
+          'operation': 'substitution'
+        });
+        i--;
+        j--;
+      }
+    }
+
+    // Reverse to get the alignment in correct order
+    return alignment.reversed.toList();
+  }
+
+  // No longer need postprocessYaMadd function as the combining happens in compareVerses
 
   //make a join verse manually with special chars
   String joinVerseManuallyWithSpecialChars(List<String> words) {
@@ -445,6 +898,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     try {
       if (isRecording) {
         // Stop recording
+        _recordingDurationTimer?.cancel(); // Cancel the duration timer
         String? filePath = await recorder.stop();
         setState(() {
           isRecording = false;
@@ -452,32 +906,97 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         });
 
         if (filePath != null) {
-          // Convert to text only after successful stop
+          setState(() {
+            recordingPath = filePath;
+            text =
+                "Processing your recording..."; // Show a processing indicator
+            hasSubmittedAnswer = false;
+            feedbackMessage = '';
+          });
+
+          // Convert to text with proper error handling
           String transcription = await convertSpeechToText(filePath);
 
-          List<Map<String, dynamic>> comparison =
+          if (transcription.startsWith('Error:')) {
+            setState(() {
+              text = transcription;
+              comparison = [];
+              isRecitationCorrect = false;
+              feedbackMessage = '';
+              incorrectWordCount = 0;
+            });
+            return;
+          }
+
+          List<Map<String, dynamic>> comparisonResult =
               compareVerses(question['correctAnswer'], transcription);
-          List<String> processedTranscribedWords = comparison
+
+          List<String> processedTranscribedWords = comparisonResult
               .map((e) => e['final_transcribed_word'] as String)
               .toList();
 
           String processedTranscribedWord =
               joinVerseManuallyWithSpecialChars(processedTranscribedWords);
 
+          // Count number of incorrect words
+          int totalIncorrectWords =
+              comparisonResult.where((word) => word['isError'] == true).length;
+
+          // Determine if recitation is correct based on the new criteria
+          bool isCorrect = false;
+          String message = '';
+
+          if (totalIncorrectWords == 0) {
+            isCorrect = true;
+            message = 'Excellent! Your recitation is perfect.';
+          } else if (totalIncorrectWords <= 2) {
+            // Check if differences are minor (only a few letter differences)
+            int totalDifferences = 0;
+            for (var word in comparisonResult) {
+              if (word['isError'] == true) {
+                if (word['differences'] is List) {
+                  totalDifferences += (word['differences'] as List).length;
+                }
+              }
+            }
+
+            if (totalDifferences <= 3) {
+              isCorrect = true;
+              message =
+                  'Very good! Your recitation has minor differences but is essentially correct.';
+            } else {
+              isCorrect = false;
+              message =
+                  'Your recitation has some errors. Please review the highlighted words.';
+            }
+          } else {
+            isCorrect = false;
+            message =
+                'Your recitation needs improvement. Please review the highlighted words.';
+          }
+
           print(transcription);
           print(question['correctAnswer']);
-          print(comparison);
+          print(comparisonResult);
 
           setState(() {
-            recordingPath = filePath;
             text = processedTranscribedWord;
+            comparison = comparisonResult;
+            isRecitationCorrect = isCorrect;
+            feedbackMessage = message;
+            incorrectWordCount = totalIncorrectWords;
           });
-
-          // Don't delete the file here anymore - we'll delete it after playback
         }
       } else {
         // Start recording
         if (await recorder.hasPermission()) {
+          // Cancel any existing timers
+          _amplitudeTimer?.cancel();
+          _recordingDurationTimer?.cancel();
+
+          // Clean up any existing recording file
+          await cleanupRecordingFile();
+
           // Ensure we have a valid directory path
           final dir = await getApplicationDocumentsDirectory();
           if (dir.path.isEmpty) {
@@ -501,10 +1020,19 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           setState(() {
             isRecording = true;
             recordingPath = path;
+            text = ''; // Clear any previous text
+            comparison = []; // Clear any previous comparison
           });
 
           // Start updating amplitudes
           _updateAmplitudes();
+
+          // Set a maximum recording duration (e.g., 30 seconds)
+          _recordingDurationTimer = Timer(const Duration(seconds: 60), () {
+            if (isRecording) {
+              handleRecording(question); // Stop recording after max duration
+            }
+          });
         } else {
           throw Exception('Recording permission not granted');
         }
@@ -512,10 +1040,13 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     } catch (e, stackTrace) {
       print('Recording error: $e');
       print('Stack trace: $stackTrace');
+      // Make sure to cancel any timers if an error occurs
+      _recordingDurationTimer?.cancel();
+      _amplitudeTimer?.cancel();
+
       setState(() {
         isRecording = false;
-        _amplitudeTimer?.cancel();
-        recordingPath = null;
+        text = 'Error recording audio. Please try again.';
       });
 
       if (context.mounted) {
@@ -523,6 +1054,12 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           SnackBar(
             content: Text('Error recording audio: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => handleRecording(question),
+            ),
           ),
         );
       }
@@ -555,7 +1092,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 50),
                   width: 4,
-                  height: max(2, amplitudes[index] * 40),
+                  height: max(2, amplitudes[index] * 35),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade300,
                     borderRadius: BorderRadius.circular(10),
@@ -588,8 +1125,38 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     );
   }
 
+  // Add this helper method to extract the first n words
+  String getFirstNWords(String text, int n) {
+    if (text.isEmpty) return '';
+
+    final words = text.split(' ');
+    if (words.length <= n) return text;
+
+    return '... ${words.take(n).join(' ')}';
+  }
+
+  // Add this function to reset the recording state
+  void resetRecording() {
+    setState(() {
+      text = '';
+      comparison = [];
+      hasSubmittedAnswer = false;
+      feedbackMessage = '';
+      isRecitationCorrect = false;
+      incorrectWordCount = 0;
+    });
+    cleanupRecordingFile();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Determine if we're in a loading state
+    bool isProcessing = text == "Processing your recording...";
+    bool hasError = text.startsWith('Error:');
+
+    // Get the first 5 words of the verse
+    String truncatedVerse = getFirstNWords(widget.question['verse'], 5);
+
     return Column(
       children: [
         Padding(
@@ -654,7 +1221,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                     border: Border.all(color: Colors.blue.shade100),
                   ),
                   child: Text(
-                    widget.question['verse'],
+                    truncatedVerse,
                     style: GoogleFonts.scheherazadeNew(
                       fontSize: 24,
                       height: 1.6,
@@ -666,30 +1233,286 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildRecordButton(),
-                    if (text.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 24),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.blue.shade100),
-                          ),
-                          child: Text(
-                            text,
-                            style: GoogleFonts.scheherazadeNew(
-                              letterSpacing: 0,
-                              fontSize: 24,
-                              height: 1.6,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                    if (isProcessing) ...[
+                      const SizedBox(height: 20),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Processing your recording...',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
                         ),
                       ),
+                    ] else if (hasError) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 32,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              text,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.red.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed: () => handleRecording(widget.question),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade700,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Try Again'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else if (text.isNotEmpty && !isProcessing) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: Column(
+                          children: [
+                            if (feedbackMessage.isNotEmpty &&
+                                hasSubmittedAnswer) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isRecitationCorrect
+                                      ? Colors.green.shade50
+                                      : Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isRecitationCorrect
+                                        ? Colors.green.shade300
+                                        : Colors.red.shade300,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isRecitationCorrect
+                                          ? Icons.check_circle
+                                          : Icons.error,
+                                      color: isRecitationCorrect
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        feedbackMessage,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: isRecitationCorrect
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 24),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.blue.shade100),
+                              ),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                textDirection: TextDirection.rtl,
+                                children: comparison.map((word) {
+                                  bool isError = word['isError'] == true;
+                                  return isError
+                                      ? GestureDetector(
+                                          onTap: () {
+                                            // Show popup with correct word
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  backgroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                  ),
+                                                  title: Center(
+                                                    child: Text(
+                                                      'Correct Word',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors
+                                                            .blue.shade700,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  content: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        word['actual_word'],
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: GoogleFonts
+                                                            .scheherazadeNew(
+                                                          fontSize: 32,
+                                                          height: 1.6,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 16),
+                                                      if (word['differences']
+                                                              is List &&
+                                                          word['differences']
+                                                              .isNotEmpty &&
+                                                          !(word['differences']
+                                                                      .length ==
+                                                                  1 &&
+                                                              word['differences']
+                                                                          [0][
+                                                                      'error'] !=
+                                                                  null)) ...[
+                                                        Text(
+                                                          'Difference details:',
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 12,
+                                                            color: Colors
+                                                                .grey.shade700,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        ...word['differences']
+                                                            .map<Widget>(
+                                                                (diff) {
+                                                          if (diff['error'] !=
+                                                              null)
+                                                            return Container();
+
+                                                          String message = '';
+                                                          if (diff['incorrect'] ==
+                                                                  '' &&
+                                                              diff['correct'] !=
+                                                                  '') {
+                                                            message =
+                                                                'Missing: ${diff['correct']}';
+                                                          } else if (diff[
+                                                                      'incorrect'] !=
+                                                                  '' &&
+                                                              diff['correct'] ==
+                                                                  '') {
+                                                            message =
+                                                                'Extra: ${diff['incorrect']}';
+                                                          } else {
+                                                            message =
+                                                                'Replace ${diff['incorrect']} with ${diff['correct']}';
+                                                          }
+
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    bottom: 4),
+                                                            child: Text(
+                                                              message,
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontSize: 12,
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade700,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text(
+                                                        'OK',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          color: Colors
+                                                              .blue.shade700,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: Text(
+                                            word['final_transcribed_word'],
+                                            style: GoogleFonts.scheherazadeNew(
+                                              letterSpacing: 0,
+                                              fontSize: 24,
+                                              height: 1.6,
+                                              color: Colors.red,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                              decorationColor:
+                                                  Colors.red.withOpacity(0.7),
+                                              decorationThickness: 1,
+                                            ),
+                                          ),
+                                        )
+                                      : Text(
+                                          word['final_transcribed_word'],
+                                          style: GoogleFonts.scheherazadeNew(
+                                            letterSpacing: 0,
+                                            fontSize: 24,
+                                            height: 1.6,
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (text.isEmpty) ...[
+                      _buildRecordButton(),
                     ],
                   ],
                 ),
@@ -697,35 +1520,76 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
             ),
           ),
         ),
-        if (text.isNotEmpty)
+        if (text.isNotEmpty && !isProcessing && !hasError)
           Padding(
             padding: const EdgeInsets.all(20),
-            child: ElevatedButton(
-              onPressed: () {
-                bool isCorrect = text == widget.question['correctAnswer'];
-                widget.onNext(isCorrect);
-                setState(() {
-                  text = '';
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: resetRecording,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Retry',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (!hasSubmittedAnswer) {
+                        // First press: Show feedback
+                        setState(() {
+                          hasSubmittedAnswer = true;
+                        });
+                      } else {
+                        // Second press: Go to next question
+                        widget.onNext(isRecitationCorrect);
+                        setState(() {
+                          text = '';
+                          hasSubmittedAnswer = false;
+                          feedbackMessage = '';
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: hasSubmittedAnswer
+                          ? Colors.green.shade700
+                          : Colors.blue.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      hasSubmittedAnswer ? 'Next' : 'Check Answer',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                'Next',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              ],
             ),
           ),
       ],
