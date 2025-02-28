@@ -106,9 +106,9 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
       children: [
         // Progress and Close Button
         Padding(
-          padding:
-              const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
+          padding: const EdgeInsets.only(left: 4, right: 20),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: widget.onClose,
@@ -130,7 +130,40 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
               const SizedBox(width: 10),
               Text(
                 '${widget.currentQuestionIndex + 1}/${widget.questions.length}',
-                style: GoogleFonts.poppins(fontSize: 14),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Question Text
+        Padding(
+          padding:
+              const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade700,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  question['question'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -142,14 +175,6 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                question['question'],
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
