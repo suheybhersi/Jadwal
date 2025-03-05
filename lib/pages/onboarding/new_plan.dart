@@ -598,7 +598,7 @@ class PlanDetailsPage extends StatelessWidget {
                                   onTapDown: (TapDownDetails details) {
                                     Timer? timer;
                                     timer = Timer.periodic(
-                                        const Duration(milliseconds: 50),
+                                        const Duration(milliseconds: 100),
                                         (timer) {
                                       final currentValue = int.tryParse(
                                               controller
@@ -652,7 +652,7 @@ class PlanDetailsPage extends StatelessWidget {
                                   onTapDown: (TapDownDetails details) {
                                     Timer? timer;
                                     timer = Timer.periodic(
-                                        const Duration(milliseconds: 50),
+                                        const Duration(milliseconds: 100),
                                         (timer) {
                                       final currentValue = int.tryParse(
                                               controller
