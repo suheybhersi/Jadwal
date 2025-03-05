@@ -39,6 +39,7 @@ class ProfilePage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // User name
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -52,6 +53,7 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ],
                         ),
+
                         IconButton(
                           icon: const Icon(Iconsax.setting_2),
                           onPressed: () {
@@ -67,23 +69,32 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        displayName.isNotEmpty
+                            ? displayName[0].toUpperCase()
+                            : 'U',
+                        style: GoogleFonts.poppins(
+                          fontSize: 40,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Stats Section with improved styling
-                        Text(
-                          'Statistics',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-
-                        const SizedBox(height: 14),
-
+                        // Stats Section
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(

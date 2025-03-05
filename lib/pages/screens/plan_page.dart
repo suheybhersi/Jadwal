@@ -48,38 +48,38 @@ class _PlanPageState extends State<PlanPage> {
                 snapshot.data!.docs[0].data() as Map<String, dynamic>;
             String id = snapshot.data!.docs[0].id;
 
-            return IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditPlanPage(
-                      plan: plan,
-                      id: id,
+            return Padding(
+              padding: const EdgeInsets.only(left: 10, top: 10),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditPlanPage(
+                        plan: plan,
+                        id: id,
+                      ),
                     ),
-                  ),
-                );
-              },
-              icon: const Icon(Iconsax.edit),
-              style: IconButton.styleFrom(
-                padding: EdgeInsets.all(12),
+                  );
+                },
+                icon: const Icon(Iconsax.edit),
               ),
             );
           },
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
-            },
-            icon: const Icon(Iconsax.setting_2),
-            style: IconButton.styleFrom(
-              padding: EdgeInsets.all(12),
+          Padding(
+            padding: const EdgeInsets.only(right: 10, top: 10),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Iconsax.setting_2),
             ),
           ),
         ],
@@ -106,29 +106,8 @@ class _PlanPageState extends State<PlanPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text(
-                        'Your Progress',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 24,
-                        ),
-                      ),
-                    ),
                     PlanProgress(
                       plan: plan,
-                    ),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text(
-                        'History',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 24,
-                        ),
-                      ),
                     ),
                     plan['hifdhs']
                             .where((hifdh) => hifdh['completed'] == true)
@@ -311,6 +290,155 @@ class PreviousMemorisation extends StatelessWidget {
     required this.plan,
   });
 
+  void _showMemorisationDetails(
+      BuildContext context, Map<String, dynamic> hifdh) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Memorisation Details',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(
+                    Iconsax.book_1,
+                    color: Color.fromARGB(255, 73, 121, 251),
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}-${hifdh['surah'].split(' ')[1] == hifdh['surah'].split(' ')[0] ? '' : hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.fromARGB(255, 73, 121, 251),
+                      Color.fromARGB(255, 114, 152, 255),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      hifdh['startVerse'] ?? 'Verse text not available',
+                      style: GoogleFonts.scheherazadeNew(
+                        letterSpacing: 0,
+                        fontSize: 20,
+                        height: 1.5,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.justify,
+                      textDirection: TextDirection.rtl,
+                    ),
+                    if (hifdh['endVerse'] != null &&
+                        hifdh['endVerse'] != hifdh['startVerse']) ...[
+                      SizedBox(height: 12),
+                      Divider(
+                          color: Colors.white.withOpacity(0.3), thickness: 1),
+                      SizedBox(height: 12),
+                      Text(
+                        hifdh['endVerse'],
+                        style: GoogleFonts.scheherazadeNew(
+                          letterSpacing: 0,
+                          fontSize: 20,
+                          height: 1.5,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.justify,
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ],
+                    SizedBox(height: 12),
+                    Text(
+                      '${hifdh['hifdh']}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(
+                    Iconsax.calendar,
+                    color: Color.fromARGB(255, 100, 163, 119),
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}/${hifdh['date'].split('-')[2]}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     List<dynamic> hifdhs = (plan['hifdhs'] as List?)
@@ -349,50 +477,54 @@ class PreviousMemorisation extends StatelessWidget {
             itemCount: hifdhs.length > 2 ? 2 : hifdhs.length,
             itemBuilder: (context, index) {
               final hifdh = hifdhs[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade100,
-                      spreadRadius: 1,
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Color.fromARGB(255, 106, 106, 106),
-                            ),
-                          ),
-                        ],
+              return InkWell(
+                onTap: () => _showMemorisationDetails(context, hifdh),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade100,
+                        spreadRadius: 1,
+                        blurRadius: 10,
                       ),
-                    ),
-                    Icon(
-                      Iconsax.tick_circle,
-                      color: Color.fromARGB(255, 73, 121, 251),
-                      size: 20,
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Color.fromARGB(255, 106, 106, 106),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Iconsax.arrow_right_3,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -411,9 +543,206 @@ class PreviousReviews extends StatelessWidget {
     required this.plan,
   });
 
+  void _showReviewDetails(BuildContext context, Map<String, dynamic> review) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Review Details',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(
+                    Iconsax.book_1,
+                    color: Color.fromARGB(255, 100, 163, 119),
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]}-${review['surah'].split(' ')[1] == review['surah'].split(' ')[0] ? '' : review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.fromARGB(255, 100, 163, 119),
+                      Color.fromARGB(255, 129, 186, 145),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          Color.fromARGB(255, 100, 163, 119).withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      review['startVerse'] ?? 'Verse text not available',
+                      style: GoogleFonts.scheherazadeNew(
+                        letterSpacing: 0,
+                        fontSize: 20,
+                        height: 1.5,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.justify,
+                      textDirection: TextDirection.rtl,
+                    ),
+                    if (review['endVerse'] != null &&
+                        review['endVerse'] != review['startVerse']) ...[
+                      SizedBox(height: 12),
+                      Divider(
+                          color: Colors.white.withOpacity(0.3), thickness: 1),
+                      SizedBox(height: 12),
+                      Text(
+                        review['endVerse'],
+                        style: GoogleFonts.scheherazadeNew(
+                          letterSpacing: 0,
+                          fontSize: 20,
+                          height: 1.5,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.justify,
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ],
+                    SizedBox(height: 12),
+                    Text(
+                      '${review['review']}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(
+                    Iconsax.calendar,
+                    color: Color.fromARGB(255, 100, 163, 119),
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}/${review['date'].split('-')[2]}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Review Ratings:',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 8),
+              review['ratings'].isEmpty
+                  ? Text(
+                      'No ratings yet',
+                      style:
+                          GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
+                    )
+                  : Column(
+                      children: [
+                        for (var i = 0; i < review['ratings'].length; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  "Review ${i + 1}:",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                _buildRatingStars(review['ratings'][i]),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+              SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRatingStars(int rating) {
+    return Row(
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_border,
+          color: index < rating ? Colors.amber : Colors.grey,
+          size: 18,
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<dynamic> reviews = (plan['reviews'] as List?) ?? [];
+    List<dynamic> reviews = plan['reviews'] ?? [];
 
     reviews.sort((a, b) {
       List<String> dateAParts = a['date'].split('-');
@@ -472,63 +801,54 @@ class PreviousReviews extends StatelessWidget {
                   itemCount: reviews.length > 3 ? 3 : reviews.length,
                   itemBuilder: (context, index) {
                     final review = reviews[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade100,
-                            spreadRadius: 1,
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: Color.fromARGB(255, 106, 106, 106),
-                                  ),
-                                ),
-                              ],
+                    return InkWell(
+                      onTap: () => _showReviewDetails(context, review),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade100,
+                              spreadRadius: 1,
+                              blurRadius: 10,
                             ),
-                          ),
-                          Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 114, 171, 255),
-                              borderRadius: BorderRadius.circular(13),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${review['ratings'].length}',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Color.fromARGB(255, 106, 106, 106),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                            Icon(
+                              Iconsax.arrow_right_3,
+                              color: Colors.grey,
+                              size: 16,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
