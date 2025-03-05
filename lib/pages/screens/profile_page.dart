@@ -74,7 +74,7 @@ class ProfilePage extends StatelessWidget {
                       children: [
                         // Stats Section with improved styling
                         Text(
-                          'Your Progress',
+                          'Statistics',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,

@@ -23,11 +23,76 @@ class _PlanPageState extends State<PlanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        title: Text(
+          'Plan',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+          ),
+        ),
+        leading: StreamBuilder<QuerySnapshot>(
+          stream: firestoreService.getPlansStream(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return IconButton(
+                onPressed: () {},
+                icon: const Icon(Iconsax.edit, color: Colors.grey),
+              );
+            }
+
+            Map<String, dynamic> plan =
+                snapshot.data!.docs[0].data() as Map<String, dynamic>;
+            String id = snapshot.data!.docs[0].id;
+
+            return IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditPlanPage(
+                      plan: plan,
+                      id: id,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Iconsax.edit),
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.all(12),
+              ),
+            );
+          },
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+            icon: const Icon(Iconsax.setting_2),
+            style: IconButton.styleFrom(
+              padding: EdgeInsets.all(12),
+            ),
+          ),
+        ],
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 73, 121, 251),
+              ),
+            );
           }
 
           if (snapshot.hasData) {
@@ -36,34 +101,34 @@ class _PlanPageState extends State<PlanPage> {
             if (plansList.isNotEmpty) {
               Map<String, dynamic> plan =
                   plansList[0].data() as Map<String, dynamic>;
-              String id = plansList[0].id;
 
               return SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PlanPageHeader(
-                      onEditPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditPlanPage(
-                              plan: plan,
-                              id: id,
-                            ),
-                          ),
-                        );
-                      },
-                      onSettingsPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsPage(),
-                          ),
-                        );
-                      },
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'Your Progress',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 24,
+                        ),
+                      ),
                     ),
                     PlanProgress(
                       plan: plan,
+                    ),
+                    SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Text(
+                        'History',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 24,
+                        ),
+                      ),
                     ),
                     plan['hifdhs']
                             .where((hifdh) => hifdh['completed'] == true)
@@ -78,67 +143,56 @@ class _PlanPageState extends State<PlanPage> {
                               ),
                             ],
                           )
-                        : Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: Text(
-                              'No history found.',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey,
+                        : Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 30),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Iconsax.clipboard_close,
+                                    size: 60,
+                                    color: Colors.grey.withOpacity(0.5),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No history found.',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+                    SizedBox(height: 30),
                   ],
                 ),
               );
             }
           }
           return Center(
-            child: Text('No plans found'),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Iconsax.document_text,
+                  size: 60,
+                  color: Colors.grey.withOpacity(0.5),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'No plans found',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
           );
         },
-      ),
-    );
-  }
-}
-
-class PlanPageHeader extends StatelessWidget {
-  final VoidCallback onEditPressed;
-  final VoidCallback onSettingsPressed;
-
-  const PlanPageHeader({
-    super.key,
-    required this.onEditPressed,
-    required this.onSettingsPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: 10,
-        right: 4,
-        bottom: 15,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: onEditPressed,
-            icon: const Icon(Iconsax.edit),
-          ),
-          Text(
-            'Plan',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-            ),
-          ),
-          IconButton(
-            onPressed: onSettingsPressed,
-            icon: const Icon(Iconsax.setting_2),
-          ),
-        ],
       ),
     );
   }
@@ -154,66 +208,96 @@ class PlanProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate percentage with safety check to avoid division by zero
+    double percentage = plan['totalLines'] > 0
+        ? (plan['completedLines'] / plan['totalLines'])
+        : 0.0;
+    // Ensure percentage doesn't exceed 1.0
+    percentage = percentage > 1.0 ? 1.0 : percentage;
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 35),
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          width: 2.0,
-          color: Color.fromARGB(255, 114, 152, 255),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.fromARGB(255, 73, 121, 251),
+            Color.fromARGB(255, 114, 152, 255),
+          ],
         ),
-        image: DecorationImage(
-          image: AssetImage(
-            'assets/progressbg.png',
-          ),
-          fit: BoxFit.contain,
-          // Adjust this to control how the image fits
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Memorisation',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Text(
-                'Keep up your progress',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 12,
-                  color: Color.fromARGB(255, 106, 106, 106),
-                ),
-              ),
-            ],
-          ),
-          CircularPercentIndicator(
-            radius: 35,
-            lineWidth: 8,
-            percent: ((plan['completedLines'] / plan['totalLines'])),
-            progressColor: Color.fromARGB(255, 73, 121, 251),
-            backgroundColor: Color.fromARGB(255, 219, 228, 254),
-            circularStrokeCap: CircularStrokeCap.round,
-            center: Text(
-              '${((((plan['completedLines'] / plan['totalLines']) > 1 ? 1 : (plan['completedLines'] / plan['totalLines'])) * 100)).toStringAsFixed(0)}%',
-              style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontWeight: FontWeight.w800),
-            ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.2),
+            blurRadius: 15,
+            offset: Offset(0, 5),
           ),
         ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Memorisation Progress',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Keep up your progress!',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              flex: 2,
+              child: CircularPercentIndicator(
+                radius: 45,
+                lineWidth: 10,
+                percent: percentage,
+                progressColor: Colors.white,
+                backgroundColor: Colors.white.withOpacity(0.3),
+                circularStrokeCap: CircularStrokeCap.round,
+                center: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${(percentage * 100).toStringAsFixed(0)}%',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                animation: true,
+                animationDuration: 1000,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -236,18 +320,29 @@ class PreviousMemorisation extends StatelessWidget {
     hifdhs = hifdhs.reversed.toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Memorisation',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+          Row(
+            children: [
+              Icon(
+                Iconsax.book_1,
+                color: Color.fromARGB(255, 73, 121, 251),
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Memorisation',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -255,54 +350,47 @@ class PreviousMemorisation extends StatelessWidget {
             itemBuilder: (context, index) {
               final hifdh = hifdhs[index];
               return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(15),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Color.fromARGB(255, 237, 242, 255),
-                  ),
-                  borderRadius: BorderRadius.circular(30),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade100,
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                    ),
+                  ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 240, 245, 255),
-                              borderRadius: BorderRadius.circular(30)),
-                          child: Image.asset(
-                            'assets/newicon.png',
-                            height: 24,
-                            width: 24,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Color.fromARGB(255, 106, 106, 106),
                             ),
-                            Text(
-                              'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 106, 106, 106),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Iconsax.tick_circle,
+                      color: Color.fromARGB(255, 73, 121, 251),
+                      size: 20,
                     ),
                   ],
                 ),
@@ -334,100 +422,117 @@ class PreviousReviews extends StatelessWidget {
           int.parse(dateAParts[1]), int.parse(dateAParts[0]));
       DateTime dateB = DateTime(int.parse(dateBParts[2]),
           int.parse(dateBParts[1]), int.parse(dateBParts[0]));
-      return dateA.compareTo(dateB);
+      return dateB.compareTo(dateA); // Reversed for newest first
     });
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Reviews',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+          Row(
+            children: [
+              Icon(
+                Iconsax.refresh,
+                color: Color.fromARGB(255, 100, 163, 119),
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Reviews',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: reviews.length > 3 ? 3 : reviews.length,
-            itemBuilder: (context, index) {
-              final review = reviews[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Color.fromARGB(255, 237, 242, 255),
+          const SizedBox(height: 12),
+          reviews.isEmpty
+              ? Container(
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 240, 255, 246),
-                              borderRadius: BorderRadius.circular(30)),
-                          child: Icon(
-                            Iconsax.refresh,
-                            color: const Color.fromARGB(255, 100, 163, 119),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 106, 106, 106),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  child: Center(
+                    child: Text(
+                      'No reviews scheduled yet',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
                     ),
-                    Padding(
-                        padding: const EdgeInsets.only(right: 0),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 114, 171, 255),
-                            borderRadius: BorderRadius.circular(20),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: reviews.length > 3 ? 3 : reviews.length,
+                  itemBuilder: (context, index) {
+                    final review = reviews[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade100,
+                            spreadRadius: 1,
+                            blurRadius: 10,
                           ),
-                          child: Center(
-                              child: Text(
-                            '${review['ratings'].length}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Color.fromARGB(255, 106, 106, 106),
+                                  ),
+                                ),
+                              ],
                             ),
-                          )),
-                        )),
-                  ],
+                          ),
+                          Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 114, 171, 255),
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${review['ratings'].length}',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ],
       ),
     );
