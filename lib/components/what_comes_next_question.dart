@@ -7,6 +7,7 @@ import 'dart:math' show max, min;
 // Flutter packages
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 
 // Audio-related packages
 import 'package:just_audio/just_audio.dart';
@@ -28,6 +29,7 @@ class WhatComesNextQuestion extends StatefulWidget {
   final int currentQuestionIndex;
   final int totalQuestions;
   final Function(bool wasCorrect) onNext;
+  final Map<int, Map<String, dynamic>> answeredQuestions;
   final VoidCallback onClose;
 
   const WhatComesNextQuestion({
@@ -36,6 +38,7 @@ class WhatComesNextQuestion extends StatefulWidget {
     required this.currentQuestionIndex,
     required this.totalQuestions,
     required this.onNext,
+    required this.answeredQuestions,
     required this.onClose,
   });
 
@@ -1129,10 +1132,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   String getFirstNWords(String text, int n) {
     if (text.isEmpty) return '';
 
-    final words = text.split(' ');
+    final words = splitVerseManuallyWithSpecialChars(text);
     if (words.length <= n) return text;
 
-    return '... ${words.take(n).join(' ')}';
+    return '... ${joinVerseManuallyWithSpecialChars(words.take(n).toList())}';
   }
 
   // Add this function to reset the recording state
@@ -1153,6 +1156,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     // Determine if we're in a loading state
     bool isProcessing = text == "Processing your recording...";
     bool hasError = text.startsWith('Error:');
+    final Color primaryAccent = const Color(0xFF4979FB);
+    final Color textColor = Colors.grey.shade800;
 
     // Get the first 5 words of the verse
     String truncatedVerse = getFirstNWords(widget.question['verse'], 5);
@@ -1160,31 +1165,61 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     return Column(
       children: [
         Padding(
-          padding:
-              const EdgeInsets.only(left: 4, right: 20, top: 0, bottom: 20),
+          padding: const EdgeInsets.fromLTRB(4, 16, 24, 16),
           child: Row(
             children: [
               IconButton(
                 onPressed: widget.onClose,
-                icon: const Icon(Icons.close),
+                icon: const Icon(Iconsax.close_circle),
                 color: Colors.grey.shade600,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
               Expanded(
-                child: LinearProgressIndicator(
-                  value:
-                      (widget.currentQuestionIndex + 1) / widget.totalQuestions,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                  minHeight: 6,
-                  borderRadius: BorderRadius.circular(3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Question ${widget.currentQuestionIndex + 1}/${widget.totalQuestions}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: textColor,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: primaryAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'What comes next?',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: primaryAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (widget.currentQuestionIndex + 1) /
+                            widget.totalQuestions,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(primaryAccent),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${widget.currentQuestionIndex + 1}/${widget.totalQuestions}',
-                style: GoogleFonts.poppins(fontSize: 14),
               ),
             ],
           ),
@@ -1223,6 +1258,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   child: Text(
                     truncatedVerse,
                     style: GoogleFonts.scheherazadeNew(
+                      letterSpacing: 0,
                       fontSize: 24,
                       height: 1.6,
                     ),
@@ -1383,6 +1419,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                                             TextAlign.center,
                                                         style: GoogleFonts
                                                             .scheherazadeNew(
+                                                          letterSpacing: 0,
                                                           fontSize: 32,
                                                           height: 1.6,
                                                           color: Colors.black,
@@ -1416,8 +1453,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                                             .map<Widget>(
                                                                 (diff) {
                                                           if (diff['error'] !=
-                                                              null)
+                                                              null) {
                                                             return Container();
+                                                          }
 
                                                           String message = '';
                                                           if (diff['incorrect'] ==
@@ -1522,33 +1560,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         ),
         if (text.isNotEmpty && !isProcessing && !hasError)
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
             child: Row(
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: resetRecording,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade700,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 24,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Retry',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -1560,6 +1574,11 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                       } else {
                         // Second press: Go to next question
                         widget.onNext(isRecitationCorrect);
+                        widget.answeredQuestions[widget.currentQuestionIndex] =
+                            {
+                          'user_answer': text,
+                          'is_correct': isRecitationCorrect
+                        };
                         setState(() {
                           text = '';
                           hasSubmittedAnswer = false;
@@ -1568,25 +1587,52 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                       backgroundColor: hasSubmittedAnswer
-                          ? Colors.green.shade700
-                          : Colors.blue.shade700,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 24,
-                      ),
+                          ? (isRecitationCorrect
+                              ? Colors.green.shade600
+                              : Colors.red.shade600)
+                          : const Color(0xFF4979FB),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: Text(
-                      hasSubmittedAnswer ? 'Next' : 'Check Answer',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: GoogleFonts.poppins(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: resetRecording,
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: const Color(0xFF4979FB).withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Iconsax.refresh,
+                        size: 22,
+                        color: const Color(0xFF4979FB),
+                      ),
+                    ],
                   ),
                 ),
               ],

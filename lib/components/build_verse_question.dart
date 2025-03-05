@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 
 class BuildVerseQuestion extends StatefulWidget {
   final int currentQuestionIndex;
   final List<Map<String, dynamic>> questions;
-  final Function(int) onNextQuestion;
-  final Map<int, List<String>> answeredQuestions;
+  final Function(bool wasCorrect) onNext;
+  final int totalQuestions;
+  final Map<int, Map<String, dynamic>> answeredQuestions;
   final VoidCallback onClose;
 
   const BuildVerseQuestion({
     super.key,
     required this.currentQuestionIndex,
     required this.questions,
-    required this.onNextQuestion,
+    required this.onNext,
+    required this.totalQuestions,
     required this.answeredQuestions,
     required this.onClose,
   });
@@ -40,8 +43,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
     // Initialize with previous answer or default state
     if (widget.answeredQuestions.containsKey(widget.currentQuestionIndex)) {
-      selectedWords =
-          List.from(widget.answeredQuestions[widget.currentQuestionIndex]!);
+      selectedWords = List.from(widget
+          .answeredQuestions[widget.currentQuestionIndex]!['user_answer']);
       usedWordIndices = _getUsedWordIndices(selectedWords);
     } else {
       selectedWords = [question['firstWord']];
@@ -73,11 +76,6 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     }
   }
 
-  void _saveCurrentState() {
-    widget.answeredQuestions[widget.currentQuestionIndex] =
-        List.from(selectedWords);
-  }
-
   bool _isWordCorrect(String word, int index) {
     return correctOrder[index] == word;
   }
@@ -101,39 +99,66 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
   Widget build(BuildContext context) {
     Map<String, dynamic> question =
         widget.questions[widget.currentQuestionIndex];
+    final Color primaryAccent = const Color(0xFF4979FB);
+    final Color textColor = Colors.grey.shade800;
 
     return Column(
       children: [
-        // Progress and Close Button
         Padding(
-          padding: const EdgeInsets.only(left: 4, right: 20),
+          padding: const EdgeInsets.fromLTRB(4, 16, 24, 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: widget.onClose,
-                icon: const Icon(Icons.close),
+                icon: const Icon(Iconsax.close_circle),
                 color: Colors.grey.shade600,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
               Expanded(
-                child: LinearProgressIndicator(
-                  value: (widget.currentQuestionIndex + 1) /
-                      widget.questions.length,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                  minHeight: 6,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${widget.currentQuestionIndex + 1}/${widget.questions.length}',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade600,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Question ${widget.currentQuestionIndex + 1}/${widget.totalQuestions}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: textColor,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: primaryAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Arrange the verse',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: primaryAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (widget.currentQuestionIndex + 1) /
+                            widget.totalQuestions,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(primaryAccent),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -512,84 +537,96 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
               // Check Answer/Next Button
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (!isChecking) {
-                      // Check if all words are used before allowing check
-                      if (selectedWords.length < correctOrder.length) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Please use all available words before checking',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color: Colors.white,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (!isChecking) {
+                        // Check if all words are used before allowing check
+                        if (selectedWords.length < correctOrder.length) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Please use all available words before checking',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              backgroundColor: Colors.blue.shade700,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              margin: const EdgeInsets.all(20),
+                              duration: const Duration(seconds: 3),
                             ),
-                            backgroundColor: Colors.blue.shade700,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            margin: const EdgeInsets.all(20),
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                        return;
-                      }
-                      // First click: Check answers
-                      setState(() {
-                        isChecking = true;
-                      });
-                    } else {
-                      // Second click: Move to next question
-                      bool isCorrect =
-                          selectedWords.join(' ') == correctOrder.join(' ');
-                      _saveCurrentState();
-                      if (isCorrect) {
+                          );
+                          return;
+                        }
+                        // First click: Check answers
                         setState(() {
-                          isChecking = false;
+                          isChecking = true;
                         });
                       } else {
-                        setState(() {
-                          isChecking = false;
-                          // Reset the words if incorrect
-                          selectedWords = [question['firstWord']];
-                          usedWordIndices = {
-                            question['firstWord']: [
-                              shuffledWords.indexOf(question['firstWord'])
-                            ]
-                          };
-                        });
+                        // Second click: Move to next question
+                        bool isCorrect =
+                            selectedWords.join(' ') == correctOrder.join(' ');
+                        widget.answeredQuestions[widget.currentQuestionIndex] =
+                            {
+                          'user_answer': selectedWords,
+                          'is_correct': isCorrect
+                        };
+                        if (isCorrect) {
+                          setState(() {
+                            isChecking = false;
+                          });
+                        } else {
+                          setState(() {
+                            isChecking = false;
+                            // Reset the words if incorrect
+                            selectedWords = [question['firstWord']];
+                            usedWordIndices = {
+                              question['firstWord']: [
+                                shuffledWords.indexOf(question['firstWord'])
+                              ]
+                            };
+                          });
+                        }
+                        widget.onNext(isCorrect);
                       }
-                      widget.onNextQuestion(widget.currentQuestionIndex + 1);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    minimumSize: const Size(0, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                    },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      backgroundColor: isChecking
+                          ? (selectedWords.join(' ') == correctOrder.join(' ')
+                              ? Colors.green.shade600
+                              : Colors.red.shade600)
+                          : const Color(0xFF4979FB), // primaryAccent color
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    isChecking ? 'Next' : 'Check Answer',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                    child: Text(
+                      isChecking ? 'Continue' : 'Check Answer',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
