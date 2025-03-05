@@ -3,7 +3,6 @@ class Hifdh {
   String date;
   final bool completed;
   final String nextKey;
-  final String planId;
   final String surah;
   final String startVerse;
   final String endVerse;
@@ -15,7 +14,6 @@ class Hifdh {
     required this.date,
     required this.completed,
     required this.nextKey,
-    required this.planId,
     required this.surah,
     required this.startVerse,
     required this.endVerse,
@@ -29,7 +27,6 @@ class Hifdh {
       'date': date,
       'completed': completed,
       'nextKey': nextKey,
-      'planId': planId,
       'surah': surah,
       'startVerse': startVerse,
       'endVerse': endVerse,

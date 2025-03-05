@@ -205,7 +205,7 @@ class ProfilePage extends StatelessWidget {
                               _buildMenuOption(
                                 context: context,
                                 icon: Icons.logout,
-                                title: 'Log out',
+                                title: 'Sign out',
                                 titleColor: Colors.red[400]!,
                                 iconColor: Colors.red[400]!,
                                 onTap: () {
@@ -320,11 +320,11 @@ class ProfilePage extends StatelessWidget {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Log Out',
+          'Sign Out',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Are you sure you want to log out?',
+          'Are you sure you want to sign out?',
           style: GoogleFonts.poppins(),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -354,7 +354,7 @@ class ProfilePage extends StatelessWidget {
               Navigator.pop(context);
             },
             child: Text(
-              'Log Out',
+              'Sign Out',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,

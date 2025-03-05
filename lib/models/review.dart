@@ -2,7 +2,6 @@ class Review {
   final String review;
   final String date;
   final List<int> ratings;
-  final String planId;
   final String surah;
   final String startVerse;
   final String endVerse;
@@ -14,7 +13,6 @@ class Review {
     required this.review,
     required this.date,
     required this.ratings,
-    required this.planId,
     required this.surah,
     required this.startVerse,
     required this.endVerse,
@@ -28,7 +26,6 @@ class Review {
       'review': review,
       'date': date,
       'ratings': ratings,
-      'planId': planId,
       'surah': surah,
       'startVerse': startVerse,
       'endVerse': endVerse,

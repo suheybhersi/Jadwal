@@ -555,7 +555,6 @@ class FirestoreService extends ChangeNotifier {
           'weekStart',
           isEqualTo: weekStartString,
         )
-        .where('planId', isEqualTo: id)
         .get();
 
     if (plan['currentWeek'].isEmpty) {
@@ -565,7 +564,6 @@ class FirestoreService extends ChangeNotifier {
           completed: false,
           missed: false,
           weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-          planId: id,
         );
 
         currentWeek.add(weekDay.toMap());
@@ -574,7 +572,6 @@ class FirestoreService extends ChangeNotifier {
       await weeksCollection.add({
         'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
         'weekDays': currentWeek,
-        'planId': id,
       });
       await plansCollection.doc(id).update({'currentWeek': currentWeek});
     } else if (week.docs.isEmpty) {
@@ -648,7 +645,6 @@ class FirestoreService extends ChangeNotifier {
                     ? !plan['hifdhs'].last['completed']
                     : false,
             weekStart: '${weekStart.day}-${weekStart.month}-${weekStart.year}',
-            planId: id,
           );
 
           currentWeek.add(weekDay.toMap());
@@ -657,7 +653,6 @@ class FirestoreService extends ChangeNotifier {
         await weeksCollection.add({
           'weekStart': '${weekStart.day}-${weekStart.month}-${weekStart.year}',
           'weekDays': currentWeek,
-          'planId': id,
         });
         await plansCollection.doc(id).update({'currentWeek': currentWeek});
       }
@@ -713,7 +708,6 @@ class FirestoreService extends ChangeNotifier {
 
       final hifdhSnapshot = await hifdhsCollection
           .where('hifdh', isEqualTo: hifdh['hifdh'])
-          .where('planId', isEqualTo: id)
           .get();
       hifdhSnapshot.docs[0].reference.update({'completed': true});
 
@@ -738,7 +732,6 @@ class FirestoreService extends ChangeNotifier {
         review: hifdh['hifdh'],
         date: reviewDate,
         ratings: [],
-        planId: id,
         surah: surah,
         startVerse: startVerse,
         endVerse: endVerse,
@@ -1107,7 +1100,6 @@ class FirestoreService extends ChangeNotifier {
       date: nextHifdhDate,
       completed: false,
       nextKey: nextKey,
-      planId: id,
       surah: surah,
       startVerse: startVerse,
       endVerse: endVerse,
@@ -1213,14 +1205,12 @@ class FirestoreService extends ChangeNotifier {
       planData = planSnapshot.data() as Map<String, dynamic>;
     }
 
-    final hifdh = await hifdhsCollection.where('planId', isEqualTo: id).get();
+    final hifdh = await hifdhsCollection.get();
     final hifdhData = hifdh.docs;
 
     if (hifdhData.length != planData['hifdhs'].length) {
-      final nextHifdh = await hifdhsCollection
-          .where('planId', isEqualTo: id)
-          .where('completed', isEqualTo: false)
-          .get();
+      final nextHifdh =
+          await hifdhsCollection.where('completed', isEqualTo: false).get();
 
       final hifdhSnapshot =
           await hifdhsCollection.doc(nextHifdh.docs.last.id).get();
@@ -1278,10 +1268,8 @@ class FirestoreService extends ChangeNotifier {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
 
-    final reviewQuery = await reviewsCollection
-        .where('planId', isEqualTo: id)
-        .where('review', isEqualTo: review)
-        .get();
+    final reviewQuery =
+        await reviewsCollection.where('review', isEqualTo: review).get();
     String reviewId = reviewQuery.docs[0].id;
     final reviewSnapshot = await reviewsCollection.doc(reviewId).get();
     final reviewData = reviewSnapshot.data() as Map<String, dynamic>;
@@ -1411,7 +1399,6 @@ class FirestoreService extends ChangeNotifier {
     });
     final hifdhSnapshot = await hifdhsCollection
         .where('hifdh', isEqualTo: hifdhs.last['hifdh'])
-        .where('planId', isEqualTo: id)
         .get();
     hifdhSnapshot.docs[0].reference.update({'date': nextHifdhDate});
   }
@@ -1455,14 +1442,10 @@ class FirestoreService extends ChangeNotifier {
 /*---------------------------------------D E L E T E   P L A N----------------------------------------*/
   Future<void> deletePlan(String id) async {
     await plansCollection.doc(id).delete();
-    final hifdhsSnapshot =
-        await hifdhsCollection.where('planId', isEqualTo: id).get();
-    final reviewsSnapshot =
-        await reviewsCollection.where('planId', isEqualTo: id).get();
-    final weeksSnapshot =
-        await weeksCollection.where('planId', isEqualTo: id).get();
-    final surahsSnapshot =
-        await surahsProgressCollection.where('planId', isEqualTo: id).get();
+    final hifdhsSnapshot = await hifdhsCollection.get();
+    final reviewsSnapshot = await reviewsCollection.get();
+    final weeksSnapshot = await weeksCollection.get();
+    final surahsSnapshot = await surahsProgressCollection.get();
 
     for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
       await hifdhsSnapshot.docs[i].reference.delete();
