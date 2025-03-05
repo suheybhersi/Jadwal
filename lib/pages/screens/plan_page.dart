@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/edit_plan_page.dart';
+import 'package:jadwal/pages/screens/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -52,7 +53,14 @@ class _PlanPageState extends State<PlanPage> {
                           ),
                         );
                       },
-                      onSettingsPressed: () {},
+                      onSettingsPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
+                        );
+                      },
                     ),
                     PlanProgress(
                       plan: plan,

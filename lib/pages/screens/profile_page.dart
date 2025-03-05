@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/settings_page.dart';
+import 'package:jadwal/services/firestore.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -10,222 +13,215 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName ?? 'User';
-    final email = user?.email ?? 'No email';
+
+    final FirestoreService firestoreService =
+        FirestoreService(FirebaseAuth.instance);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile header with enhanced styling
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    spreadRadius: 1,
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            style: GoogleFonts.poppins(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            email,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Iconsax.setting_2),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Settings coming soon')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+      body: StreamBuilder<QuerySnapshot>(
+          stream: firestoreService.getPlansStream(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-            const SizedBox(height: 30),
+            final plans = snapshot.data!.docs;
+            final plan = plans.first.data() as Map<String, dynamic>;
 
-            // Stats Section with improved styling
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                'Your Progress',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    spreadRadius: 1,
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  _buildStatItem(
-                    icon: Icons.calendar_today,
-                    iconColor: const Color(0xFF4979FB),
-                    iconBgColor: const Color(0xFFEEF2FF),
-                    title: '12 Jun 2024',
-                    subtitle: 'Date joined',
-                  ),
-                  _buildStatDivider(),
-                  _buildStatItem(
-                    icon: Icons.local_fire_department,
-                    iconColor: Colors.deepOrange[400]!,
-                    iconBgColor: Colors.deepOrange[50]!,
-                    title: '13 Days',
-                    subtitle: 'Streak',
-                  ),
-                  _buildStatDivider(),
-                  _buildStatItem(
-                    icon: Icons.flag,
-                    iconColor: Colors.green[500]!,
-                    iconBgColor: Colors.green[50]!,
-                    title: '23 Nov 2025',
-                    subtitle: 'Est completion',
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Menu Options
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                'Account',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    spreadRadius: 1,
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
+            return SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildMenuOption(
-                    context: context,
-                    icon: Icons.person_outline,
-                    title: 'Personal data',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Personal data options')),
-                      );
-                    },
+                  // Profile header with enhanced styling
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 20.0, right: 8.0, top: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Iconsax.setting_2),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  Divider(
-                    height: 1,
-                    indent: 20,
-                    endIndent: 20,
-                    color: Colors.grey.shade100,
-                  ),
-                  _buildMenuOption(
-                    context: context,
-                    icon: Icons.help_outline,
-                    title: 'Help',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Help center')),
-                      );
-                    },
-                  ),
-                  Divider(
-                    height: 1,
-                    indent: 20,
-                    endIndent: 20,
-                    color: Colors.grey.shade100,
-                  ),
-                  _buildMenuOption(
-                    context: context,
-                    icon: Icons.delete_outline,
-                    title: 'Delete account',
-                    onTap: () {
-                      _showDeleteAccountDialog(context);
-                    },
-                  ),
-                  Divider(
-                    height: 1,
-                    indent: 20,
-                    endIndent: 20,
-                    color: Colors.grey.shade100,
-                  ),
-                  _buildMenuOption(
-                    context: context,
-                    icon: Icons.logout,
-                    title: 'Log out',
-                    titleColor: Colors.red[400]!,
-                    iconColor: Colors.red[400]!,
-                    onTap: () {
-                      _showLogoutDialog(context);
-                    },
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Stats Section with improved styling
+                        Text(
+                          'Your Progress',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade100,
+                                spreadRadius: 1,
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              _buildStatItem(
+                                icon: Icons.calendar_today,
+                                iconColor: const Color(0xFF4979FB),
+                                iconBgColor: const Color(0xFFEEF2FF),
+                                title: '12 Jun 2024',
+                                subtitle: 'Date joined',
+                              ),
+                              _buildStatDivider(),
+                              _buildStatItem(
+                                icon: Icons.local_fire_department,
+                                iconColor: Colors.deepOrange[400]!,
+                                iconBgColor: Colors.deepOrange[50]!,
+                                title:
+                                    '${plan['streak']} ${plan['streak'] > 1 ? 'Days' : 'Day'}',
+                                subtitle: 'Streak',
+                              ),
+                              _buildStatDivider(),
+                              _buildStatItem(
+                                icon: Icons.flag,
+                                iconColor: Colors.green[500]!,
+                                iconBgColor: Colors.green[50]!,
+                                title: '23 Nov 2025',
+                                subtitle: 'Est completion',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Menu Options
+                        Text(
+                          'Account',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade100,
+                                spreadRadius: 1,
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildMenuOption(
+                                context: context,
+                                icon: Icons.person_outline,
+                                title: 'Personal data',
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Personal data options')),
+                                  );
+                                },
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 20,
+                                endIndent: 20,
+                                color: Colors.grey.shade100,
+                              ),
+                              _buildMenuOption(
+                                context: context,
+                                icon: Iconsax.message,
+                                title: 'Feedback',
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Feedback')),
+                                  );
+                                },
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 20,
+                                endIndent: 20,
+                                color: Colors.grey.shade100,
+                              ),
+                              _buildMenuOption(
+                                context: context,
+                                icon: Icons.delete_outline,
+                                title: 'Delete account',
+                                onTap: () {
+                                  _showDeleteAccountDialog(context);
+                                },
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 20,
+                                endIndent: 20,
+                                color: Colors.grey.shade100,
+                              ),
+                              _buildMenuOption(
+                                context: context,
+                                icon: Icons.logout,
+                                title: 'Log out',
+                                titleColor: Colors.red[400]!,
+                                iconColor: Colors.red[400]!,
+                                onTap: () {
+                                  _showLogoutDialog(context);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          }),
     );
   }
 
@@ -356,7 +352,6 @@ class ProfilePage extends StatelessWidget {
             onPressed: () {
               FirebaseAuth.instance.signOut();
               Navigator.pop(context);
-              Navigator.of(context).popUntil((route) => route.isFirst);
             },
             child: Text(
               'Log Out',

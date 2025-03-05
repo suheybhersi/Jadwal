@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jadwal/pages/screens/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -16,10 +17,6 @@ class HomePage extends StatelessWidget {
   final TextEditingController ratingController = TextEditingController();
 
   Map<String, dynamic> plan = {};
-
-  void signUserOut() {
-    FirebaseAuth.instance.signOut();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +161,15 @@ class HomePage extends StatelessWidget {
                                         ],
                                       ),
                                       IconButton(
-                                        onPressed: signUserOut,
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SettingsPage(),
+                                            ),
+                                          );
+                                        },
                                         icon: Icon(
                                           Iconsax.setting_2,
                                         ),

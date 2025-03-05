@@ -87,9 +87,20 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 4.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        title: Text(
+          'Edit Plan',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.black87,
+          ),
         ),
       ),
       body: Padding(
@@ -99,33 +110,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with icon
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Edit Plan',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Update your daily lines and memorization schedule',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
+              const SizedBox(height: 20),
               // Daily Amount Section
               Container(
                 padding: const EdgeInsets.all(20),
