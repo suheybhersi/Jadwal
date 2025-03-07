@@ -49,7 +49,6 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                 BoxShadow(
                   color: Colors.grey.shade100,
                   spreadRadius: 1,
-                  blurRadius: 12,
                 ),
               ],
             ),

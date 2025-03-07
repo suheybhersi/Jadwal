@@ -12,254 +12,346 @@ class ProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+    return const Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: ProgressContent(),
     );
   }
 }
 
-class ProgressContent extends StatelessWidget {
-  final FirestoreService firestoreService = FirestoreService(
+class ProgressContent extends StatefulWidget {
+  const ProgressContent({super.key});
+
+  @override
+  State<ProgressContent> createState() => _ProgressContentState();
+}
+
+class _ProgressContentState extends State<ProgressContent> {
+  final FirestoreService _firestoreService = FirestoreService(
     auth: FirebaseAuth.instance,
     uid: FirebaseAuth.instance.currentUser!.uid,
   );
 
-  final ValueNotifier<String> _searchQuery = ValueNotifier<String>('');
-  final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
-
-  ProgressContent({super.key});
+  List<Map<String, dynamic>>? _cachedSurahData;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Only unfocus the TextField without causing a rebuild
-        if (_searchFocusNode.hasFocus) {
-          _searchFocusNode.unfocus();
-        }
-      },
-      behavior: HitTestBehavior
-          .opaque, // Ensures taps outside the TextField are detected
+    return SafeArea(
       child: Column(
         children: [
-          // Title and Settings
-          Padding(
-            padding: const EdgeInsets.only(
-              left: 20,
-              right: 10,
-              top: 10,
-              bottom: 15,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Progress',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Iconsax.setting_2),
-                ),
-              ],
-            ),
-          ),
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ValueListenableBuilder<String>(
-              valueListenable: _searchQuery,
-              builder: (context, query, child) {
-                return TextField(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  onChanged: (value) => _searchQuery.value = value,
-                  decoration: InputDecoration(
-                    filled: true, // Enables the background color
-                    fillColor:
-                        Colors.grey[200], // Sets the gray background color
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none, // Removes the border outline
-                    ),
-                    hintText: 'Search...',
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
-                    suffixIcon: query.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear, color: Colors.grey),
-                            onPressed: () {
-                              _searchController.clear(); // Clears the TextField
-                              _searchQuery.value =
-                                  ''; // Resets the ValueNotifier
-                            },
-                          )
-                        : null,
-                  ),
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.black, // Text color inside the search bar
-                  ),
-                );
-              },
-            ),
-          ),
-
-          SizedBox(
-            height: 10,
-          ),
-          // List of Surahs
+          _buildTitleBar(context),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: firestoreService.getSurahProgressStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No data available.',
-                      style:
-                          GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-                    ),
-                  );
-                }
-
-                // Fetch and sort data
-                final surahsList = snapshot.data!.docs;
-                surahsList
-                    .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
-
-                // Map Firestore data to a usable list
-                final allData = surahsList
-                    .map((doc) => doc.data() as Map<String, dynamic>)
-                    .toList();
-
-                return ValueListenableBuilder<String>(
-                  valueListenable: _searchQuery,
-                  builder: (context, query, child) {
-                    // Filter data based on search query
-                    final filteredData = query.isEmpty
-                        ? allData
-                        : allData
-                            .where((surah) => surah['surah']
-                                .toString()
-                                .toLowerCase()
-                                .contains(query.toLowerCase()))
-                            .toList();
-
-                    if (filteredData.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No results found.',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: filteredData.length,
-                      itemBuilder: (context, index) {
-                        final surah = filteredData[index];
-                        // Calculate progress but round both to the nearest integer
-                        final completedLines = surah['completedLines'].round();
-                        final totalLines = surah['totalLines'];
-                        final double progress = completedLines / totalLines;
-
-                        return Container(
-                          margin: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Color.fromARGB(255, 237, 242, 255),
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: [
-                              // Surah Number
-                              Container(
-                                decoration: BoxDecoration(
-                                    color: Color.fromARGB(255, 114, 152, 255),
-                                    borderRadius: BorderRadius.circular(30)),
-                                height: 40,
-                                width: 40,
-                                child: Center(
-                                  child: Text(
-                                    '${surah['surahNumber']}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              // Surah Details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      surah['surah'],
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    LinearPercentIndicator(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 0,
-                                      ),
-                                      lineHeight: 10,
-                                      percent: progress > 1 ? 1 : progress,
-                                      progressColor:
-                                          Color.fromARGB(255, 113, 233, 175),
-                                      backgroundColor:
-                                          Color.fromARGB(255, 242, 243, 248),
-                                      barRadius: const Radius.circular(20),
-                                      trailing: Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 10.0),
-                                        child: Text(
-                                          '${(progress > 1 ? 100 : progress * 100).toStringAsFixed(0)}%',
-                                          style:
-                                              GoogleFonts.poppins(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildHeaderBanner(),
+                _buildSurahList(),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  // Title bar with settings button
+  Widget _buildTitleBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 20,
+        right: 10,
+        top: 10,
+        bottom: 15,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Progress',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 26,
+              color: Colors.black87,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+            icon: const Icon(Iconsax.setting_2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Header with gradient background
+  SliverToBoxAdapter _buildHeaderBanner() {
+    return SliverToBoxAdapter(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Iconsax.book_1, color: Colors.white, size: 24),
+                const SizedBox(width: 10),
+                Text(
+                  'Track Your Progress',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Keep track of how much you\'ve memorized for each surah',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Surah List with StreamBuilder
+  Widget _buildSurahList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestoreService.getSurahProgressStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _cachedSurahData == null) {
+          return const SliverFillRemaining(
+            child: Center(
+              child: CircularProgressIndicator(color: Color(0xFF4979FB)),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData && _cachedSurahData == null) {
+          return _buildEmptyState(
+            icon: Iconsax.information,
+            message: 'No data available.',
+          );
+        }
+
+        // Cache the data to prevent rebuilds
+        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+          final surahsList = snapshot.data!.docs;
+          surahsList.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+          _cachedSurahData = surahsList
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+        }
+
+        final surahData = _cachedSurahData ?? [];
+
+        return _buildSurahListItems(surahData);
+      },
+    );
+  }
+
+  // Empty state display
+  SliverFillRemaining _buildEmptyState({
+    required IconData icon,
+    required String message,
+  }) {
+    return SliverFillRemaining(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: Colors.grey[400]),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Surah list items
+  Widget _buildSurahListItems(List<Map<String, dynamic>> surahData) {
+    return SliverPadding(
+      padding: const EdgeInsets.only(bottom: 20),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final surah = surahData[index];
+            return _SurahProgressCard(surah: surah);
+          },
+          childCount: surahData.length,
+        ),
+      ),
+    );
+  }
+}
+
+// Extracted widget for Surah progress card
+class _SurahProgressCard extends StatelessWidget {
+  final Map<String, dynamic> surah;
+
+  const _SurahProgressCard({required this.surah});
+
+  @override
+  Widget build(BuildContext context) {
+    final completedLines = surah['completedLines'].round();
+    final totalLines = surah['totalLines'];
+    final double progress = completedLines / totalLines;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            spreadRadius: 1,
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildSurahNumberBox(surah['surahNumber']),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  surah['surah'],
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildProgressIndicator(progress),
+                const SizedBox(height: 4),
+                Text(
+                  _getProgressText(completedLines, totalLines),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Surah number box with gradient
+  Widget _buildSurahNumberBox(dynamic surahNumber) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      height: 40,
+      width: 40,
+      child: Center(
+        child: Text(
+          '$surahNumber',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Progress indicator row
+  Widget _buildProgressIndicator(double progress) {
+    return Row(
+      children: [
+        Expanded(
+          child: LinearPercentIndicator(
+            padding: const EdgeInsets.symmetric(horizontal: 0),
+            lineHeight: 8,
+            percent: progress > 1 ? 1 : progress,
+            progressColor: const Color(0xFF4979FB),
+            backgroundColor: Colors.grey[100],
+            barRadius: const Radius.circular(20),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0),
+          child: Text(
+            '${(progress > 1 ? 100 : progress * 100).toStringAsFixed(0)}%',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to determine whether to show lines or pages
+  String _getProgressText(int completedLines, int totalLines) {
+    const int linesPerPage = 15; // Consider a page to be around 15 lines
+
+    if (totalLines > linesPerPage) {
+      // Calculate pages (rounded to 1 decimal place)
+      final double completedPages = completedLines / linesPerPage;
+      final double totalPages = totalLines / linesPerPage;
+
+      return '${completedPages.toStringAsFixed(1)} of ${totalPages.toStringAsFixed(1)} pages memorized';
+    } else {
+      // For shorter surahs, keep showing lines
+      return '$completedLines of $totalLines lines memorized';
+    }
   }
 }

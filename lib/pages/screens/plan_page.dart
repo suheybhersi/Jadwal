@@ -450,7 +450,7 @@ class PreviousMemorisation extends StatelessWidget {
     hifdhs = hifdhs.reversed.toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -479,55 +479,59 @@ class PreviousMemorisation extends StatelessWidget {
             itemCount: hifdhs.length > 2 ? 2 : hifdhs.length,
             itemBuilder: (context, index) {
               final hifdh = hifdhs[index];
-              return InkWell(
-                onTap: () => _showMemorisationDetails(context, hifdh),
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+              return Column(
+                children: [
+                  InkWell(
+                    onTap: () => _showMemorisationDetails(context, hifdh),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade100,
-                        spreadRadius: 1,
-                        blurRadius: 10,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade100,
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]} - ${hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Color.fromARGB(255, 106, 106, 106),
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 106, 106, 106),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          Icon(
+                            Iconsax.arrow_right_3,
+                            color: Colors.grey,
+                            size: 16,
+                          ),
+                        ],
                       ),
-                      Icon(
-                        Iconsax.arrow_right_3,
-                        color: Colors.grey,
-                        size: 16,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  SizedBox(height: 12),
+                ],
               );
             },
           ),
