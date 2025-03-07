@@ -45,11 +45,11 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: Theme.of(context).colorScheme.surface,
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 5,
-                  spreadRadius: -1,
+                  color: Colors.grey.shade100,
+                  spreadRadius: 1,
+                  blurRadius: 12,
                 ),
               ],
             ),

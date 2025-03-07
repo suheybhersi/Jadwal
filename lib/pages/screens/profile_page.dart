@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/feedback_page.dart';
+import 'package:jadwal/pages/screens/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 
@@ -114,23 +116,79 @@ class ProfilePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : 'U',
-                            style: GoogleFonts.poppins(
-                              fontSize: 40,
-                              color: Colors.grey.shade700,
+
+                      // Profile header
+                      Center(
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color.fromARGB(255, 73, 121, 251)
+                                            .withOpacity(0.7),
+                                        Color.fromARGB(255, 73, 121, 251),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Iconsax.user,
+                                    size: 48,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 10,
+                                  bottom: 0,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EditProfilePage(),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.shade100,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Iconsax.edit,
+                                        size: 20,
+                                        color:
+                                            Color.fromARGB(255, 73, 121, 251),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                            SizedBox(height: 10),
+                            Text(
+                              '@${userData['username']}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -211,34 +269,35 @@ class ProfilePage extends StatelessWidget {
                               ),
                               child: Column(
                                 children: [
+                                  // _buildMenuOption(
+                                  //   context: context,
+                                  //   icon: Iconsax.medal_star,
+                                  //   title: 'Achievements',
+                                  //   onTap: () {
+                                  //     ScaffoldMessenger.of(context)
+                                  //         .showSnackBar(
+                                  //       const SnackBar(
+                                  //           content: Text('Achievements')),
+                                  //     );
+                                  //   },
+                                  // ),
+                                  // Divider(
+                                  //   height: 1,
+                                  //   indent: 20,
+                                  //   endIndent: 20,
+                                  //   color: Colors.grey.shade100,
+                                  // ),
                                   _buildMenuOption(
                                     context: context,
-                                    icon: Icons.person_outline,
-                                    title: 'Personal data',
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content:
-                                                Text('Personal data options')),
-                                      );
-                                    },
-                                  ),
-                                  Divider(
-                                    height: 1,
-                                    indent: 20,
-                                    endIndent: 20,
-                                    color: Colors.grey.shade100,
-                                  ),
-                                  _buildMenuOption(
-                                    context: context,
-                                    icon: Iconsax.message,
+                                    icon: Iconsax.message_text,
                                     title: 'Feedback',
                                     onTap: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text('Feedback')),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const FeedbackPage(),
+                                        ),
                                       );
                                     },
                                   ),
