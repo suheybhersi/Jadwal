@@ -19,8 +19,10 @@ class AuthPage extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          final FirestoreService firestoreService =
-              FirestoreService(FirebaseAuth.instance);
+          final FirestoreService firestoreService = FirestoreService(
+            auth: FirebaseAuth.instance,
+            uid: FirebaseAuth.instance.currentUser!.uid,
+          );
           return StreamBuilder(
             stream: firestoreService.getHifdhsStream(),
             builder: (context, snapshot) {

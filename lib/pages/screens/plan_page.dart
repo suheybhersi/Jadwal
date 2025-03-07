@@ -16,8 +16,10 @@ class PlanPage extends StatefulWidget {
 }
 
 class _PlanPageState extends State<PlanPage> {
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService(
+    auth: FirebaseAuth.instance,
+    uid: FirebaseAuth.instance.currentUser!.uid,
+  );
 
   @override
   Widget build(BuildContext context) {

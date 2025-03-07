@@ -11,8 +11,10 @@ import 'package:jadwal/pages/screens/quiz_page.dart';
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService(
+    auth: FirebaseAuth.instance,
+    uid: FirebaseAuth.instance.currentUser!.uid,
+  );
   int hifdhIn = -1;
   final TextEditingController ratingController = TextEditingController();
 
@@ -24,7 +26,7 @@ class HomePage extends StatelessWidget {
     bool currentWeekCalled = false;
     bool updateHifdhCalled = false;
     String id = '';
-
+    final userData = firestoreService.getUserProfile();
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: StreamBuilder(
@@ -150,13 +152,21 @@ class HomePage extends StatelessWidget {
                                               letterSpacing: 0.5,
                                             ),
                                           ),
-                                          Text(
-                                            'Mohammed',
-                                            style: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              letterSpacing: 0.5,
-                                            ),
+                                          FutureBuilder<Map<String, dynamic>?>(
+                                            future: userData,
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                return Text(
+                                                  '${snapshot.data!['firstName']}',
+                                                  style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                );
+                                              }
+                                              return const SizedBox.shrink();
+                                            },
                                           ),
                                         ],
                                       ),

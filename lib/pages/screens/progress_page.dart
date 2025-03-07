@@ -20,8 +20,10 @@ class ProgressPage extends StatelessWidget {
 }
 
 class ProgressContent extends StatelessWidget {
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService(
+    auth: FirebaseAuth.instance,
+    uid: FirebaseAuth.instance.currentUser!.uid,
+  );
 
   final ValueNotifier<String> _searchQuery = ValueNotifier<String>('');
   final TextEditingController _searchController = TextEditingController();

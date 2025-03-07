@@ -16,8 +16,10 @@ class EditPlanPage extends StatefulWidget {
 }
 
 class _EditPlanPageState extends State<EditPlanPage> {
-  final FirestoreService firestoreService =
-      FirestoreService(FirebaseAuth.instance);
+  final FirestoreService firestoreService = FirestoreService(
+    auth: FirebaseAuth.instance,
+    uid: FirebaseAuth.instance.currentUser!.uid,
+  );
   final TextEditingController linesController = TextEditingController();
   String selectedUnit = 'Lines';
   Timer? activeTimer;

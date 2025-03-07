@@ -18,7 +18,9 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (context) => FirestoreService(FirebaseAuth.instance)),
+            create: (context) => FirestoreService(
+                auth: FirebaseAuth.instance,
+                uid: FirebaseAuth.instance.currentUser!.uid)),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
       ],
       child: const MyApp(),

@@ -13,8 +13,10 @@ class NewPlanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NewPlanController());
-    final FirestoreService firestoreService =
-        FirestoreService(FirebaseAuth.instance);
+    final FirestoreService firestoreService = FirestoreService(
+      auth: FirebaseAuth.instance,
+      uid: FirebaseAuth.instance.currentUser!.uid,
+    );
 
     Future<void> storeNewPlan() async {
       controller.isCreatingPlan.value = true;

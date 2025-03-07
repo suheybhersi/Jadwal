@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jadwal/components/my_textfield.dart';
 import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/services/firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -60,10 +62,27 @@ class _RegisterPageState extends State<RegisterPage> {
 
       try {
         if (passwordController.text == confirmPasswordController.text) {
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          UserCredential userCredential =
+              await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: emailController.text.trim(),
             password: passwordController.text.trim(),
           );
+
+          // Get the current user's UID
+          final user = userCredential.user;
+          // Use your FirestoreService to store user profile
+          final firestoreService = FirestoreService(
+            uid: user!.uid,
+            auth: FirebaseAuth.instance,
+          );
+          await firestoreService.updateUserProfile({
+            'firstName': firstNameController.text.trim(),
+            'lastName': lastNameController.text.trim(),
+            'username': userNameController.text.trim(),
+            'email': emailController.text.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
           if (!mounted) return;
           Navigator.pop(context); // Close loading dialog
           Navigator.of(context).pop(); // Navigate to login or another screen

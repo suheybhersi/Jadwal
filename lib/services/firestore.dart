@@ -15,15 +15,16 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('verses');
 
   final FirebaseAuth auth;
-  late String uid;
+  final String uid;
 
-  FirestoreService(this.auth) {
+  FirestoreService({required this.auth, required this.uid}) {
     final User? user = auth.currentUser;
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    uid = user.uid;
   }
+
+  DocumentReference get userDocument => usersCollection.doc(uid);
 
   CollectionReference get plansCollection =>
       usersCollection.doc(uid).collection('plans');
@@ -35,6 +36,16 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('weeks');
   CollectionReference get surahsProgressCollection =>
       usersCollection.doc(uid).collection('surahsProgress');
+
+  Future<void> updateUserProfile(Map<String, dynamic> userData) async {
+    return await userDocument.set(userData, SetOptions(merge: true));
+  }
+
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    DocumentSnapshot doc = await userDocument.get();
+    return doc.exists ? doc.data() as Map<String, dynamic>? : null;
+  }
+
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
   Future<void> addPlan(
     bool backToFront,
@@ -484,7 +495,6 @@ class FirestoreService extends ChangeNotifier {
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    uid = user.uid;
     final plansStream = plansCollection.snapshots();
     return plansStream;
   }
@@ -494,7 +504,6 @@ class FirestoreService extends ChangeNotifier {
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    uid = user.uid;
     final surahsStream = surahsCollection.snapshots();
     return surahsStream;
   }
@@ -504,7 +513,6 @@ class FirestoreService extends ChangeNotifier {
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    uid = user.uid;
     final surahsStream = surahsProgressCollection.snapshots();
     return surahsStream;
   }
@@ -514,7 +522,6 @@ class FirestoreService extends ChangeNotifier {
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    uid = user.uid;
     final hifdhsStream = hifdhsCollection.snapshots();
     return hifdhsStream;
   }
