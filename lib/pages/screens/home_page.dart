@@ -28,12 +28,15 @@ class HomePage extends StatelessWidget {
     String id = '';
     final userData = firestoreService.getUserProfile();
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
       body: StreamBuilder(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 73, 121, 251),
+              ),
+            );
           }
           if (snapshot.hasData) {
             List plansList = snapshot.data!.docs;
@@ -42,28 +45,23 @@ class HomePage extends StatelessWidget {
                   plansList[0].data() as Map<String, dynamic>;
 
               if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
-                id = plansList[0]
-                    .id; // Assuming you need the ID for further operations
+                id = plansList[0].id;
 
                 String weekStart = plan['currentWeek'][0]['weekStart'];
-
                 DateTime currWeekStartDT = DateTime.now().subtract(
                   Duration(days: DateTime.now().weekday - 1),
                 );
-
                 String currWeekStart =
                     '${currWeekStartDT.day}-${currWeekStartDT.month}-${currWeekStartDT.year}';
 
                 if (currWeekStart != weekStart && !currentWeekCalled) {
                   currentWeekCalled = true;
                   firestoreService.updateCurrentWeek(id).then((_) {
-                    // Reset the flag after the method completes
                     currentWeekCalled = false;
                   });
                 }
 
                 bool completed = plan['hifdhs'].last['completed'];
-
                 String hifdhDate = plan['hifdhs'].last['date'];
                 String today =
                     '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}';
@@ -93,24 +91,28 @@ class HomePage extends StatelessWidget {
                   if (plan['planCompleted'] != true && !updateHifdhCalled) {
                     updateHifdhCalled = true;
                     firestoreService.updateNextHifdh(id).then((_) {
-                      // Reset the flag after the method completes
                       updateHifdhCalled = false;
                     });
                   } else if (plan['planCompleted'] == true) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         'Plan Completed',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 30),
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 30,
+                        ),
                       ),
                     );
                   } else {
-                    return Center(child: CircularProgressIndicator());
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Color.fromARGB(255, 73, 121, 251),
+                      ),
+                    );
                   }
                 } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
                   hifdhMissedCalled = true;
                   firestoreService.hifdhMissed(id).then((_) {
-                    // Reset the flag after the method completes
                     hifdhMissedCalled = false;
                   });
                 }
@@ -121,100 +123,150 @@ class HomePage extends StatelessWidget {
                         '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}')
                     .toList();
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Column(
+                return SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 20,
-                                      right: 10,
-                                      top: 10.0,
-                                      bottom: 15),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Hello',
-                                            style: GoogleFonts.poppins(
-                                              color: Color.fromARGB(
-                                                  255, 106, 106, 106),
-                                              fontSize: 16,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                          FutureBuilder<Map<String, dynamic>?>(
-                                            future: userData,
-                                            builder: (context, snapshot) {
-                                              if (snapshot.hasData) {
-                                                return Text(
-                                                  '${snapshot.data!['firstName']}',
-                                                  style: GoogleFonts.poppins(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    letterSpacing: 0.5,
-                                                  ),
-                                                );
-                                              }
-                                              return const SizedBox.shrink();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                      IconButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const SettingsPage(),
-                                            ),
-                                          );
-                                        },
-                                        icon: Icon(
-                                          Iconsax.setting_2,
-                                        ),
-                                      ),
-                                    ],
+                        // Header with name and settings
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 20, right: 10, top: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
+                                  FutureBuilder<Map<String, dynamic>?>(
+                                    future: userData,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return Text(
+                                          '${snapshot.data!['firstName']}',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SettingsPage(),
+                                    ),
+                                  );
+                                },
+                                icon: Icon(
+                                  Iconsax.setting_2,
                                 ),
-                                Column(
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        WeekDays(plan: plan),
+
+                        // Today's Tasks Section
+                        Upcoming(
+                          plan: plan,
+                          hifdhIn: hifdhIn,
+                          markHifdhAsComplete: markHifdhAsComplete,
+                          markReviewAsComplete: markReviewAsComplete,
+                          id: id,
+                          reviews: reviews,
+                        ),
+
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade100,
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Row(
                                   children: [
-                                    WeekDays(plan: plan),
-                                    Upcoming(
-                                      plan: plan,
-                                      hifdhIn: hifdhIn,
-                                      markHifdhAsComplete: markHifdhAsComplete,
-                                      markReviewAsComplete:
-                                          markReviewAsComplete,
-                                      id: id,
-                                      reviews: reviews,
+                                    Icon(
+                                      Iconsax.quote_up,
+                                      color: Color.fromARGB(255, 73, 121, 251),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Quote of the Day',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(
-                                  height: 10,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 20, right: 20, bottom: 20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '"The best among you are those who learn the Quran and teach it."',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade800,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      '- Prophet Muhammad (PBUH)',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Statistics(plan: plan),
-                        )
+
+                        SizedBox(height: 20),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 );
               }
             }
@@ -222,10 +274,18 @@ class HomePage extends StatelessWidget {
           return AlertDialog(
             content: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CircularProgressIndicator(),
+              children: [
+                CircularProgressIndicator(
+                  color: Color.fromARGB(255, 73, 121, 251),
+                ),
                 SizedBox(height: 20),
-                Text('Creating your plan'),
+                Text(
+                  'Creating your plan',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
               ],
             ),
           );
@@ -310,117 +370,179 @@ class WeekDays extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController scrollController = ScrollController();
+    final today = DateTime.now();
+    final currentWeekday = today.weekday - 1; // 0-based index (0 = Monday)
 
-    // Only scroll to end if it's Thursday-Sunday
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      int currentDay = DateTime.now().weekday;
-      if (currentDay >= 4) {
-        scrollController.jumpTo(scrollController.position.maxScrollExtent);
-      }
-    });
-
-    return SingleChildScrollView(
-      controller: scrollController, // Add the controller here
-      scrollDirection: Axis.horizontal,
-
-      child: Container(
-        width: 575,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(7, (index) {
-            dynamic day = plan['currentWeek'][index];
-            List<String> weekStartString = day['weekStart'].split('-');
-            List<String> today =
-                '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}'
-                    .split('-');
-            DateTime weekStart = DateTime(
-              int.parse(weekStartString[2]),
-              int.parse(weekStartString[1]),
-              int.parse(weekStartString[0]),
-              0,
-              0,
-            );
-
-            DateTime todayDT = DateTime(
-              int.parse(today[2]),
-              int.parse(today[1]),
-              int.parse(today[0]),
-              0,
-              0,
-            );
-
-            return Container(
-              width: 65,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: weekStart.add(Duration(days: index)) == todayDT
-                    ? const Border()
-                    : Border.all(
-                        width: 1,
-                        color: Theme.of(context).colorScheme.tertiary,
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: Row(
+              children: [
+                Icon(
+                  Iconsax.calendar_1,
+                  color: Color.fromARGB(255, 73, 121, 251),
+                  size: 20,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'This Week',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            child: Column(
+              children: [
+                // Progress bar showing week progress
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearPercentIndicator(
+                        padding: EdgeInsets.zero,
+                        lineHeight: 6,
+                        percent: (currentWeekday + 1) / 7,
+                        progressColor: Color.fromARGB(255, 73, 121, 251),
+                        backgroundColor: Colors.grey.shade100,
+                        barRadius: const Radius.circular(3),
+                        animation: true,
+                        animationDuration: 1000,
                       ),
-                color: weekStart.add(Duration(days: index)) == todayDT
-                    ? Color.fromARGB(255, 73, 121, 251)
-                    : Colors.white,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    day['day'],
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: weekStart.add(Duration(days: index)) == todayDT
-                            ? Colors.white
-                            : Color.fromARGB(255, 106, 106, 106)),
-                  ),
-                  SizedBox(
-                    height: 5,
-                  ),
-                  Text(
-                    '${weekStart.add(Duration(days: index)).day}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: weekStart.add(Duration(days: index)) == todayDT
-                          ? Colors.white
-                          : Color.fromARGB(255, 26, 26, 26),
                     ),
-                  ),
-                  SizedBox(
-                    height: 2,
-                  ),
-                  if (plan['hifdhDays'][index] == true)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: day['completed'] &&
-                                  (weekStart.add(Duration(days: index)) ==
-                                          todayDT ||
-                                      weekStart
-                                          .add(Duration(days: index))
-                                          .isBefore(todayDT))
-                              ? const Color.fromARGB(255, 60, 209, 107)
-                              : day['missed'] &&
-                                      (weekStart.add(Duration(days: index)) ==
-                                              todayDT ||
-                                          weekStart
-                                              .add(Duration(days: index))
-                                              .isBefore(
-                                                  todayDT)) //hifdh has been missed(not completed)
-                                  ? Colors.red.shade300
-                                  : Color.fromARGB(255, 254, 189, 89)),
-                    )
-                ],
-              ),
-            );
-          }),
-        ),
+                    SizedBox(width: 10),
+                    Text(
+                      'Day ${currentWeekday + 1}/7',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                // Days of the week with status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(7, (index) {
+                    dynamic day = plan['currentWeek'][index];
+                    List<String> weekStartString = day['weekStart'].split('-');
+                    List<String> today =
+                        '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}'
+                            .split('-');
+                    DateTime weekStart = DateTime(
+                      int.parse(weekStartString[2]),
+                      int.parse(weekStartString[1]),
+                      int.parse(weekStartString[0]),
+                      0,
+                      0,
+                    );
+
+                    DateTime todayDT = DateTime(
+                      int.parse(today[2]),
+                      int.parse(today[1]),
+                      int.parse(today[0]),
+                      0,
+                      0,
+                    );
+
+                    bool isToday =
+                        weekStart.add(Duration(days: index)) == todayDT;
+                    bool isPast =
+                        weekStart.add(Duration(days: index)).isBefore(todayDT);
+                    bool hasHifdh = plan['hifdhDays'][index] == true;
+                    bool isCompleted = day['completed'] && (isToday || isPast);
+                    bool isMissed = day['missed'] && (isToday || isPast);
+
+                    // Determine status color
+                    Color statusColor = Colors.transparent;
+                    if (hasHifdh) {
+                      if (isCompleted) {
+                        statusColor = Color.fromARGB(255, 113, 233, 175);
+                      } else if (isMissed) {
+                        statusColor = Colors.red.shade300;
+                      } else if (isToday) {
+                        statusColor = Color.fromARGB(255, 73, 121, 251);
+                      } else if (!isPast) {
+                        statusColor = Color.fromARGB(255, 254, 189, 89);
+                      }
+                    }
+
+                    return Column(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: isToday
+                                ? Color.fromARGB(255, 73, 121, 251)
+                                : Colors.grey.shade50,
+                            shape: BoxShape.circle,
+                            boxShadow: isToday
+                                ? [
+                                    BoxShadow(
+                                      color: Color.fromARGB(255, 73, 121, 251)
+                                          .withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${weekStart.add(Duration(days: index)).day}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isToday ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          day['day'],
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight:
+                                isToday ? FontWeight.w600 : FontWeight.w500,
+                            color: isToday
+                                ? Color.fromARGB(255, 73, 121, 251)
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        // Status indicator
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -441,18 +563,77 @@ class Upcoming extends StatelessWidget {
   final int hifdhIn;
   final String id;
   final Function(String, BuildContext, int, String) markHifdhAsComplete;
-
   final Function(BuildContext, List<dynamic>, String) markReviewAsComplete;
   final List<dynamic> reviews;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+          padding: EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Iconsax.task_square,
+                      color: Color.fromARGB(255, 73, 121, 251),
+                      size: 20,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Today\'s Tasks',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Iconsax.calendar_1,
+                      color: Color.fromARGB(255, 73, 121, 251),
+                      size: 14,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '${DateTime.now().day} ${_getMonthName(DateTime.now().month)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color.fromARGB(255, 73, 121, 251),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             children: [
+              // New Memorisation Card
               GestureDetector(
                 onTap: () {
                   if (!plan['hifdhs'].last['completed']) {
@@ -460,31 +641,25 @@ class Upcoming extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.only(
-                    top: 15,
-                    left: 15,
-                    right: 15,
-                    bottom: plan['hifdhs'] == null ||
-                            plan['hifdhs'].isEmpty ||
-                            hifdhIn == -1
-                        ? 15
-                        : 0,
-                  ),
+                  padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 104, 107, 255),
-                    borderRadius: BorderRadius.circular(30),
-                    image: plan['hifdhs'] == null ||
-                            plan['hifdhs'].isEmpty ||
-                            hifdhIn == -1
-                        ? null
-                        : DecorationImage(
-                            image: AssetImage(
-                              'assets/newbg.png',
-                            ),
-                            fit: BoxFit.contain,
-                            alignment: Alignment.bottomCenter,
-                            // Adjust this to control how the image fits
-                          ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.fromARGB(255, 73, 121, 251),
+                        Color.fromARGB(255, 114, 152, 255),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Color.fromARGB(255, 73, 121, 251).withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: plan['hifdhs'] == null ||
                           plan['hifdhs'].isEmpty ||
@@ -493,352 +668,764 @@ class Upcoming extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'None',
-                              style: TextStyle(
-                                  color: Colors.grey.shade100,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800),
+                              'No memorisation tasks',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             Container(
-                              width: 60,
-                              height: 20,
+                              padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: const Color.fromARGB(255, 134, 137, 255),
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
                               ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text(
-                                    'New',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontFamily: 'Poppins',
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
+                              child: Icon(
+                                Iconsax.book_1,
+                                color: Colors.white,
+                                size: 16,
                               ),
-                            )
+                            ),
                           ],
                         )
                       : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Surah ${plan['hifdhs'].last['surah'].split(' ')[0]}',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Iconsax.book_1,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'New Memorisation',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Container(
-                                  width: 60,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: const Color.fromARGB(
-                                        255, 134, 137, 255),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    plan['hifdhs'].last['completed']
+                                        ? 'Completed'
+                                        : 'Pending',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+                            // Add a future date indicator if the hifdh is completed and for a future date
+                            plan['hifdhs'].last['completed']
+                                ? Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromARGB(255, 254, 189, 89)
+                                          .withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color:
+                                            Color.fromARGB(255, 254, 189, 89),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Iconsax.calendar_1,
+                                          color:
+                                              Color.fromARGB(255, 254, 189, 89),
+                                          size: 16,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Upcoming task for ${_getNextHifdhDate(plan['hifdhDays'], plan['currentWeek'][0]['weekStart'])}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : SizedBox(),
+                            SizedBox(
+                                height:
+                                    plan['hifdhs'].last['completed'] ? 16 : 0),
+                            Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
                                       Text(
-                                        'New',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontFamily: 'Poppins',
+                                        '${plan['hifdhs'].last['surah'].split(' ')[0]}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
                                           color: Colors.white,
-                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Verse ${plan['hifdhs'].last['hifdh'].split('-')[0].split(':')[1]}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Verse ${plan['hifdhs'].last['hifdh'].split('-')[0].split(':')[1]}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey.shade100,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: 15,
-                                    right: 1,
-                                  ),
-                                  child: Text(
-                                    plan['hifdhs'].last['length'] >= 0.6 &&
-                                            plan['hifdhs']
-                                                    .last['surah']
-                                                    .split(' ')[0] !=
-                                                'Al-Fatiha'
-                                        ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 35).lastIndexOf(' '))}'
-                                        : plan['hifdhs'].last['startVerse'],
-                                    style: GoogleFonts.scheherazadeNew(
-                                      textStyle: TextStyle(
-                                        letterSpacing: 0,
-                                        fontSize: 24,
-                                        color: Colors.grey.shade100,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 5),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      if (!plan['hifdhs'].last['completed']) {
-                                        newDraggableBottomSheet(
-                                            context, plan['hifdhs'].last);
-                                      }
-                                    },
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 4),
-                                      child: Text(
-                                        plan['hifdhs'].last['completed']
-                                            ? 'Next - ${_getNextHifdhDate(plan['hifdhDays'], plan['currentWeek'][0]['weekStart'])}'
-                                            : 'Show details',
-                                        style: TextStyle(
-                                          color: const Color.fromARGB(
-                                              255, 90, 92, 191),
+                                  SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        plan['hifdhs'].last['length'] >= 0.6 &&
+                                                plan['hifdhs']
+                                                        .last['surah']
+                                                        .split(' ')[0] !=
+                                                    'Al-Fatiha'
+                                            ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 35).lastIndexOf(' '))}'
+                                            : plan['hifdhs'].last['startVerse'],
+                                        style: GoogleFonts.scheherazadeNew(
+                                          fontSize: 22,
+                                          height: 1.8,
+                                          color: Colors.white,
                                         ),
                                       ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    plan['hifdhs'].last['completed']
+                                        ? Iconsax.calendar_1
+                                        : Iconsax.arrow_right_3,
+                                    color: Color.fromARGB(255, 73, 121, 251),
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    plan['hifdhs'].last['completed']
+                                        ? 'Next - ${_getNextHifdhDate(plan['hifdhDays'], plan['currentWeek'][0]['weekStart'])}'
+                                        : 'Start Memorising',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color.fromARGB(255, 73, 121, 251),
                                     ),
                                   ),
                                 ],
                               ),
-                            )
+                            ),
                           ],
                         ),
                 ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
+
+              // Review Card
               reviews.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Text(
-                        'No reviews for today.',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  : GestureDetector(
-                      onTap: () {
-                        markReviewAsComplete(context, reviews, id);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.only(
-                            top: 15,
-                            left: 15,
-                            right: 15,
-                            bottom: reviews == [] || reviews.isEmpty ? 15 : 0),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 98, 99, 150),
-                          borderRadius: BorderRadius.circular(30),
-                          image: reviews == [] || reviews.isEmpty
-                              ? null
-                              : DecorationImage(
-                                  image: AssetImage(
-                                      'assets/reviewbg.png'), // Replace with the correct path to your PNG file
-                                  fit: BoxFit.contain,
-                                  alignment: Alignment.bottomCenter,
-                                  // Adjust this to control how the image fits
+                  ? SizedBox()
+                  : Column(
+                      children: [
+                        SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () {
+                            markReviewAsComplete(context, reviews, id);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color.fromARGB(255, 100, 163, 119),
+                                  Color.fromARGB(255, 129, 186, 145),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromARGB(255, 100, 163, 119)
+                                      .withOpacity(0.2),
+                                  blurRadius: 15,
+                                  offset: Offset(0, 5),
                                 ),
-                        ),
-                        child: reviews == [] || reviews.isEmpty
-                            ? Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'None',
-                                    style: TextStyle(
-                                        color: Colors.grey.shade100,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w800),
-                                  ),
-                                  Container(
-                                    width: 80,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        color:
-                                            Color.fromARGB(255, 129, 130, 171)),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
                                       children: [
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Icon(
+                                            Iconsax.refresh,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                        ),
+                                        SizedBox(width: 12),
                                         Text(
                                           'Review',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'Poppins',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
                                             color: Colors.white,
-                                            fontWeight: FontWeight.w400,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  )
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Surah ${reviews.first['surah'].split(' ')[0]}',
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 20,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'Quiz',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
                                           color: Colors.white,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      Container(
-                                        width: 80,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 16),
+                                Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${reviews.first['surah'].split(' ')[0]}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              color:
+                                                  Colors.white.withOpacity(0.9),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 12),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            reviews.first['length'] >= 0.6 &&
+                                                    reviews.first['surah']
+                                                            .split(' ')[0] !=
+                                                        'Al-Fatiha'
+                                                ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
+                                                : reviews.first['startVerse'],
+                                            style: GoogleFonts.scheherazadeNew(
+                                              fontSize: 22,
+                                              height: 1.8,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Iconsax.play,
+                                        color:
+                                            Color.fromARGB(255, 100, 163, 119),
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Start Quiz',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                           color: Color.fromARGB(
-                                              255, 129, 130, 171),
+                                              255, 100, 163, 119),
                                         ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
+      ],
+    );
+  }
+
+  void newDraggableBottomSheet(
+      BuildContext context, Map<String, dynamic> hifdh) {
+    Widget makeDissmissable({required Widget child}) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).pop(),
+          child: GestureDetector(
+            onTap: () {},
+            child: child,
+          ),
+        );
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return makeDissmissable(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.6,
+            maxChildSize: 0.9,
+            builder: (BuildContext context, ScrollController scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        physics: BouncingScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'New Memorisation',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    icon: Icon(
+                                      Icons.close,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 24),
+                              // First verse section
+                              Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color.fromARGB(255, 73, 121, 251),
+                                      Color.fromARGB(255, 114, 152, 255),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color.fromARGB(255, 73, 121, 251)
+                                          .withOpacity(0.2),
+                                      blurRadius: 15,
+                                      offset: Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Icon(
+                                            Iconsax.book_1,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Review',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontFamily: 'Poppins',
+                                              'Surah ${hifdh['surah'].split(' ')[0]}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
                                                 color: Colors.white,
-                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.white
+                                                    .withOpacity(0.9),
                                               ),
                                             ),
                                           ],
                                         ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 16),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey.shade100,
-                                          fontWeight: FontWeight.w300,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 15,
-                                          right: 1,
-                                        ),
+                                      child: Directionality(
+                                        textDirection: TextDirection.rtl,
                                         child: Text(
-                                          reviews.first['length'] >= 0.6 &&
-                                                  reviews.first['surah']
-                                                          .split(' ')[0] !=
-                                                      'Al-Fatiha'
-                                              ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
-                                              : reviews.first['startVerse'],
+                                          '${hifdh['startVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[0].split(':')[1]).replaceAll(' ', '')}﴾',
                                           style: GoogleFonts.scheherazadeNew(
-                                            textStyle: TextStyle(
-                                              letterSpacing: 0,
-                                              fontSize: 24,
-                                              color: Colors.grey.shade100,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                            fontSize: 22,
+                                            height: 1.8,
+                                            color: Colors.white,
                                           ),
+                                          textAlign: TextAlign.justify,
                                         ),
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 24),
+                              // Connection indicator
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 1,
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  Container(
+                                    margin:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    padding: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_downward_rounded,
+                                      color: Color.fromARGB(255, 73, 121, 251),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      height: 1,
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 24),
+                              // Second verse section
+                              Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color.fromARGB(255, 114, 152, 255),
+                                      Color.fromARGB(255, 73, 121, 251),
                                     ],
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 5),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color.fromARGB(255, 73, 121, 251)
+                                          .withOpacity(0.2),
+                                      blurRadius: 15,
+                                      offset: Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       children: [
-                                        TextButton(
-                                          onPressed: () {
-                                            markReviewAsComplete(
-                                                context, reviews, id);
-                                          },
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            padding: EdgeInsets.zero,
-                                            minimumSize: Size.zero,
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 4),
-                                            child: Text(
-                                              'Start Quiz',
-                                              style: TextStyle(
-                                                color: const Color.fromARGB(
-                                                    255, 98, 99, 150),
+                                          child: Icon(
+                                            Iconsax.book_1,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Surah ${hifdh['surah'].split(' ')[1]}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                          ),
+                                            Text(
+                                              'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.white
+                                                    .withOpacity(0.9),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  )
-                                ],
+                                    SizedBox(height: 16),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Directionality(
+                                        textDirection: TextDirection.rtl,
+                                        child: Text(
+                                          '${hifdh['endVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[1].split(':')[1]).replaceAll(' ', '')}﴾',
+                                          style: GoogleFonts.scheherazadeNew(
+                                            fontSize: 22,
+                                            height: 1.8,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.justify,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              SizedBox(height: 40),
+                              // Complete button
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (!hifdh['completed']) {
+                                      markHifdhAsComplete(
+                                        hifdh['nextKey'],
+                                        context,
+                                        plan['lines'],
+                                        id,
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color.fromARGB(255, 73, 121, 251),
+                                          Color.fromARGB(255, 114, 152, 255),
+                                        ],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        'Mark as Complete',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-            ],
+                  ],
+                ),
+              );
+            },
           ),
-        )
-      ],
+        );
+      },
     );
+  }
+
+  String _convertToArabicNumbers(String number) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    for (int i = 0; i < english.length; i++) {
+      number = number.replaceAll(english[i], arabic[i]);
+    }
+    return number;
   }
 
   String _getNextHifdhDate(List<dynamic> hifdhDays, String weekStart) {
@@ -888,426 +1475,21 @@ class Upcoming extends StatelessWidget {
     return '--/--'; // Fallback if no next date found
   }
 
-  void newDraggableBottomSheet(
-      BuildContext context, Map<String, dynamic> hifdh) {
-    Widget makeDissmissable({required Widget child}) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).pop(),
-          child: GestureDetector(
-            onTap: () {},
-            child: child,
-          ),
-        );
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Allow full height
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return makeDissmissable(
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.6, // Start at half height
-            minChildSize: 0.6, // Minimum height
-            maxChildSize: 0.6, // Maximum height (full screen)
-            builder: (BuildContext context, ScrollController scrollController) {
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 30.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
-                ),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20.0),
-                            child: Text(
-                              'New Memorisation',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                wordSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 5.0),
-                            child: IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(Icons.close)),
-                          )
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(left: 20),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromARGB(255, 73, 121, 251),
-                                  Color.fromARGB(255, 86, 145, 255),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color.fromARGB(255, 73, 121, 251)
-                                      .withOpacity(0.25),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Surah ${hifdh['surah'].split(' ')[0]}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 15),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Color.fromARGB(255, 73, 121, 251)
-                                  .withOpacity(0.15),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(
-                              '${hifdh['startVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[0].split(':')[1]).replaceAll(' ', '')}﴾',
-                              style: GoogleFonts.scheherazadeNew(
-                                textStyle: TextStyle(
-                                  fontSize: 22,
-                                  height: 2.0,
-                                  letterSpacing: 0,
-                                  wordSpacing: 2,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromARGB(255, 51, 51, 51),
-                                ),
-                              ),
-                              textAlign: TextAlign.justify,
-                              textDirection: TextDirection.rtl,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 20, horizontal: 20),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 2,
-                                decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 73, 121, 251),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color.fromARGB(255, 73, 121, 251),
-                                    Color.fromARGB(255, 86, 145, 255),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color.fromARGB(255, 73, 121, 251)
-                                        .withOpacity(0.25),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.arrow_downward_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Container(
-                                height: 2,
-                                decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 73, 121, 251),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(left: 20),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromARGB(255, 86, 145, 255),
-                                  Color.fromARGB(255, 73, 121, 251),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color.fromARGB(255, 73, 121, 251)
-                                      .withOpacity(0.25),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Surah ${hifdh['surah'].split(' ')[1]}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 15),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Color.fromARGB(255, 73, 121, 251)
-                                  .withOpacity(0.15),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(
-                              '${hifdh['endVerse']} ﴿${_convertToArabicNumbers(hifdh['hifdh'].split('-')[1].split(':')[1]).replaceAll(' ', '')}﴾',
-                              style: GoogleFonts.scheherazadeNew(
-                                textStyle: TextStyle(
-                                  fontSize: 22,
-                                  height: 2.0,
-                                  letterSpacing: 0,
-                                  wordSpacing: 2,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromARGB(255, 51, 51, 51),
-                                ),
-                              ),
-                              textAlign: TextAlign.justify,
-                              textDirection: TextDirection.rtl,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 50),
-                      TextButton(
-                        onPressed: () {
-                          if (!hifdh['completed']) {
-                            markHifdhAsComplete(
-                              hifdh['nextKey'],
-                              context,
-                              plan['lines'],
-                              id,
-                            );
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 86, 145, 255),
-                          padding: EdgeInsets.zero,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          child: Text(
-                            'Mark as Complete',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  String _convertToArabicNumbers(String number) {
-    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
-    for (int i = 0; i < english.length; i++) {
-      number = number.replaceAll(english[i], arabic[i]);
-    }
-    return number;
-  }
-}
-
-class Statistics extends StatelessWidget {
-  const Statistics({
-    super.key,
-    required this.plan,
-  });
-  final Map<String, dynamic> plan;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Your Memorisation Progress',
-                        style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 82, 95, 127)),
-                      ),
-                      Text(
-                        '${((((plan['completedLines'] / plan['totalLines']) > 1 ? 1 : plan['completedLines'] / plan['totalLines']) * 100)).toStringAsFixed(0)}% Progress',
-                        style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: Color.fromARGB(255, 152, 163, 199)),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 251, 241, 227),
-                        borderRadius: BorderRadius.circular(30)),
-                    padding: EdgeInsets.all(12),
-                    // height: 30,
-                    // width: 30,
-                    child: Icon(
-                      Iconsax.cup,
-                      color: const Color.fromARGB(255, 255, 178, 34),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 25, bottom: 10),
-                child: LinearPercentIndicator(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 0,
-                  ),
-                  lineHeight: 10,
-                  percent: ((plan['completedLines'] / plan['totalLines']) > 1
-                      ? 1
-                      : (plan['completedLines'] / plan['totalLines'])),
-                  progressColor: Color.fromARGB(255, 113, 233, 175),
-                  backgroundColor: Color.fromARGB(255, 242, 243, 248),
-                  barRadius: const Radius.circular(20),
-                ),
-              )
-            ],
-          ),
-        ),
-      ],
-    );
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return months[month - 1];
   }
 }

@@ -139,7 +139,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           ),
                         ),
                         Text(
-                          'How much would you like to memorize?',
+                          'How much would you like to memorise?',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -285,7 +285,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           ),
                         ),
                         Text(
-                          'Select your memorization days',
+                          'Select your memorisation days',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: Colors.grey.shade600,

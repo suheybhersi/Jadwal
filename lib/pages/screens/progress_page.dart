@@ -71,7 +71,7 @@ class _ProgressContentState extends State<ProgressContent> {
             'Progress',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
-              fontSize: 26,
+              fontSize: 22,
               color: Colors.black87,
             ),
           ),
@@ -132,7 +132,7 @@ class _ProgressContentState extends State<ProgressContent> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Keep track of how much you\'ve memorized for each surah',
+              'Keep track of how much you\'ve memorised for each surah',
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.9),
@@ -268,14 +268,6 @@ class _SurahProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildProgressIndicator(progress),
-                const SizedBox(height: 4),
-                Text(
-                  _getProgressText(completedLines, totalLines),
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
               ],
             ),
           ),
@@ -337,21 +329,5 @@ class _SurahProgressCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  // Helper method to determine whether to show lines or pages
-  String _getProgressText(int completedLines, int totalLines) {
-    const int linesPerPage = 15; // Consider a page to be around 15 lines
-
-    if (totalLines > linesPerPage) {
-      // Calculate pages (rounded to 1 decimal place)
-      final double completedPages = completedLines / linesPerPage;
-      final double totalPages = totalLines / linesPerPage;
-
-      return '${completedPages.toStringAsFixed(1)} of ${totalPages.toStringAsFixed(1)} pages memorized';
-    } else {
-      // For shorter surahs, keep showing lines
-      return '$completedLines of $totalLines lines memorized';
-    }
   }
 }
