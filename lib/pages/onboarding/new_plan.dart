@@ -175,11 +175,10 @@ class BottomNavigation extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 50.0),
+        padding: const EdgeInsets.only(bottom: 0.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 30),
             // Next Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
