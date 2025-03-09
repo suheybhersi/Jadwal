@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:jadwal/pages/screens/home_page.dart';
-import 'package:jadwal/pages/screens/plan_page.dart';
-import 'package:jadwal/pages/screens/profile_page.dart';
-import 'package:jadwal/pages/screens/progress_page.dart';
+import 'package:jadwal/pages/screens/HomePage/home_page.dart';
+import 'package:jadwal/pages/screens/PlanPage/plan_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/profile_page.dart';
+import 'package:jadwal/pages/screens/ProgressPage/progress_page.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/components/network_status_banner.dart';
 
 class MyBottomNavBar extends StatefulWidget {
   const MyBottomNavBar({super.key});
@@ -121,7 +122,14 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
           ),
         ),
       ),
-      body: _screens[_selectedIndex],
+      body: Column(
+        children: [
+          // Network status banner will appear at the top when offline
+          const NetworkStatusBanner(),
+          // Expanded to fill the remaining space with the selected screen
+          Expanded(child: _screens[_selectedIndex]),
+        ],
+      ),
     );
   }
 }

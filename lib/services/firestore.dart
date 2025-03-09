@@ -5,6 +5,8 @@ import 'package:jadwal/models/current_weekday.dart';
 import 'package:jadwal/models/hifdh.dart';
 import 'package:jadwal/models/plan.dart';
 import 'package:jadwal/models/review.dart';
+import 'package:jadwal/services/connectivity_service.dart';
+import 'dart:math';
 
 class FirestoreService extends ChangeNotifier {
   final CollectionReference usersCollection =
@@ -16,11 +18,31 @@ class FirestoreService extends ChangeNotifier {
 
   final FirebaseAuth auth;
   final String uid;
+  final ConnectivityService? connectivityService;
+  bool _isOfflineMode = false;
 
-  FirestoreService({required this.auth, required this.uid}) {
+  bool get isOfflineMode => _isOfflineMode;
+
+  FirestoreService(
+      {required this.auth, required this.uid, this.connectivityService}) {
     final User? user = auth.currentUser;
     if (user == null) {
       throw Exception('User not authenticated');
+    }
+
+    // Configure Firestore for offline persistence
+    FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
+
+    // Listen to connectivity changes if service is provided
+    connectivityService?.addListener(_onConnectivityChanged);
+  }
+
+  void _onConnectivityChanged() {
+    if (connectivityService != null) {
+      _isOfflineMode = !connectivityService!.isConnected;
+      notifyListeners();
     }
   }
 
@@ -38,12 +60,65 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('surahsProgress');
 
   Future<void> updateUserProfile(Map<String, dynamic> userData) async {
-    return await userDocument.set(userData, SetOptions(merge: true));
+    return await _executeWithRetry(
+        () => userDocument.set(userData, SetOptions(merge: true)));
   }
 
   Future<Map<String, dynamic>?> getUserProfile() async {
-    DocumentSnapshot doc = await userDocument.get();
-    return doc.exists ? doc.data() as Map<String, dynamic>? : null;
+    return await _executeWithRetry<Map<String, dynamic>?>(() async {
+      DocumentSnapshot doc = await userDocument.get();
+      return doc.exists ? doc.data() as Map<String, dynamic>? : null;
+    });
+  }
+
+  /// Generic method to execute Firestore operations with retry logic
+  Future<T> _executeWithRetry<T>(Future<T> Function() operation) async {
+    const maxRetries = 3;
+    int attempts = 0;
+
+    while (attempts < maxRetries) {
+      try {
+        return await operation();
+      } on FirebaseException catch (e) {
+        if ((e.code == 'unavailable' || e.code == 'network-request-failed') &&
+            attempts < maxRetries - 1) {
+          // Exponential backoff: wait longer between each retry
+          final waitTime =
+              Duration(milliseconds: 300 * pow(2, attempts).toInt());
+          if (kDebugMode) {
+            print(
+                'Firestore operation failed: ${e.message}, retrying in ${waitTime.inMilliseconds}ms');
+          }
+          await Future.delayed(waitTime);
+          attempts++;
+        } else {
+          _isOfflineMode = true;
+          notifyListeners();
+          rethrow; // If it's not a network error or we've exhausted retries
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Unexpected error during Firestore operation: $e');
+        }
+        _isOfflineMode = true;
+        notifyListeners();
+        rethrow;
+      }
+    }
+
+    _isOfflineMode = true;
+    notifyListeners();
+    throw FirebaseException(
+      plugin: 'cloud_firestore',
+      code: 'unavailable',
+      message: 'Service still unavailable after $maxRetries retries',
+    );
+  }
+
+  @override
+  void dispose() {
+    connectivityService?.removeListener(_onConnectivityChanged);
+    super.dispose();
   }
 
 /*-------------------------------------------A D D   P L A N-------------------------------------------*/
@@ -63,7 +138,7 @@ class FirestoreService extends ChangeNotifier {
     double lastSurahMemorisedLines = 0;
     if (!backToFront) {
       /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
-      if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
+      if (memorisedTo == 'null:null') {
         startVerseId = '1';
         startKey = '1:1';
       } else {
@@ -288,7 +363,7 @@ class FirestoreService extends ChangeNotifier {
       }
     } else {
       /*-----------C A L C U L A T E   M E M O R I S E D   L I N E S--------------*/
-      if (memorisedFrom == 'null:null' && memorisedTo == 'null:null') {
+      if (memorisedTo == 'null:null') {
         startVerseId = '6231'; // Start from last verse
         startKey = '114:1';
       } else {
@@ -700,10 +775,20 @@ class FirestoreService extends ChangeNotifier {
         0,
         0,
       );
+
+      // Get the week start date for the hifdh date
+      DateTime hifdhWeekStart = hifdhDT.subtract(
+        Duration(days: hifdhDT.weekday - 1),
+      );
+      String hifdhWeekStartString =
+          '${hifdhWeekStart.day}-${hifdhWeekStart.month}-${hifdhWeekStart.year}';
+
       dynamic currentWeek = planData['currentWeek'];
       dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
 
-      weekDay['completed'] = true;
+      if (weekDay['weekStart'] == hifdhWeekStartString) {
+        weekDay['completed'] = true;
+      }
 
       await weeksCollection
           .where('weekStart', isEqualTo: weekDay['weekStart'])
@@ -803,10 +888,6 @@ class FirestoreService extends ChangeNotifier {
     surah = verseData['surah'];
     startVerse = verseData['text'];
     verseLength = double.parse(verseData['length'].toString());
-
-    // final endOfPlanVerseSnapshot =
-    //     await versesCollection.where('key', isEqualTo: planData['end']).get();
-    // String endOfPlanVerse = endOfPlanVerseSnapshot.docs[0].reference.id;
 
     if (verseId != '6236') {
       double total = double.parse(verseData['length'].toString());

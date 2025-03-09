@@ -118,7 +118,7 @@ class OnBoardingController extends GetxController {
 
   void nextPage() {
     if (currentPageIndex.value == 0) {
-      Get.to(LoginOrRegisterPage());
+      Get.to(() => LoginOrRegisterPage());
     } else {
       int page = currentPageIndex.value + 1;
       pageController.jumpToPage(page);
@@ -128,6 +128,6 @@ class OnBoardingController extends GetxController {
   void skipPage() {
     currentPageIndex.value = 0;
     // pageController.jumpToPage(2);
-    Get.to(LoginOrRegisterPage());
+    Get.to(() => LoginOrRegisterPage());
   }
 }

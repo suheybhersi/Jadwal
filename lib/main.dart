@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/firebase_options.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
+import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -17,10 +18,13 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (context) => ConnectivityService()),
         ChangeNotifierProvider(
             create: (context) => FirestoreService(
                 auth: FirebaseAuth.instance,
-                uid: FirebaseAuth.instance.currentUser!.uid)),
+                uid: FirebaseAuth.instance.currentUser!.uid,
+                connectivityService:
+                    Provider.of<ConnectivityService>(context, listen: false))),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
       ],
       child: const MyApp(),

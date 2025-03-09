@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:jadwal/pages/screens/feedback_page.dart';
-import 'package:jadwal/pages/screens/edit_profile_page.dart';
-import 'package:jadwal/pages/screens/settings_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/feedback_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 
 class ProfilePage extends StatelessWidget {
