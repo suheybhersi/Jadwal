@@ -1,10 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:jadwal/components/build_verse_question.dart';
-import 'package:jadwal/components/quiz_intro_page.dart';
-import 'package:jadwal/components/quiz_results_page.dart';
-import 'package:jadwal/components/what_comes_next_question.dart';
-import 'package:jadwal/components/fill_blank_question.dart';
+import 'package:jadwal/pages/screens/QuizPage/build_verse_question.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_intro_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
+import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
