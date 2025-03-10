@@ -16,6 +16,7 @@ class Plan {
   final int missedReviews;
   final List<CurrentWeekDay> currentWeek;
   final bool planCompleted;
+  final List<Map<String, dynamic>> missedHifdhs;
 
   Plan({
     required this.backToFront,
@@ -31,6 +32,7 @@ class Plan {
     required this.missedReviews,
     required this.currentWeek,
     required this.planCompleted,
+    this.missedHifdhs = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -48,6 +50,7 @@ class Plan {
       'missedReviews': missedReviews,
       'currentWeek': currentWeek,
       'planCompleted': planCompleted,
+      'missedHifdhs': missedHifdhs,
     };
   }
 }

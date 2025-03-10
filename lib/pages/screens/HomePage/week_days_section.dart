@@ -186,6 +186,14 @@ class WeekDaysSection extends StatelessWidget {
           .toList();
     }
 
+    // Find missed hifdh tasks for this day
+    List<dynamic> missedHifdhTasks = [];
+    if (plan['missedHifdhs'] != null) {
+      missedHifdhTasks = plan['missedHifdhs']
+          .where((hifdh) => hifdh['date'] == formattedDate)
+          .toList();
+    }
+
     // Find review tasks for this day
     List<dynamic> reviewTasks = [];
     if (plan['reviews'] != null) {
@@ -333,7 +341,7 @@ class WeekDaysSection extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 _buildSummaryItem(
-                                    hifdhTasks.length,
+                                    hifdhTasks.length + missedHifdhTasks.length,
                                     'Memorisation',
                                     Iconsax.book_1,
                                     Color.fromARGB(255, 73, 121, 251)),
@@ -352,7 +360,9 @@ class WeekDaysSection extends StatelessWidget {
                           ),
 
                           // No tasks message
-                          if (hifdhTasks.isEmpty && reviewTasks.isEmpty)
+                          if (hifdhTasks.isEmpty &&
+                              reviewTasks.isEmpty &&
+                              missedHifdhTasks.isEmpty)
                             Container(
                               margin: EdgeInsets.symmetric(vertical: 40),
                               child: Column(
@@ -402,6 +412,17 @@ class WeekDaysSection extends StatelessWidget {
                             SizedBox(height: 12),
                             ...hifdhTasks
                                 .map((hifdh) => _buildHifdhCard(hifdh, isPast)),
+                            SizedBox(height: 24),
+                          ],
+
+                          // Missed Hifdh tasks
+                          if (missedHifdhTasks.isNotEmpty) ...[
+                            _buildSectionHeader(
+                                'Missed Memorisation (${missedHifdhTasks.length})',
+                                Iconsax.danger),
+                            SizedBox(height: 12),
+                            ...missedHifdhTasks
+                                .map((hifdh) => _buildHifdhCard(hifdh, true)),
                             SizedBox(height: 24),
                           ],
 
@@ -523,6 +544,11 @@ class WeekDaysSection extends StatelessWidget {
     String startVerse = hifdh['hifdh'].split('-')[0].split(':')[1];
     String endVerse = hifdh['hifdh'].split('-')[1].split(':')[1];
 
+    // Check if this is a missed hifdh (from missedHifdhs array)
+    bool isMissedHifdh = !hifdh.containsKey('completed');
+    bool isCompleted =
+        hifdh.containsKey('completed') ? hifdh['completed'] : false;
+
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -555,18 +581,20 @@ class WeekDaysSection extends StatelessWidget {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(vertical: 6),
-                color: hifdh['completed']
+                color: isCompleted
                     ? Color.fromARGB(255, 113, 233, 175)
-                    : isPast
+                    : isMissedHifdh || isPast
                         ? Colors.red.shade300
                         : Color.fromARGB(255, 254, 189, 89),
                 child: Center(
                   child: Text(
-                    hifdh['completed']
+                    isCompleted
                         ? 'Completed'
-                        : isPast
+                        : isMissedHifdh
                             ? 'Missed'
-                            : 'Upcoming',
+                            : isPast
+                                ? 'Missed'
+                                : 'Upcoming',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

@@ -263,6 +263,7 @@ class FirestoreService extends ChangeNotifier {
           missedReviews: 0,
           currentWeek: [],
           planCompleted: false,
+          missedHifdhs: [],
         );
 
         final document = await plansCollection.add(newPlan.toMap());
@@ -500,6 +501,7 @@ class FirestoreService extends ChangeNotifier {
           missedReviews: 0,
           currentWeek: [],
           planCompleted: false,
+          missedHifdhs: [],
         );
 
         final document = await plansCollection.add(newPlan.toMap());
@@ -1454,15 +1456,71 @@ class FirestoreService extends ChangeNotifier {
       0,
     );
 
-    dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
+    // Get existing missedHifdhs or initialize an empty list
+    List<dynamic> missedHifdhs = planData['missedHifdhs'] ?? [];
 
-    for (int i = hifdhDT.weekday - 1; i < 7 && i < todayDT.weekday - 1; i++) {
-      weekDay = currentWeek[i];
-      if (planData['hifdhDays'][i]) {
-        weekDay['missed'] = true;
+    // Mark days as missed in the current week
+    dynamic weekDay = currentWeek[hifdhDT.weekday - 1];
+    List<dynamic> hifdhDays = planData['hifdhDays'];
+
+    // Store the hifdh information for the original missed day
+    if (hifdhDT.isBefore(todayDT)) {
+      Map<String, dynamic> missedHifdh = {
+        'date': hifdhDate,
+        'hifdh': hifdhs.last['hifdh'],
+        'surah': hifdhs.last['surah'],
+        'startVerse': hifdhs.last['startVerse'],
+        'endVerse': hifdhs.last['endVerse'],
+        'length': hifdhs.last['length'],
+        'versesList': hifdhs.last['versesList'],
+      };
+
+      // Check if this date is already in missedHifdhs to avoid duplicates
+      bool alreadyMissed =
+          missedHifdhs.any((missed) => missed['date'] == hifdhDate);
+      if (!alreadyMissed) {
+        missedHifdhs = List.from(missedHifdhs)..add(missedHifdh);
       }
     }
 
+    // Check for additional missed days between the hifdh date and today
+    DateTime checkDate = hifdhDT.add(const Duration(days: 1));
+    while (checkDate.isBefore(todayDT)) {
+      String checkDateStr =
+          '${checkDate.day}-${checkDate.month}-${checkDate.year}';
+      int weekdayIndex = checkDate.weekday - 1;
+
+      // If this is a hifdh day, mark it as missed
+      if (weekdayIndex < hifdhDays.length && hifdhDays[weekdayIndex]) {
+        // Mark the day as missed in the current week if it's in the same week
+        if (checkDate.difference(hifdhDT).inDays < 7 &&
+            weekdayIndex < currentWeek.length) {
+          currentWeek[weekdayIndex]['missed'] = true;
+        }
+
+        // Store the missed hifdh information
+        Map<String, dynamic> additionalMissedHifdh = {
+          'date': checkDateStr,
+          'hifdh': hifdhs.last['hifdh'],
+          'surah': hifdhs.last['surah'],
+          'startVerse': hifdhs.last['startVerse'],
+          'endVerse': hifdhs.last['endVerse'],
+          'length': hifdhs.last['length'],
+          'versesList': hifdhs.last['versesList'],
+        };
+
+        // Check if this date is already in missedHifdhs to avoid duplicates
+        bool alreadyMissed =
+            missedHifdhs.any((missed) => missed['date'] == checkDateStr);
+        if (!alreadyMissed) {
+          missedHifdhs = List.from(missedHifdhs)..add(additionalMissedHifdh);
+        }
+      }
+
+      checkDate = checkDate.add(const Duration(days: 1));
+    }
+
+    // Update the week collection
     weeksCollection
         .where('weekStart', isEqualTo: weekDay['weekStart'])
         .get()
@@ -1470,7 +1528,7 @@ class FirestoreService extends ChangeNotifier {
           (value) => value.docs[0].reference.update({'weekDays': currentWeek}),
         );
 
-    List<dynamic> hifdhDays = planData['hifdhDays'];
+    // Calculate the next hifdh date
     bool calculated = false;
     int count = todayDT.weekday - 1;
     int nextHifdh = 0;
@@ -1502,7 +1560,8 @@ class FirestoreService extends ChangeNotifier {
     plansCollection.doc(id).update({
       'hifdhs': hifdhs,
       'currentWeek': currentWeek,
-      'streak': planData['streak']
+      'streak': planData['streak'],
+      'missedHifdhs': missedHifdhs,
     });
     final hifdhSnapshot = await hifdhsCollection
         .where('hifdh', isEqualTo: hifdhs.last['hifdh'])

@@ -34,12 +34,12 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(
                   color: Color.fromARGB(255, 73, 121, 251),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 );
               }
               return const TextStyle(
                 color: Color.fromARGB(255, 127, 131, 141),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               );
             }),
           ),
