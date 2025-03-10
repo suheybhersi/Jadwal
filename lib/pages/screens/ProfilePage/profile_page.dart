@@ -6,10 +6,14 @@ import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/screens/ProfilePage/feedback_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/delete_account_page.dart';
 import 'package:jadwal/services/firestore.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
+
+  // Add a global key for the scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +69,7 @@ class ProfilePage extends StatelessWidget {
         );
 
         return Scaffold(
+          key: _scaffoldKey, // Add the key to the Scaffold
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getPlansStream(),
@@ -312,7 +317,13 @@ class ProfilePage extends StatelessWidget {
                                     icon: Icons.delete_outline,
                                     title: 'Delete account',
                                     onTap: () {
-                                      _showDeleteAccountDialog(context);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const DeleteAccountPage(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   Divider(
@@ -476,57 +487,6 @@ class ProfilePage extends StatelessWidget {
             },
             child: Text(
               'Sign Out',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Delete Account',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[400],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              // Here you would implement the account deletion logic
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Delete account feature coming soon')),
-              );
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Delete',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,

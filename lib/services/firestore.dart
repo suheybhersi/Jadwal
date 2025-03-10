@@ -1626,4 +1626,65 @@ class FirestoreService extends ChangeNotifier {
       await surahsSnapshot.docs[i].reference.delete();
     }
   }
+
+  /*---------------------------------------D E L E T E   U S E R   A C C O U N T----------------------------------------*/
+  Future<void> deleteUserAccount() async {
+    try {
+      // Store user reference before logging out
+      final String userId = uid;
+      final DocumentReference userDocRef = usersCollection.doc(userId);
+      final CollectionReference userPlansCollection =
+          userDocRef.collection('plans');
+      final CollectionReference userHifdhsCollection =
+          userDocRef.collection('hifdhs');
+      final CollectionReference userReviewsCollection =
+          userDocRef.collection('reviews');
+      final CollectionReference userWeeksCollection =
+          userDocRef.collection('weeks');
+      final CollectionReference userSurahsProgressCollection =
+          userDocRef.collection('surahsProgress');
+
+      // Get all documents from subcollections
+      final plansSnapshot = await userPlansCollection.get();
+      final hifdhsSnapshot = await userHifdhsCollection.get();
+      final reviewsSnapshot = await userReviewsCollection.get();
+      final weeksSnapshot = await userWeeksCollection.get();
+      final surahsProgressSnapshot = await userSurahsProgressCollection.get();
+
+      // Delete the user document itself
+      await userDocRef.delete();
+
+      // Then delete the Firebase Auth user
+      final User? currentUser = auth.currentUser;
+      if (currentUser != null) {
+        await currentUser.delete();
+      }
+
+      // Delete all documents in each subcollection
+      for (var doc in plansSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in hifdhsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in reviewsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in weeksSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in surahsProgressSnapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting user account: $e');
+      }
+      rethrow; // Rethrow to handle in the UI
+    }
+  }
 }
