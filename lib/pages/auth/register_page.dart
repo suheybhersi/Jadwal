@@ -28,10 +28,6 @@ class _RegisterPageState extends State<RegisterPage> {
   // Add state variable for checkbox
   bool _agreedToTerms = false;
 
-  // Add state variables to track password visibility
-  final bool _obscurePassword = true;
-  final bool _obscureConfirmPassword = true;
-
   void showErrorDialog(String message) {
     showDialog(
       context: context,
