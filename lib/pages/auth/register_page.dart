@@ -5,6 +5,7 @@ import 'package:jadwal/components/my_textfield.dart';
 import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:flutter/gestures.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -23,6 +24,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final confirmPasswordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+
+  // Add state variable for checkbox
+  bool _agreedToTerms = false;
+
+  // Add state variables to track password visibility
+  final bool _obscurePassword = true;
+  final bool _obscureConfirmPassword = true;
 
   void showErrorDialog(String message) {
     showDialog(
@@ -92,15 +100,23 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       } on FirebaseAuthException catch (e) {
         Navigator.pop(context); // Close loading dialog
+        String errorMessage = 'An unexpected error occurred';
+
         if (e.code == 'email-already-in-use') {
-          showErrorDialog("This email is already in use. Please try another.");
+          errorMessage = "This email is already in use";
         } else if (e.code == 'invalid-email') {
-          showErrorDialog("Invalid email address. Please check and try again.");
+          errorMessage = "Invalid email address";
         } else if (e.code == 'weak-password') {
-          showErrorDialog("Password is too weak. Use a stronger password.");
-        } else {
-          showErrorDialog("An unexpected error occurred. Please try again.");
+          errorMessage = "Password is too weak";
         }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -111,8 +127,9 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,85 +161,133 @@ class _RegisterPageState extends State<RegisterPage> {
                       width: 24,
                       height: 24,
                       child: Checkbox(
-                        value: true,
-                        onChanged: (value) {},
+                        value: _agreedToTerms,
+                        onChanged: (value) {
+                          setState(() {
+                            _agreedToTerms = value ?? false;
+                          });
+                        },
                         checkColor: Colors.white,
-                        fillColor: WidgetStateProperty.all(
-                          Color.fromARGB(255, 49, 107, 253),
+                        fillColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Color.fromARGB(255, 73, 121, 251);
+                          }
+                          return Colors.transparent;
+                        }),
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
-                    SizedBox(width: 5),
+                    SizedBox(width: 8),
                     Flexible(
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'I agree to the ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade600,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _agreedToTerms = !_agreedToTerms;
+                          });
+                        },
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'I agree to the ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ).apply(
-                                decoration: TextDecoration.underline,
-                                color: Color.fromARGB(255, 49, 107, 253),
-                                decorationColor:
-                                    Color.fromARGB(255, 49, 107, 253),
+                              TextSpan(
+                                text: 'Privacy Policy',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ).apply(
+                                  decoration: TextDecoration.underline,
+                                  color: Color.fromARGB(255, 73, 121, 251),
+                                  decorationColor:
+                                      Color.fromARGB(255, 73, 121, 251),
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    // Add privacy policy action here
+                                    print('Privacy Policy tapped');
+                                  },
                               ),
-                            ),
-                            TextSpan(
-                              text: ' and ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade600,
+                              TextSpan(
+                                text: ' and ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: 'Terms of Use',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ).apply(
-                                decoration: TextDecoration.underline,
-                                color: Color.fromARGB(255, 49, 107, 253),
-                                decorationColor:
-                                    Color.fromARGB(255, 49, 107, 253),
+                              TextSpan(
+                                text: 'Terms of Use',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ).apply(
+                                  decoration: TextDecoration.underline,
+                                  color: Color.fromARGB(255, 73, 121, 251),
+                                  decorationColor:
+                                      Color.fromARGB(255, 73, 121, 251),
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    // Add terms of use action here
+                                    print('Terms of Use tapped');
+                                  },
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
+                  height: 55,
                   child: ElevatedButton(
-                    style: ButtonStyle(
-                      elevation: WidgetStateProperty.all(0),
-                      padding: WidgetStateProperty.all(
-                        EdgeInsets.symmetric(horizontal: 75, vertical: 16),
-                      ),
-                      backgroundColor: WidgetStateProperty.all(
-                        Color.fromARGB(255, 73, 121, 251),
-                      ),
-                      shape: WidgetStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: _agreedToTerms
+                          ? Color.fromARGB(255, 73, 121, 251)
+                          : Color.fromARGB(255, 73, 121, 251).withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
                       ),
                     ),
-                    onPressed: signUserUp,
+                    onPressed: _agreedToTerms
+                        ? signUserUp
+                        : () {
+                            // Show error message if trying to sign up without agreeing
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please agree to the Privacy Policy and Terms of Use',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                backgroundColor: Colors.red.shade400,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                margin: EdgeInsets.all(10),
+                              ),
+                            );
+                          },
                     child: Text(
                       'Sign Up',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -294,7 +359,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-class RegisterForm extends StatelessWidget {
+class RegisterForm extends StatefulWidget {
   const RegisterForm({
     super.key,
     required this.firstNameController,
@@ -313,6 +378,15 @@ class RegisterForm extends StatelessWidget {
   final TextEditingController confirmPasswordController;
 
   @override
+  State<RegisterForm> createState() => _RegisterFormState();
+}
+
+class _RegisterFormState extends State<RegisterForm> {
+  // Add state variables to track password visibility
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       child: Column(
@@ -321,7 +395,7 @@ class RegisterForm extends StatelessWidget {
             children: [
               Expanded(
                 child: TextFormField(
-                  controller: firstNameController,
+                  controller: widget.firstNameController,
                   decoration: InputDecoration(
                     hintText: 'First Name',
                     enabledBorder: OutlineInputBorder(
@@ -332,12 +406,24 @@ class RegisterForm extends StatelessWidget {
                       borderSide: BorderSide(color: Colors.grey.shade600),
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     fillColor: Colors.white,
                     filled: true,
                     prefixIcon: Icon(Iconsax.personalcard),
                     hintStyle: TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.w500,
+                    ),
+                    errorStyle: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
                     ),
                   ),
                   validator: (value) {
@@ -351,7 +437,7 @@ class RegisterForm extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: TextFormField(
-                  controller: lastNameController,
+                  controller: widget.lastNameController,
                   decoration: InputDecoration(
                     hintText: 'Last Name',
                     enabledBorder: OutlineInputBorder(
@@ -361,6 +447,18 @@ class RegisterForm extends StatelessWidget {
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey.shade600),
                       borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorStyle: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
                     ),
                     fillColor: Colors.white,
                     filled: true,
@@ -382,10 +480,10 @@ class RegisterForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           MyTextField(
-            controller: userNameController,
+            controller: widget.userNameController,
             hintText: 'Username',
             obscureText: false,
-            prefixIcon: Icon(Iconsax.user),
+            prefixIcon: Icon(Iconsax.user, color: Colors.grey.shade600),
             suffixIcon: null,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -396,10 +494,10 @@ class RegisterForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           MyTextField(
-            controller: emailController,
+            controller: widget.emailController,
             hintText: 'Email',
             obscureText: false,
-            prefixIcon: Icon(Iconsax.direct_right),
+            prefixIcon: Icon(Iconsax.direct_right, color: Colors.grey.shade600),
             suffixIcon: null,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -414,11 +512,22 @@ class RegisterForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           MyTextField(
-            controller: passwordController,
+            controller: widget.passwordController,
             hintText: 'Password',
-            obscureText: true,
-            prefixIcon: Icon(Iconsax.password_check),
-            suffixIcon: Icon(Iconsax.eye_slash),
+            obscureText: _obscurePassword,
+            prefixIcon:
+                Icon(Iconsax.password_check, color: Colors.grey.shade600),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Iconsax.eye_slash : Iconsax.eye,
+                color: Colors.grey.shade600,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Password is required';
@@ -431,22 +540,33 @@ class RegisterForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           MyTextField(
-            controller: confirmPasswordController,
+            controller: widget.confirmPasswordController,
             hintText: 'Confirm Password',
-            obscureText: true,
-            prefixIcon: Icon(Iconsax.password_check),
-            suffixIcon: Icon(Iconsax.eye_slash),
+            obscureText: _obscureConfirmPassword,
+            prefixIcon:
+                Icon(Iconsax.password_check, color: Colors.grey.shade600),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword ? Iconsax.eye_slash : Iconsax.eye,
+                color: Colors.grey.shade600,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                });
+              },
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Confirmation password is required';
               }
-              if (value != passwordController.text) {
+              if (value != widget.passwordController.text) {
                 return 'Passwords do not match';
               }
               return null;
             },
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
         ],
       ),
     );

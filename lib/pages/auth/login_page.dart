@@ -19,6 +19,9 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  // Add state variable to track password visibility
+  bool _obscurePassword = true;
+
   void showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -79,13 +82,24 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Add method to check if form is valid
+  bool _isFormValid() {
+    return emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty &&
+        RegExp(r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
+            .hasMatch(emailController.text) &&
+        passwordController.text.length >= 6;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
                 Column(
@@ -121,7 +135,8 @@ class _LoginPageState extends State<LoginPage> {
                         MyTextField(
                           controller: emailController,
                           hintText: 'Email',
-                          prefixIcon: Icon(Iconsax.direct_right),
+                          prefixIcon: Icon(Iconsax.direct_right,
+                              color: Colors.grey.shade600),
                           suffixIcon: null,
                           obscureText: false,
                           validator: (value) {
@@ -140,9 +155,22 @@ class _LoginPageState extends State<LoginPage> {
                         MyTextField(
                           controller: passwordController,
                           hintText: 'Password',
-                          prefixIcon: Icon(Iconsax.password_check),
-                          suffixIcon: Icon(Iconsax.eye_slash),
-                          obscureText: true,
+                          prefixIcon: Icon(Iconsax.password_check,
+                              color: Colors.grey.shade600),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Iconsax.eye_slash
+                                  : Iconsax.eye,
+                              color: Colors.grey.shade600,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                          obscureText: _obscurePassword,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your password';
@@ -184,6 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(height: 32),
                         SizedBox(
                           width: double.infinity,
+                          height: 55,
                           child: ElevatedButton(
                             style: ButtonStyle(
                               elevation: WidgetStateProperty.all(0),
@@ -202,12 +231,13 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                            onPressed: signUserIn,
+                            onPressed: _isFormValid() ? signUserIn : null,
                             child: Text(
                               'Login',
-                              style: const TextStyle(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -291,5 +321,24 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to trigger rebuild when text changes
+    emailController.addListener(() {
+      setState(() {});
+    });
+    passwordController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }
