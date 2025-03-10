@@ -5,6 +5,7 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_intro_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
+import 'package:jadwal/services/openai_service.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
@@ -35,7 +36,14 @@ class _QuizPageState extends State<QuizPage> {
   @override
   void initState() {
     super.initState();
-    questions = generateQuestions()..shuffle();
+    _loadQuestions();
+  }
+
+  Future<void> _loadQuestions() async {
+    final generatedQuestions = await _generateQuestions();
+    setState(() {
+      questions = generatedQuestions..shuffle();
+    });
   }
 
   List<String> splitVerseManuallyWithSpecialChars(String verse) {
@@ -55,24 +63,28 @@ class _QuizPageState extends State<QuizPage> {
     return processedWords;
   }
 
-  List<Map<String, dynamic>> generateQuestions() {
-    //split up the types of questions
+  Future<List<Map<String, dynamic>>> _generateQuestions() async {
     List<Map<String, dynamic>> generatedQuestions = [];
+
+    // Generate fill in the blank questions
     List<Map<String, dynamic>> fillInTheBlankQuestions = [];
-    List<Map<String, dynamic>> whatComesNextQuestions = [];
     List<Map<String, dynamic>> dragAndDropQuestions = [];
+    List<Map<String, dynamic>> whatComesNextQuestions = [];
 
     for (int i = 0; i < widget.versesList.length; i++) {
       String verse = widget.versesList[i];
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
+      // Generate what comes next questions
       if (i < widget.versesList.length - 1) {
         whatComesNextQuestions.add(_generateWhatComesNextQuestion(i));
       }
 
       // Only add fill in the blank for verses with more than 1 word
       if (!words.contains('')) {
-        fillInTheBlankQuestions.add(_generateFillInTheBlankQuestion(verse));
+        // Use await here since _generateFillInTheBlankQuestion is now async
+        fillInTheBlankQuestions
+            .add(await _generateFillInTheBlankQuestion(verse));
       }
 
       // Only add drag and drop for verses between 2 and 7 words
@@ -157,63 +169,137 @@ class _QuizPageState extends State<QuizPage> {
     return generatedQuestions;
   }
 
-  Map<String, dynamic> _generateFillInTheBlankQuestion(String verse) {
-    List<String> words = splitVerseManuallyWithSpecialChars(verse);
+  Future<Map<String, dynamic>> _generateFillInTheBlankQuestion(
+      String verse) async {
+    try {
+      List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-    // Create a map to track word frequencies
-    Map<String, int> wordFrequency = {};
-    for (String word in words) {
-      wordFrequency[word] = (wordFrequency[word] ?? 0) + 1;
-    }
-
-    // Determine number of blanks based on verse length
-    int numberOfBlanks = words.length >= 18
-        ? 3
-        : words.length >= 10
-            ? 2
-            : 1;
-
-    // Keep track of missing words and their indices
-    List<String> missingWords = [];
-    List<int> missingIndices = [];
-
-    // Generate unique random indices for blanks
-    while (missingIndices.length < numberOfBlanks) {
-      int index = Random().nextInt(words.length);
-
-      // Skip if word is a special character or already selected or appears multiple times
-      if (missingIndices.contains(index) || wordFrequency[words[index]]! > 1) {
-        continue;
+      // Create a map to track word frequencies
+      Map<String, int> wordFrequency = {};
+      for (String word in words) {
+        wordFrequency[word] = (wordFrequency[word] ?? 0) + 1;
       }
 
-      missingIndices.add(index);
+      // Determine number of blanks based on verse length
+      int numberOfBlanks = words.length >= 18
+          ? 3
+          : words.length >= 10
+              ? 2
+              : 1;
+
+      // Keep track of missing words and their indices
+      List<String> missingWords = [];
+      List<int> missingIndices = [];
+
+      // Generate unique random indices for blanks
+      while (missingIndices.length < numberOfBlanks) {
+        int index = Random().nextInt(words.length);
+
+        // Skip if word is a special character or already selected or appears multiple times
+        if (missingIndices.contains(index) ||
+            wordFrequency[words[index]]! > 1) {
+          continue;
+        }
+
+        missingIndices.add(index);
+      }
+
+      // Sort indices to maintain original word order
+      missingIndices.sort();
+
+      // Add words in correct order
+      missingWords = missingIndices.map((index) => words[index]).toList();
+      print('Selected missing words: $missingWords');
+
+      // Create verse with blanks
+      List<String> verseWithBlanks = List.from(words);
+      for (int i = 0; i < missingIndices.length; i++) {
+        verseWithBlanks[missingIndices[i]] = '____';
+      }
+
+      // Create a map to store options for each correct word
+      Map<String, List<String>> wordOptions = {};
+
+      // Number of options to generate per word
+      final int optionsPerWord = 5; // Generate 5 options per word
+
+      try {
+        // Generate options for each missing word
+        for (String missingWord in missingWords) {
+          // Initialize options list for this word with the correct answer
+          List<String> wordOptionsList = [missingWord];
+
+          // Create context by replacing the current blank with a placeholder
+          String context = verse;
+
+          // Get AI-generated wrong options
+          List<String> aiOptions = await OpenAIService.generateWrongOptions(
+            correctWord: missingWord,
+            context: context,
+            numberOfOptions: optionsPerWord,
+          );
+
+          // Add AI options if available
+          if (aiOptions.isNotEmpty) {
+            print(
+                'Received ${aiOptions.length} AI-generated options for $missingWord: $aiOptions');
+            wordOptionsList.addAll(aiOptions);
+          } else {
+            print('No AI-generated options received for word: $missingWord');
+            // Fallback to random words for this specific word
+            List<String> randomOptions =
+                getRandomWords([missingWord], verse, optionsPerWord);
+            wordOptionsList.addAll(randomOptions);
+          }
+
+          // Shuffle the options for this word
+          wordOptionsList.shuffle();
+
+          // Store options for this word
+          wordOptions[missingWord] = wordOptionsList;
+        }
+      } catch (e) {
+        print('Error using OpenAI for options: $e');
+        // Fallback to the original method if OpenAI fails
+        print('Falling back to random word selection for all words');
+
+        for (String missingWord in missingWords) {
+          List<String> randomOptions =
+              getRandomWords([missingWord], verse, optionsPerWord);
+          List<String> wordOptionsList = [missingWord, ...randomOptions];
+          wordOptionsList.shuffle();
+          wordOptions[missingWord] = wordOptionsList;
+        }
+      }
+
+      // For debugging
+      print('Word options map: $wordOptions');
+
+      return {
+        'type': 'fill_blank',
+        'question': numberOfBlanks > 1
+            ? "Fill in the missing words:"
+            : "Fill in the missing word:",
+        'verseWords': verseWithBlanks,
+        'wordOptions':
+            wordOptions, // New format: options organized by correct word
+        'correctAnswers': missingWords,
+        'missingIndices': missingIndices,
+      };
+    } catch (e) {
+      print('Error generating fill-in-the-blank question: $e');
+      // Provide a fallback question if there's an error
+      return {
+        'type': 'fill_blank',
+        'question': "Fill in the missing word:",
+        'verseWords': [verse],
+        'wordOptions': {
+          'Option 1': ['Option 1', 'Option 2', 'Option 3', 'Option 4']
+        },
+        'correctAnswers': ['Option 1'],
+        'missingIndices': [0],
+      };
     }
-
-    // Sort indices to maintain original word order
-    missingIndices.sort();
-
-    // Add words in correct order
-    missingWords = missingIndices.map((index) => words[index]).toList();
-
-    // Create verse with blanks
-    List<String> verseWithBlanks = List.from(words);
-    for (int i = 0; i < missingIndices.length; i++) {
-      verseWithBlanks[missingIndices[i]] = '____';
-    }
-
-    return {
-      'type': 'fill_blank',
-      'question': numberOfBlanks > 1
-          ? "Fill in the missing words:"
-          : "Fill in the missing word:",
-      'verseWords': verseWithBlanks,
-      'options': [
-        ...missingWords,
-        ...getRandomWords(missingWords, verse, numberOfBlanks)
-      ]..shuffle(),
-      'correctAnswers': missingWords,
-      'missingIndices': missingIndices,
-    };
   }
 
   Map<String, dynamic> _generateWhatComesNextQuestion(int index) {
@@ -261,6 +347,30 @@ class _QuizPageState extends State<QuizPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator while questions are being loaded
+    if (questions.isEmpty) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  "Generating questions...",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (currentQuestionIndex == -1) {
       return QuizIntroPage(
         reviewTitle: widget.reviewTitle,

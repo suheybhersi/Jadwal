@@ -96,11 +96,6 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      widget.updateReview(
-                        widget.id,
-                        "${widget.score / widget.questions.length}",
-                        "${widget.questions.length}",
-                      );
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.close),

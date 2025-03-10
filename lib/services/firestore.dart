@@ -1358,6 +1358,15 @@ class FirestoreService extends ChangeNotifier {
 
     final reviewQuery =
         await reviewsCollection.where('review', isEqualTo: review).get();
+
+    // Check if any matching reviews were found
+    if (reviewQuery.docs.isEmpty) {
+      if (kDebugMode) {
+        print('No review found with review ID: $review');
+      }
+      return;
+    }
+
     String reviewId = reviewQuery.docs[0].id;
     final reviewSnapshot = await reviewsCollection.doc(reviewId).get();
     final reviewData = reviewSnapshot.data() as Map<String, dynamic>;
@@ -1367,8 +1376,18 @@ class FirestoreService extends ChangeNotifier {
 
     List<dynamic> ratings = reviewData['ratings'];
     ratings = List.from(ratings)..add(int.parse(rating));
-    Map<String, dynamic> rev =
-        planData['reviews'].where((rev) => rev['review'] == review).toList()[0];
+
+    // Find the matching review in the plan data, with null safety
+    final matchingReviews =
+        planData['reviews'].where((rev) => rev['review'] == review).toList();
+    if (matchingReviews.isEmpty) {
+      if (kDebugMode) {
+        print('No matching review found in plan data for review: $review');
+      }
+      return;
+    }
+
+    Map<String, dynamic> rev = matchingReviews[0];
 
     if (updatedSm2.length == 1) {
       if (updatedSm2[0] == 'success') {

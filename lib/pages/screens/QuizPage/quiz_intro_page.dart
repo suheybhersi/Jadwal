@@ -20,6 +20,61 @@ class QuizIntroPage extends StatefulWidget {
 class _QuizIntroPageState extends State<QuizIntroPage> {
   @override
   Widget build(BuildContext context) {
+    // Handle empty questions list
+    if (widget.questions.isEmpty) {
+      return Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header with Close Button
+              Padding(
+                padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                    Text(
+                      'Quiz',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Balance the header
+                  ],
+                ),
+              ),
+
+              // Loading indicator
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        "Preparing quiz questions...",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Column(

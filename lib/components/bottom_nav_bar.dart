@@ -33,9 +33,14 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(
-                    color: Color.fromARGB(255, 73, 121, 251));
+                  color: Color.fromARGB(255, 73, 121, 251),
+                  fontWeight: FontWeight.w600,
+                );
               }
-              return const TextStyle(color: Color.fromARGB(255, 127, 131, 141));
+              return const TextStyle(
+                color: Color.fromARGB(255, 127, 131, 141),
+                fontWeight: FontWeight.w600,
+              );
             }),
           ),
         ),
