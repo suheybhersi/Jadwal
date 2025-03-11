@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/ProfilePage/delete_account_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
+import 'package:jadwal/pages/screens/ProfilePage/feedback_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -9,8 +13,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
-    with SingleTickerProviderStateMixin {
+class _SettingsPageState extends State<SettingsPage> {
   bool isDarkMode = false;
   bool isPushNotificationsEnabled = true;
   bool isEmailNotificationsEnabled = false;
@@ -20,271 +23,251 @@ class _SettingsPageState extends State<SettingsPage>
     // Get current theme mode
     isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // App's primary blue color - CHANGE THIS TO MATCH YOUR APP'S BLUE
-    final primaryBlue = const Color(
-        0xFF1976D2); // Material Blue 700, replace with your app's blue
-
-    // Derived colors based on primary blue
-    final cardColor = Colors.white;
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
           'Settings',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            color: Colors.black87,
           ),
         ),
         centerTitle: true,
-        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          // Main Settings Section
-          _buildSettingsGroups(context, primaryBlue, cardColor),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // App Settings Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4979FB).withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Icon container
+                      Container(
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Iconsax.setting_3,
+                          size: 28,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      // Text content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'App Settings',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Customize your app experience',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-          // Sign Out Button
-          const SizedBox(height: 40),
-          _buildSignOutButton(context),
-          const SizedBox(height: 40),
-        ],
+                const SizedBox(height: 30),
+
+                // Profile Section
+                _buildSectionHeader('Profile', Iconsax.user),
+                const SizedBox(height: 10),
+                _buildSettingCard([
+                  _buildSettingTile(
+                    icon: Iconsax.edit,
+                    title: 'Edit Profile',
+                    description: 'Update your personal information',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EditProfilePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.lock,
+                    title: 'Password & Security',
+                    description: 'Manage your account security',
+                    onTap: () {},
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.message_text,
+                    title: 'Send Feedback',
+                    description: 'Help us improve the app',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FeedbackPage(),
+                        ),
+                      );
+                    },
+                    isLast: true,
+                  ),
+                ]),
+
+                const SizedBox(height: 24),
+
+                // Preferences Section
+                _buildSectionHeader('Preferences', Iconsax.setting),
+                const SizedBox(height: 10),
+                _buildSettingCard([
+                  _buildSettingTile(
+                    icon: Iconsax.notification,
+                    title: 'Notifications',
+                    description: 'Configure app alerts',
+                    trailing: Switch(
+                      value: isPushNotificationsEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          isPushNotificationsEnabled = value;
+                        });
+                      },
+                      activeColor: const Color(0xFF4979FB),
+                    ),
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.moon,
+                    title: 'Dark Mode',
+                    description: 'Switch app theme',
+                    trailing: Switch(
+                      value: isDarkMode,
+                      onChanged: (value) {
+                        setState(() {
+                          isDarkMode = value;
+                        });
+                      },
+                      activeColor: const Color(0xFF4979FB),
+                    ),
+                    isLast: true,
+                  ),
+                ]),
+
+                const SizedBox(height: 24),
+
+                // Support & About Section
+                _buildSectionHeader('Support & About', Iconsax.info_circle),
+                const SizedBox(height: 10),
+                _buildSettingCard([
+                  _buildSettingTile(
+                    icon: Iconsax.message_question,
+                    title: 'Help & Support',
+                    description: 'Get assistance with the app',
+                    onTap: () {},
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.shield,
+                    title: 'Privacy Policy',
+                    description: 'View our privacy policy',
+                    onTap: () {},
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.document_text,
+                    title: 'Terms of Service',
+                    description: 'View our terms of service',
+                    onTap: () {},
+                  ),
+                  _buildSettingTile(
+                    icon: Iconsax.information,
+                    title: 'About App',
+                    description: 'Version 1.0.0',
+                    isLast: true,
+                  ),
+                ]),
+
+                const SizedBox(height: 30),
+
+                // Account actions
+                _buildAccountActionButtons(),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildSettingsGroups(
-      BuildContext context, Color primaryBlue, Color cardColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
       children: [
-        // Appearance Section
-        _buildSettingsHeader(Icons.palette_outlined, 'Appearance', primaryBlue),
-        const SizedBox(height: 12),
-        _buildSettingsCard(
-          context,
-          [
-            _buildSwitchTile(
-              context,
-              title: 'Dark Mode',
-              subtitle: 'Switch between light and dark themes',
-              icon: Icons.dark_mode_outlined,
-              value: isDarkMode,
-              accentColor: primaryBlue,
-              onChanged: (value) {
-                setState(() {
-                  isDarkMode = value;
-                  // Implement theme switching logic here
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Text Size',
-              subtitle: 'Adjust the application text size',
-              icon: Icons.text_fields_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to text size settings
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'App Color',
-              subtitle: 'Choose your favorite color theme',
-              icon: Icons.color_lens_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to color theme settings
-              },
-            ),
-          ],
-          cardColor: cardColor,
+        Icon(
+          icon,
+          size: 18,
+          color: const Color(0xFF4979FB),
         ),
-        const SizedBox(height: 24),
-
-        // Notifications Section
-        _buildSettingsHeader(
-            Icons.notifications_none_rounded, 'Notifications', primaryBlue),
-        const SizedBox(height: 12),
-        _buildSettingsCard(
-          context,
-          [
-            _buildSwitchTile(
-              context,
-              title: 'Push Notifications',
-              subtitle: 'Receive app alerts and updates',
-              icon: Icons.notifications_active_outlined,
-              value: isPushNotificationsEnabled,
-              accentColor: primaryBlue,
-              onChanged: (value) {
-                setState(() {
-                  isPushNotificationsEnabled = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildSwitchTile(
-              context,
-              title: 'Email Notifications',
-              subtitle: 'Receive emails about activity',
-              icon: Icons.email_outlined,
-              value: isEmailNotificationsEnabled,
-              accentColor: primaryBlue,
-              onChanged: (value) {
-                setState(() {
-                  isEmailNotificationsEnabled = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Notification Preferences',
-              subtitle: 'Customise notification types',
-              icon: Icons.tune_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to notification preferences
-              },
-            ),
-          ],
-          cardColor: cardColor,
-        ),
-        const SizedBox(height: 24),
-
-        // Privacy & Security Section
-        _buildSettingsHeader(
-            Icons.shield_outlined, 'Privacy & Security', primaryBlue),
-        const SizedBox(height: 12),
-        _buildSettingsCard(
-          context,
-          [
-            _buildNavigationTile(
-              context,
-              title: 'Change Password',
-              subtitle: 'Update your account password',
-              icon: Icons.lock_outline,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to password change
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Data Privacy',
-              subtitle: 'Manage data sharing options',
-              icon: Icons.security_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to data privacy settings
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Biometric Authentication',
-              subtitle: 'Secure your app with fingerprint or face ID',
-              icon: Icons.fingerprint,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to biometric settings
-              },
-            ),
-          ],
-          cardColor: cardColor,
-        ),
-        const SizedBox(height: 24),
-
-        // About Section
-        _buildSettingsHeader(Icons.info_outline, 'About', primaryBlue),
-        const SizedBox(height: 12),
-        _buildSettingsCard(
-          context,
-          [
-            _buildInfoTile(
-              context,
-              title: 'App Version',
-              subtitle: 'v1.0.0',
-              icon: Icons.new_releases_outlined,
-              accentColor: primaryBlue,
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Terms of Service',
-              icon: Icons.description_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to terms of service
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Privacy Policy',
-              icon: Icons.privacy_tip_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to privacy policy
-              },
-            ),
-            _buildDivider(),
-            _buildNavigationTile(
-              context,
-              title: 'Help & Support',
-              icon: Icons.support_agent_outlined,
-              accentColor: primaryBlue,
-              onTap: () {
-                // Navigate to help page
-              },
-            ),
-          ],
-          cardColor: cardColor,
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSettingsHeader(IconData icon, String title, Color accentColor) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: accentColor,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: accentColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsCard(BuildContext context, List<Widget> children,
-      {Color? cardColor}) {
+  Widget _buildSettingCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor ?? Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.grey.shade100,
+            blurRadius: 12,
+            spreadRadius: 1,
           ),
         ],
       ),
@@ -294,245 +277,237 @@ class _SettingsPageState extends State<SettingsPage>
     );
   }
 
-  Widget _buildSwitchTile(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
+  Widget _buildSettingTile({
     required IconData icon,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    required Color accentColor,
+    required String title,
+    required String description,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool isLast = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: accentColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4979FB).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: const Color(0xFF4979FB),
                   ),
                 ),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          CupertinoSwitch(
-            value: value,
-            activeTrackColor: accentColor,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavigationTile(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-    required Color accentColor,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: accentColor,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                  if (subtitle != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 14,
+                      Text(
+                        description,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
                       ),
-                    ),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+                if (trailing != null)
+                  trailing
+                else if (onTap != null)
+                  Icon(
+                    Iconsax.arrow_right_3,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+              ],
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: Colors.grey.shade400,
-            ),
-          ],
+          ),
         ),
-      ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 56,
+            endIndent: 16,
+            color: Colors.grey.shade100,
+          ),
+      ],
     );
   }
 
-  Widget _buildInfoTile(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
-    required IconData icon,
-    required Color accentColor,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: accentColor,
-              size: 22,
-            ),
+  Widget _buildAccountActionButtons() {
+    return Column(
+      children: [
+        // Sign Out Button
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade100,
+                blurRadius: 12,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
-                ),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                _showSignOutDialog();
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Iconsax.logout,
+                      size: 20,
+                      color: const Color(0xFF4979FB),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Sign Out',
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF4979FB),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      indent: 56,
-      endIndent: 16,
-      color: Colors.grey.shade200,
-    );
-  }
-
-  Widget _buildSignOutButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.redAccent,
-            Colors.red.shade700,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            FirebaseAuth.instance.signOut();
-            Navigator.pop(context);
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.logout_rounded,
-                  color: Colors.white,
+                  ],
                 ),
-                SizedBox(width: 8),
-                Text(
-                  'Sign Out',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
+
+        const SizedBox(height: 12),
+
+        // Delete Account Button
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade100,
+                blurRadius: 12,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DeleteAccountPage(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Iconsax.trash,
+                      size: 20,
+                      color: Colors.red[400],
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Delete Account',
+                      style: GoogleFonts.poppins(
+                        color: Colors.red[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Sign Out',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Are you sure you want to sign out?',
+          style: GoogleFonts.poppins(),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4979FB),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to previous screen
+            },
+            child: Text(
+              'Sign Out',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
