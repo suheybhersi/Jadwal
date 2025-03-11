@@ -67,6 +67,50 @@ class _HomePageState extends State<HomePage> {
                   });
                 }
 
+                if (plan['currentWeek'] != null && !currentWeekCalled) {
+                  DateTime todayDT = DateTime(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                    DateTime.now().day,
+                    0,
+                    0,
+                  );
+
+                  // Check each day of the week
+                  bool needsUpdate = false;
+                  List updatedWeek = List.from(plan['currentWeek']);
+
+                  for (int i = 0; i < plan['currentWeek'].length; i++) {
+                    dynamic day = plan['currentWeek'][i];
+                    List<String> weekStartString =
+                        plan['currentWeek'][0]['weekStart'].split('-');
+                    DateTime weekStart = DateTime(
+                      int.parse(weekStartString[2]),
+                      int.parse(weekStartString[1]),
+                      int.parse(weekStartString[0]),
+                      0,
+                      0,
+                    );
+
+                    DateTime dayDate = weekStart.add(Duration(days: i));
+
+                    // If day is in the past and hasn't been marked as completed but has Hifdh assigned
+                    if (dayDate.isBefore(todayDT) &&
+                        !day['completed'] &&
+                        plan['hifdhDays'][i] == true &&
+                        !day['missed']) {
+                      updatedWeek[i] = {...day, 'missed': true};
+                      needsUpdate = true;
+                    }
+                  }
+
+                  // Update Firestore if any days were marked as missed
+                  if (needsUpdate) {
+                    firestoreService
+                        .updateDocument(id, {'currentWeek': updatedWeek});
+                  }
+                }
+
                 bool completed = plan['hifdhs'].last['completed'];
                 String hifdhDate = plan['hifdhs'].last['date'];
                 String today =

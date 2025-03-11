@@ -1687,4 +1687,8 @@ class FirestoreService extends ChangeNotifier {
       rethrow; // Rethrow to handle in the UI
     }
   }
+
+  Future<void> updateDocument(String docId, Map<String, dynamic> data) async {
+    await _executeWithRetry(() => plansCollection.doc(docId).update(data));
+  }
 }
