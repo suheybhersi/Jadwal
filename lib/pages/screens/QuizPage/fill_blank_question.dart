@@ -36,7 +36,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   // Options for the currently selected blank
   List<String> currentBlankOptions = [];
 
-  // Initialize controllers directly to avoid late initialization errors
+  // Initialise controllers directly to avoid late initialisation errors
   AnimationController? _animationController;
   Animation<double> _fadeAnimation = const AlwaysStoppedAnimation<double>(1.0);
 
@@ -44,18 +44,18 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   void initState() {
     super.initState();
 
-    // Initialize the animation controller
+    // Initialise the animation controller
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
 
-    // Set the animation after controller is initialized
+    // Set the animation after controller is initialised
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
     );
 
-    // Initialize chosen words list
+    // Initialise chosen words list
     _initializeChosenWords();
 
     // Automatically select the first blank after initialization
@@ -73,7 +73,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   }
 
   void _initializeChosenWords() {
-    // Initialize chosen words list based on already filled blanks
+    // Initialise chosen words list based on already filled blanks
     List<String> words = widget.question['verseWords'];
     for (String word in words) {
       if (word != '____' && !chosenWords.contains(word)) {
@@ -160,7 +160,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
       selectedBlankIndex = null; // Clear selected blank when checking
     });
 
-    // Ensure animation controller is initialized before using it
+    // Ensure animation controller is initialised before using it
     if (_animationController != null) {
       if (_animationController!.isAnimating) {
         _animationController!.stop();
@@ -865,12 +865,12 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
           ),
         );
       } else {
-        // Regular word - now we need to check if this is actually a filled blank that wasn't recognized
+        // Regular word - now we need to check if this is actually a filled blank that wasn't recognised
         bool isActuallyFilledBlank =
             widget.question['missingIndices'].contains(i);
 
         if (isActuallyFilledBlank) {
-          // This is a filled blank that wasn't recognized as such
+          // This is a filled blank that wasn't recognised as such
 
           // Determine if this word is correct in this position
           bool isCorrectHere = false;

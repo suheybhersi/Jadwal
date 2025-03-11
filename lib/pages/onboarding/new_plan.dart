@@ -538,7 +538,7 @@ class PlanDetailsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Choose how many days you want to memorise and customize your schedule.',
+                'Choose how many days you want to memorise and customise your schedule.',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   height: 1.5,

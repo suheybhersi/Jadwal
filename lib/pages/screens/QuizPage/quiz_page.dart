@@ -6,6 +6,7 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
 import 'package:jadwal/services/openai_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
@@ -27,51 +28,202 @@ class QuizPage extends StatefulWidget {
   State<QuizPage> createState() => _QuizPageState();
 }
 
-class _QuizPageState extends State<QuizPage> {
+class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   int currentQuestionIndex = -1;
   int score = 0;
   late List<Map<String, dynamic>> questions = [];
   Map<int, Map<String, dynamic>> answeredQuestions = {};
 
+  // Progress tracking variables
+  double _loadingProgress = 0.0;
+  double _targetProgress = 0.0;
+  bool _isLoadingText = true;
+  final List<String> _loadingMessages = [
+    "Generating questions...",
+    "Almost there...",
+    "Finalising your quiz..."
+  ];
+  int _currentMessageIndex = 0;
+
+  // Animation controllers
+  AnimationController? _loadingAnimationController;
+  AnimationController? _rotationAnimationController;
+  bool _isActive = true;
+
   @override
   void initState() {
     super.initState();
+    // Initialise animation controllers
+    _loadingAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+
+    _rotationAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 10),
+    )..repeat();
+
+    // Start animations and load questions
+    _startSmoothProgressAnimation();
     _loadQuestions();
+    _startLoadingTextAnimation();
   }
 
-  Future<void> _loadQuestions() async {
-    final generatedQuestions = await _generateQuestions();
-    setState(() {
-      questions = generatedQuestions..shuffle();
+  @override
+  void dispose() {
+    // First set flag to stop all animations
+    _isActive = false;
+
+    // Make sure to stop all controllers first
+    _loadingAnimationController?.stop();
+    _rotationAnimationController?.stop();
+
+    // Then dispose controllers with proper null safety checks
+    if (_loadingAnimationController != null) {
+      _loadingAnimationController!.dispose();
+      _loadingAnimationController = null;
+    }
+
+    if (_rotationAnimationController != null) {
+      _rotationAnimationController!.dispose();
+      _rotationAnimationController = null;
+    }
+
+    // Make sure super.dispose() is called last
+    super.dispose();
+  }
+
+  // Consistent smooth progress animation
+  void _startSmoothProgressAnimation() {
+    Future.microtask(() async {
+      while (_isActive &&
+          mounted &&
+          (questions.isEmpty || _loadingProgress < 1.0)) {
+        // Only animate if we haven't reached the target
+        if (_loadingProgress < _targetProgress) {
+          if (!mounted || !_isActive) return;
+
+          setState(() {
+            // Apply appropriate step size based on current progress
+            double step;
+
+            if (_loadingProgress < 0.3) {
+              step = 0.005; // Faster in the beginning (0-30%)
+            } else if (_loadingProgress < 0.7) {
+              step = 0.003; // Slower in the middle (30-70%)
+            } else {
+              step = 0.004; // Medium speed at the end (70-100%)
+            }
+
+            // Cap step size based on distance to target
+            double maxStep = (_targetProgress - _loadingProgress) * 0.5;
+            if (step > maxStep && maxStep > 0.001) {
+              step = maxStep;
+            }
+
+            _loadingProgress += step;
+
+            // Ensure we don't overshoot the target
+            if (_loadingProgress > _targetProgress) {
+              _loadingProgress = _targetProgress;
+            }
+
+            // Force to 100% if we're very close and target is 100%
+            if (_targetProgress >= 0.99 && _loadingProgress >= 0.98) {
+              _loadingProgress = 1.0;
+            }
+          });
+        }
+
+        await Future.delayed(const Duration(milliseconds: 30));
+        if (!mounted || !_isActive) return;
+      }
     });
   }
 
-  List<String> splitVerseManuallyWithSpecialChars(String verse) {
-    const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
-    List<String> words = verse.split(" ");
-    List<String> processedWords = [];
+  // Safe setState wrapper for progress updates
+  void _updateTargetProgress(double target) {
+    if (!mounted || !_isActive) return;
+    setState(() => _targetProgress = target);
+  }
 
-    for (int i = 0; i < words.length; i++) {
-      if (specialChars.any((char) => words[i].contains(char)) && i > 0) {
-        processedWords[processedWords.length - 1] =
-            "${words[i]} ${processedWords[processedWords.length - 1]}";
-      } else {
-        processedWords.add(words[i]);
+  // Text animation with proper lifecycle checks
+  void _startLoadingTextAnimation() {
+    if (!mounted || !_isActive) return;
+
+    Future.delayed(Duration(seconds: 3), () {
+      if (!mounted || !_isActive) return;
+      if (questions.isEmpty) {
+        setState(() => _isLoadingText = false);
+
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (!mounted || !_isActive) return;
+          if (questions.isEmpty) {
+            setState(() {
+              _currentMessageIndex =
+                  (_currentMessageIndex + 1) % _loadingMessages.length;
+              _isLoadingText = true;
+            });
+            _startLoadingTextAnimation();
+          }
+        });
       }
-    }
+    });
+  }
 
-    return processedWords;
+  // Load questions with evenly distributed progress updates
+  Future<void> _loadQuestions() async {
+    if (!mounted || !_isActive) return;
+
+    // Initial progress
+    _updateTargetProgress(0.05);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted || !_isActive) return;
+
+    _updateTargetProgress(0.15);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted || !_isActive) return;
+
+    // Generate questions
+    final generatedQuestions = await _generateQuestions();
+    if (!mounted || !_isActive) return;
+
+    // Final progress updates
+    _updateTargetProgress(0.95);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted || !_isActive) return;
+
+    _updateTargetProgress(1.0);
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted || !_isActive) return;
+
+    setState(() {
+      questions = generatedQuestions..shuffle();
+      _loadingProgress = 1.0;
+    });
+
+    // Wait before transitioning
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   Future<List<Map<String, dynamic>>> _generateQuestions() async {
     List<Map<String, dynamic>> generatedQuestions = [];
-
-    // Generate fill in the blank questions
     List<Map<String, dynamic>> fillInTheBlankQuestions = [];
     List<Map<String, dynamic>> dragAndDropQuestions = [];
     List<Map<String, dynamic>> whatComesNextQuestions = [];
 
+    // Start with 25% progress
+    _updateTargetProgress(0.25);
+
+    // Distribute 45% of progress across verse processing
+    final totalVerses = widget.versesList.length;
+    final verseProgressIncrement = 0.45 / totalVerses;
+
+    // Process each verse
     for (int i = 0; i < widget.versesList.length; i++) {
+      if (!mounted || !_isActive) break;
+
       String verse = widget.versesList[i];
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
@@ -80,9 +232,17 @@ class _QuizPageState extends State<QuizPage> {
         whatComesNextQuestions.add(_generateWhatComesNextQuestion(i));
       }
 
+      // Update progress incrementally
+      _updateTargetProgress(0.25 + (verseProgressIncrement * (i + 1)));
+
+      // Add small delays occasionally for smooth animation
+      if (i % 5 == 0) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        if (!mounted || !_isActive) break;
+      }
+
       // Only add fill in the blank for verses with more than 1 word
       if (!words.contains('')) {
-        // Use await here since _generateFillInTheBlankQuestion is now async
         fillInTheBlankQuestions
             .add(await _generateFillInTheBlankQuestion(verse));
       }
@@ -93,6 +253,11 @@ class _QuizPageState extends State<QuizPage> {
       }
     }
 
+    // Progress updates for question processing phase
+    _updateTargetProgress(0.70);
+    await _safeDelay(150);
+
+    // Shuffle questions
     dragAndDropQuestions.shuffle();
     fillInTheBlankQuestions.shuffle();
     whatComesNextQuestions.shuffle();
@@ -102,6 +267,10 @@ class _QuizPageState extends State<QuizPage> {
         ? dragAndDropQuestions.take(7)
         : dragAndDropQuestions);
 
+    _updateTargetProgress(0.78);
+    await _safeDelay(150);
+
+    // Adding what comes next questions
     int dDCount = (20 - generatedQuestions.length + 1) ~/ 2;
     int count = 1;
 
@@ -123,6 +292,10 @@ class _QuizPageState extends State<QuizPage> {
       }
     }
 
+    _updateTargetProgress(0.85);
+    await _safeDelay(150);
+
+    // Adding fill in the blank questions
     for (int i = 0;
         i < fillInTheBlankQuestions.length && generatedQuestions.length < 20;
         i++) {
@@ -148,6 +321,10 @@ class _QuizPageState extends State<QuizPage> {
       }
     }
 
+    _updateTargetProgress(0.90);
+    await _safeDelay(150);
+
+    // Final questions
     for (int i = 0;
         i < fillInTheBlankQuestions.length && generatedQuestions.length < 20;
         i++) {
@@ -166,7 +343,57 @@ class _QuizPageState extends State<QuizPage> {
       }
     }
 
+    _updateTargetProgress(0.95);
+    await _safeDelay(150);
+
     return generatedQuestions;
+  }
+
+  // Helper method for safe delays with lifecycle checks
+  Future<void> _safeDelay(int milliseconds) async {
+    if (!mounted || !_isActive) return;
+    await Future.delayed(Duration(milliseconds: milliseconds));
+  }
+
+  List<String> splitVerseManuallyWithSpecialChars(String verse) {
+    const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
+    List<String> words = verse.split(" ");
+    List<String> processedWords = [];
+
+    for (int i = 0; i < words.length; i++) {
+      if (specialChars.any((char) => words[i].contains(char)) && i > 0) {
+        processedWords[processedWords.length - 1] =
+            "${words[i]} ${processedWords[processedWords.length - 1]}";
+      } else {
+        processedWords.add(words[i]);
+      }
+    }
+
+    return processedWords;
+  }
+
+  Map<String, dynamic> _generateWhatComesNextQuestion(int index) {
+    return {
+      'type': 'what_next',
+      'question': "What verse comes after this?",
+      'verse': widget.versesList[index],
+      'correctAnswer': widget.versesList[index + 1],
+    };
+  }
+
+  Map<String, dynamic> _generateDragAndDropQuestion(String verse) {
+    List<String> words = splitVerseManuallyWithSpecialChars(verse);
+    String firstWord = words.first;
+    List<String> shuffledWords = List.from(words.skip(1))..shuffle();
+
+    return {
+      'type': 'drag_drop',
+      'question': "Arrange the verse correctly:",
+      'firstWord': firstWord,
+      'shuffledWords': shuffledWords,
+      'correctOrder': words.skip(1).toList(),
+      'questionId': UniqueKey().toString(),
+    };
   }
 
   Future<Map<String, dynamic>> _generateFillInTheBlankQuestion(
@@ -226,7 +453,7 @@ class _QuizPageState extends State<QuizPage> {
       try {
         // Generate options for each missing word
         for (String missingWord in missingWords) {
-          // Initialize options list for this word with the correct answer
+          // Initialise options list for this word with the correct answer
           List<String> wordOptionsList = [missingWord];
 
           // Create context by replacing the current blank with a placeholder
@@ -282,7 +509,7 @@ class _QuizPageState extends State<QuizPage> {
             : "Fill in the missing word:",
         'verseWords': verseWithBlanks,
         'wordOptions':
-            wordOptions, // New format: options organized by correct word
+            wordOptions, // New format: options organised by correct word
         'correctAnswers': missingWords,
         'missingIndices': missingIndices,
       };
@@ -300,30 +527,6 @@ class _QuizPageState extends State<QuizPage> {
         'missingIndices': [0],
       };
     }
-  }
-
-  Map<String, dynamic> _generateWhatComesNextQuestion(int index) {
-    return {
-      'type': 'what_next',
-      'question': "What verse comes after this?",
-      'verse': widget.versesList[index],
-      'correctAnswer': widget.versesList[index + 1],
-    };
-  }
-
-  Map<String, dynamic> _generateDragAndDropQuestion(String verse) {
-    List<String> words = splitVerseManuallyWithSpecialChars(verse);
-    String firstWord = words.first;
-    List<String> shuffledWords = List.from(words.skip(1))..shuffle();
-
-    return {
-      'type': 'drag_drop',
-      'question': "Arrange the verse correctly:",
-      'firstWord': firstWord,
-      'shuffledWords': shuffledWords,
-      'correctOrder': words.skip(1).toList(),
-      'questionId': UniqueKey().toString(),
-    };
   }
 
   List<String> getRandomWords(
@@ -349,19 +552,250 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     // Show loading indicator while questions are being loaded
     if (questions.isEmpty) {
+      // Get app primary color from the app's theme (matching homepage)
+      final primaryColor = Color.fromARGB(255, 73, 121, 251);
+
       return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: primaryColor),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            "Quiz",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Colors.black,
+            ),
+          ),
+          centerTitle: true,
+        ),
         body: SafeArea(
-          child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            width: double.infinity,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text(
-                  "Generating questions...",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                SizedBox(height: 40),
+
+                // Simplified animation area - just a pulsing central element
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Outer pulsing circle
+                        AnimatedBuilder(
+                          animation: _loadingAnimationController!,
+                          builder: (context, child) {
+                            return Container(
+                              width: 200 +
+                                  (_loadingAnimationController!.value * 20),
+                              height: 200 +
+                                  (_loadingAnimationController!.value * 20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: primaryColor.withOpacity(0.03),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Middle pulsing circle
+                        AnimatedBuilder(
+                          animation: _loadingAnimationController!,
+                          builder: (context, child) {
+                            return Container(
+                              width: 160 +
+                                  (_loadingAnimationController!.value * 15),
+                              height: 160 +
+                                  (_loadingAnimationController!.value * 15),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: primaryColor.withOpacity(0.08),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Inner circle with icon
+                        Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryColor.withOpacity(0.2),
+                                blurRadius: 15,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.quiz_outlined,
+                              size: 60,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+
+                        // Rotating circle around the main icon
+                        AnimatedBuilder(
+                          animation: _rotationAnimationController!,
+                          builder: (context, child) {
+                            return Transform.rotate(
+                              angle:
+                                  _rotationAnimationController!.value * 2 * pi,
+                              child: Container(
+                                width: 160,
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: primaryColor.withOpacity(0.15),
+                                    width: 2,
+                                    strokeAlign: BorderSide.strokeAlignOutside,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Animated message with fade transition
+                AnimatedOpacity(
+                  opacity: _isLoadingText ? 1.0 : 0.0,
+                  duration: Duration(milliseconds: 500),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      _loadingMessages[_currentMessageIndex],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Spacer(),
+                // Enhanced progress indicator
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Generating questions...",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          Text(
+                            "${(_loadingProgress * 100).toInt()}%",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Stack(
+                        children: [
+                          // Background track
+                          Container(
+                            height: 10,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                          // Progress bar
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            height: 10,
+                            width: MediaQuery.of(context).size.width *
+                                (_loadingProgress * 0.9), // Account for padding
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 40),
+
+                // Tip message in card format similar to home page
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade100,
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.tips_and_updates,
+                            color: primaryColor,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "Quiz Tip",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Your personalised quiz will test your knowledge with various question types.",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

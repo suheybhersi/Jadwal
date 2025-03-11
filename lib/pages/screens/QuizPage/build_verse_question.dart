@@ -41,7 +41,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     Map<String, dynamic> question =
         widget.questions[widget.currentQuestionIndex];
 
-    // Initialize with previous answer or default state
+    // Initialise with previous answer or default state
     if (widget.answeredQuestions.containsKey(widget.currentQuestionIndex)) {
       selectedWords = List.from(widget
           .answeredQuestions[widget.currentQuestionIndex]!['user_answer']);

@@ -144,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage>
             _buildNavigationTile(
               context,
               title: 'Notification Preferences',
-              subtitle: 'Customize notification types',
+              subtitle: 'Customise notification types',
               icon: Icons.tune_outlined,
               accentColor: primaryBlue,
               onTap: () {

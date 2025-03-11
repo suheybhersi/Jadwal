@@ -31,7 +31,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize with the current plan days
+    // Initialise with the current plan days
     selectedDays = List.from(widget.plan['hifdhDays']);
     linesController.text = widget.plan['lines'].toString();
   }

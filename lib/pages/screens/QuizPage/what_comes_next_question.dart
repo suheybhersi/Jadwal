@@ -64,8 +64,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   List<Map<String, dynamic>> comparison = [];
 
-  // Cache for normalized texts to avoid repeated processing of the same strings
-  final Map<String, String> _normalizationCache = {};
+  // Cache for normalised texts to avoid repeated processing of the same strings
+  final Map<String, String> _normalisationCache = {};
 
   // Add these new state variables at the top of the class
   bool isRecitationCorrect = false;
@@ -122,12 +122,12 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
       try {
         final amplitude = await recorder.getAmplitude();
-        double normalizedValue = 0.0;
-        normalizedValue = ((amplitude.current + 80) / 80).clamp(0.0, 1.0);
+        double normalisedValue = 0.0;
+        normalisedValue = ((amplitude.current + 80) / 80).clamp(0.0, 1.0);
 
         setState(() {
           amplitudes.removeAt(0);
-          amplitudes.add(normalizedValue);
+          amplitudes.add(normalisedValue);
         });
       } catch (e) {
         print('Amplitude error: $e');
@@ -200,8 +200,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   String normaliseArabicText(String text) {
     // Check cache first to avoid redundant processing
-    if (_normalizationCache.containsKey(text)) {
-      return _normalizationCache[text]!;
+    if (_normalisationCache.containsKey(text)) {
+      return _normalisationCache[text]!;
     }
 
     // Define regex patterns once for better performance
@@ -211,18 +211,18 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     final tatweelRegex = RegExp(r'[ٓـ]');
 
     // Process the text with more efficient chaining of replacements
-    String normalized = text
+    String normalised = text
         .replaceAll(harakatRegex, '') // Remove diacritics and special marks
-        .replaceAll(alifVariationsRegex, 'ا') // Normalize alif variations
-        .replaceAll('ءا', 'ا') // Normalize hamza+alif
-        .replaceAll('ي', 'ى') // Normalize Ya and Alif Maqsura
+        .replaceAll(alifVariationsRegex, 'ا') // Normalise alif variations
+        .replaceAll('ءا', 'ا') // Normalise hamza+alif
+        .replaceAll('ي', 'ى') // Normalise Ya and Alif Maqsura
         .replaceAll(tatweelRegex, '') // Remove tatweel characters
         .trim(); // Remove extra spaces
 
     // Cache the result for future use
-    _normalizationCache[text] = normalized;
+    _normalisationCache[text] = normalised;
 
-    return normalized;
+    return normalised;
   }
 
   List<Map<String, dynamic>> findDifferences(
@@ -230,7 +230,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     String processedCorrect = normaliseArabicText(correct);
     String processedTranscribed = normaliseArabicText(transcribed);
 
-    // If the processed texts are identical after normalization, return no differences
+    // If the processed texts are identical after normalisation, return no differences
     if (processedCorrect == processedTranscribed) {
       return [];
     }
@@ -279,7 +279,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     // we'll use a simple comparison check
     // Simple equality check instead of semantic similarity
     if (processedCorrect == processedTranscribed) {
-      return []; // Consider them matching if they're identical after normalization
+      return []; // Consider them matching if they're identical after normalisation
     }
 
     // If difference is exactly 1 or 2, find the missing/extra character
@@ -353,7 +353,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     List<List<int>> dp = List.generate(
         lenCorrect + 1, (i) => List.filled(lenTranscribed + 1, 0));
 
-    // Initialize DP table
+    // Initialise DP table
     for (int i = 0; i <= lenCorrect; i++) {
       dp[i][0] = i;
     }
@@ -449,9 +449,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         List<String> correctChars = correct.split('');
         List<String> result = [];
 
-        // Map the normalized index to the actual index in the text with diacritics
+        // Map the normalised index to the actual index in the text with diacritics
         int actualIndex = 0;
-        int normalizedIndex = 0;
+        int normalisedIndex = 0;
         const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
         final harakatRegex =
             RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
@@ -459,15 +459,15 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         for (int i = 0; i < correctChars.length; i++) {
           String char = correctChars[i];
 
-          // If not a special character or diacritic, increment normalized index
+          // If not a special character or diacritic, increment normalised index
           if (!specialChars.contains(char) && !harakatRegex.hasMatch(char)) {
-            if (normalizedIndex == index) {
+            if (normalisedIndex == index) {
               // Found the position to replace
               result.add(incorrect);
               actualIndex = i + 1;
               break;
             }
-            normalizedIndex++;
+            normalisedIndex++;
           }
           result.add(char);
         }
@@ -523,18 +523,18 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   // Helper function to check if a word should be split (starts with يا variants)
   bool shouldSplitYaMadd(String word) {
-    // Normalize by removing diacritics
+    // Normalise by removing diacritics
     final harakatRegex =
         RegExp(r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+');
-    String normalized = word.replaceAll(harakatRegex, '');
+    String normalised = word.replaceAll(harakatRegex, '');
 
-    if (normalized.length < 2) return false;
+    if (normalised.length < 2) return false;
 
     // Check for ya-alif patterns
-    if ((normalized[0] == 'ي' || normalized[0] == 'ى') &&
-        (normalized[1] == 'ا' ||
-            normalized[1] == 'ٰ' ||
-            normalized[1] == 'ـ')) {
+    if ((normalised[0] == 'ي' || normalised[0] == 'ى') &&
+        (normalised[1] == 'ا' ||
+            normalised[1] == 'ٰ' ||
+            normalised[1] == 'ـ')) {
       return true;
     }
 
@@ -780,7 +780,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     List<List<int>> dp = List.generate(
         correctLen + 1, (i) => List.generate(transcribedLen + 1, (j) => 0));
 
-    // Initialize the DP table
+    // Initialise the DP table
     for (int i = 0; i <= correctLen; i++) {
       dp[i][0] = i;
     }
@@ -1009,7 +1009,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           final path =
               '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-          // Initialize recording with explicit configuration
+          // Initialise recording with explicit configuration
           await recorder.start(
             RecordConfig(
               sampleRate: 44100,

@@ -1456,7 +1456,7 @@ class FirestoreService extends ChangeNotifier {
       0,
     );
 
-    // Get existing missedHifdhs or initialize an empty list
+    // Get existing missedHifdhs or initialise an empty list
     List<dynamic> missedHifdhs = planData['missedHifdhs'] ?? [];
 
     // Mark days as missed in the current week
