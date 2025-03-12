@@ -5,6 +5,12 @@ import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/screens/ProfilePage/delete_account_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/feedback_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/password_security_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/about_app_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/help_support_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -101,7 +107,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Customize your app experience',
+                              'Customise your app experience',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.white.withOpacity(0.9),
@@ -137,7 +143,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Iconsax.lock,
                     title: 'Password & Security',
                     description: 'Manage your account security',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PasswordSecurityPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.message_text,
@@ -165,14 +178,34 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Iconsax.notification,
                     title: 'Notifications',
                     description: 'Configure app alerts',
-                    trailing: Switch(
-                      value: isPushNotificationsEnabled,
-                      onChanged: (value) {
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationsPage(
+                            initialPushNotificationsValue:
+                                isPushNotificationsEnabled,
+                            initialEmailNotificationsValue:
+                                isEmailNotificationsEnabled,
+                          ),
+                        ),
+                      );
+
+                      if (result != null && result is Map<String, bool>) {
                         setState(() {
-                          isPushNotificationsEnabled = value;
+                          isPushNotificationsEnabled =
+                              result['pushNotificationsEnabled'] ??
+                                  isPushNotificationsEnabled;
+                          isEmailNotificationsEnabled =
+                              result['emailNotificationsEnabled'] ??
+                                  isEmailNotificationsEnabled;
                         });
-                      },
-                      activeColor: const Color(0xFF4979FB),
+                      }
+                    },
+                    trailing: Icon(
+                      Iconsax.arrow_right_3,
+                      size: 16,
+                      color: Colors.grey[400],
                     ),
                   ),
                   _buildSettingTile(
@@ -184,9 +217,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       onChanged: (value) {
                         setState(() {
                           isDarkMode = value;
+                          // Add theme switching functionality
+                          // Replace with your theme management solution:
+                          // ThemeProvider.of(context).changeTheme(value ? ThemeMode.dark : ThemeMode.light);
                         });
                       },
                       activeColor: const Color(0xFF4979FB),
+                      inactiveThumbColor: Colors.grey[300],
+                      trackOutlineColor: WidgetStateProperty.all(
+                        isDarkMode ? Colors.transparent : Colors.grey[300],
+                      ),
                     ),
                     isLast: true,
                   ),
@@ -202,24 +242,53 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Iconsax.message_question,
                     title: 'Help & Support',
                     description: 'Get assistance with the app',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.shield,
                     title: 'Privacy Policy',
                     description: 'View our privacy policy',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PrivacyPolicyPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.document_text,
                     title: 'Terms of Service',
                     description: 'View our terms of service',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsServicePage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.information,
                     title: 'About App',
                     description: 'Version 1.0.0',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AboutAppPage(),
+                        ),
+                      );
+                    },
                     isLast: true,
                   ),
                 ]),

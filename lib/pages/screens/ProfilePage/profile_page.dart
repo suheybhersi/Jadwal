@@ -35,8 +35,6 @@ class ProfilePage extends StatelessWidget {
 
         // Retrieve user data from Firestore
         final userData = snapshot.data!.data() as Map<String, dynamic>;
-        final displayName = '${userData['firstName'] ?? ''}'.trim();
-        final username = userData['username'] ?? '';
 
         // Get date joined
         List<String> createdAt = (userData['createdAt']
@@ -275,7 +273,7 @@ class ProfilePage extends StatelessWidget {
     // Calculate completion date
     final DateTime completionDate = _calculateDaysLeft(plan);
     final String formattedDate =
-        "${completionDate.day}.${completionDate.month}.${completionDate.year.toString().substring(2)}";
+        "${completionDate.day}-${completionDate.month}-${completionDate.year.toString().substring(2)}";
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -589,6 +587,43 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildRecentActivityWidget(Map<String, dynamic> plan) {
+    // Create a combined list of activities
+    List<Map<String, dynamic>> activities = [];
+
+    // Add hifdhs to activities
+    if (plan['hifdhs'] != null && plan['hifdhs'].isNotEmpty) {
+      for (var hifdh in plan['hifdhs']) {
+        activities.add({
+          'type': 'hifdh',
+          'title': 'Memorised new verses',
+          'subtitle':
+              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}-${hifdh['surah'].split(' ')[1] == hifdh['surah'].split(' ')[0] ? '' : hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+          'icon': Iconsax.book_1,
+          'color': const Color(0xFF4979FB),
+          'date': hifdh['date'],
+        });
+      }
+    }
+
+    // Add reviews to activities
+    if (plan['reviews'] != null &&
+        plan['reviews'] is List &&
+        plan['reviews'].isNotEmpty) {
+      for (var review in plan['reviews']) {
+        activities.add({
+          'type': 'review',
+          'title': 'Completed review',
+          'subtitle': '${review['surah']} ${review['verses'] ?? ''}',
+          'icon': Iconsax.refresh,
+          'color': Colors.green,
+          'date': review['date'],
+        });
+      }
+    }
+
+    // Sort activities by date (most recent first)
+    activities.sort((a, b) => b['date'].compareTo(a['date']));
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -601,11 +636,11 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
-      child: (plan['hifdhs'] != null && plan['hifdhs'].isNotEmpty)
+      child: activities.isNotEmpty
           ? ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: plan['hifdhs'].length > 3 ? 3 : plan['hifdhs'].length,
+              itemCount: activities.length > 3 ? 3 : activities.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
                 indent: 16,
@@ -613,14 +648,13 @@ class ProfilePage extends StatelessWidget {
                 color: Colors.grey.shade200,
               ),
               itemBuilder: (context, index) {
-                final hifdh = plan['hifdhs'][plan['hifdhs'].length - 1 - index];
+                final activity = activities[index];
                 return _buildActivityItem(
-                  title: 'Memorized new verses',
-                  subtitle:
-                      '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}-${hifdh['surah'].split(' ')[1] == hifdh['surah'].split(' ')[0] ? '' : hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                  icon: Iconsax.book_1,
-                  color: const Color(0xFF4979FB),
-                  date: hifdh['date'],
+                  title: activity['title'],
+                  subtitle: activity['subtitle'],
+                  icon: activity['icon'],
+                  color: activity['color'],
+                  date: activity['date'],
                 );
               },
             )
