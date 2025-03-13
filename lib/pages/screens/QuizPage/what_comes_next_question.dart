@@ -21,9 +21,6 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// Local imports
-// import '../utils/arabic_text_processor.dart'; // Placeholder for future refactoring
-
 class WhatComesNextQuestion extends StatefulWidget {
   final Map<String, dynamic> question;
   final int currentQuestionIndex;
@@ -63,9 +60,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   String? apiKey = dotenv.env['API_KEY'];
 
   List<Map<String, dynamic>> comparison = [];
-
-  // Cache for normalised texts to avoid repeated processing of the same strings
-  final Map<String, String> _normalisationCache = {};
 
   // Add these new state variables at the top of the class
   bool isRecitationCorrect = false;
@@ -199,28 +193,25 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   }
 
   String normaliseArabicText(String text) {
-    // Check cache first to avoid redundant processing
-    if (_normalisationCache.containsKey(text)) {
-      return _normalisationCache[text]!;
-    }
-
     // Define regex patterns once for better performance
     final harakatRegex = RegExp(
         r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+'); // Tanween, Fatha, Kasra, Damma, etc.
-    final alifVariationsRegex = RegExp(r'[آٱـٰ]');
+    final alifVariationsRegex = RegExp(r'[ـٰآٱـٰٓ]');
     final tatweelRegex = RegExp(r'[ٓـ]');
+    const hamzaVariations = ['ء', 'ؤ', 'ئ', 'أ'];
 
     // Process the text with more efficient chaining of replacements
     String normalised = text
         .replaceAll(harakatRegex, '') // Remove diacritics and special marks
         .replaceAll(alifVariationsRegex, 'ا') // Normalise alif variations
+        .replaceAllMapped(RegExp(r'[' + hamzaVariations.join() + r']'),
+            (match) {
+          return 'ء'; // Normalize all hamza forms to basic ء
+        })
         .replaceAll('ءا', 'ا') // Normalise hamza+alif
         .replaceAll('ي', 'ى') // Normalise Ya and Alif Maqsura
         .replaceAll(tatweelRegex, '') // Remove tatweel characters
         .trim(); // Remove extra spaces
-
-    // Cache the result for future use
-    _normalisationCache[text] = normalised;
 
     return normalised;
   }
@@ -241,7 +232,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     List<Map<String, dynamic>> differences = [];
 
     // Special case: If the only difference is a missing alif ('ا') at index 3 or 4, ignore it
-    // This handles the أُولَئِكَ vs أُو۟لَـٰٓئِكَ case
     if (lengthDifference == 1) {
       // Check if longer word has an alif at the position where the shorter word is missing it
       if (lenCorrect > lenTranscribed) {
@@ -267,8 +257,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       }
     }
 
-    // Added more leniency for differences - increase from 1 to 2
-    // This allows for minor variations like added/omitted characters that are common in Arabic
+    // This allows for minor variations like added/omitted characters
     if (lengthDifference > 2) {
       return [
         {"error": "Word is too different to be corrected"}
@@ -864,9 +853,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     return alignment.reversed.toList();
   }
 
-  // No longer need postprocessYaMadd function as the combining happens in compareVerses
-
-  //make a join verse manually with special chars
   String joinVerseManuallyWithSpecialChars(List<String> words) {
     const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
     List<String> processedWords = [];
@@ -1160,7 +1146,16 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     final Color textColor = Colors.grey.shade800;
 
     // Get the first 5 words of the verse
-    String truncatedVerse = getFirstNWords(widget.question['verse'], 5);
+    String truncatedVerse = '';
+    final words = splitVerseManuallyWithSpecialChars(widget.question['verse']);
+    if (words.length > 6) {
+      final firstFourWords = words.take(4).toList();
+      final lastTwoWords = words.skip(words.length - 2).take(2).toList();
+      truncatedVerse =
+          '${joinVerseManuallyWithSpecialChars(firstFourWords)} ... ${joinVerseManuallyWithSpecialChars(lastTwoWords)}';
+    } else {
+      truncatedVerse = widget.question['verse'];
+    }
 
     return Column(
       children: [
