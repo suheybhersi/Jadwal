@@ -1,0 +1,2 @@
+/Users/suheybhersi/Documents/GitHub/Jadwal/android/app/.cxx/RelWithDebInfo/6r6a4l1r/x86_64/CMakeFiles/edit_cache.dir
+/Users/suheybhersi/Documents/GitHub/Jadwal/android/app/.cxx/RelWithDebInfo/6r6a4l1r/x86_64/CMakeFiles/rebuild_cache.dir
