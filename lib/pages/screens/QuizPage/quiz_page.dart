@@ -5,6 +5,7 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_intro_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
+import 'package:jadwal/pages/screens/QuizPage/verse_pairing_question.dart';
 import 'package:jadwal/services/openai_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -212,6 +213,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     List<Map<String, dynamic>> fillInTheBlankQuestions = [];
     List<Map<String, dynamic>> dragAndDropQuestions = [];
     List<Map<String, dynamic>> whatComesNextQuestions = [];
+    List<Map<String, dynamic>> versePairingQuestions = [];
 
     // Start with 25% progress
     _updateTargetProgress(0.25);
@@ -230,6 +232,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       // Generate what comes next questions
       if (i < widget.versesList.length - 1) {
         whatComesNextQuestions.add(_generateWhatComesNextQuestion(i));
+      }
+
+      // Generate verse pairing questions for each verse except first and last
+      if (i > 0 && i < widget.versesList.length - 1) {
+        versePairingQuestions.add(_generateVersePairingQuestion(i));
       }
 
       // Update progress incrementally
@@ -261,6 +268,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     dragAndDropQuestions.shuffle();
     fillInTheBlankQuestions.shuffle();
     whatComesNextQuestions.shuffle();
+    versePairingQuestions.shuffle();
 
     // Add drag and drop questions
     generatedQuestions.addAll(dragAndDropQuestions.length > 7
@@ -345,6 +353,13 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
     _updateTargetProgress(0.95);
     await _safeDelay(150);
+
+    // Shuffle verse pairing questions
+    versePairingQuestions.shuffle();
+
+    // Add verse pairing questions (allocate ~30% of quiz to this type)
+    int pairingCount = min(6, versePairingQuestions.length);
+    generatedQuestions.addAll(versePairingQuestions.take(pairingCount));
 
     return generatedQuestions;
   }
@@ -546,6 +561,100 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     verses.removeAt(index);
     verses.shuffle();
     return verses.take(3).toList();
+  }
+
+  Map<String, dynamic> _generateVersePairingQuestion(int verseIndex) {
+    String currentVerse = widget.versesList[verseIndex];
+    String? verseBefore =
+        verseIndex > 0 ? widget.versesList[verseIndex - 1] : null;
+    String? verseAfter = verseIndex < widget.versesList.length - 1
+        ? widget.versesList[verseIndex + 1]
+        : null;
+
+    // Generate options for the "verse before" section
+    List<String> beforeOptions = [];
+    if (verseBefore != null) {
+      beforeOptions.add(verseBefore); // Add correct answer
+    }
+
+    // Generate options for the "verse after" section
+    List<String> afterOptions = [];
+    if (verseAfter != null) {
+      afterOptions.add(verseAfter); // Add correct answer
+    }
+
+    // Add incorrect options from other verses
+    List<String> allVerses = List.from(widget.versesList);
+    allVerses.remove(currentVerse);
+    if (verseBefore != null) allVerses.remove(verseBefore);
+    if (verseAfter != null) allVerses.remove(verseAfter);
+
+    // Shuffle remaining verses
+    allVerses.shuffle();
+
+    // Add nearby verses for more challenging distractors
+    List<String> nearbyVerses = [];
+    for (int i = 1; i <= 5; i++) {
+      // Add verses that are nearby but not adjacent
+      if (verseIndex - i - 1 >= 0) {
+        nearbyVerses.add(widget.versesList[verseIndex - i - 1]);
+      }
+      if (verseIndex + i + 1 < widget.versesList.length) {
+        nearbyVerses.add(widget.versesList[verseIndex + i + 1]);
+      }
+    }
+    nearbyVerses.shuffle();
+
+    // Fill options for "before" section
+    if (verseBefore != null) {
+      // Add nearby verses first (more challenging)
+      for (int i = 0;
+          i < nearbyVerses.length && beforeOptions.length < 4;
+          i++) {
+        if (!beforeOptions.contains(nearbyVerses[i])) {
+          beforeOptions.add(nearbyVerses[i]);
+        }
+      }
+
+      // Fill with random verses if needed
+      for (int i = 0; i < allVerses.length && beforeOptions.length < 4; i++) {
+        if (!beforeOptions.contains(allVerses[i])) {
+          beforeOptions.add(allVerses[i]);
+        }
+      }
+      beforeOptions.shuffle(); // Randomize order
+    }
+
+    // Fill options for "after" section
+    if (verseAfter != null) {
+      // Add nearby verses first (more challenging)
+      for (int i = 0; i < nearbyVerses.length && afterOptions.length < 4; i++) {
+        if (!afterOptions.contains(nearbyVerses[i]) &&
+            !beforeOptions.contains(nearbyVerses[i])) {
+          afterOptions.add(nearbyVerses[i]);
+        }
+      }
+
+      // Fill with random verses if needed
+      for (int i = 0; i < allVerses.length && afterOptions.length < 4; i++) {
+        if (!afterOptions.contains(allVerses[i]) &&
+            !beforeOptions.contains(allVerses[i])) {
+          afterOptions.add(allVerses[i]);
+        }
+      }
+      afterOptions.shuffle(); // Randomize order
+    }
+
+    return {
+      'type': 'verse_pairing',
+      'question':
+          "Complete the sequence by identifying verses before and after:",
+      'currentVerse': currentVerse,
+      'verseBefore': verseBefore,
+      'verseAfter': verseAfter,
+      'beforeOptions': beforeOptions,
+      'afterOptions': afterOptions,
+    };
   }
 
   @override
@@ -859,19 +968,33 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                     answeredQuestions: answeredQuestions,
                     onClose: () => Navigator.pop(context),
                   )
-                : BuildVerseQuestion(
-                    currentQuestionIndex: currentQuestionIndex,
-                    questions: questions,
-                    totalQuestions: questions.length,
-                    onNext: (bool wasCorrect) {
-                      if (wasCorrect) {
-                        setState(() => score++);
-                      }
-                      setState(() => currentQuestionIndex++);
-                    },
-                    answeredQuestions: answeredQuestions,
-                    onClose: () => Navigator.pop(context),
-                  ),
+                : currentQuestion['type'] == 'verse_pairing'
+                    ? VersePairingQuestion(
+                        question: currentQuestion,
+                        currentQuestionIndex: currentQuestionIndex,
+                        totalQuestions: questions.length,
+                        onNext: (bool wasCorrect) {
+                          if (wasCorrect) {
+                            setState(() => score++);
+                          }
+                          setState(() => currentQuestionIndex++);
+                        },
+                        answeredQuestions: answeredQuestions,
+                        onClose: () => Navigator.pop(context),
+                      )
+                    : BuildVerseQuestion(
+                        currentQuestionIndex: currentQuestionIndex,
+                        questions: questions,
+                        totalQuestions: questions.length,
+                        onNext: (bool wasCorrect) {
+                          if (wasCorrect) {
+                            setState(() => score++);
+                          }
+                          setState(() => currentQuestionIndex++);
+                        },
+                        answeredQuestions: answeredQuestions,
+                        onClose: () => Navigator.pop(context),
+                      ),
       ),
     );
   }
