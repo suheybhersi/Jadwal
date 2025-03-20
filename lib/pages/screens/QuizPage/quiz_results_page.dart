@@ -351,7 +351,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
 
             // Buttons
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 24),
               child: SizedBox(
                 height: 56,
                 child: ElevatedButton(

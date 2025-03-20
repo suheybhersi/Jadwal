@@ -614,7 +614,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
               // Check Answer/Next Button
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding:
+                    const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

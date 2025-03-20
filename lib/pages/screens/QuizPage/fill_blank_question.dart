@@ -692,7 +692,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
         // Fixed position button at the bottom - only show when all blanks are filled or when checking
         if (!widget.question['verseWords'].contains('____') || isChecking)
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(

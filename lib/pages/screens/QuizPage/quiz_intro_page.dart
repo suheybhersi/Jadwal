@@ -241,8 +241,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
 
             // Start Button at bottom
             Padding(
-              padding:
-                  const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 children: [
                   // Subtitle with icon
@@ -299,8 +298,6 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded),
                         ],
                       ),
                     ),

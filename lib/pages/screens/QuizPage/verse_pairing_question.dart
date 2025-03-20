@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -31,7 +32,17 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
   bool isChecking = false;
   bool allCorrect = false;
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+
+  // Add scroll controller
+  final ScrollController _scrollController = ScrollController();
+
+  // Add keys for scrolling to specific widgets
+  final GlobalKey _beforeSectionKey = GlobalKey();
+  final GlobalKey _afterSectionKey = GlobalKey();
+
+  // Add separate keys for options
+  final GlobalKey _beforeOptionsKey = GlobalKey();
+  final GlobalKey _afterOptionsKey = GlobalKey();
 
   @override
   void initState() {
@@ -40,19 +51,49 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _fadeAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  // Add scroll to widget method with offset parameter
+  void _scrollToWidget(GlobalKey key, {double offset = 0.0}) {
+    if (key.currentContext != null) {
+      final RenderObject? renderObject = key.currentContext!.findRenderObject();
+      if (renderObject != null) {
+        final RenderAbstractViewport viewport =
+            RenderAbstractViewport.of(renderObject);
+        final double position =
+            viewport.getOffsetToReveal(renderObject, 0.0).offset;
+
+        _scrollController.animateTo(
+          position + offset, // Apply additional offset to fine-tune position
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
   }
 
   void _handleSectionTap(String section) {
     setState(() {
       activeSection = section;
+    });
+
+    // Scroll to the appropriate section's options
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (section == 'before' && _beforeOptionsKey.currentContext != null) {
+        // For before section, use a small offset for subtle positioning
+        _scrollToWidget(_beforeOptionsKey, offset: -20.0);
+      } else if (section == 'after' &&
+          _afterOptionsKey.currentContext != null) {
+        // For after section, use a larger negative offset to prevent aggressive scrolling
+        _scrollToWidget(_afterOptionsKey, offset: -100.0);
+      }
     });
   }
 
@@ -69,12 +110,32 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
       // Auto-switch to the other section if it's empty
       if (section == 'before' && hasAfterPart && selectedAfterVerse == null) {
         activeSection = 'after';
+        // Schedule scrolling after state is updated
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (_afterSectionKey.currentContext != null) {
+            _scrollToWidget(_afterSectionKey);
+          }
+        });
       } else if (section == 'after' &&
           hasBeforePart &&
           selectedBeforeVerse == null) {
         activeSection = 'before';
+        // Schedule scrolling after state is updated
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (_beforeSectionKey.currentContext != null) {
+            _scrollToWidget(_beforeSectionKey);
+          }
+        });
       } else {
         activeSection = null; // Close options after selection
+        // Scroll back to show the current verse
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
       }
     });
   }
@@ -147,6 +208,15 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
   bool get canSubmit =>
       (selectedBeforeVerse != null || !hasBeforePart) &&
       (selectedAfterVerse != null || !hasAfterPart);
+
+  // Add this helper method to truncate verse text
+  String _truncateVerse(String verse, {int maxWords = 10}) {
+    final words = verse.split(' ');
+    if (words.length <= maxWords) {
+      return verse;
+    }
+    return '${words.take(maxWords).join(' ')} ...';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -241,12 +311,14 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                 // Sequence selection area
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Before verse section - NOW PLACED FIRST
                         if (hasBeforePart) ...[
                           GestureDetector(
+                            key: _beforeSectionKey,
                             onTap: () => _handleSectionTap('before'),
                             child: Container(
                               width: double.infinity,
@@ -356,7 +428,11 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                         ),
                                       ),
                                       child: Text(
-                                        selectedBeforeVerse!,
+                                        // Display full verse when checking answers, truncated version otherwise
+                                        isChecking
+                                            ? selectedBeforeVerse!
+                                            : _truncateVerse(
+                                                selectedBeforeVerse!),
                                         style: GoogleFonts.scheherazadeNew(
                                           fontSize: 20,
                                           height: 1.5,
@@ -397,6 +473,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                     ),
                                   if (activeSection == 'before' && !isChecking)
                                     Padding(
+                                      key: _beforeOptionsKey,
                                       padding: const EdgeInsets.only(top: 16),
                                       child: Column(
                                         crossAxisAlignment:
@@ -441,7 +518,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   ),
                                                 ),
                                                 child: Text(
-                                                  option,
+                                                  // Always truncate in the options list, even if selected
+                                                  _truncateVerse(option),
                                                   style: GoogleFonts
                                                       .scheherazadeNew(
                                                     fontSize: 18,
@@ -530,6 +608,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                         // After verse section PLACED LAST
                         if (hasAfterPart) ...[
                           GestureDetector(
+                            key: _afterSectionKey,
                             onTap: () => _handleSectionTap('after'),
                             child: Container(
                               width: double.infinity,
@@ -639,7 +718,11 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                         ),
                                       ),
                                       child: Text(
-                                        selectedAfterVerse!,
+                                        // Display full verse when checking answers, truncated version otherwise
+                                        isChecking
+                                            ? selectedAfterVerse!
+                                            : _truncateVerse(
+                                                selectedAfterVerse!),
                                         style: GoogleFonts.scheherazadeNew(
                                           fontSize: 20,
                                           height: 1.5,
@@ -680,6 +763,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                     ),
                                   if (activeSection == 'after' && !isChecking)
                                     Padding(
+                                      key: _afterOptionsKey,
                                       padding: const EdgeInsets.only(top: 16),
                                       child: Column(
                                         crossAxisAlignment:
@@ -724,7 +808,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   ),
                                                 ),
                                                 child: Text(
-                                                  option,
+                                                  // Always truncate in the options list, even if selected
+                                                  _truncateVerse(option),
                                                   style: GoogleFonts
                                                       .scheherazadeNew(
                                                     fontSize: 18,
@@ -748,86 +833,6 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                             ),
                           ),
                         ],
-
-                        // Feedback message (stays the same)
-                        if (isChecking)
-                          Builder(
-                            builder: (context) {
-                              Widget feedbackContent = Container(
-                                margin:
-                                    const EdgeInsets.only(top: 20, bottom: 20),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 16, horizontal: 20),
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: allCorrect
-                                      ? Colors.green.shade50
-                                      : Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: allCorrect
-                                        ? Colors.green.shade300
-                                        : Colors.red.shade300,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          allCorrect
-                                              ? Iconsax.tick_circle5
-                                              : Iconsax.close_circle5,
-                                          color: allCorrect
-                                              ? Colors.green.shade600
-                                              : Colors.red.shade600,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          allCorrect
-                                              ? 'Correct!'
-                                              : 'Not quite right',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: allCorrect
-                                                ? Colors.green.shade600
-                                                : Colors.red.shade600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (!allCorrect)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 8, left: 36),
-                                        child: Text(
-                                          'Check the highlighted verses and try again next time',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color: Colors.red.shade700,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-
-                              try {
-                                return _animationController != null
-                                    ? FadeTransition(
-                                        opacity: _fadeAnimation,
-                                        child: feedbackContent,
-                                      )
-                                    : feedbackContent;
-                              } catch (e) {
-                                return feedbackContent;
-                              }
-                            },
-                          ),
                       ],
                     ),
                   ),
@@ -840,7 +845,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
         // Bottom button - stays the same
         if (canSubmit || isChecking)
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.only(left: 20.0, right: 20.0),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
