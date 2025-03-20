@@ -153,7 +153,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
     // Colors for question elements
     final textColor = Colors.grey.shade800;
     final containerBgColor = const Color(0xFFF5F9FF);
-    final primaryAccent = Colors.blue;
+    final primaryAccent = const Color(0xFF4979FB);
 
     return Column(
       children: [
@@ -190,7 +190,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'Verse Sequence',
+                            'Verse Pairing',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -488,7 +488,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                             ),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               // Label for current verse
                               Row(

@@ -418,8 +418,7 @@ class WeekDaysSection extends StatelessWidget {
                           // Missed Hifdh tasks
                           if (missedHifdhTasks.isNotEmpty) ...[
                             _buildSectionHeader(
-                                'Missed Memorisation (${missedHifdhTasks.length})',
-                                Iconsax.danger),
+                                'Memorisation Tasks', Iconsax.book_1),
                             SizedBox(height: 12),
                             ...missedHifdhTasks
                                 .map((hifdh) => _buildHifdhCard(hifdh, true)),
@@ -549,6 +548,21 @@ class WeekDaysSection extends StatelessWidget {
     bool isCompleted =
         hifdh.containsKey('completed') ? hifdh['completed'] : false;
 
+    // Status text and color
+    String statusText = isCompleted
+        ? 'Completed'
+        : isMissedHifdh
+            ? 'Missed'
+            : isPast
+                ? 'Missed'
+                : 'Upcoming';
+
+    Color statusColor = isCompleted
+        ? Color.fromARGB(255, 90, 180, 140) // Less bright green
+        : isMissedHifdh || isPast
+            ? Colors.red.shade300
+            : Color.fromARGB(255, 254, 189, 89);
+
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -574,35 +588,50 @@ class WeekDaysSection extends StatelessWidget {
               ],
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              // Status bar at top
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 6),
-                color: isCompleted
-                    ? Color.fromARGB(255, 113, 233, 175)
-                    : isMissedHifdh || isPast
-                        ? Colors.red.shade300
-                        : Color.fromARGB(255, 254, 189, 89),
-                child: Center(
-                  child: Text(
-                    isCompleted
-                        ? 'Completed'
-                        : isMissedHifdh
-                            ? 'Missed'
-                            : isPast
-                                ? 'Missed'
-                                : 'Upcoming',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
+              // Status indicator in top right
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: statusColor,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        statusText,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+
               Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -749,7 +778,7 @@ class WeekDaysSection extends StatelessWidget {
 
     Color statusColor = isPast
         ? (isCompleted
-            ? Color.fromARGB(255, 113, 233, 175)
+            ? Color.fromARGB(255, 90, 180, 140) // Less bright green
             : Colors.red.shade300)
         : Color.fromARGB(255, 254, 189, 89);
 
@@ -778,25 +807,50 @@ class WeekDaysSection extends StatelessWidget {
               ],
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              // Status bar at top
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 6),
-                color: statusColor,
-                child: Center(
-                  child: Text(
-                    statusText,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
+              // Status indicator in top right
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: statusColor,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        statusText,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+
               Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(

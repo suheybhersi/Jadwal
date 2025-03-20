@@ -390,6 +390,18 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
     _selectBlankAtPosition(position);
   }
 
+  // Add this helper function to the _FillBlankQuestionState class
+  String _convertToArabicNumbers(String input) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+    for (int i = 0; i < english.length; i++) {
+      input = input.replaceAll(english[i], arabic[i]);
+    }
+
+    return input;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Colors for question elements
@@ -482,8 +494,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                 Container(
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.35,
-                  margin:
-                      const EdgeInsets.only(bottom: 16), // Add margin at bottom
+                  margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: containerBgColor,
                     borderRadius: BorderRadius.circular(24),
@@ -756,13 +767,61 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   List<Widget> _buildVerseWords() {
     List<Widget> wordWidgets = [];
     List<String> words = widget.question['verseWords'];
+    List<int> missingIndices =
+        List<int>.from(widget.question['missingIndices']);
     int blankCount = 0;
 
+    // First add the previous verse ending and verse number if available
+    if (widget.question.containsKey('previousVerseWords') &&
+        widget.question['previousVerseWords'] != null &&
+        widget.question['previousVerseWords'].length > 0) {
+      // Add previous verse words
+      List<dynamic> previousWords = widget.question['previousVerseWords'];
+      for (String word in previousWords) {
+        wordWidgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              word,
+              style: GoogleFonts.scheherazadeNew(
+                letterSpacing: 0,
+                fontSize: 20,
+                height: 1.2,
+                color: Colors.grey.shade600,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Add verse number with special formatting if available
+      if (widget.question.containsKey('verseNumber') &&
+          widget.question['verseNumber'] != null) {
+        String verseNumber = widget.question['verseNumber'].toString();
+
+        // Add the special verse marker with Arabic numerals
+        wordWidgets.add(
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              "﴾${_convertToArabicNumbers(verseNumber).replaceAll(' ', '')}﴿",
+              style: GoogleFonts.scheherazadeNew(
+                fontSize: 20,
+                color: primaryAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Now add the current verse words with blanks
     for (int i = 0; i < words.length; i++) {
       String word = words[i];
       bool isBlank = word == '____';
-      bool isFilledWord =
-          !isBlank && widget.question['correctAnswers'].contains(word);
+      bool isOriginallyBlank = missingIndices.contains(i);
 
       if (isBlank) {
         // This is a blank - get its index
@@ -802,21 +861,11 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
             ),
           ),
         );
-      } else if (isFilledWord ||
-          widget.question['correctAnswers']
-              .any((correctWord) => correctWord == word)) {
-        // Filled word that can be tapped to remove
+      } else if (isOriginallyBlank) {
+        // This is a filled word that was originally a blank
 
         // Find the position of this word in the missing indices
-        int missingIndexPosition = -1;
-        List<int> missingIndices =
-            List<int>.from(widget.question['missingIndices']);
-        for (int j = 0; j < missingIndices.length; j++) {
-          if (missingIndices[j] == i) {
-            missingIndexPosition = j;
-            break;
-          }
-        }
+        int missingIndexPosition = missingIndices.indexOf(i);
 
         // Determine if this word is correct in this position
         bool isCorrectHere = false;
@@ -865,84 +914,21 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
           ),
         );
       } else {
-        // Regular word - now we need to check if this is actually a filled blank that wasn't recognised
-        bool isActuallyFilledBlank =
-            widget.question['missingIndices'].contains(i);
-
-        if (isActuallyFilledBlank) {
-          // This is a filled blank that wasn't recognised as such
-
-          // Determine if this word is correct in this position
-          bool isCorrectHere = false;
-          List<int> missingIndices =
-              List<int>.from(widget.question['missingIndices']);
-          int missingIndexPosition = missingIndices.indexOf(i);
-
-          if (missingIndexPosition != -1 &&
-              missingIndexPosition < widget.question['correctAnswers'].length) {
-            isCorrectHere =
-                widget.question['correctAnswers'][missingIndexPosition] == word;
-          }
-
-          // Define word colors based on state
-          Color wordColor = isChecking
-              ? (isCorrectHere ? Colors.green.shade600 : Colors.red.shade600)
-              : primaryAccent;
-
-          wordWidgets.add(
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: isChecking
-                    ? (isCorrectHere
-                        ? Colors.green.shade50
-                        : Colors.red.shade50)
-                    : primaryAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isChecking
-                      ? (isCorrectHere
-                          ? Colors.green.shade300
-                          : Colors.red.shade300)
-                      : primaryAccent.withOpacity(0.5),
-                  width: 1,
-                ),
-              ),
-              child: GestureDetector(
-                onTap: isChecking
-                    ? null
-                    : () => _removeWordAndSelectBlank(i, word),
-                child: Text(
-                  word,
-                  style: GoogleFonts.scheherazadeNew(
-                    letterSpacing: 0,
-                    fontSize: 20,
-                    height: 1.2,
-                    color: wordColor,
-                    fontWeight:
-                        isChecking ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
+        // Regular word - not a blank or filled blank
+        wordWidgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              word,
+              style: GoogleFonts.scheherazadeNew(
+                letterSpacing: 0,
+                fontSize: 20,
+                height: 1.2,
+                color: Colors.grey.shade800,
               ),
             ),
-          );
-        } else {
-          // Regular word
-          wordWidgets.add(
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                word,
-                style: GoogleFonts.scheherazadeNew(
-                  letterSpacing: 0,
-                  fontSize: 20,
-                  height: 1.2,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-            ),
-          );
-        }
+          ),
+        );
       }
     }
 

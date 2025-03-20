@@ -8,6 +8,7 @@ import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/verse_pairing_question.dart';
 import 'package:jadwal/services/openai_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
@@ -35,10 +36,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   late List<Map<String, dynamic>> questions = [];
   Map<int, Map<String, dynamic>> answeredQuestions = {};
 
-  // Progress tracking variables
+  // Simplified progress tracking
   double _loadingProgress = 0.0;
-  double _targetProgress = 0.0;
-  bool _isLoadingText = true;
+  bool _isActive = true;
   final List<String> _loadingMessages = [
     "Generating questions...",
     "Almost there...",
@@ -47,327 +47,585 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   int _currentMessageIndex = 0;
 
   // Animation controllers
-  AnimationController? _loadingAnimationController;
-  AnimationController? _rotationAnimationController;
-  bool _isActive = true;
+  AnimationController? _pulseController;
+  late AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
-    // Initialise animation controllers
-    _loadingAnimationController = AnimationController(
+    // Initialize animation controllers
+    _pulseController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
 
-    _rotationAnimationController = AnimationController(
+    _rotationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
     )..repeat();
 
-    // Start animations and load questions
-    _startSmoothProgressAnimation();
+    // Start loading questions
+    _startProgressAnimation();
     _loadQuestions();
-    _startLoadingTextAnimation();
+    _cycleLoadingMessages();
   }
 
   @override
   void dispose() {
-    // First set flag to stop all animations
     _isActive = false;
-
-    // Make sure to stop all controllers first
-    _loadingAnimationController?.stop();
-    _rotationAnimationController?.stop();
-
-    // Then dispose controllers with proper null safety checks
-    if (_loadingAnimationController != null) {
-      _loadingAnimationController!.dispose();
-      _loadingAnimationController = null;
-    }
-
-    if (_rotationAnimationController != null) {
-      _rotationAnimationController!.dispose();
-      _rotationAnimationController = null;
-    }
-
-    // Make sure super.dispose() is called last
+    _pulseController!.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
-  // Consistent smooth progress animation
-  void _startSmoothProgressAnimation() {
+  // Simplified progress animation
+  void _startProgressAnimation() {
+    const duration = 20000; // 20 seconds to reach ~100%
+    const interval = 100; // Update every 100ms
+    int elapsed = 0;
+
     Future.microtask(() async {
-      while (_isActive &&
-          mounted &&
-          (questions.isEmpty || _loadingProgress < 1.0)) {
-        // Only animate if we haven't reached the target
-        if (_loadingProgress < _targetProgress) {
-          if (!mounted || !_isActive) return;
-
-          setState(() {
-            // Apply appropriate step size based on current progress
-            double step;
-
-            if (_loadingProgress < 0.3) {
-              step = 0.005; // Faster in the beginning (0-30%)
-            } else if (_loadingProgress < 0.7) {
-              step = 0.003; // Slower in the middle (30-70%)
-            } else {
-              step = 0.004; // Medium speed at the end (70-100%)
-            }
-
-            // Cap step size based on distance to target
-            double maxStep = (_targetProgress - _loadingProgress) * 0.5;
-            if (step > maxStep && maxStep > 0.001) {
-              step = maxStep;
-            }
-
-            _loadingProgress += step;
-
-            // Ensure we don't overshoot the target
-            if (_loadingProgress > _targetProgress) {
-              _loadingProgress = _targetProgress;
-            }
-
-            // Force to 100% if we're very close and target is 100%
-            if (_targetProgress >= 0.99 && _loadingProgress >= 0.98) {
-              _loadingProgress = 1.0;
-            }
-          });
-        }
-
-        await Future.delayed(const Duration(milliseconds: 30));
+      while (_isActive && mounted && _loadingProgress < 0.99) {
         if (!mounted || !_isActive) return;
+
+        elapsed += interval;
+        final progress = min(elapsed / duration, 0.99);
+
+        setState(() => _loadingProgress = progress);
+        await Future.delayed(const Duration(milliseconds: interval));
       }
     });
   }
 
-  // Safe setState wrapper for progress updates
-  void _updateTargetProgress(double target) {
-    if (!mounted || !_isActive) return;
-    setState(() => _targetProgress = target);
-  }
-
-  // Text animation with proper lifecycle checks
-  void _startLoadingTextAnimation() {
+  // Simplified message cycling
+  void _cycleLoadingMessages() {
     if (!mounted || !_isActive) return;
 
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (!mounted || !_isActive) return;
       if (questions.isEmpty) {
-        setState(() => _isLoadingText = false);
-
-        Future.delayed(Duration(milliseconds: 500), () {
-          if (!mounted || !_isActive) return;
-          if (questions.isEmpty) {
-            setState(() {
-              _currentMessageIndex =
-                  (_currentMessageIndex + 1) % _loadingMessages.length;
-              _isLoadingText = true;
-            });
-            _startLoadingTextAnimation();
-          }
+        setState(() {
+          _currentMessageIndex =
+              (_currentMessageIndex + 1) % _loadingMessages.length;
         });
+        _cycleLoadingMessages();
       }
     });
   }
 
-  // Load questions with evenly distributed progress updates
+  // Load questions with progress animation
   Future<void> _loadQuestions() async {
-    if (!mounted || !_isActive) return;
-
-    // Initial progress
-    _updateTargetProgress(0.05);
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted || !_isActive) return;
-
-    _updateTargetProgress(0.15);
-    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted || !_isActive) return;
 
     // Generate questions
     final generatedQuestions = await _generateQuestions();
     if (!mounted || !_isActive) return;
 
-    // Final progress updates
-    _updateTargetProgress(0.95);
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted || !_isActive) return;
-
-    _updateTargetProgress(1.0);
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted || !_isActive) return;
-
     setState(() {
-      questions = generatedQuestions..shuffle();
+      questions = generatedQuestions;
       _loadingProgress = 1.0;
     });
-
-    // Wait before transitioning
-    await Future.delayed(const Duration(milliseconds: 800));
   }
 
+  // Generate quiz questions with diverse question types
   Future<List<Map<String, dynamic>>> _generateQuestions() async {
+    // Initialize question lists
     List<Map<String, dynamic>> generatedQuestions = [];
     List<Map<String, dynamic>> fillInTheBlankQuestions = [];
     List<Map<String, dynamic>> dragAndDropQuestions = [];
     List<Map<String, dynamic>> whatComesNextQuestions = [];
     List<Map<String, dynamic>> versePairingQuestions = [];
 
-    // Start with 25% progress
-    _updateTargetProgress(0.25);
+    // Determine target question count based on verse count
+    int targetQuestionCount;
+    final verseCount = widget.versesList.length;
 
-    // Distribute 45% of progress across verse processing
-    final totalVerses = widget.versesList.length;
-    final verseProgressIncrement = 0.45 / totalVerses;
+    if (verseCount <= 3) {
+      targetQuestionCount = 5;
+    } else if (verseCount <= 7) {
+      targetQuestionCount = 10;
+    } else if (verseCount <= 12) {
+      targetQuestionCount = 15;
+    } else if (verseCount <= 20) {
+      targetQuestionCount = 20;
+    } else {
+      targetQuestionCount = 30;
+    }
 
-    // Process each verse
-    for (int i = 0; i < widget.versesList.length; i++) {
+    // Create and distribute verse indices for diverse question types
+    final verseIndices = List.generate(verseCount, (i) => i)..shuffle();
+    final totalTypes = 4; // Fill blank, drag-drop, what-next, verse-pairing
+    final baseIndicesPerType = verseIndices.length ~/ totalTypes;
+
+    // Distribute indices among question types
+    final typeIndices = List.generate(totalTypes, (i) {
+      final start = i * baseIndicesPerType;
+      final end = (i == totalTypes - 1)
+          ? verseIndices.length
+          : (i + 1) * baseIndicesPerType;
+      return verseIndices.sublist(start, end);
+    });
+
+    // Handle fill-in-blank questions (limit to 5)
+    final fillInBlankLimit = 5;
+    var fillBlankIndices = typeIndices[0];
+
+    // Ensure we have enough indices for fill-in-blank
+    if (fillBlankIndices.length < fillInBlankLimit) {
+      for (int i = 1;
+          i < typeIndices.length && fillBlankIndices.length < fillInBlankLimit;
+          i++) {
+        if (typeIndices[i].isNotEmpty) {
+          fillBlankIndices.add(typeIndices[i].removeAt(0));
+        }
+      }
+    }
+    // Get evenly distributed indices for fill-in-blank
+    fillBlankIndices = List.generate(fillBlankIndices.length, (i) => i)
+        .where((i) =>
+            i %
+                (fillBlankIndices.length /
+                        min(fillInBlankLimit, fillBlankIndices.length))
+                    .ceil() ==
+            0)
+        .map((i) => fillBlankIndices[i])
+        .take(min(fillInBlankLimit, fillBlankIndices.length))
+        .toList();
+
+    // Generate all question types
+    await _generateAllQuestionTypes(
+      fillBlankIndices: fillBlankIndices,
+      typeIndices: typeIndices,
+      fillInTheBlankQuestions: fillInTheBlankQuestions,
+      dragAndDropQuestions: dragAndDropQuestions,
+      whatComesNextQuestions: whatComesNextQuestions,
+      versePairingQuestions: versePairingQuestions,
+    );
+
+    // Add questions based on target distribution
+    generatedQuestions = _assembleQuestionSet(
+      targetQuestionCount: targetQuestionCount,
+      fillInTheBlankQuestions: fillInTheBlankQuestions,
+      dragAndDropQuestions: dragAndDropQuestions,
+      whatComesNextQuestions: whatComesNextQuestions,
+      versePairingQuestions: versePairingQuestions,
+      fillBlankIndices: fillBlankIndices,
+    );
+
+    return generatedQuestions;
+  }
+
+  // Generate all question types from their respective indices
+  Future<void> _generateAllQuestionTypes({
+    required List<int> fillBlankIndices,
+    required List<List<int>> typeIndices,
+    required List<Map<String, dynamic>> fillInTheBlankQuestions,
+    required List<Map<String, dynamic>> dragAndDropQuestions,
+    required List<Map<String, dynamic>> whatComesNextQuestions,
+    required List<Map<String, dynamic>> versePairingQuestions,
+  }) async {
+    // CHANGE ORDER: Start with drag & drop questions first due to length restrictions
+    // 1. Generate Drag & Drop questions FIRST
+    for (int verseIndex in typeIndices[1]) {
       if (!mounted || !_isActive) break;
 
-      String verse = widget.versesList[i];
+      String verse = widget.versesList[verseIndex];
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-      // Generate what comes next questions
-      if (i < widget.versesList.length - 1) {
-        whatComesNextQuestions.add(_generateWhatComesNextQuestion(i));
-      }
-
-      // Generate verse pairing questions for each verse except first and last
-      if (i > 0 && i < widget.versesList.length - 1) {
-        versePairingQuestions.add(_generateVersePairingQuestion(i));
-      }
-
-      // Update progress incrementally
-      _updateTargetProgress(0.25 + (verseProgressIncrement * (i + 1)));
-
-      // Add small delays occasionally for smooth animation
-      if (i % 5 == 0) {
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (!mounted || !_isActive) break;
-      }
-
-      // Only add fill in the blank for verses with more than 1 word
-      if (!words.contains('')) {
-        fillInTheBlankQuestions
-            .add(await _generateFillInTheBlankQuestion(verse));
-      }
-
-      // Only add drag and drop for verses between 2 and 7 words
       if (!words.contains('') && words.length < 15) {
         dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
       }
     }
 
-    // Progress updates for question processing phase
-    _updateTargetProgress(0.70);
-    await _safeDelay(150);
+    // 2. Generate Fill-in-Blank questions
+    for (int i = 0; i < fillBlankIndices.length; i++) {
+      if (!mounted || !_isActive) break;
 
-    // Shuffle questions
-    dragAndDropQuestions.shuffle();
+      int verseIndex = fillBlankIndices[i];
+      String verse = widget.versesList[verseIndex];
+      List<String> words = splitVerseManuallyWithSpecialChars(verse);
+
+      if (words.length > 1 && !words.contains('')) {
+        fillInTheBlankQuestions
+            .add(await _generateFillInTheBlankQuestion(verse, verseIndex));
+      }
+    }
+
+    // 3. Generate What Comes Next questions
+    for (int verseIndex in typeIndices[2]) {
+      if (!mounted || !_isActive) break;
+      if (verseIndex < widget.versesList.length - 1) {
+        whatComesNextQuestions.add(_generateWhatComesNextQuestion(verseIndex));
+      }
+    }
+
+    // 4. Generate Verse Pairing questions
+    for (int verseIndex in typeIndices[3]) {
+      if (!mounted || !_isActive) break;
+      if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
+        versePairingQuestions.add(_generateVersePairingQuestion(verseIndex));
+      }
+    }
+
+    // Shuffle all question collections for variety
     fillInTheBlankQuestions.shuffle();
+    dragAndDropQuestions.shuffle();
     whatComesNextQuestions.shuffle();
     versePairingQuestions.shuffle();
+  }
 
-    // Add drag and drop questions
-    generatedQuestions.addAll(dragAndDropQuestions.length > 7
-        ? dragAndDropQuestions.take(7)
-        : dragAndDropQuestions);
+  // Assemble the final question set with balanced distribution
+  List<Map<String, dynamic>> _assembleQuestionSet({
+    required int targetQuestionCount,
+    required List<Map<String, dynamic>> fillInTheBlankQuestions,
+    required List<Map<String, dynamic>> dragAndDropQuestions,
+    required List<Map<String, dynamic>> whatComesNextQuestions,
+    required List<Map<String, dynamic>> versePairingQuestions,
+    required List<int> fillBlankIndices,
+  }) {
+    // First, collect all questions by type
+    List<Map<String, dynamic>> generatedQuestions = [];
 
-    _updateTargetProgress(0.78);
-    await _safeDelay(150);
+    // IMPROVED BALANCING: Create a more even distribution
+    // Target a quarter of questions for each type, with minimum 0 and maximum 40% of total
+    int perTypeTarget = (targetQuestionCount / 4).ceil();
+    int maxPerType = (targetQuestionCount * 0.4).ceil(); // Max 40% per type
 
-    // Adding what comes next questions
-    int dDCount = (20 - generatedQuestions.length + 1) ~/ 2;
-    int count = 1;
+    // Calculate how many questions we want of each type
+    int fillBlankTarget =
+        min(min(perTypeTarget, fillInTheBlankQuestions.length), maxPerType);
+    int dragDropTarget =
+        min(min(perTypeTarget, dragAndDropQuestions.length), maxPerType);
+    int whatNextTarget =
+        min(min(perTypeTarget, whatComesNextQuestions.length), maxPerType);
+    int verseMatchTarget =
+        min(min(perTypeTarget, versePairingQuestions.length), maxPerType);
 
-    for (int i = 0;
-        i < whatComesNextQuestions.length && generatedQuestions.length < 20;
-        i++) {
-      // Check if this what_next question's first word matches any drag_drop question's first word
-      bool hasMatchingDragDrop = generatedQuestions.any((q) {
-        String whatNextFirstWord = splitVerseManuallyWithSpecialChars(
-                whatComesNextQuestions[i]['verse'])
-            .first;
-        return q['firstWord'] == whatNextFirstWord;
-      });
+    // Take the desired number from each type
+    List<Map<String, dynamic>> fillBlankList =
+        fillInTheBlankQuestions.take(fillBlankTarget).toList();
+    List<Map<String, dynamic>> dragDropList =
+        dragAndDropQuestions.take(dragDropTarget).toList();
+    List<Map<String, dynamic>> whatNextList =
+        whatComesNextQuestions.take(whatNextTarget).toList();
+    List<Map<String, dynamic>> pairingList =
+        versePairingQuestions.take(verseMatchTarget).toList();
 
-      // Only add if there's no matching drag_drop question and within count limit
-      if (!hasMatchingDragDrop && count <= dDCount) {
-        generatedQuestions.add(whatComesNextQuestions[i]);
-        count++;
-      }
-    }
+    // Log question counts for debugging
+    print(
+        'Question counts - Fill blank: ${fillBlankList.length}, Drag drop: ${dragDropList.length}, '
+        'What next: ${whatNextList.length}, Pairing: ${pairingList.length}');
 
-    _updateTargetProgress(0.85);
-    await _safeDelay(150);
+    // Create a list of question type groups to alternate between
+    List<List<Map<String, dynamic>>> questionGroups = [
+      fillBlankList,
+      dragDropList,
+      whatNextList,
+      pairingList,
+    ];
 
-    // Adding fill in the blank questions
-    for (int i = 0;
-        i < fillInTheBlankQuestions.length && generatedQuestions.length < 20;
-        i++) {
-      // Get first word of the current fill_blank question
-      String fillBlankFirstWord =
-          fillInTheBlankQuestions[i]['verseWords'].first;
+    // Remove any empty groups
+    questionGroups.removeWhere((group) => group.isEmpty);
 
-      // Check for matches with drag_drop and what_next questions
-      bool hasMatchingQuestion = generatedQuestions.any((q) {
-        if (q['type'] == 'drag_drop') {
-          return q['firstWord'] == fillBlankFirstWord;
-        } else if (q['type'] == 'what_next') {
-          String whatNextCorrectFirstWord =
-              splitVerseManuallyWithSpecialChars(q['correctAnswer']).first;
-          return whatNextCorrectFirstWord == fillBlankFirstWord;
+    // Arrange questions by alternating types
+    // This ensures we don't get clusters of the same type
+    String? lastType;
+    while (generatedQuestions.length < targetQuestionCount &&
+        questionGroups.any((g) => g.isNotEmpty)) {
+      // Try to find a group with a different type than the last one
+      List<List<Map<String, dynamic>>>? availableGroups;
+
+      if (lastType != null) {
+        // Look for non-empty groups with a different type
+        availableGroups = questionGroups
+            .where(
+                (group) => group.isNotEmpty && group.first['type'] != lastType)
+            .toList();
+
+        // If all remaining groups are the same type, just use what we have
+        if (availableGroups.isEmpty) {
+          availableGroups =
+              questionGroups.where((group) => group.isNotEmpty).toList();
         }
-        return false;
-      });
-
-      // Only add if there's no matching question
-      if (!hasMatchingQuestion) {
-        generatedQuestions.add(fillInTheBlankQuestions[i]);
+      } else {
+        // For the first question, use any non-empty group
+        availableGroups =
+            questionGroups.where((group) => group.isNotEmpty).toList();
       }
+
+      // Break if no groups are available
+      if (availableGroups.isEmpty) break;
+
+      // Pick a random group from available ones
+      final randomIndex = Random().nextInt(availableGroups.length);
+      final selectedGroup = availableGroups[randomIndex];
+
+      // Add a question from this group
+      if (selectedGroup.isNotEmpty) {
+        final question = selectedGroup.removeAt(0);
+        generatedQuestions.add(question);
+        lastType = question['type'];
+      }
+
+      // Update our groups list by removing empty ones
+      questionGroups.removeWhere((group) => group.isEmpty);
     }
 
-    _updateTargetProgress(0.90);
-    await _safeDelay(150);
+    // If we still don't have enough questions, generate additional ones
+    if (generatedQuestions.length < targetQuestionCount) {
+      List<Map<String, dynamic>> additionalQuestions = [];
+      _generateAdditionalQuestions(
+        generatedQuestions: additionalQuestions,
+        targetQuestionCount: targetQuestionCount - generatedQuestions.length,
+        fillBlankIndices: fillBlankIndices,
+      );
 
-    // Final questions
-    for (int i = 0;
-        i < fillInTheBlankQuestions.length && generatedQuestions.length < 20;
-        i++) {
-      // Check for matches with drag_drop and what_next questions
-      bool hasMatchingQuestion = generatedQuestions.any((q) {
-        if (q['type'] == 'fill_blank') {
-          return fillInTheBlankQuestions[i]['correctAnswers']
-              .contains(q['correctAnswers'].first);
+      // Add additional questions with alternating types
+      for (var question in additionalQuestions) {
+        if (generatedQuestions.length >= targetQuestionCount) break;
+
+        // Only add if different from the last type, or if we have no choice
+        if (lastType == null ||
+            question['type'] != lastType ||
+            additionalQuestions.length == 1) {
+          generatedQuestions.add(question);
+          lastType = question['type'];
         }
-        return false;
-      });
-
-      // Only add if there's no matching question
-      if (!hasMatchingQuestion) {
-        generatedQuestions.add(fillInTheBlankQuestions[i]);
       }
     }
 
-    _updateTargetProgress(0.95);
-    await _safeDelay(150);
+    // Ensure we have multiples of 5 for question count
+    int desiredCount = (targetQuestionCount ~/ 5) * 5;
+    if (generatedQuestions.length > desiredCount) {
+      // Trim questions if we have too many, but maintain type alternation
+      generatedQuestions = generatedQuestions.take(desiredCount).toList();
+    }
 
-    // Shuffle verse pairing questions
-    versePairingQuestions.shuffle();
+    // If we're still under target, add more questions to reach exact count
+    if (generatedQuestions.length < desiredCount &&
+        generatedQuestions.isNotEmpty) {
+      // Calculate how many more questions we need
+      int shortfall = desiredCount - generatedQuestions.length;
 
-    // Add verse pairing questions (allocate ~30% of quiz to this type)
-    int pairingCount = min(6, versePairingQuestions.length);
-    generatedQuestions.addAll(versePairingQuestions.take(pairingCount));
+      // Track which verses have been used for which question types
+      Map<int, Set<String>> usedVerseQuestionTypes = {};
+
+      // Map existing questions to track which verses were used for which types
+      for (var question in generatedQuestions) {
+        int verseIndex = -1;
+
+        // Extract verse index based on question type
+        if (question['type'] == 'what_next' && question.containsKey('verse')) {
+          // For what-comes-next, extract from the verse data
+          String verse = question['verse'];
+          verseIndex = widget.versesList.indexOf(verse);
+        } else if (question['type'] == 'verse_pairing' &&
+            question.containsKey('currentVerse')) {
+          // For verse pairing, extract from currentVerse
+          String verse = question['currentVerse'];
+          verseIndex = widget.versesList.indexOf(verse);
+        } else if (question['type'] == 'drag_drop' &&
+            question.containsKey('correctOrder')) {
+          // For drag & drop, reconstruct verse and find index
+          String firstWord = question['firstWord'];
+          List<String> fullWords = [firstWord, ...question['correctOrder']];
+          String verse = fullWords.join(' ');
+          verseIndex = widget.versesList.indexOf(verse);
+
+          // If exact match fails, try containment search
+          if (verseIndex == -1) {
+            for (int i = 0; i < widget.versesList.length; i++) {
+              if (widget.versesList[i].contains(firstWord)) {
+                verseIndex = i;
+                break;
+              }
+            }
+          }
+        } else if (question['type'] == 'fill_blank' &&
+            question.containsKey('verseWords')) {
+          // We won't generate more fill_blank, but track them to avoid verse reuse
+          // This is approximate since we can't easily recover the full verse
+          // Just mark all verses as used for this type to be safe
+          continue;
+        }
+
+        // Track this verse and question type combination
+        if (verseIndex >= 0) {
+          usedVerseQuestionTypes[verseIndex] ??= {};
+          usedVerseQuestionTypes[verseIndex]!.add(question['type']);
+        }
+      }
+
+      // Define allowed padding question types (excluding fill_blank)
+      List<String> paddingTypes = ['drag_drop', 'what_next', 'verse_pairing'];
+
+      // Calculate how many questions of each type to generate
+      int baseCount = shortfall ~/ paddingTypes.length;
+      List<int> typeCounts = List.filled(paddingTypes.length, baseCount);
+
+      // Distribute any remainder questions
+      int remainder = shortfall - (baseCount * paddingTypes.length);
+      for (int i = 0; i < remainder; i++) {
+        typeCounts[i]++;
+      }
+
+      // Get all possible verse indices
+      List<int> allVerseIndices =
+          List.generate(widget.versesList.length, (i) => i);
+
+      // Add padding questions of each type
+      List<Map<String, dynamic>> paddingQuestions = [];
+
+      for (int typeIndex = 0; typeIndex < paddingTypes.length; typeIndex++) {
+        String questionType = paddingTypes[typeIndex];
+        int targetCount = typeCounts[typeIndex];
+
+        // Handle each question type
+        if (questionType == 'drag_drop') {
+          // Find verses that haven't been used for drag_drop
+          List<int> candidateIndices = allVerseIndices
+              .where((i) =>
+                  !usedVerseQuestionTypes.containsKey(i) ||
+                  !usedVerseQuestionTypes[i]!.contains('drag_drop'))
+              .toList()
+            ..shuffle();
+
+          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
+            int verseIndex = candidateIndices[i];
+            String verse = widget.versesList[verseIndex];
+            List<String> words = splitVerseManuallyWithSpecialChars(verse);
+
+            if (!words.contains('') && words.length < 15) {
+              paddingQuestions.add(_generateDragAndDropQuestion(verse));
+
+              // Mark as used
+              usedVerseQuestionTypes[verseIndex] ??= {};
+              usedVerseQuestionTypes[verseIndex]!.add('drag_drop');
+            }
+          }
+        } else if (questionType == 'what_next') {
+          // Find verses that haven't been used for what_next
+          List<int> candidateIndices = allVerseIndices
+              .where((i) =>
+                  i < widget.versesList.length - 1 &&
+                  (!usedVerseQuestionTypes.containsKey(i) ||
+                      !usedVerseQuestionTypes[i]!.contains('what_next')))
+              .toList()
+            ..shuffle();
+
+          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
+            int verseIndex = candidateIndices[i];
+            paddingQuestions.add(_generateWhatComesNextQuestion(verseIndex));
+
+            // Mark as used
+            usedVerseQuestionTypes[verseIndex] ??= {};
+            usedVerseQuestionTypes[verseIndex]!.add('what_next');
+          }
+        } else if (questionType == 'verse_pairing') {
+          // Find verses that haven't been used for verse_pairing
+          List<int> candidateIndices = allVerseIndices
+              .where((i) =>
+                  i > 0 &&
+                  i < widget.versesList.length - 1 &&
+                  (!usedVerseQuestionTypes.containsKey(i) ||
+                      !usedVerseQuestionTypes[i]!.contains('verse_pairing')))
+              .toList()
+            ..shuffle();
+
+          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
+            int verseIndex = candidateIndices[i];
+            paddingQuestions.add(_generateVersePairingQuestion(verseIndex));
+
+            // Mark as used
+            usedVerseQuestionTypes[verseIndex] ??= {};
+            usedVerseQuestionTypes[verseIndex]!.add('verse_pairing');
+          }
+        }
+      }
+
+      // If we still need more questions due to verse constraints
+      if (paddingQuestions.length < shortfall) {
+        // Get all verses as candidates
+        List<int> allIndices = List.generate(widget.versesList.length, (i) => i)
+          ..shuffle();
+        int typeIndex = 0;
+
+        for (int i = 0;
+            i < allIndices.length && paddingQuestions.length < shortfall;
+            i++) {
+          int verseIndex = allIndices[i];
+          String questionType = paddingTypes[typeIndex % paddingTypes.length];
+
+          // Try generating this type of question for this verse
+          Map<String, dynamic>? question;
+
+          if (questionType == 'drag_drop') {
+            String verse = widget.versesList[verseIndex];
+            List<String> words = splitVerseManuallyWithSpecialChars(verse);
+
+            if (!words.contains('') && words.length < 15) {
+              question = _generateDragAndDropQuestion(verse);
+            }
+          } else if (questionType == 'what_next' &&
+              verseIndex < widget.versesList.length - 1) {
+            question = _generateWhatComesNextQuestion(verseIndex);
+          } else if (questionType == 'verse_pairing' &&
+              verseIndex > 0 &&
+              verseIndex < widget.versesList.length - 1) {
+            question = _generateVersePairingQuestion(verseIndex);
+          }
+
+          // Add question if successfully generated
+          if (question != null) {
+            paddingQuestions.add(question);
+            typeIndex++; // Move to next type for balance
+          }
+        }
+      }
+
+      // Add all padding questions to the final list
+      generatedQuestions.addAll(paddingQuestions);
+    }
 
     return generatedQuestions;
   }
 
-  // Helper method for safe delays with lifecycle checks
-  Future<void> _safeDelay(int milliseconds) async {
-    if (!mounted || !_isActive) return;
-    await Future.delayed(Duration(milliseconds: milliseconds));
+  // Generate additional questions if needed to meet target count
+  void _generateAdditionalQuestions({
+    required List<Map<String, dynamic>> generatedQuestions,
+    required int targetQuestionCount,
+    required List<int> fillBlankIndices,
+  }) {
+    // Get unused verse indices
+    List<int> unusedIndices = List.generate(widget.versesList.length, (i) => i);
+    unusedIndices.removeWhere((i) => fillBlankIndices.contains(i));
+    unusedIndices.shuffle();
+
+    int i = 0;
+    // Generate additional questions using the unused indices
+    while (generatedQuestions.length < targetQuestionCount &&
+        i < unusedIndices.length) {
+      int verseIndex = unusedIndices[i];
+      String verse = widget.versesList[verseIndex];
+
+      // Generate question based on rotation pattern
+      if (i % 3 == 0 && verseIndex < widget.versesList.length - 1) {
+        // What comes next
+        generatedQuestions.add(_generateWhatComesNextQuestion(verseIndex));
+      } else if (i % 3 == 1 &&
+          verseIndex > 0 &&
+          verseIndex < widget.versesList.length - 1) {
+        // Verse pairing
+        generatedQuestions.add(_generateVersePairingQuestion(verseIndex));
+      } else {
+        // Drag and drop
+        List<String> words = splitVerseManuallyWithSpecialChars(verse);
+        if (!words.contains('') && words.length < 15) {
+          generatedQuestions.add(_generateDragAndDropQuestion(verse));
+        }
+      }
+      i++;
+    }
   }
 
   List<String> splitVerseManuallyWithSpecialChars(String verse) {
@@ -412,83 +670,96 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   }
 
   Future<Map<String, dynamic>> _generateFillInTheBlankQuestion(
-      String verse) async {
+      String verse, int verseIndex) async {
     try {
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
+      int prevIndex = verseIndex - 1;
 
-      // Create a map to track word frequencies
-      Map<String, int> wordFrequency = {};
-      for (String word in words) {
-        wordFrequency[word] = (wordFrequency[word] ?? 0) + 1;
+      // Get previous verse if available
+      String? previousVerse;
+      String? verseNumber;
+      if (verseIndex > 0) {
+        previousVerse = widget.versesList[prevIndex];
+        FirebaseFirestore.instance
+            .collection('verses')
+            .where('text', isEqualTo: previousVerse)
+            .get()
+            .then((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            verseNumber =
+                snapshot.docs.first.data()['key'].split(':')[1].toString();
+          }
+        });
       }
 
-      // Determine number of blanks based on verse length
-      int numberOfBlanks = words.length >= 18
-          ? 3
-          : words.length >= 10
-              ? 2
-              : 1;
+      // Get the last 3 words of the previous verse (if available)
+      List<String> previousVerseLastWords = [];
+      if (previousVerse != null) {
+        List<String> previousWords =
+            splitVerseManuallyWithSpecialChars(previousVerse);
+        int wordsToTake = previousWords.length > 3 ? 3 : previousWords.length;
+        previousVerseLastWords =
+            previousWords.sublist(previousWords.length - wordsToTake);
+      }
+
+      // Determine number of blanks at the start and end
+      int startBlanksCount = min(3, words.length ~/ 3);
+      int endBlanksCount = min(2, words.length ~/ 4);
+
+      // Ensure we don't try to blank out the entire verse
+      int totalBlanks = startBlanksCount + endBlanksCount;
+      if (totalBlanks >= words.length) {
+        startBlanksCount = min(2, words.length - 1);
+        endBlanksCount = min(1, words.length - startBlanksCount);
+      }
 
       // Keep track of missing words and their indices
       List<String> missingWords = [];
       List<int> missingIndices = [];
 
-      // Generate unique random indices for blanks
-      while (missingIndices.length < numberOfBlanks) {
-        int index = Random().nextInt(words.length);
-
-        // Skip if word is a special character or already selected or appears multiple times
-        if (missingIndices.contains(index) ||
-            wordFrequency[words[index]]! > 1) {
-          continue;
-        }
-
-        missingIndices.add(index);
+      // Add indices for blanks at the beginning
+      for (int i = 0; i < startBlanksCount; i++) {
+        missingIndices.add(i);
+        missingWords.add(words[i]);
       }
 
-      // Sort indices to maintain original word order
-      missingIndices.sort();
-
-      // Add words in correct order
-      missingWords = missingIndices.map((index) => words[index]).toList();
-      print('Selected missing words: $missingWords');
+      // Add indices for blanks at the end
+      for (int i = 0; i < endBlanksCount; i++) {
+        int index = words.length - endBlanksCount + i;
+        missingIndices.add(index);
+        missingWords.add(words[index]);
+      }
 
       // Create verse with blanks
       List<String> verseWithBlanks = List.from(words);
-      for (int i = 0; i < missingIndices.length; i++) {
-        verseWithBlanks[missingIndices[i]] = '____';
+      for (int index in missingIndices) {
+        verseWithBlanks[index] = '____';
       }
 
       // Create a map to store options for each correct word
       Map<String, List<String>> wordOptions = {};
 
       // Number of options to generate per word
-      final int optionsPerWord = 5; // Generate 5 options per word
+      final int optionsPerWord = 5;
 
       try {
         // Generate options for each missing word
         for (String missingWord in missingWords) {
-          // Initialise options list for this word with the correct answer
+          // Initialize options list with the correct answer
           List<String> wordOptionsList = [missingWord];
-
-          // Create context by replacing the current blank with a placeholder
-          String context = verse;
 
           // Get AI-generated wrong options
           List<String> aiOptions = await OpenAIService.generateWrongOptions(
             correctWord: missingWord,
-            context: context,
+            context: verse,
             numberOfOptions: optionsPerWord,
           );
 
           // Add AI options if available
           if (aiOptions.isNotEmpty) {
-            print(
-                'Received ${aiOptions.length} AI-generated options for $missingWord: $aiOptions');
             wordOptionsList.addAll(aiOptions);
           } else {
-            print('No AI-generated options received for word: $missingWord');
-            // Fallback to random words for this specific word
+            // Fallback to random words
             List<String> randomOptions =
                 getRandomWords([missingWord], verse, optionsPerWord);
             wordOptionsList.addAll(randomOptions);
@@ -502,9 +773,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         }
       } catch (e) {
         print('Error using OpenAI for options: $e');
-        // Fallback to the original method if OpenAI fails
-        print('Falling back to random word selection for all words');
-
+        // Fallback to random word selection
         for (String missingWord in missingWords) {
           List<String> randomOptions =
               getRandomWords([missingWord], verse, optionsPerWord);
@@ -514,32 +783,31 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         }
       }
 
-      // For debugging
-      print('Word options map: $wordOptions');
-
       return {
         'type': 'fill_blank',
-        'question': numberOfBlanks > 1
-            ? "Fill in the missing words:"
-            : "Fill in the missing word:",
+        'question':
+            "Fill in the missing words at the beginning and end of the verse:",
         'verseWords': verseWithBlanks,
-        'wordOptions':
-            wordOptions, // New format: options organised by correct word
+        'wordOptions': wordOptions,
         'correctAnswers': missingWords,
         'missingIndices': missingIndices,
+        'previousVerseWords': previousVerseLastWords,
+        'verseNumber': verseNumber,
       };
     } catch (e) {
       print('Error generating fill-in-the-blank question: $e');
-      // Provide a fallback question if there's an error
+      // Provide a fallback question
       return {
         'type': 'fill_blank',
-        'question': "Fill in the missing word:",
+        'question': "Fill in the missing words:",
         'verseWords': [verse],
         'wordOptions': {
           'Option 1': ['Option 1', 'Option 2', 'Option 3', 'Option 4']
         },
         'correctAnswers': ['Option 1'],
         'missingIndices': [0],
+        'previousVerseWords': [],
+        'verseNumber': "Verse",
       };
     }
   }
@@ -661,8 +929,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     // Show loading indicator while questions are being loaded
     if (questions.isEmpty) {
-      // Get app primary color from the app's theme (matching homepage)
-      final primaryColor = Color.fromARGB(255, 73, 121, 251);
+      final primaryColor = const Color.fromARGB(255, 73, 121, 251);
 
       return Scaffold(
         backgroundColor: Colors.white,
@@ -690,9 +957,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-                // Simplified animation area - just a pulsing central element
+                // Loading animation - simplified but maintains visual
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.3,
                   child: Center(
@@ -701,13 +968,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                       children: [
                         // Outer pulsing circle
                         AnimatedBuilder(
-                          animation: _loadingAnimationController!,
+                          animation: _pulseController!,
                           builder: (context, child) {
                             return Container(
-                              width: 200 +
-                                  (_loadingAnimationController!.value * 20),
-                              height: 200 +
-                                  (_loadingAnimationController!.value * 20),
+                              width: 200 + (_pulseController!.value * 20),
+                              height: 200 + (_pulseController!.value * 20),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: primaryColor.withOpacity(0.03),
@@ -718,13 +983,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
                         // Middle pulsing circle
                         AnimatedBuilder(
-                          animation: _loadingAnimationController!,
+                          animation: _pulseController!,
                           builder: (context, child) {
                             return Container(
-                              width: 160 +
-                                  (_loadingAnimationController!.value * 15),
-                              height: 160 +
-                                  (_loadingAnimationController!.value * 15),
+                              width: 160 + (_pulseController!.value * 15),
+                              height: 160 + (_pulseController!.value * 15),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: primaryColor.withOpacity(0.08),
@@ -733,7 +996,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           },
                         ),
 
-                        // Inner circle with icon
+                        // Center icon
                         Container(
                           width: 130,
                           height: 130,
@@ -748,22 +1011,21 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                               ),
                             ],
                           ),
-                          child: Center(
+                          child: const Center(
                             child: Icon(
                               Icons.quiz_outlined,
                               size: 60,
-                              color: primaryColor,
+                              color: Color.fromARGB(255, 73, 121, 251),
                             ),
                           ),
                         ),
 
-                        // Rotating circle around the main icon
+                        // Rotating circle
                         AnimatedBuilder(
-                          animation: _rotationAnimationController!,
+                          animation: _rotationController,
                           builder: (context, child) {
                             return Transform.rotate(
-                              angle:
-                                  _rotationAnimationController!.value * 2 * pi,
+                              angle: _rotationController.value * 2 * pi,
                               child: Container(
                                 width: 160,
                                 height: 160,
@@ -784,27 +1046,21 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                   ),
                 ),
 
-                // Animated message with fade transition
-                AnimatedOpacity(
-                  opacity: _isLoadingText ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 500),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      _loadingMessages[_currentMessageIndex],
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                // Loading message
+                Text(
+                  _loadingMessages[_currentMessageIndex],
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
                   ),
                 ),
 
-                Spacer(),
-                // Enhanced progress indicator
+                const Spacer(),
+
+                // Progress indicator - simplified
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   width: double.infinity,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,7 +1086,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Stack(
                         children: [
                           // Background track
@@ -844,7 +1100,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           ),
                           // Progress bar
                           AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 300),
                             height: 10,
                             width: MediaQuery.of(context).size.width *
                                 (_loadingProgress * 0.9), // Account for padding
@@ -859,9 +1115,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                   ),
                 ),
 
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-                // Tip message in card format similar to home page
+                // Tip message
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -874,7 +1130,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -885,7 +1141,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                             color: primaryColor,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             "Quiz Tip",
                             style: GoogleFonts.poppins(
@@ -895,7 +1151,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         "Your personalised quiz will test your knowledge with various question types.",
                         style: GoogleFonts.poppins(

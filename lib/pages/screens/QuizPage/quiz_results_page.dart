@@ -381,8 +381,6 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.check_circle_outline),
                     ],
                   ),
                 ),
@@ -408,6 +406,8 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
       questionText = 'What comes next';
     } else if (question['type'] == 'drag_drop') {
       questionText = 'Arrange the verse';
+    } else if (question['type'] == 'verse_pairing') {
+      questionText = 'What comes before and after';
     }
 
     return Card(
@@ -534,6 +534,13 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
       // For drag and drop, user answers might be in a different format
       userAnswer = widget.answeredQuestions[index]!['user_answer'].join(' ') ??
           'Not attempted';
+    } else if (question['type'] == 'verse_pairing') {
+      questionTitle = 'What comes before and after';
+      questionContent = question['currentVerse'];
+      correctAnswer =
+          '${question['verseBefore']} ... ${question['verseAfter']}';
+      userAnswer =
+          '${widget.answeredQuestions[index]!['userAnswerBefore']} ... ${widget.answeredQuestions[index]!['userAnswerAfter']}';
     }
 
     showDialog(
