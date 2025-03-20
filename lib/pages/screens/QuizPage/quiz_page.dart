@@ -232,7 +232,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       String verse = widget.versesList[verseIndex];
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-      if (!words.contains('') && words.length < 15) {
+      if (!words.contains('')) {
         dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
       }
     }
@@ -495,7 +495,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             String verse = widget.versesList[verseIndex];
             List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-            if (!words.contains('') && words.length < 15) {
+            if (!words.contains('')) {
               paddingQuestions.add(_generateDragAndDropQuestion(verse));
 
               // Mark as used
@@ -563,7 +563,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             String verse = widget.versesList[verseIndex];
             List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-            if (!words.contains('') && words.length < 15) {
+            if (!words.contains('')) {
               question = _generateDragAndDropQuestion(verse);
             }
           } else if (questionType == 'what_next' &&
@@ -620,7 +620,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       } else {
         // Drag and drop
         List<String> words = splitVerseManuallyWithSpecialChars(verse);
-        if (!words.contains('') && words.length < 15) {
+        if (!words.contains('')) {
           generatedQuestions.add(_generateDragAndDropQuestion(verse));
         }
       }
