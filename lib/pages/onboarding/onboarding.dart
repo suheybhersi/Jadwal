@@ -19,7 +19,7 @@ class OnboardingScreen extends StatelessWidget {
             onPageChanged: controller.updatePageIndicator,
             children: [
               OnBoardingPage(
-                image: 'assets/logo2.png',
+                image: 'assets/logo.png',
                 title: 'Welcome to Jadwal',
                 subTitle: 'Your personal Quran Planner',
               ),
