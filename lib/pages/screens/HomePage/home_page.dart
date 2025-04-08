@@ -27,6 +27,8 @@ class _HomePageState extends State<HomePage> {
 
   Map<String, dynamic> plan = {};
 
+  bool reviewsMissedCalled = false;
+
   @override
   Widget build(BuildContext context) {
     bool hifdhMissedCalled = false;
@@ -164,6 +166,14 @@ class _HomePageState extends State<HomePage> {
                   hifdhMissedCalled = true;
                   firestoreService.hifdhMissed(id).then((_) {
                     hifdhMissedCalled = false;
+                  });
+                }
+
+                // Call reviewMissed if there are reviews in the past not completed
+                if (!reviewsMissedCalled) {
+                  reviewsMissedCalled = true;
+                  firestoreService.reviewMissed(id).then((_) {
+                    reviewsMissedCalled = false;
                   });
                 }
 

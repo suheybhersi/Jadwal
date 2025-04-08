@@ -897,23 +897,6 @@ class WeekDaysSection extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (review['ratings'] != null &&
-                            review['ratings'].isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${review['ratings'].last}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
 

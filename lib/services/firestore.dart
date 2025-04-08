@@ -1771,4 +1771,52 @@ class FirestoreService extends ChangeNotifier {
   Future<void> updateDocument(String docId, Map<String, dynamic> data) async {
     await _executeWithRetry(() => plansCollection.doc(docId).update(data));
   }
+
+  Future<void> reviewMissed(String planId) async {
+    final planSnapshot = await plansCollection.doc(planId).get();
+    if (!planSnapshot.exists) return;
+
+    final planData = planSnapshot.data() as Map<String, dynamic>;
+    final List<dynamic> reviews = planData['reviews'] ?? [];
+
+    var today = DateTime.now();
+    today = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    );
+    bool updated = false;
+
+    // Reschedule any missed reviews (date < today) to the next day
+    for (var review in reviews) {
+      final parts = (review['date'] as String).split('-');
+      final reviewDate = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+
+      // Check if the review date is before today and not completed
+      if (reviewDate.isBefore(today) &&
+          reviewDate != today &&
+          (review['completed'] != true)) {
+        review['date'] = '${today.day}-${today.month}-${today.year}';
+        updated = true;
+        // Update the review date in the database
+        final reviewQ = await reviewsCollection
+            .where('review', isEqualTo: review['review'])
+            .get();
+        final reviewId = reviewQ.docs[0].id;
+        if (reviewId.isNotEmpty) {
+          await reviewsCollection.doc(reviewId).update({
+            'date': '${today.day}-${today.month}-${today.year}',
+          });
+        }
+      }
+    }
+
+    if (updated) {
+      await plansCollection.doc(planId).update({'reviews': reviews});
+    }
+  }
 }
