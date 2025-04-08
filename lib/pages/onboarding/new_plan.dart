@@ -336,6 +336,9 @@ class IntroPage extends StatelessWidget {
                       value: controller.hasMemorisedBefore.value,
                       onChanged: (value) {
                         controller.hasMemorisedBefore.value = value;
+                        controller.selectedToSurah.value = null;
+                        controller.selectedToVerse.value = null;
+                        controller.selectedToSurahData.value = null;
                       },
                       activeColor: Color.fromARGB(255, 73, 121, 251),
                       inactiveThumbColor: Colors.white,
@@ -903,7 +906,8 @@ class ReviewPage extends StatelessWidget {
                 ? '${controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha'} 1 - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
                 : 'No previous memorisation',
             icon: Icons.history,
-            onEdit: () => controller.pageController.jumpToPage(0),
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
           ),
 
           const SizedBox(height: 20),
@@ -927,7 +931,7 @@ class ReviewPage extends StatelessWidget {
                 .join(', '),
             icon: Icons.calendar_today,
             onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 3 : 1),
+                .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
           ),
 
           const SizedBox(height: 20),
@@ -940,7 +944,7 @@ class ReviewPage extends StatelessWidget {
             icon: Icons.calculate,
             onEdit: () {
               controller.pageController
-                  .jumpToPage(controller.hasMemorisedBefore.value ? 3 : 1);
+                  .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1);
             },
           ),
         ],

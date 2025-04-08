@@ -1144,10 +1144,36 @@ class FirestoreService extends ChangeNotifier {
       endKey = verseData['key'];
       endVerse = verseData['text'];
       surah += ' ${verseData['surah']}';
-      if (verseId != '6237') {
+      if (verseId != '6237' || (planData['backToFront'] && verseId != '8')) {
         final nextVerse = await versesCollection.doc(verseId).get();
         verseData = nextVerse.data() as Map<String, dynamic>;
-        nextKey = verseData['key'];
+
+        // Check if we're at the end of a surah in back-to-front mode
+        if (planData['backToFront'] && verseData['key'].split(':')[1] == '1') {
+          // We need to get the first verse of the previous surah
+          final prevSurahId =
+              (int.parse(verseData['key'].split(':')[0]) - 2).toString();
+          if (prevSurahId != '0') {
+            // Check to avoid going past Surah 1
+            final prevSurahVerseSnapshot = await versesCollection
+                .where('key', isEqualTo: '$prevSurahId:1')
+                .get();
+            if (prevSurahVerseSnapshot.docs.isNotEmpty) {
+              final prevSurahVerseDoc = await versesCollection
+                  .doc(prevSurahVerseSnapshot.docs[0].id)
+                  .get();
+              Map<String, dynamic> prevSurahVerseData =
+                  prevSurahVerseDoc.data() as Map<String, dynamic>;
+              nextKey = prevSurahVerseData['key'];
+            } else {
+              nextKey = verseData['key']; // Fallback
+            }
+          } else {
+            nextKey = verseData['key']; // At Surah 1, can't go further back
+          }
+        } else {
+          nextKey = verseData['key'];
+        }
       } else {
         nextKey = endKey;
       }
@@ -1687,6 +1713,60 @@ class FirestoreService extends ChangeNotifier {
       rethrow; // Rethrow to handle in the UI
     }
   }
+
+  /*---------------------------------------R E S E T   P L A N---------------------------------------*/
+  Future<void> resetPlan() async {
+    try {
+      // Store user reference before logging out
+      final String userId = uid;
+      final DocumentReference userDocRef = usersCollection.doc(userId);
+      final CollectionReference userPlansCollection =
+          userDocRef.collection('plans');
+      final CollectionReference userHifdhsCollection =
+          userDocRef.collection('hifdhs');
+      final CollectionReference userReviewsCollection =
+          userDocRef.collection('reviews');
+      final CollectionReference userWeeksCollection =
+          userDocRef.collection('weeks');
+      final CollectionReference userSurahsProgressCollection =
+          userDocRef.collection('surahsProgress');
+
+      // Get all documents from subcollections
+      final plansSnapshot = await userPlansCollection.get();
+      final hifdhsSnapshot = await userHifdhsCollection.get();
+      final reviewsSnapshot = await userReviewsCollection.get();
+      final weeksSnapshot = await userWeeksCollection.get();
+      final surahsProgressSnapshot = await userSurahsProgressCollection.get();
+
+      // Delete all documents in each subcollection
+      for (var doc in plansSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in hifdhsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in reviewsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in weeksSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in surahsProgressSnapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error resetting plan: $e');
+      }
+      rethrow; // Rethrow to handle in the UI
+    }
+  }
+
+  /*---------------------------------------U P D A T E   D O C U M E N T----------------------------------------*/
 
   Future<void> updateDocument(String docId, Map<String, dynamic> data) async {
     await _executeWithRetry(() => plansCollection.doc(docId).update(data));

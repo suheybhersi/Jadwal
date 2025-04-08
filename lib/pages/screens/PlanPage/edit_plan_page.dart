@@ -83,6 +83,189 @@ class _EditPlanPageState extends State<EditPlanPage> {
     }
   }
 
+  void _showResetConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0.0, 10.0),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.warning_rounded,
+                  color: Colors.red[700],
+                  size: 32,
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Title
+              Text(
+                'Reset Plan',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+
+              SizedBox(height: 16),
+
+              // Content
+              Text(
+                'This will erase ALL your memorization progress, including hifdh records, reviews, and statistics.',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[800],
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 8),
+
+              // Warning
+              Text(
+                'This action cannot be undone.',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 32),
+
+              // Buttons
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 16),
+
+                  // Reset button
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[700],
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        // Show loading indicator
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        );
+
+                        // Reset the plan
+                        firestoreService.resetPlan().then((_) {
+                          // Close loading dialog
+                          Navigator.pop(context);
+                          // Close confirmation dialog
+                          Navigator.pop(context);
+                          // Navigate back to main screen
+                          Navigator.of(context)
+                              .popUntil((route) => route.isFirst);
+
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Plan reset successfully',
+                                style: GoogleFonts.poppins(),
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }).catchError((error) {
+                          // Handle errors
+                          Navigator.pop(context); // Close loading dialog
+                          Navigator.pop(context); // Close confirmation dialog
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Error resetting plan: $error',
+                                style: GoogleFonts.poppins(),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        });
+                      },
+                      child: Text(
+                        'Reset',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -104,6 +287,13 @@ class _EditPlanPageState extends State<EditPlanPage> {
             color: Colors.black87,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+            onPressed: () => _showResetConfirmation(context),
+            tooltip: 'Reset Plan',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
