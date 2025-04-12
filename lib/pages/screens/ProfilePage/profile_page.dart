@@ -70,7 +70,7 @@ class ProfilePage extends StatelessWidget {
 
         return Scaffold(
           key: _scaffoldKey,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getPlansStream(),
               builder: (context, snapshot) {
@@ -146,12 +146,6 @@ class ProfilePage extends StatelessWidget {
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.grey.shade100,
-                                                  spreadRadius: 1,
-                                                ),
-                                              ],
                                             ),
                                             child: Icon(
                                               Iconsax.edit,
@@ -179,31 +173,31 @@ class ProfilePage extends StatelessWidget {
                             const SizedBox(height: 24),
 
                             // Stats Overview Section
-                            _buildStatsOverview(plan),
+                            _buildStatsOverview(plan, context),
 
                             const SizedBox(height: 24),
 
                             // Progress Overview section
                             _buildSectionHeader(
-                                'Progress Overview', Iconsax.graph),
+                                'Progress Overview', Iconsax.graph, context),
                             const SizedBox(height: 12),
-                            _buildLearningStatsWidget(plan),
+                            _buildLearningStatsWidget(plan, context),
 
                             const SizedBox(height: 24),
 
                             // Achievements section
                             _buildSectionHeader(
-                                'Achievements', Iconsax.medal_star),
+                                'Achievements', Iconsax.medal_star, context),
                             const SizedBox(height: 12),
-                            _buildAchievementsWidget(),
+                            _buildAchievementsWidget(context),
 
                             const SizedBox(height: 24),
 
                             // Recent Activity section
                             _buildSectionHeader(
-                                'Recent Activity', Iconsax.activity),
+                                'Recent Activity', Iconsax.activity, context),
                             const SizedBox(height: 12),
-                            _buildRecentActivityWidget(plan),
+                            _buildRecentActivityWidget(plan, context),
 
                             const SizedBox(height: 30),
                           ],
@@ -229,7 +223,7 @@ class ProfilePage extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           IconButton(
@@ -248,7 +242,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(
+      String title, IconData icon, BuildContext context) {
     return Row(
       children: [
         Icon(
@@ -262,14 +257,14 @@ class ProfilePage extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatsOverview(Map<String, dynamic> plan) {
+  Widget _buildStatsOverview(Map<String, dynamic> plan, BuildContext context) {
     // Calculate completion date
     final DateTime completionDate = _calculateDaysLeft(plan);
     final String formattedDate =
@@ -278,11 +273,11 @@ class ProfilePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -292,26 +287,26 @@ class ProfilePage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem(
-            value: formattedDate,
-            label: 'Est. Completion',
-            icon: Iconsax.timer_1,
-            color: Colors.green,
-          ),
-          _buildDivider(),
+              value: formattedDate,
+              label: 'Est. Completion',
+              icon: Iconsax.timer_1,
+              color: Colors.green,
+              context: context),
+          _buildDivider(context),
           _buildStatItem(
-            value: '${plan['streak']}',
-            label: 'Streak',
-            icon: Iconsax.flash_1,
-            color: Colors.orange,
-          ),
-          _buildDivider(),
+              value: '${plan['streak']}',
+              label: 'Streak',
+              icon: Iconsax.flash_1,
+              color: Colors.orange,
+              context: context),
+          _buildDivider(context),
           _buildStatItem(
-            value:
-                '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
-            label: 'Completion Rate',
-            icon: Iconsax.chart,
-            color: Colors.blue,
-          ),
+              value:
+                  '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
+              label: 'Completion Rate',
+              icon: Iconsax.chart,
+              color: Colors.blue,
+              context: context),
         ],
       ),
     );
@@ -359,6 +354,7 @@ class ProfilePage extends StatelessWidget {
     required String label,
     required IconData icon,
     required Color color,
+    required BuildContext? context,
   }) {
     return Column(
       children: [
@@ -376,7 +372,7 @@ class ProfilePage extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context!).colorScheme.inversePrimary,
           ),
         ),
         Text(
@@ -391,23 +387,24 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Container(
       height: 40,
       width: 1,
-      color: Colors.grey.shade200,
+      color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
     );
   }
 
-  Widget _buildLearningStatsWidget(Map<String, dynamic> plan) {
+  Widget _buildLearningStatsWidget(
+      Map<String, dynamic> plan, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -416,30 +413,30 @@ class ProfilePage extends StatelessWidget {
       child: Column(
         children: [
           _buildStatRow(
-            title: 'Completion Rate',
-            value:
-                '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
-            icon: Iconsax.chart,
-            color: const Color(0xFF4979FB),
-          ),
+              title: 'Completion Rate',
+              value:
+                  '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
+              icon: Iconsax.chart,
+              color: const Color(0xFF4979FB),
+              context: context),
           const SizedBox(height: 16),
           _buildStatRow(
-            title: 'Average Rating',
-            value: '4.7/5',
-            icon: Iconsax.star,
-            color: Colors.amber,
-          ),
+              title: 'Average Rating',
+              value: '4.7/5',
+              icon: Iconsax.star,
+              color: Colors.amber,
+              context: context),
           const SizedBox(height: 16),
           _buildStatRow(
-            title: 'Completed Reviews',
-            value: plan['reviews'] != null
-                ? (plan['reviews'] is List
-                    ? '${plan['reviews'].length}'
-                    : '${plan['reviews']}')
-                : '0',
-            icon: Iconsax.clock,
-            color: Colors.green,
-          ),
+              title: 'Completed Reviews',
+              value: plan['reviews'] != null
+                  ? (plan['reviews'] is List
+                      ? '${plan['reviews'].length}'
+                      : '${plan['reviews']}')
+                  : '0',
+              icon: Iconsax.clock,
+              color: Colors.green,
+              context: context),
         ],
       ),
     );
@@ -450,6 +447,7 @@ class ProfilePage extends StatelessWidget {
     required String value,
     required IconData icon,
     required Color color,
+    required BuildContext context,
   }) {
     return Row(
       children: [
@@ -471,7 +469,7 @@ class ProfilePage extends StatelessWidget {
             title,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
         ),
@@ -480,22 +478,22 @@ class ProfilePage extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAchievementsWidget() {
+  Widget _buildAchievementsWidget(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -511,18 +509,21 @@ class ProfilePage extends StatelessWidget {
                 icon: Iconsax.flash_1,
                 color: Colors.orange,
                 isUnlocked: true,
+                context: context,
               ),
               _buildAchievementItem(
                 title: 'First Surah',
                 icon: Iconsax.book_1,
                 color: const Color(0xFF4979FB),
                 isUnlocked: true,
+                context: context,
               ),
               _buildAchievementItem(
                 title: '1 Month',
                 icon: Iconsax.calendar,
                 color: Colors.purple,
                 isUnlocked: false,
+                context: context,
               ),
             ],
           ),
@@ -555,6 +556,7 @@ class ProfilePage extends StatelessWidget {
     required IconData icon,
     required Color color,
     required bool isUnlocked,
+    required BuildContext context,
   }) {
     return Column(
       children: [
@@ -578,7 +580,9 @@ class ProfilePage extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: isUnlocked ? Colors.black87 : Colors.grey,
+            color: isUnlocked
+                ? Theme.of(context).colorScheme.inversePrimary
+                : Colors.grey,
           ),
           textAlign: TextAlign.center,
         ),
@@ -586,7 +590,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivityWidget(Map<String, dynamic> plan) {
+  Widget _buildRecentActivityWidget(
+      Map<String, dynamic> plan, BuildContext context) {
     // Create a combined list of activities
     List<Map<String, dynamic>> activities = [];
 
@@ -626,11 +631,11 @@ class ProfilePage extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -645,7 +650,7 @@ class ProfilePage extends StatelessWidget {
                 height: 1,
                 indent: 16,
                 endIndent: 16,
-                color: Colors.grey.shade200,
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
               ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
@@ -655,6 +660,7 @@ class ProfilePage extends StatelessWidget {
                   icon: activity['icon'],
                   color: activity['color'],
                   date: activity['date'],
+                  context: context,
                 );
               },
             )
@@ -679,6 +685,7 @@ class ProfilePage extends StatelessWidget {
     required IconData icon,
     required Color color,
     required String date,
+    required BuildContext context,
   }) {
     List<String> dateParts = date.split('-');
     return Padding(
@@ -707,7 +714,7 @@ class ProfilePage extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
                 Text(

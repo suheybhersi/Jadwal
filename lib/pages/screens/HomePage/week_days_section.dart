@@ -15,9 +15,10 @@ class WeekDaysSection extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +112,10 @@ class WeekDaysSection extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isToday
                                   ? Color.fromARGB(255, 73, 121, 251)
-                                  : Colors.grey.shade50,
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .tertiary
+                                      .withOpacity(0.5),
                               shape: BoxShape.circle,
                               boxShadow: isToday
                                   ? [
@@ -130,8 +134,12 @@ class WeekDaysSection extends StatelessWidget {
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color:
-                                      isToday ? Colors.white : Colors.black87,
+                                  color: isToday
+                                      ? Colors.white
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary
+                                          .withOpacity(0.6),
                                 ),
                               ),
                             ),
@@ -202,246 +210,263 @@ class WeekDaysSection extends StatelessWidget {
           .toList();
     }
 
+    Widget makeDissmissable({required Widget child}) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).pop(),
+          child: GestureDetector(
+            onTap: () {},
+            child: child,
+          ),
+        );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
-          builder: (_, controller) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: EdgeInsets.only(top: 12, bottom: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+        return makeDissmissable(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.9,
+            builder: (_, controller) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: ListView(
-                        controller: controller,
-                        children: [
-                          // Header with date
-                          Container(
-                            margin: EdgeInsets.only(top: 16, bottom: 24),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Color.fromARGB(255, 73, 121, 251)
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '${dayDate.day}',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color.fromARGB(
-                                                255, 73, 121, 251),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 16),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          _getDayName(dayDate.weekday),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${_getMonthName(dayDate.month)} ${dayDate.year}',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: isPast
-                                        ? Colors.grey.shade100
-                                        : Color.fromARGB(255, 73, 121, 251)
-                                            .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
+                ),
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: ListView(
+                          controller: controller,
+                          children: [
+                            // Header with date
+                            Container(
+                              margin: EdgeInsets.only(top: 16, bottom: 24),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
                                     children: [
-                                      Icon(
-                                        isPast
-                                            ? Iconsax.clock
-                                            : Iconsax.calendar_1,
-                                        size: 14,
-                                        color: isPast
-                                            ? Colors.grey.shade700
-                                            : Color.fromARGB(255, 73, 121, 251),
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              Color.fromARGB(255, 73, 121, 251)
+                                                  .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${dayDate.day}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color.fromARGB(
+                                                  255, 73, 121, 251),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        isPast ? 'Past' : 'Upcoming',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
+                                      SizedBox(width: 16),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _getDayName(dayDate.weekday),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${_getMonthName(dayDate.month)} ${dayDate.year}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isPast
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary
+                                              .withOpacity(0.1)
+                                          : Color.fromARGB(255, 73, 121, 251)
+                                              .withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isPast
+                                              ? Iconsax.clock
+                                              : Iconsax.calendar_1,
+                                          size: 14,
                                           color: isPast
                                               ? Colors.grey.shade700
                                               : Color.fromARGB(
                                                   255, 73, 121, 251),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Summary section
-                          Container(
-                            margin: EdgeInsets.only(bottom: 24),
-                            padding: EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade100),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildSummaryItem(
-                                    hifdhTasks.length + missedHifdhTasks.length,
-                                    'Memorisation',
-                                    Iconsax.book_1,
-                                    Color.fromARGB(255, 73, 121, 251)),
-                                Container(
-                                  height: 40,
-                                  width: 1,
-                                  color: Colors.grey.shade200,
-                                ),
-                                _buildSummaryItem(
-                                    reviewTasks.length,
-                                    'Reviews',
-                                    Iconsax.refresh,
-                                    Color.fromARGB(255, 100, 163, 119)),
-                              ],
-                            ),
-                          ),
-
-                          // No tasks message
-                          if (hifdhTasks.isEmpty &&
-                              reviewTasks.isEmpty &&
-                              missedHifdhTasks.isEmpty)
-                            Container(
-                              margin: EdgeInsets.symmetric(vertical: 40),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    hasHifdh
-                                        ? Iconsax.calendar_1
-                                        : Iconsax.calendar_remove,
-                                    size: 60,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  SizedBox(height: 20),
-                                  Text(
-                                    hasHifdh
-                                        ? isPast
-                                            ? 'No completed tasks found'
-                                            : 'Tasks will appear here soon'
-                                        : 'No tasks scheduled for this day',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade600,
+                                        SizedBox(width: 6),
+                                        Text(
+                                          isPast ? 'Past' : 'Upcoming',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: isPast
+                                                ? Colors.grey.shade700
+                                                : Color.fromARGB(
+                                                    255, 73, 121, 251),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    hasHifdh
-                                        ? isPast
-                                            ? 'Tasks may have been missed or rescheduled'
-                                            : 'Check back later for updates'
-                                        : 'This is a rest day in your schedule',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade500,
-                                      height: 1.5,
-                                    ),
-                                    textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
                             ),
+                            // Summary section
+                            Container(
+                              margin: EdgeInsets.only(bottom: 24),
+                              padding: EdgeInsets.all(20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildSummaryItem(
+                                      hifdhTasks.length +
+                                          missedHifdhTasks.length,
+                                      'Memorisation',
+                                      Iconsax.book_1,
+                                      Color.fromARGB(255, 73, 121, 251)),
+                                  Container(
+                                    height: 40,
+                                    width: 1,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary
+                                        .withOpacity(0.5),
+                                  ),
+                                  _buildSummaryItem(
+                                      reviewTasks.length,
+                                      'Reviews',
+                                      Iconsax.refresh,
+                                      Color.fromARGB(255, 100, 163, 119)),
+                                ],
+                              ),
+                            ),
 
-                          // Hifdh tasks
-                          if (hifdhTasks.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                'Memorisation Tasks', Iconsax.book_1),
-                            SizedBox(height: 12),
-                            ...hifdhTasks
-                                .map((hifdh) => _buildHifdhCard(hifdh, isPast)),
-                            SizedBox(height: 24),
-                          ],
+                            // No tasks message
+                            if (hifdhTasks.isEmpty &&
+                                reviewTasks.isEmpty &&
+                                missedHifdhTasks.isEmpty)
+                              Container(
+                                margin: EdgeInsets.symmetric(vertical: 40),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      hasHifdh
+                                          ? Iconsax.calendar_1
+                                          : Iconsax.calendar_remove,
+                                      size: 60,
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    SizedBox(height: 20),
+                                    Text(
+                                      hasHifdh
+                                          ? isPast
+                                              ? 'No completed tasks found'
+                                              : 'Tasks will appear here soon'
+                                          : 'No tasks scheduled for this day',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      hasHifdh
+                                          ? isPast
+                                              ? 'Tasks may have been missed or rescheduled'
+                                              : 'Check back later for updates'
+                                          : 'This is a rest day in your schedule',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade500,
+                                        height: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                          // Missed Hifdh tasks
-                          if (missedHifdhTasks.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                'Memorisation Tasks', Iconsax.book_1),
-                            SizedBox(height: 12),
-                            ...missedHifdhTasks
-                                .map((hifdh) => _buildHifdhCard(hifdh, true)),
-                            SizedBox(height: 24),
-                          ],
+                            // Hifdh tasks
+                            if (hifdhTasks.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                  'Memorisation Tasks', Iconsax.book_1),
+                              SizedBox(height: 12),
+                              ...hifdhTasks.map((hifdh) =>
+                                  _buildHifdhCard(hifdh, isPast, context)),
+                              SizedBox(height: 24),
+                            ],
 
-                          // Review tasks
-                          if (reviewTasks.isNotEmpty) ...[
-                            _buildSectionHeader(
-                                'Review Tasks', Iconsax.refresh),
-                            SizedBox(height: 12),
-                            ...reviewTasks.map(
-                                (review) => _buildReviewCard(review, isPast)),
-                            SizedBox(height: 24),
+                            // Missed Hifdh tasks
+                            if (missedHifdhTasks.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                  'Memorisation Tasks', Iconsax.book_1),
+                              SizedBox(height: 12),
+                              ...missedHifdhTasks.map((hifdh) =>
+                                  _buildHifdhCard(hifdh, true, context)),
+                              SizedBox(height: 24),
+                            ],
+
+                            // Review tasks
+                            if (reviewTasks.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                  'Review Tasks', Iconsax.refresh),
+                              SizedBox(height: 12),
+                              ...reviewTasks.map(
+                                  (review) => _buildReviewCard(review, isPast)),
+                              SizedBox(height: 24),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -483,6 +508,7 @@ class WeekDaysSection extends StatelessWidget {
     return Column(
       children: [
         Container(
+          width: 80,
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
@@ -533,7 +559,8 @@ class WeekDaysSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHifdhCard(Map<String, dynamic> hifdh, bool isPast) {
+  Widget _buildHifdhCard(
+      Map<String, dynamic> hifdh, bool isPast, BuildContext context) {
     // Split the surah string to get start and end surahs
     List<String> surahs = hifdh['surah'].split(' ');
     String startSurah = surahs[0];

@@ -53,7 +53,8 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
               color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.shade100,
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
                   spreadRadius: 1,
                 ),
               ],
@@ -65,8 +66,9 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                 elevation: 0,
                 surfaceTintColor: Colors.transparent,
                 animationDuration: Duration.zero,
-                indicatorColor: Colors.white,
-                backgroundColor: Colors.white,
+                indicatorColor: Theme.of(context).colorScheme.surface,
+                backgroundColor:
+                    Theme.of(context).colorScheme.surface.withOpacity(0.9),
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (value) {
                   setState(() {

@@ -33,7 +33,7 @@ class OnboardingScreen extends StatelessWidget {
               child: Text(
                 'Skip',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
             ),
@@ -50,6 +50,7 @@ class OnboardingScreen extends StatelessWidget {
               ),
               child: Icon(
                 Iconsax.arrow_right_3,
+                color: Colors.white,
               ),
             ),
           )

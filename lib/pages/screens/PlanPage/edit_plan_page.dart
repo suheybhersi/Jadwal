@@ -33,7 +33,11 @@ class _EditPlanPageState extends State<EditPlanPage> {
     super.initState();
     // Initialise with the current plan days
     selectedDays = List.from(widget.plan['hifdhDays']);
-    linesController.text = widget.plan['lines'].toString();
+    selectedUnit = widget.plan['lines'] % 15 == 0 ? 'Pages' : 'Lines';
+    linesController.text = (widget.plan['lines'] % 15 == 0
+            ? widget.plan['lines'] ~/ 15
+            : widget.plan['lines'])
+        .toString();
   }
 
   @override
@@ -95,7 +99,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
         child: Container(
           padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             shape: BoxShape.rectangle,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -131,7 +135,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
 
@@ -142,7 +146,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 'This will erase ALL your memorization progress, including hifdh records, reviews, and statistics.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.grey[800],
+                  color: Theme.of(context)
+                      .colorScheme
+                      .inversePrimary
+                      .withOpacity(0.7),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -180,7 +187,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         'Cancel',
                         style: GoogleFonts.poppins(
                           fontSize: 15,
-                          color: Colors.grey[800],
+                          color: Theme.of(context)
+                              .colorScheme
+                              .inversePrimary
+                              .withOpacity(0.7),
                         ),
                       ),
                     ),
@@ -284,12 +294,13 @@ class _EditPlanPageState extends State<EditPlanPage> {
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             fontSize: 24,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+            icon: Icon(Icons.delete_outline,
+                color: Theme.of(context).colorScheme.inversePrimary),
             onPressed: () => _showResetConfirmation(context),
             tooltip: 'Reset Plan',
           ),
@@ -307,12 +318,18 @@ class _EditPlanPageState extends State<EditPlanPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.blue.shade50,
-                    width: 1,
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,16 +340,19 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         Text(
                           'Daily Amount',
                           style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary),
                         ),
                         Text(
                           'How much would you like to memorise?',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .inversePrimary
+                                .withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -344,8 +364,14 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           flex: 3,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -387,7 +413,9 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
-                                      color: Colors.black87,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
                                     ),
                                   ),
                                 ),
@@ -453,12 +481,18 @@ class _EditPlanPageState extends State<EditPlanPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.blue.shade50,
-                    width: 1,
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,14 +505,17 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         Text(
                           'Select your memorisation days',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .inversePrimary
+                                .withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -506,12 +543,12 @@ class _EditPlanPageState extends State<EditPlanPage> {
                               decoration: BoxDecoration(
                                 color: selectedDays[index]
                                     ? const Color.fromARGB(255, 73, 121, 251)
-                                    : Colors.grey.shade50,
+                                    : Theme.of(context).colorScheme.tertiary,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: selectedDays[index]
                                       ? Colors.transparent
-                                      : Colors.grey.shade300,
+                                      : Theme.of(context).colorScheme.tertiary,
                                 ),
                                 boxShadow: selectedDays[index]
                                     ? [
@@ -532,7 +569,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                   fontWeight: FontWeight.w500,
                                   color: selectedDays[index]
                                       ? Colors.white
-                                      : Colors.grey.shade700,
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary
+                                          .withOpacity(0.7),
                                 ),
                               ),
                             ),

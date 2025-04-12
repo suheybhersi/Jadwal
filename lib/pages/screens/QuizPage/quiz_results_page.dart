@@ -413,11 +413,11 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: isCorrect ? Colors.green.shade50 : Colors.red.shade50,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isCorrect ? Colors.green.shade200 : Colors.red.shade200,
+          color: isCorrect ? Colors.green.shade800 : Colors.red.shade800,
           width: 1,
         ),
       ),

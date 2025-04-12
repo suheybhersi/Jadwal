@@ -40,7 +40,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
             children: [
               Icon(Iconsax.warning_2, color: Colors.white),
               const SizedBox(width: 10),
-              const Text('Please enter your feedback'),
+              const Text('Please enter your feedback',
+                  style: TextStyle(color: Colors.white)),
             ],
           ),
           behavior: SnackBarBehavior.floating,
@@ -75,7 +76,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
             children: [
               Icon(Iconsax.tick_circle, color: Colors.white),
               const SizedBox(width: 10),
-              const Text('Thank you for your feedback!'),
+              const Text('Thank you for your feedback!',
+                  style: TextStyle(color: Colors.white)),
             ],
           ),
           behavior: SnackBarBehavior.floating,
@@ -105,21 +107,22 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           title: Text(
             'Feedback',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           leading: IconButton(
-            icon: Icon(Iconsax.arrow_left, color: Colors.black),
+            icon: Icon(Iconsax.arrow_left,
+                color: Theme.of(context).colorScheme.inversePrimary),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -205,11 +208,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.shade100,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -230,20 +236,24 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                 child: DropdownButton<String>(
                                   value: _selectedCategory,
                                   isExpanded: true,
-                                  icon: const Padding(
+                                  icon: Padding(
                                     padding: EdgeInsets.only(right: 16),
                                     child: Icon(
                                       Iconsax.arrow_down_1,
-                                      color: Color(0xFF4979FB),
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       size: 20,
                                     ),
                                   ),
                                   elevation: 2,
-                                  dropdownColor: Colors.white,
+                                  dropdownColor:
+                                      Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
-                                    color: Colors.black87,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .inversePrimary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hint: Text(
@@ -309,16 +319,20 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         _buildSectionTitle('Your feedback'),
                         const SizedBox(height: 15),
                         Container(
+                          padding: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
+                            color: Theme.of(context).colorScheme.surface,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.shade100,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
                             ],
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: TextField(
                             controller: _feedbackController,
@@ -327,7 +341,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                             maxLength: 500,
                             style: GoogleFonts.poppins(
                               fontSize: 16,
-                              color: Colors.black87,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
                             ),
                             decoration: InputDecoration(
                               hintText:
@@ -342,7 +357,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                               ),
                               contentPadding: const EdgeInsets.all(20),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: Theme.of(context).colorScheme.surface,
                               counterStyle: GoogleFonts.poppins(
                                 color: Colors.grey.shade600,
                               ),
@@ -437,7 +452,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       style: GoogleFonts.poppins(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: Theme.of(context).colorScheme.inversePrimary,
       ),
     );
   }

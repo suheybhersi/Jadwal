@@ -32,21 +32,21 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Text(
           'Password & Security',
           style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-            color: Colors.black87,
-          ),
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Theme.of(context).colorScheme.inversePrimary),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back,
+              color: Theme.of(context).colorScheme.inversePrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -126,11 +126,14 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
                         blurRadius: 12,
                         spreadRadius: 1,
                       ),
@@ -226,6 +229,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
+                                      color: Colors.white,
                                     ),
                                   ),
                           ),
@@ -261,7 +265,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -278,14 +282,20 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey.shade400,
-            ),
+                fontSize: 14, color: Theme.of(context).colorScheme.secondary),
             filled: true,
-            fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
+            fillColor: Theme.of(context).colorScheme.surface,
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -300,11 +310,11 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
   Widget _buildSecuritySection() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -379,7 +389,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.inversePrimary,
                     ),
                   ),
                   Text(
@@ -531,7 +541,10 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
             child: Text(
               'Cancel',
               style: GoogleFonts.poppins(
-                color: Colors.grey[700],
+                color: Theme.of(context)
+                    .colorScheme
+                    .inversePrimary
+                    .withOpacity(0.5),
               ),
             ),
           ),

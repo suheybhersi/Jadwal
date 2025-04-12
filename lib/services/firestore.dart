@@ -568,12 +568,26 @@ class FirestoreService extends ChangeNotifier {
 
 /*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
   Stream<QuerySnapshot> getPlansStream() {
-    final User? user = auth.currentUser;
-    if (user == null) {
-      throw Exception('User not authenticated');
-    }
-    final plansStream = plansCollection.snapshots();
-    return plansStream;
+    return plansCollection.snapshots();
+  }
+
+  Stream<DocumentSnapshot<Object?>> getRandomVerseStream() {
+    // Get today's date as a string in the format YYYY-MM-DD
+    final today = DateTime.now();
+    final dateString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    // Create a deterministic random number for today
+    // Using the date string as seed so it's consistent for the whole day
+    final seed = dateString.hashCode;
+    final random = Random(seed);
+
+    // Total number of verses in the Quran is 6236
+    // Generate a random verse ID between 1 and 6236
+    final verseId = random.nextInt(6236) + 1;
+
+    // Return a stream that emits the verse for today
+    return versesCollection.doc(verseId.toString()).snapshots();
   }
 
   Stream<QuerySnapshot> getSurahsStream() {
@@ -881,6 +895,13 @@ class FirestoreService extends ChangeNotifier {
     }
 
     /*C A L C U L A T E   H I F D H   S T A R T   A N D   E N D*/
+
+    for (int i = 0; i < hifdhs.length; i++) {
+      if (hifdhs[i]['hifdh'].split('-')[0].trim() == key) {
+        key = hifdhs[hifdhs.length - 2]['nextKey'];
+        break;
+      }
+    }
 
     final verseSnapshot =
         await versesCollection.where('key', isEqualTo: key).get();
@@ -1420,8 +1441,67 @@ class FirestoreService extends ChangeNotifier {
     if (updatedSm2.length == 1) {
       if (updatedSm2[0] == 'success') {
         //* A D D   T O   D A I L Y   R E A D I N G   L I S T
-      } else {
-        //* A D D   T O   H I F D H   L I S T
+      } else if (updatedSm2[0] == 'fail') {
+        // Find the next hifdh day (that is not today)
+        DateTime today = DateTime.now();
+        List<dynamic> hifdhDays = planData['hifdhDays'];
+        int i = today.weekday - 1;
+        int counter = 0;
+
+        // Find the next hifdh day
+        while (true) {
+          i = (i + 1) % 7;
+          counter++;
+          if (hifdhDays[i] && counter > 0) {
+            break;
+          }
+        }
+
+        DateTime nextHifdhDate = today.add(Duration(days: counter));
+        String nextHifdhDateStr =
+            '${nextHifdhDate.day}-${nextHifdhDate.month}-${nextHifdhDate.year}';
+
+        // Find the hifdh in the collection that matches the review's content
+        final existingHifdhQuery = await hifdhsCollection
+            .where('hifdh', isEqualTo: reviewData['review'])
+            .get();
+
+        if (existingHifdhQuery.docs.isNotEmpty) {
+          // The hifdh exists, update its date and completed status
+          String hifdhId = existingHifdhQuery.docs[0].id;
+          await hifdhsCollection
+              .doc(hifdhId)
+              .update({'date': nextHifdhDateStr, 'completed': false});
+
+          // Check if there's already a hifdh scheduled for this day
+          // Modified query to avoid composite index requirement
+          final conflictingHifdhQuery = await hifdhsCollection
+              .where('hifdh', isEqualTo: planData['hifdhs'].last['hifdh'])
+              .get();
+
+          // There's a conflicting hifdh, reschedule it to the next hifdh day
+          String conflictingHifdhId = conflictingHifdhQuery.docs[0].id;
+          await hifdhsCollection.doc(conflictingHifdhId).delete();
+
+          // Update the plan's hifdhs list to reflect these changes
+          List<dynamic> updatedHifdhs = List.from(planData['hifdhs']);
+          updatedHifdhs.remove(updatedHifdhs.last);
+          for (int j = 0; j < updatedHifdhs.length; j++) {
+            if (updatedHifdhs[j]['hifdh'] == reviewData['review']) {
+              dynamic temp = updatedHifdhs[j];
+              updatedHifdhs.remove(updatedHifdhs[j]);
+              temp['date'] = nextHifdhDateStr;
+              temp['completed'] = false;
+              updatedHifdhs.add(temp);
+              break;
+            }
+          }
+
+          await plansCollection.doc(id).update({
+            'hifdhs': updatedHifdhs,
+            'hifdhIn': counter, // Update hifdhIn to the days until next hifdh
+          });
+        }
       }
       //remove review from review list
       planData['reviews'].removeWhere((review) => review == rev);

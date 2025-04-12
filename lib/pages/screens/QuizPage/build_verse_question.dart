@@ -151,9 +151,11 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
       SnackBar(
         content: Text(
           'Arrangement cleared',
-          style: GoogleFonts.poppins(fontSize: 14),
+          style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.inversePrimary),
         ),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -176,7 +178,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     Map<String, dynamic> question =
         widget.questions[widget.currentQuestionIndex];
     final Color primaryAccent = const Color(0xFF4979FB);
-    final Color textColor = Colors.grey.shade800;
+    final Color textColor = Theme.of(context).colorScheme.inversePrimary;
 
     return Column(
       children: [
@@ -204,22 +206,55 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                           ),
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: primaryAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Arrange the verse',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: primaryAccent,
+                        if (widget.currentQuestionIndex <
+                            widget.totalQuestions) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              bool isCorrect = selectedWords.join(' ') ==
+                                  correctOrder.join(' ');
+                              widget.answeredQuestions[
+                                  widget.currentQuestionIndex] = {
+                                'user_answer': selectedWords,
+                                'is_correct': isCorrect
+                              };
+                              if (isCorrect) {
+                                setState(() {
+                                  isChecking = false;
+                                });
+                              } else {
+                                setState(() {
+                                  isChecking = false;
+                                  // Reset the words if incorrect
+                                  selectedWords = [question['firstWord']];
+                                  usedWordIndices = {
+                                    question['firstWord']: [
+                                      shuffledWords
+                                          .indexOf(question['firstWord'])
+                                    ]
+                                  };
+                                });
+                              }
+                              widget.onNext(isCorrect);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: primaryAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Skip',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: primaryAccent,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -281,10 +316,18 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                 height: 150, // Fixed height for scrollable container
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(227, 242, 253, 0.3),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.blue.shade100),
-                ),
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
+                        blurRadius: 5,
+                        spreadRadius: 1,
+                      )
+                    ]),
                 child: DragTarget<Map<String, dynamic>>(
                   onAcceptWithDetails: (details) {
                     if (!isChecking && details.data['source'] == 'options') {
@@ -403,10 +446,9 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                               vertical: 8,
                                             ),
                                             decoration: BoxDecoration(
-                                              color:
-                                                  word == question['firstWord']
-                                                      ? Colors.blue.shade200
-                                                      : Colors.blue.shade100,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
                                               borderRadius:
                                                   BorderRadius.circular(20),
                                             ),
@@ -416,7 +458,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                                   GoogleFonts.scheherazadeNew(
                                                 letterSpacing: 0,
                                                 fontSize: 20,
-                                                color: Colors.black87,
+                                                color: Colors.white,
                                               ),
                                             ),
                                           ),
@@ -470,8 +512,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
         // Bottom Section with Options
         Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
           ),
           child: Column(
             children: [
@@ -516,9 +558,11 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                 ? _expandedHeight
                                 : _collapsedHeight,
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.blue.shade100),
+                              border: Border.all(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
                             ),
                             child: Column(
                               children: [
@@ -528,7 +572,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                       horizontal: 16, vertical: 16),
                                   decoration: BoxDecoration(
                                     color:
-                                        Colors.blue.shade100.withOpacity(0.3),
+                                        Theme.of(context).colorScheme.primary,
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                   child: Row(
@@ -539,18 +583,20 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                           style: GoogleFonts.poppins(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary,
                                           ),
                                         ),
                                       ),
                                       Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                           borderRadius:
                                               BorderRadius.circular(12),
-                                          border: Border.all(
-                                              color: Colors.blue.shade300),
                                         ),
                                         child: Icon(
                                           _isFeedbackExpanded
@@ -757,14 +803,10 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: highContrastMode
-                            ? Colors.grey.shade900
-                            : Colors.grey.shade50,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: highContrastMode
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade200,
+                          color: Theme.of(context).colorScheme.tertiary,
                         ),
                       ),
                       child: SingleChildScrollView(
@@ -871,51 +913,45 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                             setState(() => activeTab = 0);
                                           }
                                         },
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
+                                  child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: isUsed
-                                          ? (highContrastMode
-                                              ? Colors.grey.shade800
-                                              : Colors.grey.shade200)
-                                          : isFocused
-                                              ? primaryAccent
-                                              : (highContrastMode
-                                                  ? Colors.grey.shade700
-                                                  : Colors.white),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
                                         color: isUsed
-                                            ? (highContrastMode
-                                                ? Colors.grey.shade700
-                                                : Colors.grey.shade200)
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary
+                                                .withOpacity(0.1)
                                             : isFocused
-                                                ? Colors.white
-                                                : (highContrastMode
-                                                    ? Colors.grey.shade600
-                                                    : Colors.blue.shade200),
-                                        width: isFocused ? 2 : 1,
-                                      ),
-                                    ),
+                                                ? primaryAccent
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          isUsed
+                                              ? BoxShadow()
+                                              : BoxShadow(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .tertiary
+                                                      .withOpacity(0.3),
+                                                  blurRadius: 5,
+                                                  spreadRadius: 1,
+                                                )
+                                        ]),
                                     child: Text(
                                       word,
                                       style: GoogleFonts.scheherazadeNew(
-                                        letterSpacing: 0,
-                                        fontSize: 20,
-                                        color: isUsed
-                                            ? (highContrastMode
-                                                ? Colors.grey.shade500
-                                                : Colors.grey.shade400)
-                                            : isFocused
-                                                ? Colors.white
-                                                : (highContrastMode
-                                                    ? Colors.white
-                                                    : Colors.black87),
-                                      ),
+                                          letterSpacing: 0,
+                                          fontSize: 20,
+                                          color: isUsed
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .tertiary
+                                              : Colors.white),
                                     ),
                                   ),
                                 ),

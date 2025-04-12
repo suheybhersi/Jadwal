@@ -150,7 +150,7 @@ class CreatingPlanPage extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -257,7 +257,7 @@ class IntroPage extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -281,13 +281,14 @@ class IntroPage extends StatelessWidget {
           Container(
             padding: EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.shade100,
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
                   spreadRadius: 5,
-                  blurRadius: 15,
+                  blurRadius: 12,
                   offset: Offset(0, 3),
                 ),
               ],
@@ -300,12 +301,15 @@ class IntroPage extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .inversePrimary
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.history_edu,
-                        color: Colors.blue.shade700,
+                        color: Theme.of(context).colorScheme.primary,
                         size: 22,
                       ),
                     ),
@@ -318,7 +322,7 @@ class IntroPage extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         Text(
@@ -341,9 +345,11 @@ class IntroPage extends StatelessWidget {
                         controller.selectedToSurahData.value = null;
                       },
                       activeColor: Color.fromARGB(255, 73, 121, 251),
-                      inactiveThumbColor: Colors.white,
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.secondary,
                       activeTrackColor: Colors.blue.shade200,
-                      inactiveTrackColor: Colors.grey.shade200,
+                      inactiveTrackColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor:
                           WidgetStateProperty.all(Colors.transparent),
                     )),
@@ -357,13 +363,14 @@ class IntroPage extends StatelessWidget {
           Container(
             padding: EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.shade100,
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
                   spreadRadius: 5,
-                  blurRadius: 15,
+                  blurRadius: 12,
                   offset: Offset(0, 3),
                 ),
               ],
@@ -376,12 +383,15 @@ class IntroPage extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .inversePrimary
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.swap_horiz,
-                        color: Color.fromARGB(255, 73, 121, 251),
+                        color: Theme.of(context).colorScheme.primary,
                         size: 22,
                       ),
                     ),
@@ -394,7 +404,7 @@ class IntroPage extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         Text(
@@ -414,9 +424,11 @@ class IntroPage extends StatelessWidget {
                         controller.isBackToFront.value = value;
                       },
                       activeColor: Color.fromARGB(255, 73, 121, 251),
-                      inactiveThumbColor: Colors.white,
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.secondary,
                       activeTrackColor: Colors.blue.shade200,
-                      inactiveTrackColor: Colors.grey.shade200,
+                      inactiveTrackColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor:
                           WidgetStateProperty.all(Colors.transparent),
                     )),
@@ -456,7 +468,7 @@ class MemorisedPage extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
               fontSize: 24,
-              color: const Color.fromARGB(255, 31, 31, 31),
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -536,7 +548,7 @@ class PlanDetailsPage extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   fontSize: 26,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -556,12 +568,18 @@ class PlanDetailsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.blue.shade50,
-                    width: 1,
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.3),
+                      spreadRadius: 5,
+                      blurRadius: 12,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +592,7 @@ class PlanDetailsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         Text(
@@ -593,8 +611,14 @@ class PlanDetailsPage extends StatelessWidget {
                           flex: 3,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -648,7 +672,9 @@ class PlanDetailsPage extends StatelessWidget {
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
-                                          color: Colors.black87,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                         ),
                                       )),
                                 ),
@@ -724,12 +750,18 @@ class PlanDetailsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.blue.shade50,
-                    width: 1,
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.3),
+                      spreadRadius: 5,
+                      blurRadius: 12,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -742,7 +774,7 @@ class PlanDetailsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         Text(
@@ -775,12 +807,14 @@ class PlanDetailsPage extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: controller.selectedDays[index]
                                       ? const Color.fromARGB(255, 73, 121, 251)
-                                      : Colors.grey.shade50,
+                                      : Theme.of(context).colorScheme.tertiary,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: controller.selectedDays[index]
                                         ? Colors.transparent
-                                        : Colors.grey.shade300,
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
                                   ),
                                   boxShadow: controller.selectedDays[index]
                                       ? [
@@ -801,7 +835,10 @@ class PlanDetailsPage extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                     color: controller.selectedDays[index]
                                         ? Colors.white
-                                        : Colors.grey.shade700,
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary
+                                            .withOpacity(0.7),
                                   ),
                                 ),
                               ),
@@ -865,7 +902,7 @@ class ReviewPage extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -973,7 +1010,7 @@ class SectionCard extends StatelessWidget {
       width: double.infinity, // Full width of parent
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
       decoration: BoxDecoration(
-        color: Colors.white, // Set to white for consistency
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16), // Rounded corners
         boxShadow: [
           BoxShadow(
@@ -1011,7 +1048,7 @@ class SectionCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.inversePrimary,
                     ),
                   ),
                   const SizedBox(height: 4),

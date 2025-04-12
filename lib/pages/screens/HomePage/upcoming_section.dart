@@ -515,11 +515,16 @@ class UpcomingSection extends StatelessWidget {
                   children: [
                     // Handle bar
                     Container(
-                      margin: EdgeInsets.only(top: 12, bottom: 8),
+                      margin: EdgeInsets.only(
+                        top: 12,
+                      ),
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .secondary
+                            .withOpacity(0.5),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -543,14 +548,16 @@ class UpcomingSection extends StatelessWidget {
                                       fontWeight: FontWeight.w700,
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onSurface,
+                                          .inversePrimary,
                                     ),
                                   ),
                                   IconButton(
                                     onPressed: () => Navigator.pop(context),
                                     icon: Icon(
                                       Icons.close,
-                                      color: Colors.grey.shade700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
                                     ),
                                   ),
                                 ],
@@ -560,10 +567,17 @@ class UpcomingSection extends StatelessWidget {
                               Container(
                                 padding: EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .tertiary
+                                      .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
-                                  border:
-                                      Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary
+                                        .withOpacity(0.1),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,7 +616,10 @@ class UpcomingSection extends StatelessWidget {
                                               'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
-                                                color: Colors.grey.shade700,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .inversePrimary
+                                                    .withOpacity(0.5),
                                               ),
                                             ),
                                           ],
@@ -617,7 +634,9 @@ class UpcomingSection extends StatelessWidget {
                                         style: GoogleFonts.scheherazadeNew(
                                           fontSize: 22,
                                           height: 1.8,
-                                          color: Colors.black,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                         ),
                                         textAlign: TextAlign.justify,
                                       ),
@@ -632,7 +651,9 @@ class UpcomingSection extends StatelessWidget {
                                   Expanded(
                                     child: Container(
                                       height: 1,
-                                      color: Colors.grey.shade200,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
                                     ),
                                   ),
                                   Container(
@@ -640,21 +661,30 @@ class UpcomingSection extends StatelessWidget {
                                         EdgeInsets.symmetric(horizontal: 16),
                                     padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                          color: Colors.grey.shade300),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
+                                      ),
                                     ),
                                     child: Icon(
                                       Icons.arrow_downward_rounded,
-                                      color: Colors.grey.shade700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary,
                                       size: 20,
                                     ),
                                   ),
                                   Expanded(
                                     child: Container(
                                       height: 1,
-                                      color: Colors.grey.shade200,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
                                     ),
                                   ),
                                 ],
@@ -664,10 +694,17 @@ class UpcomingSection extends StatelessWidget {
                               Container(
                                 padding: EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .tertiary
+                                      .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
-                                  border:
-                                      Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary
+                                        .withOpacity(0.1),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,7 +743,10 @@ class UpcomingSection extends StatelessWidget {
                                               'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
-                                                color: Colors.grey.shade700,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .inversePrimary
+                                                    .withOpacity(0.5),
                                               ),
                                             ),
                                           ],
@@ -721,7 +761,9 @@ class UpcomingSection extends StatelessWidget {
                                         style: GoogleFonts.scheherazadeNew(
                                           fontSize: 22,
                                           height: 1.8,
-                                          color: Colors.black,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                         ),
                                         textAlign: TextAlign.justify,
                                       ),

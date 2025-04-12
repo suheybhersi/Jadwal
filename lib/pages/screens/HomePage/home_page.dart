@@ -7,6 +7,7 @@ import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -215,7 +216,9 @@ class _HomePageState extends State<HomePage> {
                                           style: GoogleFonts.poppins(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
-                                            color: Colors.black,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary,
                                           ),
                                         );
                                       }
@@ -258,68 +261,130 @@ class _HomePageState extends State<HomePage> {
                           margin: EdgeInsets.symmetric(
                               horizontal: 20, vertical: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.shade100,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(20),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Iconsax.quote_up,
+                          child: StreamBuilder<DocumentSnapshot>(
+                            stream: firestoreService.getRandomVerseStream(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: CircularProgressIndicator(
                                       color: Color.fromARGB(255, 73, 121, 251),
-                                      size: 20,
                                     ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Quote of the Day',
+                                  ),
+                                );
+                              }
+
+                              if (!snapshot.hasData || snapshot.data == null) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Text(
+                                      'Verse not available',
                                       style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
                                         fontSize: 16,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 20, right: 20, bottom: 20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '"The best among you are those who learn the Quran and teach it."',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade800,
-                                        height: 1.5,
-                                      ),
+                                  ),
+                                );
+                              }
+
+                              final verseData = snapshot.data!.data()
+                                  as Map<String, dynamic>?;
+                              if (verseData == null) return SizedBox();
+
+                              final verseText = verseData['text'] as String? ??
+                                  'Verse not available';
+                              final surah = verseData['surah'] as String? ?? '';
+                              final key = verseData['key'] as String? ?? '';
+                              final verseNumber = key.split(':').length > 1
+                                  ? key.split(':')[1]
+                                  : '';
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Iconsax.book_1,
+                                              color: Color.fromARGB(
+                                                  255, 73, 121, 251),
+                                              size: 20,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'Verse of the Day',
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      '- Prophet Muhammad (PBUH)',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      textAlign: TextAlign.right,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 20, right: 20, bottom: 20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          verseText,
+                                          style: GoogleFonts.scheherazadeNew(
+                                            letterSpacing: 0,
+                                            fontSize: 24,
+                                            height: 1.6,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary,
+                                          ),
+                                          textAlign: TextAlign.justify,
+                                          textDirection: TextDirection.rtl,
+                                        ),
+                                        SizedBox(height: 12),
+                                        Text(
+                                          '$surah, Verse $verseNumber',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary
+                                                .withOpacity(0.7),
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
 

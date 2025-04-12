@@ -405,7 +405,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   @override
   Widget build(BuildContext context) {
     // Colors for question elements
-    final textColor = Colors.grey.shade800;
+    final textColor = Theme.of(context).colorScheme.inversePrimary;
     final containerBgColor = const Color(0xFFF5F9FF);
 
     return Column(
@@ -417,7 +417,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
               IconButton(
                 onPressed: widget.onClose,
                 icon: const Icon(Iconsax.close_circle),
-                color: Colors.grey.shade600,
+                color: textColor,
               ),
               Expanded(
                 child: Column(
@@ -434,22 +434,62 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                           ),
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: primaryAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Fill in the Blanks',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: primaryAccent,
+                        if (widget.currentQuestionIndex <
+                            widget.totalQuestions) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              widget.answeredQuestions[
+                                  widget.currentQuestionIndex] = {
+                                'user_answer': chosenWords,
+                                'is_correct': allCorrect
+                              };
+
+                              // Safely handle animation
+                              if (_animationController != null) {
+                                if (_animationController!.isAnimating) {
+                                  _animationController!.stop();
+                                }
+                              }
+
+                              // Use a try-catch to handle any animation errors
+                              try {
+                                if (_animationController != null) {
+                                  _animationController!.reverse().then((_) {
+                                    setState(() {
+                                      chosenWords = [];
+                                      isChecking = false;
+                                    });
+                                  });
+                                }
+                              } catch (e) {
+                                // Fallback if animation fails
+                                setState(() {
+                                  chosenWords = [];
+                                  isChecking = false;
+                                });
+                              }
+
+                              widget.onNext(allCorrect);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: primaryAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Skip',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: primaryAccent,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -458,7 +498,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                       child: LinearProgressIndicator(
                         value: (widget.currentQuestionIndex + 1) /
                             widget.totalQuestions,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: Theme.of(context).colorScheme.tertiary,
                         valueColor:
                             AlwaysStoppedAnimation<Color>(primaryAccent),
                         minHeight: 6,
@@ -496,20 +536,19 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                   height: MediaQuery.of(context).size.height * 0.35,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: containerBgColor,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                         spreadRadius: 1,
                       ),
                     ],
-                    border: Border.all(
-                      color: Colors.blue.shade100,
-                      width: 1,
-                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -924,7 +963,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                 letterSpacing: 0,
                 fontSize: 20,
                 height: 1.2,
-                color: Colors.grey.shade800,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
             ),
           ),
@@ -990,12 +1029,16 @@ class AdaptiveWordOptionsGrid extends StatelessWidget {
                   horizontal: 12,
                   vertical: buttonWidth < 150 ? 6 : 8,
                 ),
-                backgroundColor: isDark ? tertiaryColor : Colors.white,
+                backgroundColor: isDark
+                    ? tertiaryColor
+                    : Theme.of(context).colorScheme.surface,
                 foregroundColor: primaryAccent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: isDark ? Colors.grey.shade700 : Colors.blue.shade200,
+                    color: isDark
+                        ? Colors.grey.shade700
+                        : Theme.of(context).colorScheme.tertiary,
                     width: 1.5,
                   ),
                 ),
@@ -1006,7 +1049,7 @@ class AdaptiveWordOptionsGrid extends StatelessWidget {
                   letterSpacing: 0,
                   fontSize: buttonWidth < 150 ? 18 : 20,
                   height: 1.4,
-                  color: isDark ? Colors.white : Colors.grey.shade800,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,

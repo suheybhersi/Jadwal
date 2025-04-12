@@ -222,7 +222,6 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
   Widget build(BuildContext context) {
     // Colors for question elements
     final textColor = Colors.grey.shade800;
-    final containerBgColor = const Color(0xFFF5F9FF);
     final primaryAccent = const Color(0xFF4979FB);
 
     return Column(
@@ -235,7 +234,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
               IconButton(
                 onPressed: widget.onClose,
                 icon: const Icon(Iconsax.close_circle),
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
               Expanded(
                 child: Column(
@@ -248,26 +247,63 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: textColor,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: primaryAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Verse Pairing',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: primaryAccent,
+                        if (widget.currentQuestionIndex <
+                            widget.totalQuestions) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              widget.answeredQuestions[
+                                  widget.currentQuestionIndex] = {
+                                'question': widget.question,
+                                'userAnswerBefore': selectedBeforeVerse,
+                                'userAnswerAfter': selectedAfterVerse,
+                                'is_correct': allCorrect,
+                              };
+
+                              if (_animationController.isAnimating) {
+                                _animationController.stop();
+                              }
+
+                              try {
+                                _animationController.reverse().then((_) {
+                                  setState(() {
+                                    selectedBeforeVerse = null;
+                                    selectedAfterVerse = null;
+                                    isChecking = false;
+                                  });
+                                });
+                              } catch (e) {
+                                setState(() {
+                                  selectedBeforeVerse = null;
+                                  selectedAfterVerse = null;
+                                  isChecking = false;
+                                });
+                              }
+
+                              widget.onNext(allCorrect);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: primaryAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Skip',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: primaryAccent,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -276,7 +312,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                       child: LinearProgressIndicator(
                         value: (widget.currentQuestionIndex + 1) /
                             widget.totalQuestions,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: Theme.of(context).colorScheme.tertiary,
                         valueColor:
                             AlwaysStoppedAnimation<Color>(primaryAccent),
                         minHeight: 6,
@@ -303,7 +339,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -333,7 +369,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                     correctBeforeVerse
                                             ? Colors.green.shade50
                                             : Colors.red.shade50)
-                                        : Colors.white,
+                                        : Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: activeSection == 'before'
@@ -344,7 +380,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                       correctBeforeVerse
                                               ? Colors.green.shade300
                                               : Colors.red.shade300)
-                                          : Colors.grey.shade300,
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
                                   width: 1.5,
                                 ),
                               ),
@@ -434,6 +472,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                             : _truncateVerse(
                                                 selectedBeforeVerse!),
                                         style: GoogleFonts.scheherazadeNew(
+                                          letterSpacing: 0,
                                           fontSize: 20,
                                           height: 1.5,
                                           color: isChecking
@@ -442,7 +481,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                           correctBeforeVerse
                                                   ? Colors.green.shade700
                                                   : Colors.red.shade700)
-                                              : textColor,
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary,
                                         ),
                                         textDirection: TextDirection.rtl,
                                         textAlign: TextAlign.justify,
@@ -453,7 +494,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: Colors.grey.shade300,
@@ -465,7 +508,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                         "Tap to select verse before",
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
-                                          color: Colors.grey.shade500,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
                                           fontStyle: FontStyle.italic,
                                         ),
                                         textAlign: TextAlign.center,
@@ -484,7 +529,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade700,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary,
                                             ),
                                           ),
                                           const SizedBox(height: 12),
@@ -507,13 +554,17 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   color: isSelected
                                                       ? primaryAccent
                                                           .withOpacity(0.1)
-                                                      : Colors.white,
+                                                      : Theme.of(context)
+                                                          .colorScheme
+                                                          .surface,
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   border: Border.all(
                                                     color: isSelected
                                                         ? primaryAccent
-                                                        : Colors.grey.shade300,
+                                                        : Theme.of(context)
+                                                            .colorScheme
+                                                            .tertiary,
                                                     width: 1.5,
                                                   ),
                                                 ),
@@ -522,11 +573,12 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   _truncateVerse(option),
                                                   style: GoogleFonts
                                                       .scheherazadeNew(
+                                                    letterSpacing: 0,
                                                     fontSize: 18,
                                                     height: 1.5,
-                                                    color: isSelected
-                                                        ? primaryAccent
-                                                        : textColor,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
                                                   ),
                                                   textDirection:
                                                       TextDirection.rtl,
@@ -550,7 +602,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                           padding: const EdgeInsets.all(20),
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: containerBgColor,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -561,7 +613,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                               ),
                             ],
                             border: Border.all(
-                              color: Colors.blue.shade100,
+                              color: Theme.of(context).colorScheme.primary,
                               width: 1,
                             ),
                           ),
@@ -593,10 +645,13 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                               Text(
                                 widget.question['currentVerse'],
                                 style: GoogleFonts.scheherazadeNew(
+                                  letterSpacing: 0,
                                   fontSize: 22,
                                   height: 1.5,
                                   fontWeight: FontWeight.w500,
-                                  color: textColor,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
                                 ),
                                 textDirection: TextDirection.rtl,
                                 textAlign: TextAlign.justify,
@@ -623,7 +678,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                     correctAfterVerse
                                             ? Colors.green.shade50
                                             : Colors.red.shade50)
-                                        : Colors.white,
+                                        : Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: activeSection == 'after'
@@ -634,7 +689,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                       correctAfterVerse
                                               ? Colors.green.shade300
                                               : Colors.red.shade300)
-                                          : Colors.grey.shade300,
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
                                   width: 1.5,
                                 ),
                               ),
@@ -724,6 +781,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                             : _truncateVerse(
                                                 selectedAfterVerse!),
                                         style: GoogleFonts.scheherazadeNew(
+                                          letterSpacing: 0,
                                           fontSize: 20,
                                           height: 1.5,
                                           color: isChecking
@@ -732,7 +790,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                           correctAfterVerse
                                                   ? Colors.green.shade700
                                                   : Colors.red.shade700)
-                                              : textColor,
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary,
                                         ),
                                         textDirection: TextDirection.rtl,
                                         textAlign: TextAlign.justify,
@@ -743,7 +803,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: Colors.grey.shade300,
@@ -774,7 +836,9 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade700,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .inversePrimary,
                                             ),
                                           ),
                                           const SizedBox(height: 12),
@@ -797,13 +861,17 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   color: isSelected
                                                       ? primaryAccent
                                                           .withOpacity(0.1)
-                                                      : Colors.white,
+                                                      : Theme.of(context)
+                                                          .colorScheme
+                                                          .surface,
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   border: Border.all(
                                                     color: isSelected
                                                         ? primaryAccent
-                                                        : Colors.grey.shade300,
+                                                        : Theme.of(context)
+                                                            .colorScheme
+                                                            .tertiary,
                                                     width: 1.5,
                                                   ),
                                                 ),
@@ -812,11 +880,12 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                   _truncateVerse(option),
                                                   style: GoogleFonts
                                                       .scheherazadeNew(
+                                                    letterSpacing: 0,
                                                     fontSize: 18,
                                                     height: 1.5,
-                                                    color: isSelected
-                                                        ? primaryAccent
-                                                        : textColor,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
                                                   ),
                                                   textDirection:
                                                       TextDirection.rtl,

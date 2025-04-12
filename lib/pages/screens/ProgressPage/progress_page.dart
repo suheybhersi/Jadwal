@@ -12,8 +12,8 @@ class ProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.white,
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       resizeToAvoidBottomInset: true,
       body: ProgressContent(),
     );
@@ -72,7 +72,7 @@ class _ProgressContentState extends State<ProgressContent> {
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
               fontSize: 22,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           IconButton(
@@ -107,9 +107,9 @@ class _ProgressContentState extends State<ProgressContent> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 12,
-              spreadRadius: 1,
+              color: const Color(0xFF4979FB).withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -240,11 +240,11 @@ class _SurahProgressCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 8,
           ),
@@ -263,11 +263,11 @@ class _SurahProgressCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildProgressIndicator(progress),
+                _buildProgressIndicator(progress, context),
               ],
             ),
           ),
@@ -303,7 +303,7 @@ class _SurahProgressCard extends StatelessWidget {
   }
 
   // Progress indicator row
-  Widget _buildProgressIndicator(double progress) {
+  Widget _buildProgressIndicator(double progress, BuildContext context) {
     return Row(
       children: [
         Expanded(
@@ -312,7 +312,8 @@ class _SurahProgressCard extends StatelessWidget {
             lineHeight: 8,
             percent: progress > 1 ? 1 : progress,
             progressColor: const Color(0xFF4979FB),
-            backgroundColor: Colors.grey[100],
+            backgroundColor:
+                Theme.of(context).colorScheme.inversePrimary.withOpacity(0.1),
             barRadius: const Radius.circular(20),
           ),
         ),

@@ -4,13 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/screens/ProfilePage/delete_account_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
-import 'package:jadwal/pages/screens/ProfilePage/feedback_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/feedback_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/password_security_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/about_app_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/help_support_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
+import 'package:provider/provider.dart';
+import 'package:jadwal/themes/theme_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -20,31 +18,30 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool isDarkMode = false;
   bool isPushNotificationsEnabled = true;
   bool isEmailNotificationsEnabled = false;
 
   @override
   Widget build(BuildContext context) {
-    // Get current theme mode
-    isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Text(
           'Settings',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             fontSize: 22,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back,
+              color: Theme.of(context).colorScheme.inversePrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -213,19 +210,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     title: 'Dark Mode',
                     description: 'Switch app theme',
                     trailing: Switch(
-                      value: isDarkMode,
+                      value: themeProvider.isDarkMode,
                       onChanged: (value) {
-                        setState(() {
-                          isDarkMode = value;
-                          // Add theme switching functionality
-                          // Replace with your theme management solution:
-                          // ThemeProvider.of(context).changeTheme(value ? ThemeMode.dark : ThemeMode.light);
-                        });
+                        themeProvider.toggleTheme();
                       },
                       activeColor: const Color(0xFF4979FB),
                       inactiveThumbColor: Colors.grey[300],
                       trackOutlineColor: WidgetStateProperty.all(
-                        isDarkMode ? Colors.transparent : Colors.grey[300],
+                        themeProvider.isDarkMode
+                            ? Colors.transparent
+                            : Colors.grey[300],
                       ),
                     ),
                     isLast: true,
@@ -242,53 +236,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Iconsax.message_question,
                     title: 'Help & Support',
                     description: 'Get assistance with the app',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HelpSupportPage(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                   _buildSettingTile(
                     icon: Iconsax.shield,
                     title: 'Privacy Policy',
                     description: 'View our privacy policy',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PrivacyPolicyPage(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                   _buildSettingTile(
                     icon: Iconsax.document_text,
                     title: 'Terms of Service',
                     description: 'View our terms of service',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TermsServicePage(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                   _buildSettingTile(
                     icon: Iconsax.information,
                     title: 'About App',
                     description: 'Version 1.0.0',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AboutAppPage(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                     isLast: true,
                   ),
                 ]),
@@ -320,7 +286,7 @@ class _SettingsPageState extends State<SettingsPage> {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
       ],
@@ -330,11 +296,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSettingCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -384,7 +350,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                       Text(
@@ -411,12 +377,11 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         if (!isLast)
           Divider(
-            height: 1,
-            thickness: 1,
-            indent: 56,
-            endIndent: 16,
-            color: Colors.grey.shade100,
-          ),
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+              color: Theme.of(context).colorScheme.tertiary),
       ],
     );
   }
@@ -428,11 +393,11 @@ class _SettingsPageState extends State<SettingsPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.shade100,
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
                 blurRadius: 12,
                 spreadRadius: 1,
               ),
@@ -477,11 +442,11 @@ class _SettingsPageState extends State<SettingsPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.shade100,
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
                 blurRadius: 12,
                 spreadRadius: 1,
               ),

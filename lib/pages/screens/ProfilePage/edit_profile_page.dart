@@ -70,7 +70,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             children: [
               Icon(Iconsax.tick_circle, color: Colors.white),
               SizedBox(width: 12),
-              Text('Profile updated successfully'),
+              Text('Profile updated successfully',
+                  style: TextStyle(color: Colors.white)),
             ],
           ),
           backgroundColor: Color.fromARGB(255, 73, 121, 251),
@@ -98,20 +99,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Text(
           'My Profile',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
         leading: IconButton(
-          icon: Icon(Iconsax.arrow_left, color: Colors.black),
+          icon: Icon(Iconsax.arrow_left,
+              color: Theme.of(context).colorScheme.inversePrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -198,7 +200,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
                               ),
                             ),
                             SizedBox(height: 30),
@@ -301,52 +305,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade50,
-            spreadRadius: 1,
-            blurRadius: 12,
-          ),
-        ],
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         style: TextStyle(fontSize: 16),
         decoration: InputDecoration(
-          labelText: labelText,
-          labelStyle: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.grey.shade400,
+            color: Theme.of(context).colorScheme.secondary,
             fontSize: 16,
           ),
           prefixIcon: Icon(
             prefixIcon,
-            color: Colors.grey.shade600,
+            color: Theme.of(context).colorScheme.secondary,
             size: 20,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.secondary),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Color.fromARGB(255, 73, 121, 251)),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.primary),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.surface,
           contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
       ),

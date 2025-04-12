@@ -932,7 +932,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       final primaryColor = const Color.fromARGB(255, 73, 121, 251);
 
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -945,7 +945,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           centerTitle: true,
@@ -1002,7 +1002,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           height: 130,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             boxShadow: [
                               BoxShadow(
                                 color: primaryColor.withOpacity(0.2),
@@ -1120,11 +1120,14 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                 // Tip message
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
                         blurRadius: 12,
                         spreadRadius: 1,
                       ),

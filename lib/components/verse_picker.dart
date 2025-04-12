@@ -73,12 +73,12 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                blurRadius: 12,
                 spreadRadius: 2,
                 offset: const Offset(2, 4),
               ),
@@ -99,7 +99,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                         style: GoogleFonts.lato(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                     ),
@@ -127,12 +127,15 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                   vertical: 12, horizontal: 16),
                               decoration: BoxDecoration(
                                 color: selectedSurahIndex == index
-                                    ? Colors.blue.shade100
-                                    : Colors.white,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.shade200,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary
+                                        .withOpacity(0.3),
                                     blurRadius: 4,
                                     spreadRadius: 1,
                                     offset: const Offset(0, 2),
@@ -145,8 +148,8 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                   color: selectedSurahIndex == index
-                                      ? Colors.blue.shade700
-                                      : Colors.black87,
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.tertiary,
                                 ),
                               ),
                             ),
@@ -160,7 +163,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
 
               // Divider
               VerticalDivider(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.tertiary,
                 thickness: 1,
                 indent: 35,
                 width: 10,
@@ -179,7 +182,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                         style: GoogleFonts.lato(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                     ),
@@ -211,12 +214,15 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                   vertical: 12, horizontal: 16),
                               decoration: BoxDecoration(
                                 color: selectedVerseNumber == verseNumber
-                                    ? Colors.blue.shade100
-                                    : Colors.white,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.shade200,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary
+                                        .withOpacity(0.3),
                                     blurRadius: 4,
                                     spreadRadius: 1,
                                     offset: const Offset(0, 2),
@@ -230,8 +236,10 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
                                     color: selectedVerseNumber == verseNumber
-                                        ? Colors.blue.shade700
-                                        : Colors.black87,
+                                        ? Colors.white
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
                                   ),
                                 ),
                               ),

@@ -252,7 +252,7 @@ class _LoginPageState extends State<LoginPage> {
                               side: WidgetStateProperty.all(
                                 BorderSide(
                                   width: 1,
-                                  color: Colors.grey.shade400,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               padding: WidgetStateProperty.all(
@@ -272,8 +272,11 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: widget.onTap,
                             child: Text(
                               'Create Account',
-                              style: const TextStyle(
-                                  color: Colors.black, fontSize: 16),
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
+                                  fontSize: 16),
                             ),
                           ),
                         ),
@@ -313,7 +316,10 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SquareTile(imagePath: 'assets/google.png'),
-                    SquareTile(imagePath: 'assets/apple.png'),
+                    SquareTile(
+                      imagePath: 'assets/apple.png',
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
                   ],
                 ),
               ],

@@ -29,17 +29,18 @@ class MyTextField extends StatelessWidget {
         suffixIcon: suffixIcon,
         hintText: hintText,
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide:
+              BorderSide(color: Theme.of(context).colorScheme.secondary),
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade600),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
           borderRadius: BorderRadius.circular(12),
         ),
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
         filled: true,
         hintStyle: TextStyle(
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.secondary,
           fontWeight: FontWeight.w500,
         ),
       ),

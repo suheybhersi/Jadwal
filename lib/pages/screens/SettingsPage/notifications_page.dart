@@ -33,21 +33,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Text(
           'Notifications',
           style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-            color: Colors.black87,
-          ),
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Theme.of(context).colorScheme.inversePrimary),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back,
+              color: Theme.of(context).colorScheme.inversePrimary),
           onPressed: () {
             // Return the updated values to the previous screen
             Navigator.pop(context, {
@@ -145,11 +145,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         });
                       },
                       activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
                         isPushNotificationsEnabled
                             ? Colors.transparent
-                            : Colors.grey[300],
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ),
@@ -165,11 +166,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         });
                       },
                       activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
                         isEmailNotificationsEnabled
                             ? Colors.transparent
-                            : Colors.grey[300],
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                     isLast: true,
@@ -196,11 +198,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             }
                           : null,
                       activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
                         isTaskReminderEnabled
                             ? Colors.transparent
-                            : Colors.grey[300],
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ),
@@ -218,11 +221,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             }
                           : null,
                       activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
                         isEventAlertEnabled
                             ? Colors.transparent
-                            : Colors.grey[300],
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ),
@@ -240,11 +244,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             }
                           : null,
                       activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
+                      inactiveThumbColor:
+                          Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
                         isWeeklySummaryEnabled
                             ? Colors.transparent
-                            : Colors.grey[300],
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                     isLast: true,
@@ -288,9 +293,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     child: Text(
                       'Save Settings',
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white),
                     ),
                   ),
                 ),
@@ -312,7 +317,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
       ],
@@ -322,11 +327,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget _buildSettingCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -376,7 +381,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -384,7 +389,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         description,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                       ),
                     ],
@@ -399,9 +404,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Divider(
             height: 1,
             thickness: 1,
-            indent: 56,
+            indent: 16,
             endIndent: 16,
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary,
           ),
       ],
     );
@@ -411,11 +416,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -429,7 +434,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -466,7 +471,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
       ],

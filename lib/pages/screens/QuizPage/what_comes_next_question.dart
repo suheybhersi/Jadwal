@@ -10,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 // Audio-related packages
-import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 
 // File/storage-related packages
@@ -45,12 +44,12 @@ class WhatComesNextQuestion extends StatefulWidget {
 
 class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   final AudioRecorder recorder = AudioRecorder();
-  AudioPlayer audioPlayer = AudioPlayer();
 
   bool isRecording = false;
   String? recordingPath;
   bool isPlaying = false;
   String text = '';
+  bool isAnswerBoxExpanded = true; // Add this state variable
 
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
@@ -75,7 +74,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
     // Properly dispose of audio resources
     recorder.dispose();
-    audioPlayer.stop().then((_) => audioPlayer.dispose());
 
     // Clean up any recording files
     cleanupRecordingFile();
@@ -1143,7 +1141,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     bool isProcessing = text == "Processing your recording...";
     bool hasError = text.startsWith('Error:');
     final Color primaryAccent = const Color(0xFF4979FB);
-    final Color textColor = Colors.grey.shade800;
 
     // Get the first 5 words of the verse
     String truncatedVerse = '';
@@ -1166,7 +1163,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               IconButton(
                 onPressed: widget.onClose,
                 icon: const Icon(Iconsax.close_circle),
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
               Expanded(
                 child: Column(
@@ -1179,26 +1176,46 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: textColor,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: primaryAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'What comes next?',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: primaryAccent,
+                        if (widget.currentQuestionIndex <
+                            widget.totalQuestions) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              resetRecording();
+                              widget.onNext(isRecitationCorrect);
+                              widget.answeredQuestions[
+                                  widget.currentQuestionIndex] = {
+                                'user_answer': text,
+                                'is_correct': isRecitationCorrect
+                              };
+                              setState(() {
+                                text = '';
+                                hasSubmittedAnswer = false;
+                                feedbackMessage = '';
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: primaryAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Skip',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: primaryAccent,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -1207,7 +1224,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                       child: LinearProgressIndicator(
                         value: (widget.currentQuestionIndex + 1) /
                             widget.totalQuestions,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: Theme.of(context).colorScheme.tertiary,
                         valueColor:
                             AlwaysStoppedAnimation<Color>(primaryAccent),
                         minHeight: 6,
@@ -1229,7 +1246,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
             ],
@@ -1246,9 +1263,18 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.blue.shade100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
+                        blurRadius: 5,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
                   child: Text(
                     truncatedVerse,
@@ -1363,182 +1389,306 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                               ),
                               const SizedBox(height: 16),
                             ],
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 24),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.blue.shade100),
-                              ),
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 8,
-                                textDirection: TextDirection.rtl,
-                                children: comparison.map((word) {
-                                  bool isError = word['isError'] == true;
-                                  return isError
-                                      ? GestureDetector(
-                                          onTap: () {
-                                            // Show popup with correct word
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return AlertDialog(
-                                                  backgroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
-                                                  ),
-                                                  title: Center(
-                                                    child: Text(
-                                                      'Correct Word',
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors
-                                                            .blue.shade700,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  content: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Text(
-                                                        word['actual_word'],
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: GoogleFonts
-                                                            .scheherazadeNew(
-                                                          letterSpacing: 0,
-                                                          fontSize: 32,
-                                                          height: 1.6,
-                                                          color: Colors.black,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                          height: 16),
-                                                      if (word['differences']
-                                                              is List &&
-                                                          word['differences']
-                                                              .isNotEmpty &&
-                                                          !(word['differences']
-                                                                      .length ==
-                                                                  1 &&
-                                                              word['differences']
-                                                                          [0][
-                                                                      'error'] !=
-                                                                  null)) ...[
-                                                        Text(
-                                                          'Difference details:',
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 12,
-                                                            color: Colors
-                                                                .grey.shade700,
+                            Column(
+                              children: [
+                                // Header bar with toggle button
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      isAnswerBoxExpanded =
+                                          !isAnswerBoxExpanded;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(16),
+                                          topRight: Radius.circular(16),
+                                          bottomLeft: isAnswerBoxExpanded
+                                              ? Radius.zero
+                                              : Radius.circular(16),
+                                          bottomRight: isAnswerBoxExpanded
+                                              ? Radius.zero
+                                              : Radius.circular(16),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .tertiary
+                                                .withOpacity(0.3),
+                                            blurRadius: 5,
+                                            spreadRadius: 1,
+                                          )
+                                        ]),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Your Answer',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary,
+                                          ),
+                                        ),
+                                        Icon(
+                                          isAnswerBoxExpanded
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .inversePrimary,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                // Animated expandable content
+                                Container(
+                                  height: isAnswerBoxExpanded
+                                      ? 200
+                                      : 0, // Set fixed height when expanded
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(16),
+                                      bottomRight: Radius.circular(16),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary
+                                            .withOpacity(0.3),
+                                        blurRadius: 5,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(16),
+                                      bottomRight: Radius.circular(16),
+                                    ),
+                                    child: SingleChildScrollView(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 24),
+                                      child: Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 8,
+                                        textDirection: TextDirection.rtl,
+                                        children: comparison.map((word) {
+                                          bool isError =
+                                              word['isError'] == true;
+                                          return isError
+                                              ? GestureDetector(
+                                                  onTap: () {
+                                                    // Show popup with correct word
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return AlertDialog(
+                                                          backgroundColor:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .surface,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        16),
                                                           ),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 8),
-                                                        ...word['differences']
-                                                            .map<Widget>(
-                                                                (diff) {
-                                                          if (diff['error'] !=
-                                                              null) {
-                                                            return Container();
-                                                          }
-
-                                                          String message = '';
-                                                          if (diff['incorrect'] ==
-                                                                  '' &&
-                                                              diff['correct'] !=
-                                                                  '') {
-                                                            message =
-                                                                'Missing: ${diff['correct']}';
-                                                          } else if (diff[
-                                                                      'incorrect'] !=
-                                                                  '' &&
-                                                              diff['correct'] ==
-                                                                  '') {
-                                                            message =
-                                                                'Extra: ${diff['incorrect']}';
-                                                          } else {
-                                                            message =
-                                                                'Replace ${diff['incorrect']} with ${diff['correct']}';
-                                                          }
-
-                                                          return Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    bottom: 4),
+                                                          title: Center(
                                                             child: Text(
-                                                              message,
+                                                              'Correct Word',
                                                               style: GoogleFonts
                                                                   .poppins(
-                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
                                                                 color: Colors
-                                                                    .grey
+                                                                    .blue
                                                                     .shade700,
                                                               ),
                                                             ),
-                                                          );
-                                                        }).toList(),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
+                                                          ),
+                                                          content: Column(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              Text(
+                                                                word[
+                                                                    'actual_word'],
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style: GoogleFonts
+                                                                    .scheherazadeNew(
+                                                                  letterSpacing:
+                                                                      0,
+                                                                  fontSize: 32,
+                                                                  height: 1.6,
+                                                                  color: Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .inversePrimary,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 16),
+                                                              if (word['differences']
+                                                                      is List &&
+                                                                  word['differences']
+                                                                      .isNotEmpty &&
+                                                                  !(word['differences']
+                                                                              .length ==
+                                                                          1 &&
+                                                                      word['differences'][0]
+                                                                              [
+                                                                              'error'] !=
+                                                                          null)) ...[
+                                                                Text(
+                                                                  'Difference details:',
+                                                                  style: GoogleFonts
+                                                                      .poppins(
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade700,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(
+                                                                    height: 8),
+                                                                ...word['differences']
+                                                                    .map<Widget>(
+                                                                        (diff) {
+                                                                  if (diff[
+                                                                          'error'] !=
+                                                                      null) {
+                                                                    return Container();
+                                                                  }
+
+                                                                  String
+                                                                      message =
+                                                                      '';
+                                                                  if (diff['incorrect'] ==
+                                                                          '' &&
+                                                                      diff['correct'] !=
+                                                                          '') {
+                                                                    message =
+                                                                        'Missing: ${diff['correct']}';
+                                                                  } else if (diff[
+                                                                              'incorrect'] !=
+                                                                          '' &&
+                                                                      diff['correct'] ==
+                                                                          '') {
+                                                                    message =
+                                                                        'Extra: ${diff['incorrect']}';
+                                                                  } else {
+                                                                    message =
+                                                                        'Replace ${diff['incorrect']} with ${diff['correct']}';
+                                                                  }
+
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .only(
+                                                                        bottom:
+                                                                            4),
+                                                                    child: Text(
+                                                                      message,
+                                                                      style: GoogleFonts
+                                                                          .poppins(
+                                                                        fontSize:
+                                                                            12,
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade700,
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                }).toList(),
+                                                              ],
+                                                            ],
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                              child: Text(
+                                                                'OK',
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  color: Colors
+                                                                      .blue
+                                                                      .shade700,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        );
                                                       },
-                                                      child: Text(
-                                                        'OK',
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                          color: Colors
-                                                              .blue.shade700,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    word[
+                                                        'final_transcribed_word'],
+                                                    style: GoogleFonts
+                                                        .scheherazadeNew(
+                                                      letterSpacing: 0,
+                                                      fontSize: 24,
+                                                      height: 1.6,
+                                                      color: Colors.red,
+                                                      decoration: TextDecoration
+                                                          .underline,
+                                                      decorationColor: Colors
+                                                          .red
+                                                          .withOpacity(0.7),
+                                                      decorationThickness: 1,
                                                     ),
-                                                  ],
+                                                  ),
+                                                )
+                                              : Text(
+                                                  word[
+                                                      'final_transcribed_word'],
+                                                  style: GoogleFonts
+                                                      .scheherazadeNew(
+                                                    letterSpacing: 0,
+                                                    fontSize: 24,
+                                                    height: 1.6,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
+                                                  ),
                                                 );
-                                              },
-                                            );
-                                          },
-                                          child: Text(
-                                            word['final_transcribed_word'],
-                                            style: GoogleFonts.scheherazadeNew(
-                                              letterSpacing: 0,
-                                              fontSize: 24,
-                                              height: 1.6,
-                                              color: Colors.red,
-                                              decoration:
-                                                  TextDecoration.underline,
-                                              decorationColor:
-                                                  Colors.red.withOpacity(0.7),
-                                              decorationThickness: 1,
-                                            ),
-                                          ),
-                                        )
-                                      : Text(
-                                          word['final_transcribed_word'],
-                                          style: GoogleFonts.scheherazadeNew(
-                                            letterSpacing: 0,
-                                            fontSize: 24,
-                                            height: 1.6,
-                                            color: Colors.black,
-                                          ),
-                                        );
-                                }).toList(),
-                              ),
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

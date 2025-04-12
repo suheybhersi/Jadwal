@@ -20,7 +20,9 @@ class MyDropDown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(

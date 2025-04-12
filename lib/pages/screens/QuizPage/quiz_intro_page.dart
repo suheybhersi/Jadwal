@@ -154,8 +154,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                         boxShadow: [
                           BoxShadow(
                             color: Colors.blue.shade200.withOpacity(0.5),
-                            blurRadius: 15,
-                            offset: const Offset(0, 10),
+                            blurRadius: 4,
                           ),
                         ],
                       ),
@@ -248,8 +247,18 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [

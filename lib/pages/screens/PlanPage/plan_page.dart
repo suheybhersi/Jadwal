@@ -621,11 +621,14 @@ class PreviousMemorisation extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.shade100,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .tertiary
+                                .withOpacity(0.3),
                             spreadRadius: 1,
                             blurRadius: 10,
                           ),
@@ -694,328 +697,358 @@ class PreviousReviews extends StatelessWidget {
   }
 
   void _showReviewDetails(BuildContext context, Map<String, dynamic> review) {
+    Widget makeDissmissable({required Widget child}) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).pop(),
+          child: GestureDetector(
+            onTap: () {},
+            child: child,
+          ),
+        );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: Offset(0, -5),
-              ),
-            ],
-          ),
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  margin: EdgeInsets.only(bottom: 16),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        return makeDissmissable(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.8,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) => Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Review Details',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close),
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: Offset(0, -5),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
-
-              // First verse container
-              Container(
-                padding: EdgeInsets.all(20),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey.shade200),
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, -5),
+                    ),
+                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFE6F3EA),
-                            borderRadius: BorderRadius.circular(12),
+                padding: EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Review Details',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
-                          child: Icon(
-                            Iconsax.refresh,
-                            color: Color(0xFF64A377),
-                            size: 18,
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Icon(Icons.close),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
                           ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+
+                      // First verse container
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey.shade200),
                         ),
-                        SizedBox(width: 12),
-                        Column(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Surah ${review['surah'].split(' ')[0]}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFE6F3EA),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Iconsax.refresh,
+                                    color: Color(0xFF64A377),
+                                    size: 18,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Surah ${review['surah'].split(' ')[0]}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Verse ${review['review'].split('-')[0].split(':')[1]}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Verse ${review['review'].split('-')[0].split(':')[1]}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
+                            SizedBox(height: 16),
+                            Divider(
+                              height: 1,
+                              color: Colors.grey.shade200,
+                            ),
+                            SizedBox(height: 24),
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Text(
+                                '${review['startVerse']} ﴿${_convertToArabicNumbers(review['review'].split('-')[0].split(':')[1]).replaceAll(' ', '')}﴾',
+                                style: GoogleFonts.scheherazadeNew(
+                                  letterSpacing: 0,
+                                  fontSize: 20,
+                                  height: 1.5,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.justify,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    Divider(
-                      height: 1,
-                      color: Colors.grey.shade200,
-                    ),
-                    SizedBox(height: 24),
-                    Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Text(
-                        '${review['startVerse']} ﴿${_convertToArabicNumbers(review['review'].split('-')[0].split(':')[1]).replaceAll(' ', '')}﴾',
-                        style: GoogleFonts.scheherazadeNew(
-                          letterSpacing: 0,
-                          fontSize: 20,
-                          height: 1.5,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.justify,
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-              // Connection indicator
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: Colors.grey.shade200,
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Icon(
-                      Icons.arrow_downward_rounded,
-                      color: Colors.grey.shade700,
-                      size: 20,
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: Colors.grey.shade200,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Second verse container (if different from first)
-              if (review['endVerse'] != null &&
-                  review['endVerse'] != review['startVerse'])
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      // Connection indicator
                       Row(
                         children: [
-                          Container(
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFE6F3EA),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Iconsax.refresh,
-                              color: Color(0xFF64A377),
-                              size: 18,
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: Colors.grey.shade200,
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Column(
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: 16, horizontal: 16),
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Icon(
+                              Icons.arrow_downward_rounded,
+                              color: Colors.grey.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: Colors.grey.shade200,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Second verse container (if different from first)
+                      if (review['endVerse'] != null &&
+                          review['endVerse'] != review['startVerse'])
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Surah ${review['surah'].split(' ')[1]}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFE6F3EA),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Iconsax.refresh,
+                                      color: Color(0xFF64A377),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Surah ${review['surah'].split(' ')[1]}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Verse ${review['review'].split('-')[1].split(':')[1]}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Verse ${review['review'].split('-')[1].split(':')[1]}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade700,
+                              SizedBox(height: 16),
+                              Divider(
+                                height: 1,
+                                color: Colors.grey.shade200,
+                              ),
+                              SizedBox(height: 24),
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: Text(
+                                  '${review['endVerse']} ﴿${_convertToArabicNumbers(review['review'].split('-')[1].split(':')[1]).replaceAll(' ', '')}﴾',
+                                  style: GoogleFonts.scheherazadeNew(
+                                    letterSpacing: 0,
+                                    fontSize: 20,
+                                    height: 1.5,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.justify,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Divider(
-                        height: 1,
-                        color: Colors.grey.shade200,
-                      ),
-                      SizedBox(height: 24),
-                      Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Text(
-                          '${review['endVerse']} ﴿${_convertToArabicNumbers(review['review'].split('-')[1].split(':')[1]).replaceAll(' ', '')}﴾',
-                          style: GoogleFonts.scheherazadeNew(
-                            letterSpacing: 0,
-                            fontSize: 20,
-                            height: 1.5,
-                            color: Colors.black87,
-                          ),
-                          textAlign: TextAlign.justify,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
 
-              SizedBox(height: 20),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Iconsax.calendar,
-                      color: Color(0xFF64A377),
-                      size: 20,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}/${review['date'].split('-')[2]}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Review Ratings:',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              SizedBox(height: 12),
-              review['ratings'].isEmpty
-                  ? Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'No ratings yet',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Iconsax.calendar,
+                              color: Color(0xFF64A377),
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}/${review['date'].split('-')[2]}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  : Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                      SizedBox(height: 20),
+                      Text(
+                        'Review Ratings:',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < review['ratings'].length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    "Review ${i + 1}:",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade800,
-                                    ),
+                      SizedBox(height: 12),
+                      review['ratings'].isEmpty
+                          ? Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'No ratings yet',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
                                   ),
-                                  SizedBox(width: 8),
-                                  _buildRatingStars(review['ratings'][i]),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Column(
+                                children: [
+                                  for (var i = 0;
+                                      i < review['ratings'].length;
+                                      i++)
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 8.0),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            "Review ${i + 1}:",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey.shade800,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          _buildRatingStars(
+                                              review['ratings'][i]),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-              SizedBox(height: 20),
-            ],
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -1102,11 +1135,14 @@ class PreviousReviews extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.shade100,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
+                                  .withOpacity(0.3),
                               spreadRadius: 1,
                               blurRadius: 10,
                             ),

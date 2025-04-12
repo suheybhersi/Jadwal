@@ -134,7 +134,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 Text(
                   'Let\'s create an account for you!',
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 22,
                   ),
@@ -267,6 +267,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   'Please agree to the Privacy Policy and Terms of Use',
                                   style: TextStyle(
                                     fontSize: 14,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 backgroundColor: Colors.red.shade400,
@@ -317,12 +318,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ],
                 ),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SquareTile(imagePath: 'assets/google.png'),
                     SizedBox(width: 10),
-                    SquareTile(imagePath: 'assets/apple.png'),
+                    SquareTile(
+                      imagePath: 'assets/apple.png',
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -395,11 +399,13 @@ class _RegisterFormState extends State<RegisterForm> {
                   decoration: InputDecoration(
                     hintText: 'First Name',
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.secondary),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade600),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorBorder: OutlineInputBorder(
@@ -410,11 +416,12 @@ class _RegisterFormState extends State<RegisterForm> {
                       borderSide: BorderSide(color: Colors.red),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    fillColor: Colors.white,
+                    fillColor: Theme.of(context).colorScheme.surface,
                     filled: true,
-                    prefixIcon: Icon(Iconsax.personalcard),
+                    prefixIcon:
+                        Icon(Iconsax.personalcard, color: Colors.grey.shade600),
                     hintStyle: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.w500,
                     ),
                     errorStyle: TextStyle(
@@ -437,11 +444,13 @@ class _RegisterFormState extends State<RegisterForm> {
                   decoration: InputDecoration(
                     hintText: 'Last Name',
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.secondary),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade600),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorBorder: OutlineInputBorder(
@@ -456,11 +465,12 @@ class _RegisterFormState extends State<RegisterForm> {
                       color: Colors.red,
                       fontSize: 12,
                     ),
-                    fillColor: Colors.white,
+                    fillColor: Theme.of(context).colorScheme.surface,
                     filled: true,
-                    prefixIcon: Icon(Iconsax.personalcard),
+                    prefixIcon:
+                        Icon(Iconsax.personalcard, color: Colors.grey.shade600),
                     hintStyle: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
