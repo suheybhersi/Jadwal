@@ -367,9 +367,13 @@ class PreviousMemorisation extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,7 +418,7 @@ class PreviousMemorisation extends StatelessWidget {
                     SizedBox(height: 16),
                     Divider(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                     SizedBox(height: 24),
                     Directionality(
@@ -425,7 +429,7 @@ class PreviousMemorisation extends StatelessWidget {
                           letterSpacing: 0,
                           fontSize: 20,
                           height: 1.5,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                         textAlign: TextAlign.justify,
                       ),
@@ -440,27 +444,29 @@ class PreviousMemorisation extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                   ),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Theme.of(context).colorScheme.tertiary,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                     ),
                     child: Icon(
                       Icons.arrow_downward_rounded,
-                      color: Colors.grey.shade700,
+                      color: Theme.of(context).colorScheme.inversePrimary,
                       size: 20,
                     ),
                   ),
                   Expanded(
                     child: Container(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                   ),
                 ],
@@ -472,9 +478,15 @@ class PreviousMemorisation extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.1),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -520,7 +532,7 @@ class PreviousMemorisation extends StatelessWidget {
                       SizedBox(height: 16),
                       Divider(
                         height: 1,
-                        color: Colors.grey.shade200,
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                       SizedBox(height: 24),
                       Directionality(
@@ -531,7 +543,7 @@ class PreviousMemorisation extends StatelessWidget {
                             letterSpacing: 0,
                             fontSize: 20,
                             height: 1.5,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                           textAlign: TextAlign.justify,
                         ),
@@ -544,9 +556,13 @@ class PreviousMemorisation extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -559,10 +575,9 @@ class PreviousMemorisation extends StatelessWidget {
                     Text(
                       'Completed on ${hifdh['date'].split('-')[0]}/${hifdh['date'].split('-')[1]}/${hifdh['date'].split('-')[2]}',
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
-                      ),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.inversePrimary),
                     ),
                   ],
                 ),
@@ -775,9 +790,17 @@ class PreviousReviews extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .tertiary
+                                .withOpacity(0.1),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -824,7 +847,7 @@ class PreviousReviews extends StatelessWidget {
                             SizedBox(height: 16),
                             Divider(
                               height: 1,
-                              color: Colors.grey.shade200,
+                              color: Theme.of(context).colorScheme.tertiary,
                             ),
                             SizedBox(height: 24),
                             Directionality(
@@ -835,7 +858,9 @@ class PreviousReviews extends StatelessWidget {
                                   letterSpacing: 0,
                                   fontSize: 20,
                                   height: 1.5,
-                                  color: Colors.black87,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
                                 ),
                                 textAlign: TextAlign.justify,
                               ),
@@ -850,7 +875,7 @@ class PreviousReviews extends StatelessWidget {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.grey.shade200,
+                              color: Theme.of(context).colorScheme.tertiary,
                             ),
                           ),
                           Container(
@@ -858,20 +883,23 @@ class PreviousReviews extends StatelessWidget {
                                 vertical: 16, horizontal: 16),
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: Theme.of(context).colorScheme.tertiary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade300),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
                             ),
                             child: Icon(
                               Icons.arrow_downward_rounded,
-                              color: Colors.grey.shade700,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
                               size: 20,
                             ),
                           ),
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.grey.shade200,
+                              color: Theme.of(context).colorScheme.tertiary,
                             ),
                           ),
                         ],
@@ -883,9 +911,17 @@ class PreviousReviews extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .tertiary
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
+                                  .withOpacity(0.1),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -933,7 +969,7 @@ class PreviousReviews extends StatelessWidget {
                               SizedBox(height: 16),
                               Divider(
                                 height: 1,
-                                color: Colors.grey.shade200,
+                                color: Theme.of(context).colorScheme.tertiary,
                               ),
                               SizedBox(height: 24),
                               Directionality(
@@ -944,7 +980,9 @@ class PreviousReviews extends StatelessWidget {
                                     letterSpacing: 0,
                                     fontSize: 20,
                                     height: 1.5,
-                                    color: Colors.black87,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .inversePrimary,
                                   ),
                                   textAlign: TextAlign.justify,
                                 ),
@@ -958,9 +996,17 @@ class PreviousReviews extends StatelessWidget {
                         padding:
                             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .tertiary
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .tertiary
+                                .withOpacity(0.1),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -973,10 +1019,11 @@ class PreviousReviews extends StatelessWidget {
                             Text(
                               'Next review on ${review['date'].split('-')[0]}/${review['date'].split('-')[1]}/${review['date'].split('-')[2]}',
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade800,
-                              ),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary),
                             ),
                           ],
                         ),
@@ -995,17 +1042,26 @@ class PreviousReviews extends StatelessWidget {
                           ? Container(
                               padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiary
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .tertiary
+                                      .withOpacity(0.1),
+                                ),
                               ),
                               child: Center(
                                 child: Text(
                                   'No ratings yet',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
+                                      fontSize: 14,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary),
                                 ),
                               ),
                             )

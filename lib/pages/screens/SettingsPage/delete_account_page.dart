@@ -83,10 +83,14 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -103,7 +107,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 26,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -120,11 +124,14 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.3),
                         spreadRadius: 1,
                         blurRadius: 12,
                       ),
@@ -150,7 +157,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -219,7 +226,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -229,10 +236,10 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                         style: GoogleFonts.poppins(),
                         decoration: InputDecoration(
                           hintText: 'Enter your password',
-                          hintStyle:
-                              GoogleFonts.poppins(color: Colors.grey[400]),
-                          prefixIcon:
-                              Icon(Iconsax.lock, color: Color(0xFF4979FB)),
+                          hintStyle: GoogleFonts.poppins(
+                              color: Theme.of(context).colorScheme.secondary),
+                          prefixIcon: Icon(Iconsax.lock,
+                              color: Theme.of(context).colorScheme.secondary),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -244,19 +251,17 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                                 () => _obscurePassword = !_obscurePassword),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
+                          fillColor: Theme.of(context).colorScheme.surface,
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
+                            borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.secondary),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide(
-                                color: Color(0xFF4979FB), width: 1.5),
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1.5),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
