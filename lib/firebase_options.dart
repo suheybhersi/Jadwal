@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'jadwal-dca2a.firebasestorage.app',
     iosBundleId: 'com.suheyb.jadwal',
   );
-
 }

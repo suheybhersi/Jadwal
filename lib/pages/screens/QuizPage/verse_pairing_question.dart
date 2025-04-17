@@ -221,7 +221,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
   @override
   Widget build(BuildContext context) {
     // Colors for question elements
-    final textColor = Colors.grey.shade800;
+
     final primaryAccent = const Color(0xFF4979FB);
 
     return Column(
