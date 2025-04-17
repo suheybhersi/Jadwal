@@ -87,11 +87,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         final file = File(recordingPath!);
         if (await file.exists()) {
           await file.delete();
-          print('Recording file deleted: $recordingPath');
         }
         recordingPath = null;
       } catch (e) {
-        print('Error deleting recording file: $e');
+        return;
       }
     }
   }
@@ -122,7 +121,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           amplitudes.add(normalisedValue);
         });
       } catch (e) {
-        print('Amplitude error: $e');
         setState(() {
           amplitudes.removeAt(0);
           amplitudes.add(0.0);
@@ -185,7 +183,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       // Return the text value from the JSON response
       return responseData['text'] ?? '';
     } catch (e) {
-      print('Speech-to-text conversion error: $e');
       return 'Error: Unable to convert speech to text. ${e.toString()}';
     }
   }
@@ -962,10 +959,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 'Your recitation needs improvement. Please review the highlighted words.';
           }
 
-          print(transcription);
-          print(question['correctAnswer']);
-          print(comparisonResult);
-
           setState(() {
             text = processedTranscribedWord;
             comparison = comparisonResult;
@@ -1024,9 +1017,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           throw Exception('Recording permission not granted');
         }
       }
-    } catch (e, stackTrace) {
-      print('Recording error: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
       // Make sure to cancel any timers if an error occurs
       _recordingDurationTimer?.cancel();
       _amplitudeTimer?.cancel();

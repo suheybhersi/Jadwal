@@ -21,9 +21,7 @@ class ConnectivityService extends ChangeNotifier {
       ConnectivityResult result = await _connectivity.checkConnectivity();
       _updateConnectionStatus(result);
     } catch (e) {
-      if (kDebugMode) {
-        print('Connectivity initialization error: $e');
-      }
+      if (kDebugMode) {}
       _isConnected = false;
       notifyListeners();
     }

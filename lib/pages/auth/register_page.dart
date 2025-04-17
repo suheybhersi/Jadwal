@@ -210,7 +210,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
                                     // Add privacy policy action here
-                                    print('Privacy Policy tapped');
                                   },
                               ),
                               TextSpan(
@@ -233,7 +232,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
                                     // Add terms of use action here
-                                    print('Terms of Use tapped');
                                   },
                               ),
                             ],

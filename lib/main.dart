@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -32,15 +33,96 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  Timer? _themePollTimer;
+  Brightness? _lastKnownBrightness;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initial theme setting with a slight delay to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final brightness = MediaQuery.of(context).platformBrightness;
+      _lastKnownBrightness = brightness;
+      Provider.of<ThemeProvider>(context, listen: false)
+          .updateWithSystemTheme(brightness);
+
+      // Start polling for theme changes when in foreground
+      _startThemePolling();
+    });
+  }
+
+  void _startThemePolling() {
+    // Poll every 500ms to check for system theme changes
+    _themePollTimer?.cancel();
+    _themePollTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (!mounted) return;
+
+      final currentBrightness = MediaQuery.platformBrightnessOf(context);
+      // Only update if brightness actually changed
+      if (_lastKnownBrightness != currentBrightness) {
+        _lastKnownBrightness = currentBrightness;
+        Provider.of<ThemeProvider>(context, listen: false)
+            .updateWithSystemTheme(currentBrightness);
+      }
+    });
+  }
+
+  void _stopThemePolling() {
+    _themePollTimer?.cancel();
+    _themePollTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _stopThemePolling();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // This is called when the system brightness changes
+    final brightness = MediaQuery.platformBrightnessOf(context);
+    _lastKnownBrightness = brightness;
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    themeProvider.updateWithSystemTheme(brightness);
+    super.didChangePlatformBrightness();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App comes to foreground - check theme and resume polling
+      final brightness = MediaQuery.platformBrightnessOf(context);
+      _lastKnownBrightness = brightness;
+      Provider.of<ThemeProvider>(context, listen: false)
+          .updateWithSystemTheme(brightness);
+      _startThemePolling();
+    } else if (state == AppLifecycleState.paused) {
+      // App goes to background - stop polling to save resources
+      _stopThemePolling();
+    }
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       home: AuthPage(),
-      theme: Provider.of<ThemeProvider>(context).themeData,
+      theme: themeProvider.themeData,
     );
   }
 }

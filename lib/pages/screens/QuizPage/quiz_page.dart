@@ -310,12 +310,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         whatComesNextQuestions.take(whatNextTarget).toList();
     List<Map<String, dynamic>> pairingList =
         versePairingQuestions.take(verseMatchTarget).toList();
-
-    // Log question counts for debugging
-    print(
-        'Question counts - Fill blank: ${fillBlankList.length}, Drag drop: ${dragDropList.length}, '
-        'What next: ${whatNextList.length}, Pairing: ${pairingList.length}');
-
     // Create a list of question type groups to alternate between
     List<List<Map<String, dynamic>>> questionGroups = [
       fillBlankList,
@@ -772,7 +766,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
           wordOptions[missingWord] = wordOptionsList;
         }
       } catch (e) {
-        print('Error using OpenAI for options: $e');
         // Fallback to random word selection
         for (String missingWord in missingWords) {
           List<String> randomOptions =
@@ -795,7 +788,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         'verseNumber': verseNumber,
       };
     } catch (e) {
-      print('Error generating fill-in-the-blank question: $e');
       // Provide a fallback question
       return {
         'type': 'fill_blank',

@@ -208,20 +208,64 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   _buildSettingTile(
                     icon: Iconsax.moon,
-                    title: 'Dark Mode',
-                    description: 'Switch app theme',
-                    trailing: Switch(
-                      value: themeProvider.isDarkMode,
-                      onChanged: (value) {
-                        themeProvider.toggleTheme();
-                      },
-                      activeColor: const Color(0xFF4979FB),
-                      inactiveThumbColor: Colors.grey[300],
-                      trackOutlineColor: WidgetStateProperty.all(
-                        themeProvider.isDarkMode
-                            ? Colors.transparent
-                            : Colors.grey[300],
-                      ),
+                    title: 'Theme Mode',
+                    description: themeProvider.useSystemTheme
+                        ? 'Automatic (follows system)'
+                        : themeProvider.isDarkMode
+                            ? 'Dark mode'
+                            : 'Light mode',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Automatic theme toggle
+                        GestureDetector(
+                          onTap: () {
+                            if (themeProvider.useSystemTheme) {
+                              // Switch to manual mode with current theme
+                              themeProvider.setSystemTheme(false);
+                            } else {
+                              // Switch to automatic mode
+                              themeProvider.setSystemTheme(true);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: themeProvider.useSystemTheme
+                                  ? const Color(0xFF4979FB)
+                                  : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Auto',
+                              style: GoogleFonts.poppins(
+                                color: themeProvider.useSystemTheme
+                                    ? Colors.white
+                                    : Colors.grey[700],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Manual light/dark toggle (only enabled in manual mode)
+                        if (!themeProvider.useSystemTheme)
+                          Switch(
+                            value: themeProvider.isDarkMode,
+                            onChanged: (value) {
+                              themeProvider.toggleTheme();
+                            },
+                            activeColor: const Color(0xFF4979FB),
+                            inactiveThumbColor: Colors.grey[300],
+                            trackOutlineColor: WidgetStateProperty.all(
+                              themeProvider.isDarkMode
+                                  ? Colors.transparent
+                                  : Colors.grey[300],
+                            ),
+                          ),
+                      ],
                     ),
                     isLast: true,
                   ),
