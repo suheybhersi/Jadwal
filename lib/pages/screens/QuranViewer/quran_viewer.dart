@@ -9,12 +9,13 @@ class QuranViewer extends StatefulWidget {
   final int initialPage;
   final int totalPages;
   final String verseToHighlight;
-
+  final String pageToHighlight;
   const QuranViewer({
     super.key,
     required this.initialPage,
     this.totalPages = 604,
     this.verseToHighlight = '',
+    this.pageToHighlight = '',
   });
 
   @override
@@ -119,6 +120,7 @@ class _QuranViewerState extends State<QuranViewer> {
             return QuranPage(
               pageData: _pages![pageIndex],
               verseToHighlight: widget.verseToHighlight,
+              pageToHighlight: widget.pageToHighlight,
             );
           }
           return null;

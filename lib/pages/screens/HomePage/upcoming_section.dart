@@ -680,7 +680,10 @@ class UpcomingSection extends StatelessWidget {
                                                           initialPage:
                                                               pageNumber,
                                                           verseToHighlight:
-                                                              verseKey),
+                                                              verseKey,
+                                                          pageToHighlight:
+                                                              pageNumber
+                                                                  .toString()),
                                                 ),
                                               );
                                             } catch (e) {

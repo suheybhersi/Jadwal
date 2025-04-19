@@ -8,22 +8,25 @@ class _StyledTextResult {
   final Widget widget;
   final bool foundPrevVerse;
   final bool foundHighlightedVerse;
-
+  final String pageToHighlight;
   _StyledTextResult({
     required this.widget,
     required this.foundPrevVerse,
     required this.foundHighlightedVerse,
+    required this.pageToHighlight,
   });
 }
 
 class QuranPage extends StatelessWidget {
   final DocumentSnapshot pageData;
   final String verseToHighlight;
+  final String pageToHighlight;
 
   const QuranPage({
     super.key,
     required this.pageData,
     this.verseToHighlight = '',
+    this.pageToHighlight = '',
   });
 
   @override
@@ -77,6 +80,7 @@ class QuranPage extends StatelessWidget {
                 prevVerseNum: prevVerseNum,
                 foundPrevVerse: foundPrevVerseInPage,
                 foundHighlightedVerse: foundHighlightedVerseInPage,
+                pageToHighlight: pageToHighlight,
               );
 
               // Update the global state based on this line's processing
@@ -112,12 +116,14 @@ class QuranPage extends StatelessWidget {
     int prevVerseNum = 0,
     bool foundPrevVerse = false,
     bool foundHighlightedVerse = false,
+    String pageToHighlight = '',
   }) {
     if (text.isEmpty) {
       return _StyledTextResult(
         widget: const SizedBox(),
         foundPrevVerse: foundPrevVerse,
         foundHighlightedVerse: foundHighlightedVerse,
+        pageToHighlight: pageToHighlight,
       );
     }
 
@@ -138,6 +144,7 @@ class QuranPage extends StatelessWidget {
         ),
         foundPrevVerse: foundPrevVerse,
         foundHighlightedVerse: foundHighlightedVerse,
+        pageToHighlight: pageToHighlight,
       );
     }
 
@@ -156,8 +163,10 @@ class QuranPage extends StatelessWidget {
       String matchText = text.substring(match.start, match.end);
       int currentVerseNum = _parseArabicOrWesternNumeral(matchText);
 
-      bool isPreviousVerse = currentVerseNum == prevVerseNum;
-      bool isHighlightedVerse = currentVerseNum == verseToHighlight;
+      bool isPreviousVerse = currentVerseNum == prevVerseNum &&
+          pageData.id.toString() == pageToHighlight;
+      bool isHighlightedVerse = currentVerseNum == verseToHighlight &&
+          pageData.id.toString() == pageToHighlight;
 
       // Process the text before the verse number
       if (match.start > lastEnd) {
@@ -227,6 +236,7 @@ class QuranPage extends StatelessWidget {
       ),
       foundPrevVerse: localFoundPrevVerse,
       foundHighlightedVerse: localFoundHighlightedVerse,
+      pageToHighlight: pageToHighlight,
     );
   }
 
