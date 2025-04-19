@@ -259,11 +259,6 @@ class QuranPage extends StatelessWidget {
           true; // Also consider prev verse found on subsequent pages
     }
 
-    // If we're on or after the start page and we haven't found the end verse yet,
-    // we should be in highlighting mode
-    bool isInHighlightRange =
-        (currentPage >= startPage && currentPage <= endPage) && !foundEndVerse;
-
     // Build RichText with multiple spans for verse styling and highlighting
     List<InlineSpan> spans = [];
     int lastEnd = 0;

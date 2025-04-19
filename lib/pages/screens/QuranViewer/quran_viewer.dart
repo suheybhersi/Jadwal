@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:jadwal/components/QuranPage.dart';
+import 'package:jadwal/components/quran_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
