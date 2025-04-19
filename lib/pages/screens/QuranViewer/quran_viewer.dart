@@ -31,6 +31,14 @@ class _QuranViewerState extends State<QuranViewer> {
   void initState() {
     super.initState();
     _currentPage = widget.initialPage;
+
+    // Debug information for verse highlighting
+    if (widget.verseToHighlight.isNotEmpty) {
+      developer.log(
+          'QuranViewer initialized with verse to highlight: ${widget.verseToHighlight}');
+      developer.log('Initial page: ${widget.initialPage}');
+    }
+
     // Initialize PageController with reversed index because we want page 1 on the right
     _pageController = PageController(
       initialPage: widget.totalPages - widget.initialPage,
@@ -51,6 +59,16 @@ class _QuranViewerState extends State<QuranViewer> {
       setState(() {
         _isLoading = false;
       });
+
+      // Ensure we're on the right page after loading
+      if (widget.verseToHighlight.isNotEmpty && mounted) {
+        // Optional: give a slight delay to let page build properly
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) {
+            _pageController.jumpToPage(widget.totalPages - widget.initialPage);
+          }
+        });
+      }
     } catch (e) {
       developer.log('Error loading pages: $e', error: e);
       setState(() {
@@ -98,7 +116,10 @@ class _QuranViewerState extends State<QuranViewer> {
               _pages!.indexWhere((doc) => int.parse(doc.id) == pageNumber);
 
           if (pageIndex >= 0) {
-            return QuranPage(pageData: _pages![pageIndex]);
+            return QuranPage(
+              pageData: _pages![pageIndex],
+              verseToHighlight: widget.verseToHighlight,
+            );
           }
           return null;
         },
@@ -112,7 +133,6 @@ class _QuranViewerState extends State<QuranViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Page $_currentPage'),
         actions: [
           IconButton(onPressed: _showPageInfo, icon: const Icon(Icons.info)),
         ],
