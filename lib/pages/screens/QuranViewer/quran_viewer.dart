@@ -10,12 +10,19 @@ class QuranViewer extends StatefulWidget {
   final int totalPages;
   final String verseToHighlight;
   final String pageToHighlight;
+  final String endVerseToHighlight;
+  final String endPageToHighlight;
+  final String prevVerseKey;
+
   const QuranViewer({
     super.key,
     required this.initialPage,
     this.totalPages = 604,
     this.verseToHighlight = '',
     this.pageToHighlight = '',
+    this.endVerseToHighlight = '',
+    this.endPageToHighlight = '',
+    this.prevVerseKey = '',
   });
 
   @override
@@ -37,7 +44,19 @@ class _QuranViewerState extends State<QuranViewer> {
     if (widget.verseToHighlight.isNotEmpty) {
       developer.log(
           'QuranViewer initialized with verse to highlight: ${widget.verseToHighlight}');
+      if (widget.endVerseToHighlight.isNotEmpty) {
+        developer.log('End verse to highlight: ${widget.endVerseToHighlight}');
+      }
+      if (widget.prevVerseKey.isNotEmpty) {
+        developer.log('Previous verse key: ${widget.prevVerseKey}');
+      }
       developer.log('Initial page: ${widget.initialPage}');
+      developer.log('Page to highlight: ${widget.pageToHighlight}');
+
+      // Log end page if available
+      if (widget.endPageToHighlight.isNotEmpty) {
+        developer.log('End page to highlight: ${widget.endPageToHighlight}');
+      }
     }
 
     // Initialize PageController with reversed index because we want page 1 on the right
@@ -117,10 +136,25 @@ class _QuranViewerState extends State<QuranViewer> {
               _pages!.indexWhere((doc) => int.parse(doc.id) == pageNumber);
 
           if (pageIndex >= 0) {
+            // Enhanced debugging for page-based highlighting
+            if (pageNumber == int.tryParse(widget.pageToHighlight)) {
+              developer.log('Rendering start page: $pageNumber');
+            }
+
+            if (widget.endPageToHighlight.isNotEmpty &&
+                pageNumber == int.tryParse(widget.endPageToHighlight)) {
+              developer.log('Rendering end page: $pageNumber');
+            }
+
+            // We always pass the start page as pageToHighlight
+            // This is the reference point for highlighting logic
             return QuranPage(
               pageData: _pages![pageIndex],
               verseToHighlight: widget.verseToHighlight,
-              pageToHighlight: widget.pageToHighlight,
+              pageToHighlight: widget.pageToHighlight, // Always pass start page
+              endVerseToHighlight: widget.endVerseToHighlight,
+              endPageToHighlight: widget.endPageToHighlight,
+              prevVerseKey: widget.prevVerseKey,
             );
           }
           return null;

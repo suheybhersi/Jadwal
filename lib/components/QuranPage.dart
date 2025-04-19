@@ -6,14 +6,18 @@ import 'dart:developer' as developer;
 // Helper class to return both widget and state from text styling
 class _StyledTextResult {
   final Widget widget;
+  final bool foundStartVerse;
+  final bool foundEndVerse;
   final bool foundPrevVerse;
-  final bool foundHighlightedVerse;
   final String pageToHighlight;
+  final String endPageToHighlight;
   _StyledTextResult({
     required this.widget,
+    required this.foundStartVerse,
+    required this.foundEndVerse,
     required this.foundPrevVerse,
-    required this.foundHighlightedVerse,
     required this.pageToHighlight,
+    required this.endPageToHighlight,
   });
 }
 
@@ -21,12 +25,18 @@ class QuranPage extends StatelessWidget {
   final DocumentSnapshot pageData;
   final String verseToHighlight;
   final String pageToHighlight;
+  final String endVerseToHighlight;
+  final String endPageToHighlight;
+  final String prevVerseKey;
 
   const QuranPage({
     super.key,
     required this.pageData,
     this.verseToHighlight = '',
     this.pageToHighlight = '',
+    this.endVerseToHighlight = '',
+    this.endPageToHighlight = '',
+    this.prevVerseKey = '',
   });
 
   @override
@@ -36,24 +46,66 @@ class QuranPage extends StatelessWidget {
     final bool isShortPage = allLines.length < 13;
 
     // Parse verse to highlight
-    int verseToHighlightNum = 0;
+    int startVerseToHighlightNum = 0;
+    int endVerseToHighlightNum = 0;
+    int startChapter = 0;
+    int endChapter = 0;
+
+    // Parse previous verse
     int prevVerseNum = 0;
+    int prevChapter = 0;
 
     if (verseToHighlight.isNotEmpty) {
       final parts = verseToHighlight.split(':');
       if (parts.length == 2) {
-        verseToHighlightNum = int.tryParse(parts[1]) ?? 0;
-        if (verseToHighlightNum > 0) {
-          prevVerseNum = verseToHighlightNum - 1;
-          developer.log(
-              'Looking for verse: $verseToHighlightNum (previous verse: $prevVerseNum)');
+        startChapter = int.tryParse(parts[0]) ?? 0;
+        startVerseToHighlightNum = int.tryParse(parts[1]) ?? 0;
+
+        if (endVerseToHighlight.isNotEmpty) {
+          final endParts = endVerseToHighlight.split(':');
+          if (endParts.length == 2) {
+            endChapter = int.tryParse(endParts[0]) ?? 0;
+            endVerseToHighlightNum = int.tryParse(endParts[1]) ?? 0;
+          } else {
+            // If no end verse specified, highlight only the start verse
+            endVerseToHighlightNum = startVerseToHighlightNum;
+            endChapter = startChapter;
+          }
+        } else {
+          // If no end verse specified, highlight only the start verse
+          endVerseToHighlightNum = startVerseToHighlightNum;
+          endChapter = startChapter;
+        }
+
+        // Parse previous verse key if provided
+        if (prevVerseKey.isNotEmpty) {
+          final prevParts = prevVerseKey.split(':');
+          if (prevParts.length == 2) {
+            prevChapter = int.tryParse(prevParts[0]) ?? 0;
+            prevVerseNum = int.tryParse(prevParts[1]) ?? 0;
+            developer.log('Previous verse: $prevChapter:$prevVerseNum');
+          }
+        } else {
+          // If no previous verse key provided and this is not the first verse of a surah,
+          // we'll assume it's the verse before the start verse in the same surah
+          if (startVerseToHighlightNum > 1) {
+            prevVerseNum = startVerseToHighlightNum - 1;
+            prevChapter = startChapter;
+          }
+        }
+
+        developer.log(
+            'Highlighting verses from $startChapter:$startVerseToHighlightNum to $endChapter:$endVerseToHighlightNum');
+        if (prevVerseNum > 0) {
+          developer.log('Previous verse: $prevChapter:$prevVerseNum');
         }
       }
     }
 
     // Store the global highlighting state across lines
+    bool foundStartVerseInPage = false;
+    bool foundEndVerseInPage = false;
     bool foundPrevVerseInPage = false;
-    bool foundHighlightedVerseInPage = false;
 
     return SafeArea(
       child: Container(
@@ -76,16 +128,23 @@ class QuranPage extends StatelessWidget {
               final result = _buildStyledText(
                 line.toString(),
                 context,
-                verseToHighlight: verseToHighlightNum,
+                startVerseToHighlight: startVerseToHighlightNum,
+                endVerseToHighlight: endVerseToHighlightNum,
+                startChapter: startChapter,
+                endChapter: endChapter,
                 prevVerseNum: prevVerseNum,
+                prevChapter: prevChapter,
+                foundStartVerse: foundStartVerseInPage,
+                foundEndVerse: foundEndVerseInPage,
                 foundPrevVerse: foundPrevVerseInPage,
-                foundHighlightedVerse: foundHighlightedVerseInPage,
                 pageToHighlight: pageToHighlight,
+                endPageToHighlight: endPageToHighlight,
               );
 
               // Update the global state based on this line's processing
+              foundStartVerseInPage = result.foundStartVerse;
+              foundEndVerseInPage = result.foundEndVerse;
               foundPrevVerseInPage = result.foundPrevVerse;
-              foundHighlightedVerseInPage = result.foundHighlightedVerse;
 
               return FittedBox(
                 fit: BoxFit.fitWidth,
@@ -112,28 +171,157 @@ class QuranPage extends StatelessWidget {
   _StyledTextResult _buildStyledText(
     String text,
     BuildContext context, {
-    int verseToHighlight = 0,
+    int startVerseToHighlight = 0,
+    int endVerseToHighlight = 0,
+    int startChapter = 0,
+    int endChapter = 0,
     int prevVerseNum = 0,
+    int prevChapter = 0,
+    bool foundStartVerse = false,
+    bool foundEndVerse = false,
     bool foundPrevVerse = false,
-    bool foundHighlightedVerse = false,
     String pageToHighlight = '',
+    String endPageToHighlight = '',
   }) {
     if (text.isEmpty) {
       return _StyledTextResult(
         widget: const SizedBox(),
+        foundStartVerse: foundStartVerse,
+        foundEndVerse: foundEndVerse,
         foundPrevVerse: foundPrevVerse,
-        foundHighlightedVerse: foundHighlightedVerse,
         pageToHighlight: pageToHighlight,
+        endPageToHighlight: endPageToHighlight,
       );
     }
 
-    // Regular expression to match verse numbers
+    // Parse current page and pages to highlight
+    int currentPage = int.tryParse(pageData.id) ?? 0;
+    int startPage = int.tryParse(pageToHighlight) ?? 0;
+    int endPage = int.tryParse(endPageToHighlight) ?? 0;
+
+    // Regular expression to match verse numbers - moved before the condition
     RegExp numbersRegex = RegExp(r'[\u0660-\u0669\u06F0-\u06F9\d]+');
     final matches = numbersRegex.allMatches(text);
 
+    // Skip all highlighting logic if no highlighting was requested
+    // This ensures no random highlighting when accessed from ProgressPage
+    if (pageToHighlight.isEmpty && verseToHighlight.isEmpty) {
+      // Still need to process verse numbers with proper styling
+      if (matches.isEmpty) {
+        // No verse numbers in this text
+        return _StyledTextResult(
+          widget: Text(
+            text,
+            style: _getTextStyle(context, text, highlighted: false),
+            textAlign: TextAlign.justify,
+            textDirection: TextDirection.rtl,
+          ),
+          foundStartVerse: foundStartVerse,
+          foundEndVerse: foundEndVerse,
+          foundPrevVerse: foundPrevVerse,
+          pageToHighlight: pageToHighlight,
+          endPageToHighlight: endPageToHighlight,
+        );
+      } else {
+        // Has verse numbers that need styling
+        List<InlineSpan> spans = [];
+        int lastEnd = 0;
+
+        for (var match in matches) {
+          String matchText = text.substring(match.start, match.end);
+
+          // Add text before verse number
+          if (match.start > lastEnd) {
+            spans.add(TextSpan(
+              text: text.substring(lastEnd, match.start),
+              style: _getTextStyle(context, text, highlighted: false),
+            ));
+          }
+
+          // Add verse number with special styling
+          spans.add(TextSpan(
+            text: "﴿$matchText﴾",
+            style: GoogleFonts.scheherazadeNew(
+              fontSize: 24,
+              color: Theme.of(context).colorScheme.inversePrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ));
+
+          lastEnd = match.end;
+        }
+
+        // Add any remaining text after the last verse number
+        if (lastEnd < text.length) {
+          spans.add(TextSpan(
+            text: text.substring(lastEnd),
+            style: _getTextStyle(context, text, highlighted: false),
+          ));
+        }
+
+        return _StyledTextResult(
+          widget: RichText(
+            text: TextSpan(children: spans),
+            textAlign: TextAlign.justify,
+            textDirection: TextDirection.rtl,
+          ),
+          foundStartVerse: foundStartVerse,
+          foundEndVerse: foundEndVerse,
+          foundPrevVerse: foundPrevVerse,
+          pageToHighlight: pageToHighlight,
+          endPageToHighlight: endPageToHighlight,
+        );
+      }
+    }
+
+    // For debugging
+    developer.log(
+        'Current page: $currentPage, Start page: $startPage, End page: $endPage, '
+        'Found prev verse: $foundPrevVerse, '
+        'Found start verse: $foundStartVerse, '
+        'Found end verse: $foundEndVerse');
+
+    // Check if we're within the page range for highlighting
+    bool isInPageRange =
+        currentPage >= startPage && (endPage == 0 || currentPage <= endPage);
+
+    // If we're outside the page range, don't highlight anything
+    if (!isInPageRange) {
+      return _StyledTextResult(
+        widget: Text(
+          text,
+          style: _getTextStyle(context, text, highlighted: false),
+          textAlign: TextAlign.justify,
+          textDirection: TextDirection.rtl,
+        ),
+        foundStartVerse: foundStartVerse,
+        foundEndVerse: foundEndVerse,
+        foundPrevVerse: foundPrevVerse,
+        pageToHighlight: pageToHighlight,
+        endPageToHighlight: endPageToHighlight,
+      );
+    }
+
+    // CRITICAL CHANGE: On pages after the start page, we should consider the start verse as already found
+    // This ensures highlighting continues across pages
+    if (currentPage > startPage) {
+      foundStartVerse = true;
+      foundPrevVerse =
+          true; // Also consider prev verse found on subsequent pages
+    }
+
+    // If we're on or after the start page and we haven't found the end verse yet,
+    // we should be in highlighting mode
+    bool isInHighlightRange =
+        (currentPage >= startPage && currentPage <= endPage) && !foundEndVerse;
+
     // If no verse numbers in this line
     if (matches.isEmpty) {
-      bool shouldHighlight = foundPrevVerse && !foundHighlightedVerse;
+      // Highlight all text if we're in highlighting range and either:
+      // 1. We've found the start verse
+      // 2. OR we've found the prev verse and not the start verse yet (key for highlighting start verse content)
+      bool shouldHighlight = isInHighlightRange &&
+          (foundStartVerse || (foundPrevVerse && !foundStartVerse));
 
       return _StyledTextResult(
         widget: Text(
@@ -142,43 +330,104 @@ class QuranPage extends StatelessWidget {
           textAlign: TextAlign.justify,
           textDirection: TextDirection.rtl,
         ),
+        foundStartVerse: foundStartVerse,
+        foundEndVerse: foundEndVerse,
         foundPrevVerse: foundPrevVerse,
-        foundHighlightedVerse: foundHighlightedVerse,
         pageToHighlight: pageToHighlight,
+        endPageToHighlight: endPageToHighlight,
       );
     }
 
     // Build RichText with multiple spans for precise highlighting
     List<InlineSpan> spans = [];
     int lastEnd = 0;
+    bool localFoundStartVerse = foundStartVerse;
+    bool localFoundEndVerse = foundEndVerse;
     bool localFoundPrevVerse = foundPrevVerse;
-    bool localFoundHighlightedVerse = foundHighlightedVerse;
-    bool startHighlightAfterThisMatch =
-        false; // Flag to start highlighting after this match
-    bool stopHighlightingAfterThisMatch =
-        false; // Flag to stop highlighting after this match
+    bool stopHighlightingNow = false;
+    int currentChapter = 0;
+
+    // Try to extract chapter information from the page data
+    try {
+      if (pageData.data() != null) {
+        final Map<String, dynamic> data =
+            pageData.data() as Map<String, dynamic>;
+        if (data.containsKey('chapter')) {
+          currentChapter = data['chapter'] as int;
+        }
+      }
+    } catch (e) {
+      developer.log('Error getting chapter: $e');
+    }
 
     for (var i = 0; i < matches.length; i++) {
       var match = matches.elementAt(i);
       String matchText = text.substring(match.start, match.end);
       int currentVerseNum = _parseArabicOrWesternNumeral(matchText);
 
-      bool isPreviousVerse = currentVerseNum == prevVerseNum &&
-          pageData.id.toString() == pageToHighlight;
-      bool isHighlightedVerse = currentVerseNum == verseToHighlight &&
-          pageData.id.toString() == pageToHighlight;
+      // Check if this is our previous, start, or end verse
+      bool isPrevVerse = (currentPage == startPage) &&
+          currentVerseNum == prevVerseNum &&
+          (currentChapter == 0 || currentChapter == prevChapter);
+
+      bool isStartVerse = (currentPage == startPage) &&
+          currentVerseNum == startVerseToHighlight &&
+          (currentChapter == 0 || currentChapter == startChapter);
+
+      bool isEndVerse = currentVerseNum == endVerseToHighlight &&
+          (currentChapter == 0 || currentChapter == endChapter);
+
+      // If we find the previous verse, mark it so we can highlight from this point forward
+      if (isPrevVerse) {
+        localFoundPrevVerse = true;
+        developer
+            .log('Found previous verse on page $currentPage: $currentVerseNum');
+      }
 
       // Process the text before the verse number
       if (match.start > lastEnd) {
-        // Should we highlight this text?
-        bool shouldHighlight =
-            localFoundPrevVerse && !localFoundHighlightedVerse;
+        // Determine if this text should be highlighted
+        // Highlight if:
+        // 1. We're in the page range AND
+        // 2. Either:
+        //    a. We've found the start verse but not the end verse
+        //    b. OR we've found the previous verse but haven't found the start verse yet
+        //    c. OR we're on a page after the start page but before finding the end verse
+        bool shouldHighlight = isInPageRange &&
+            ((localFoundStartVerse && !localFoundEndVerse) ||
+                (localFoundPrevVerse && !localFoundStartVerse) ||
+                (currentPage > startPage &&
+                    currentPage <= endPage &&
+                    !localFoundEndVerse));
 
         spans.add(TextSpan(
           text: text.substring(lastEnd, match.start),
           style: _getTextStyle(context, text, highlighted: shouldHighlight),
         ));
       }
+
+      // If this is the start verse, update state
+      if (isStartVerse) {
+        localFoundStartVerse = true;
+        developer
+            .log('Found start verse on page $currentPage: $currentVerseNum');
+      }
+
+      // If this is the end verse, update state
+      if (isEndVerse) {
+        localFoundEndVerse = true;
+        stopHighlightingNow = true;
+        developer.log('Found end verse on page $currentPage: $currentVerseNum');
+      }
+
+      // Determine if the verse number should be highlighted
+      bool shouldHighlightVerseNum = isInPageRange &&
+          (isStartVerse ||
+              isEndVerse ||
+              (localFoundStartVerse && !localFoundEndVerse) ||
+              (currentPage > startPage &&
+                  currentPage <= endPage &&
+                  !localFoundEndVerse));
 
       // Process the verse number with its parentheses
       spans.add(TextSpan(
@@ -187,38 +436,32 @@ class QuranPage extends StatelessWidget {
           fontSize: 24,
           color: Theme.of(context).colorScheme.inversePrimary,
           fontWeight: FontWeight.bold,
-          backgroundColor: isHighlightedVerse
+          backgroundColor: shouldHighlightVerseNum
               ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
               : null,
         ),
       ));
-
-      // Update state after processing this verse number
-      if (isPreviousVerse) {
-        localFoundPrevVerse = true;
-        startHighlightAfterThisMatch = true;
-      }
-
-      if (isHighlightedVerse) {
-        localFoundHighlightedVerse = true;
-        stopHighlightingAfterThisMatch = true;
-      }
 
       lastEnd = match.end;
     }
 
     // Process the text after the last verse number
     if (lastEnd < text.length) {
-      // Should we highlight this text?
-      bool shouldHighlight = localFoundPrevVerse && !localFoundHighlightedVerse;
+      // Determine if the text after the last verse number should be highlighted
+      bool shouldHighlight = isInPageRange &&
+          ((localFoundStartVerse && !localFoundEndVerse) ||
+              (localFoundPrevVerse && !localFoundStartVerse));
 
-      // If we found the prev verse in this line but haven't started highlighting yet
-      if (startHighlightAfterThisMatch && !stopHighlightingAfterThisMatch) {
+      // If we're on a page after the start page but before finding end verse, highlight everything
+      if (isInPageRange &&
+          currentPage > startPage &&
+          currentPage <= endPage &&
+          !localFoundEndVerse) {
         shouldHighlight = true;
       }
 
-      // If we found the highlighted verse in this line, don't highlight after it
-      if (stopHighlightingAfterThisMatch) {
+      // If we found the end verse in this line, don't highlight after it
+      if (stopHighlightingNow) {
         shouldHighlight = false;
       }
 
@@ -234,9 +477,11 @@ class QuranPage extends StatelessWidget {
         textAlign: TextAlign.justify,
         textDirection: TextDirection.rtl,
       ),
+      foundStartVerse: localFoundStartVerse,
+      foundEndVerse: localFoundEndVerse,
       foundPrevVerse: localFoundPrevVerse,
-      foundHighlightedVerse: localFoundHighlightedVerse,
       pageToHighlight: pageToHighlight,
+      endPageToHighlight: endPageToHighlight,
     );
   }
 

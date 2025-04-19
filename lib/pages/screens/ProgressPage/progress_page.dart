@@ -272,7 +272,13 @@ class _SurahProgressCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => QuranViewer(initialPage: pageNumber),
+              builder: (context) => QuranViewer(
+                initialPage: pageNumber,
+                verseToHighlight: '',
+                pageToHighlight: '',
+                endVerseToHighlight: '',
+                prevVerseKey: '',
+              ),
             ),
           );
         } catch (e) {

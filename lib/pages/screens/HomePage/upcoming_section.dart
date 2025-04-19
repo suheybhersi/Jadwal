@@ -639,6 +639,34 @@ class UpcomingSection extends StatelessWidget {
                                             final verseKey = hifdh['hifdh']
                                                 .split('-')[0]
                                                 .trim();
+                                            // Get the end verse key from hifdh
+                                            final endVerseKey = hifdh['hifdh']
+                                                .split('-')[1]
+                                                .trim();
+
+                                            // Parse the start verse key to determine previous verse
+                                            String prevVerseKey = '';
+                                            try {
+                                              final parts = verseKey.split(':');
+                                              if (parts.length == 2) {
+                                                int chapter =
+                                                    int.parse(parts[0]);
+                                                int verse = int.parse(parts[1]);
+                                                // If this isn't the first verse of the surah, then previous is same surah, verse-1
+                                                if (verse > 1) {
+                                                  prevVerseKey =
+                                                      '$chapter:${verse - 1}';
+                                                } else {
+                                                  // If it's the first verse, we need special handling
+                                                  // For now we'll leave prevVerseKey empty which works for our case
+                                                  // In a complete implementation, you'd need to handle surah boundaries
+                                                }
+                                              }
+                                            } catch (e) {
+                                              // If we can't parse, we'll just proceed without a previous verse key
+                                              print(
+                                                  'Error determining previous verse: $e');
+                                            }
 
                                             try {
                                               // Show loading indicator
@@ -662,11 +690,33 @@ class UpcomingSection extends StatelessWidget {
                                                     .instance.currentUser!.uid,
                                               );
 
-                                              // Get the page number for the verse
-                                              final pageNumber =
+                                              // Get the page number for the start verse
+                                              final startPageNumber =
                                                   await firestoreService
                                                       .getPageForVerseKey(
                                                           verseKey);
+
+                                              // Get the page number for the end verse
+                                              final endPageNumber =
+                                                  await firestoreService
+                                                      .getPageForVerseKey(
+                                                          endVerseKey);
+
+                                              // If we have a previous verse, try to get its page number
+                                              // String prevVersePage = '';
+                                              // if (prevVerseKey.isNotEmpty) {
+                                              //   try {
+                                              //     final prevPage =
+                                              //         await firestoreService
+                                              //             .getPageForVerseKey(
+                                              //                 prevVerseKey);
+                                              //     prevVersePage =
+                                              //         prevPage.toString();
+                                              //   } catch (e) {
+                                              //     print(
+                                              //         'Error getting previous verse page: $e');
+                                              //   }
+                                              // }
 
                                               // Close the loading dialog
                                               Navigator.pop(context);
@@ -678,12 +728,19 @@ class UpcomingSection extends StatelessWidget {
                                                   builder: (context) =>
                                                       QuranViewer(
                                                           initialPage:
-                                                              pageNumber,
+                                                              startPageNumber,
                                                           verseToHighlight:
                                                               verseKey,
                                                           pageToHighlight:
-                                                              pageNumber
-                                                                  .toString()),
+                                                              startPageNumber
+                                                                  .toString(),
+                                                          endVerseToHighlight:
+                                                              endVerseKey,
+                                                          endPageToHighlight:
+                                                              endPageNumber
+                                                                  .toString(),
+                                                          prevVerseKey:
+                                                              prevVerseKey),
                                                 ),
                                               );
                                             } catch (e) {
