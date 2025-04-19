@@ -15,6 +15,8 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('surahs');
   final CollectionReference versesCollection =
       FirebaseFirestore.instance.collection('verses');
+  final CollectionReference pagesCollection =
+      FirebaseFirestore.instance.collection('pages');
 
   final FirebaseAuth auth;
   final String uid;
@@ -26,7 +28,7 @@ class FirestoreService extends ChangeNotifier {
   FirestoreService(
       {required this.auth, required this.uid, this.connectivityService}) {
     final User? user = auth.currentUser;
-    if (user == null) {
+    if (user == null && uid.isNotEmpty) {
       throw Exception('User not authenticated');
     }
 
@@ -1843,6 +1845,120 @@ class FirestoreService extends ChangeNotifier {
         print('Error resetting plan: $e');
       }
       rethrow; // Rethrow to handle in the UI
+    }
+  }
+
+  /*---------------------------------------G E T   P A G E   F O R   V E R S E   K E Y----------------------------------------*/
+  Future<int> getPageForVerseKey(String verseKey) async {
+    try {
+      final verseSnapshot =
+          await versesCollection.where('key', isEqualTo: verseKey).get();
+
+      if (verseSnapshot.docs.isEmpty) {
+        throw Exception('Verse not found for key: $verseKey');
+      }
+
+      final verseData = verseSnapshot.docs[0].data() as Map<String, dynamic>;
+      return verseData['page'] as int;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting page for verse key: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /*---------------------------------------G E T   P A G E   S T R E A M----------------------------------------*/
+  Stream<DocumentSnapshot> getPageStream(int pageNumber) {
+    try {
+      return pagesCollection.doc(pageNumber.toString()).snapshots();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting page stream: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /*---------------------------------------G E T   A L L   P A G E S----------------------------------------*/
+  Future<List<DocumentSnapshot>> getAllPages() async {
+    try {
+      final pagesSnapshot = await pagesCollection.get();
+
+      // Sort pages numerically based on page number (document ID)
+      final sortedDocs = pagesSnapshot.docs.toList()
+        ..sort((a, b) {
+          final pageNumberA = int.parse(a.id);
+          final pageNumberB = int.parse(b.id);
+          return pageNumberA.compareTo(pageNumberB);
+        });
+
+      // Log info about the first document for debugging
+      if (sortedDocs.isNotEmpty) {
+        final firstDoc = sortedDocs.first;
+        if (kDebugMode) {
+          print('First page ID: ${firstDoc.id}');
+          print('First page data structure: ${firstDoc.data()}');
+          print(
+              'First page fields: ${(firstDoc.data() as Map<String, dynamic>).keys.join(', ')}');
+        }
+      } else {
+        if (kDebugMode) {
+          print('No pages found in collection');
+        }
+      }
+
+      return sortedDocs;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting all pages: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /*---------------------------------------G E T   P A G E   S T R U C T U R E----------------------------------------*/
+  Future<Map<String, dynamic>> getPageStructure(String pageId) async {
+    try {
+      final pageDoc = await pagesCollection.doc(pageId).get();
+      if (!pageDoc.exists) {
+        return {'exists': false, 'message': 'Page does not exist'};
+      }
+
+      final data = pageDoc.data() as Map<String, dynamic>;
+      final result = <String, dynamic>{
+        'exists': true,
+        'id': pageDoc.id,
+        'fields': data.keys.toList(),
+      };
+
+      // Add sample data for each field
+      data.forEach((key, value) {
+        if (value is String) {
+          result['${key}_type'] = 'String';
+          result['${key}_sample'] =
+              value.length > 100 ? '${value.substring(0, 100)}...' : value;
+        } else if (value is List) {
+          result['${key}_type'] = 'List (${value.length} items)';
+          if (value.isNotEmpty) {
+            result['${key}_sample'] = value[0] is Map
+                ? (value[0] as Map).keys.toList()
+                : value[0].toString();
+          }
+        } else if (value is Map) {
+          result['${key}_type'] = 'Map';
+          result['${key}_keys'] = value.keys.toList();
+        } else {
+          result['${key}_type'] = value.runtimeType.toString();
+        }
+      });
+
+      return result;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting page structure: $e');
+      }
+      return {'error': e.toString()};
     }
   }
 

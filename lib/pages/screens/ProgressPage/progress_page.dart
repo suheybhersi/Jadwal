@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
+import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -236,42 +237,96 @@ class _SurahProgressCard extends StatelessWidget {
     final totalLines = surah['totalLines'];
     final double progress = completedLines / totalLines;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 8,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildSurahNumberBox(surah['surahNumber']),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  surah['surah'],
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildProgressIndicator(progress, context),
-              ],
+    return GestureDetector(
+      onTap: () async {
+        // Get surah number and create verse key for first verse
+        final surahNumber = surah['surahNumber'];
+        final verseKey = '$surahNumber:1';
+
+        // Get the FirestoreService from the parent widget
+        final firestoreService = FirestoreService(
+          auth: FirebaseAuth.instance,
+          uid: FirebaseAuth.instance.currentUser!.uid,
+        );
+
+        try {
+          // Show loading indicator
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          );
+
+          // Get the page number for the first verse of this surah
+          final pageNumber =
+              await firestoreService.getPageForVerseKey(verseKey);
+
+          // Close the loading dialog
+          Navigator.pop(context);
+
+          // Navigate to QuranViewer
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuranViewer(initialPage: pageNumber),
             ),
-          ),
-        ],
+          );
+        } catch (e) {
+          // Close the loading dialog if there was an error
+          Navigator.pop(context);
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error loading surah: $e')),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _buildSurahNumberBox(surah['surahNumber']),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    surah['surah'],
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildProgressIndicator(progress, context),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey,
+            ),
+          ],
+        ),
       ),
     );
   }

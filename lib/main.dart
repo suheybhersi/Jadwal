@@ -20,12 +20,33 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ConnectivityService()),
-        ChangeNotifierProvider(
-            create: (context) => FirestoreService(
-                auth: FirebaseAuth.instance,
-                uid: FirebaseAuth.instance.currentUser!.uid,
-                connectivityService:
-                    Provider.of<ConnectivityService>(context, listen: false))),
+        ChangeNotifierProxyProvider<ConnectivityService, FirestoreService>(
+          create: (context) => FirestoreService(
+            auth: FirebaseAuth.instance,
+            uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+            connectivityService:
+                Provider.of<ConnectivityService>(context, listen: false),
+          ),
+          update: (context, connectivityService, previous) {
+            final currentUser = FirebaseAuth.instance.currentUser;
+            if (currentUser == null) {
+              // Return a placeholder service if no user is logged in yet
+              return previous ??
+                  FirestoreService(
+                    auth: FirebaseAuth.instance,
+                    uid: '',
+                    connectivityService: connectivityService,
+                  );
+            }
+
+            // Update with current user info
+            return FirestoreService(
+              auth: FirebaseAuth.instance,
+              uid: currentUser.uid,
+              connectivityService: connectivityService,
+            );
+          },
+        ),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
       ],
       child: const MyApp(),
