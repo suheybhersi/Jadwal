@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 
 class UpcomingSection extends StatelessWidget {
   const UpcomingSection({
@@ -583,46 +586,136 @@ class UpcomingSection extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Container(
-                                          padding: EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFFE3EAFF),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Icon(
-                                            Iconsax.book_1,
-                                            color: Color(0xFF4979FB),
-                                            size: 18,
-                                          ),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                        Row(
                                           children: [
-                                            Text(
-                                              'Surah ${hifdh['surah'].split(' ')[0]}',
+                                            Container(
+                                              padding: EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: Color(0xFFE3EAFF),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                Iconsax.book_1,
+                                                color: Color(0xFF4979FB),
+                                                size: 18,
+                                              ),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Surah ${hifdh['surah'].split(' ')[0]}',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 12,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary
+                                                        .withOpacity(0.5),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            // Get the first verse key from hifdh
+                                            final verseKey = hifdh['hifdh']
+                                                .split('-')[0]
+                                                .trim();
+
+                                            try {
+                                              // Show loading indicator
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                              );
+
+                                              // Get the FirestoreService
+                                              final firestoreService =
+                                                  FirestoreService(
+                                                auth: FirebaseAuth.instance,
+                                                uid: FirebaseAuth
+                                                    .instance.currentUser!.uid,
+                                              );
+
+                                              // Get the page number for the verse
+                                              final pageNumber =
+                                                  await firestoreService
+                                                      .getPageForVerseKey(
+                                                          verseKey);
+
+                                              // Close the loading dialog
+                                              Navigator.pop(context);
+
+                                              // Navigate to QuranViewer
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      QuranViewer(
+                                                          initialPage:
+                                                              pageNumber,
+                                                          verseToHighlight:
+                                                              verseKey),
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              // Close the loading dialog if there was an error
+                                              Navigator.pop(context);
+
+                                              // Show error message
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Error loading verse: $e')),
+                                              );
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            backgroundColor: Color(0xFF4979FB),
+                                            elevation: 0,
+                                          ),
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              'Go',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w600,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                            Text(
-                                              'Verse ${hifdh['hifdh'].split('-')[0].split(':')[1]}',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .inversePrimary
-                                                    .withOpacity(0.5),
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -772,7 +865,7 @@ class UpcomingSection extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(height: 40),
-                              // Complete button
+
                               SizedBox(
                                 width: double.infinity,
                                 height: 56,

@@ -8,11 +8,13 @@ import 'dart:developer' as developer;
 class QuranViewer extends StatefulWidget {
   final int initialPage;
   final int totalPages;
+  final String verseToHighlight;
 
   const QuranViewer({
     super.key,
     required this.initialPage,
     this.totalPages = 604,
+    this.verseToHighlight = '',
   });
 
   @override
@@ -81,7 +83,7 @@ class _QuranViewerState extends State<QuranViewer> {
 
       return PageView.builder(
         controller: _pageController,
-        reverse: true, // Right to left direction
+        reverse: false, // Right to left direction
         onPageChanged: (index) {
           setState(() {
             _currentPage = widget.totalPages - index;
