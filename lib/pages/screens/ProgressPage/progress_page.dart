@@ -241,10 +241,14 @@ class _ProgressContentState extends State<ProgressContent> {
 
 // Extracted widget for Surah progress card
 class _SurahProgressCard extends StatelessWidget {
+  final FirestoreService _firestoreService = FirestoreService(
+    auth: FirebaseAuth.instance,
+    uid: FirebaseAuth.instance.currentUser!.uid,
+  );
   final Map<String, dynamic> surah;
   final Map<String, dynamic>? planData;
 
-  const _SurahProgressCard({
+  _SurahProgressCard({
     required this.surah,
     this.planData,
   });
@@ -370,23 +374,67 @@ class _SurahProgressCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    surah['surah'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.inversePrimary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        surah['surah'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                      ),
+                      StreamBuilder<QuerySnapshot>(
+                        stream: _firestoreService
+                            .getVerseJuz('${surah['surahNumber']}:1'),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            final juz = snapshot.data!.docs[0].data()
+                                as Map<String, dynamic>;
+                            return Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF4979FB),
+                                        Color(0xFF5C89FF)
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Juz ${juz['juz']}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   _buildProgressIndicator(progress, context),
                 ],
               ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey,
             ),
           ],
         ),

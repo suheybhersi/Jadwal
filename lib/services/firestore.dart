@@ -573,6 +573,10 @@ class FirestoreService extends ChangeNotifier {
     return plansCollection.snapshots();
   }
 
+  Stream<QuerySnapshot> getVerseJuz(String key) {
+    return versesCollection.where('key', isEqualTo: key).snapshots();
+  }
+
   Stream<DocumentSnapshot<Object?>> getRandomVerseStream() {
     // Get today's date as a string in the format YYYY-MM-DD
     final today = DateTime.now();
