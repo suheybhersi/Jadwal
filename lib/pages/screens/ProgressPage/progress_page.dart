@@ -35,6 +35,7 @@ class _ProgressContentState extends State<ProgressContent> {
   );
 
   List<Map<String, dynamic>>? _cachedSurahData;
+  Map<String, dynamic>? _planData;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +178,17 @@ class _ProgressContentState extends State<ProgressContent> {
 
         final surahData = _cachedSurahData ?? [];
 
-        return _buildSurahListItems(surahData);
+        return StreamBuilder<QuerySnapshot>(
+          stream: _firestoreService.getPlansStream(),
+          builder: (context, planSnapshot) {
+            if (planSnapshot.hasData && planSnapshot.data!.docs.isNotEmpty) {
+              _planData =
+                  planSnapshot.data!.docs[0].data() as Map<String, dynamic>;
+            }
+
+            return _buildSurahListItems(surahData);
+          },
+        );
       },
     );
   }
@@ -216,7 +227,10 @@ class _ProgressContentState extends State<ProgressContent> {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final surah = surahData[index];
-            return _SurahProgressCard(surah: surah);
+            return _SurahProgressCard(
+              surah: surah,
+              planData: _planData,
+            );
           },
           childCount: surahData.length,
         ),
@@ -228,8 +242,12 @@ class _ProgressContentState extends State<ProgressContent> {
 // Extracted widget for Surah progress card
 class _SurahProgressCard extends StatelessWidget {
   final Map<String, dynamic> surah;
+  final Map<String, dynamic>? planData;
 
-  const _SurahProgressCard({required this.surah});
+  const _SurahProgressCard({
+    required this.surah,
+    this.planData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -265,6 +283,44 @@ class _SurahProgressCard extends StatelessWidget {
           final pageNumber =
               await firestoreService.getPageForVerseKey(verseKey);
 
+          // Find the latest hifdh for this surah in plan data
+          String verseToHighlight = '';
+          String endVerseToHighlight = '';
+
+          // Extract the verse keys from hifdh data
+          verseToHighlight =
+              planData!['hifdhs'].last['hifdh'].split('-')[0].trim();
+          endVerseToHighlight =
+              planData!['hifdhs'].last['hifdh'].split('-')[1].trim();
+
+          String prevVerseKey = '';
+          try {
+            final parts = verseToHighlight.split(':');
+            if (parts.length == 2) {
+              int chapter = int.parse(parts[0]);
+              int verse = int.parse(parts[1]);
+              // If this isn't the first verse of the surah, then previous is same surah, verse-1
+              if (verse > 1) {
+                prevVerseKey = '$chapter:${verse - 1}';
+              } else {
+                // If it's the first verse, we need special handling
+                // For now we'll leave prevVerseKey empty which works for our case
+                // In a complete implementation, you'd need to handle surah boundaries
+              }
+            }
+          } catch (e) {
+            // If we can't parse, we'll just proceed without a previous verse key
+            print('Error determining previous verse: $e');
+          }
+
+          // Get the page number for the start verse
+          final startPageNumber =
+              await firestoreService.getPageForVerseKey(verseToHighlight);
+
+          // Get the page number for the end verse
+          final endPageNumber =
+              await firestoreService.getPageForVerseKey(endVerseToHighlight);
+
           // Close the loading dialog
           Navigator.pop(context);
 
@@ -274,10 +330,11 @@ class _SurahProgressCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => QuranViewer(
                 initialPage: pageNumber,
-                verseToHighlight: '',
-                pageToHighlight: '',
-                endVerseToHighlight: '',
-                prevVerseKey: '',
+                verseToHighlight: verseToHighlight,
+                pageToHighlight: startPageNumber.toString(),
+                endVerseToHighlight: endVerseToHighlight,
+                prevVerseKey: prevVerseKey,
+                endPageToHighlight: endPageNumber.toString(),
               ),
             ),
           );

@@ -203,125 +203,27 @@ class QuranPage extends StatelessWidget {
     RegExp numbersRegex = RegExp(r'[\u0660-\u0669\u06F0-\u06F9\d]+');
     final matches = numbersRegex.allMatches(text);
 
-    // Skip all highlighting logic if no highlighting was requested
-    // This ensures no random highlighting when accessed from ProgressPage
-    if (pageToHighlight.isEmpty && verseToHighlight.isEmpty) {
-      // Still need to process verse numbers with proper styling
-      if (matches.isEmpty) {
-        // No verse numbers in this text
-        return _StyledTextResult(
-          widget: Text(
-            text,
-            style: _getTextStyle(context, text, highlighted: false),
-            textAlign: TextAlign.justify,
-            textDirection: TextDirection.rtl,
-          ),
-          foundStartVerse: foundStartVerse,
-          foundEndVerse: foundEndVerse,
-          foundPrevVerse: foundPrevVerse,
-          pageToHighlight: pageToHighlight,
-          endPageToHighlight: endPageToHighlight,
-        );
-      } else {
-        // Has verse numbers that need styling
-        List<InlineSpan> spans = [];
-        int lastEnd = 0;
-
-        for (var match in matches) {
-          String matchText = text.substring(match.start, match.end);
-
-          // Add text before verse number
-          if (match.start > lastEnd) {
-            spans.add(TextSpan(
-              text: text.substring(lastEnd, match.start),
-              style: _getTextStyle(context, text, highlighted: false),
-            ));
-          }
-
-          // Add verse number with special styling
-          spans.add(TextSpan(
-            text: "﴿$matchText﴾",
-            style: GoogleFonts.scheherazadeNew(
-              fontSize: 24,
-              color: Theme.of(context).colorScheme.inversePrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ));
-
-          lastEnd = match.end;
-        }
-
-        // Add any remaining text after the last verse number
-        if (lastEnd < text.length) {
-          spans.add(TextSpan(
-            text: text.substring(lastEnd),
-            style: _getTextStyle(context, text, highlighted: false),
-          ));
-        }
-
-        return _StyledTextResult(
-          widget: RichText(
-            text: TextSpan(children: spans),
-            textAlign: TextAlign.justify,
-            textDirection: TextDirection.rtl,
-          ),
-          foundStartVerse: foundStartVerse,
-          foundEndVerse: foundEndVerse,
-          foundPrevVerse: foundPrevVerse,
-          pageToHighlight: pageToHighlight,
-          endPageToHighlight: endPageToHighlight,
-        );
-      }
-    }
-
-    // For debugging
-    developer.log(
-        'Current page: $currentPage, Start page: $startPage, End page: $endPage, '
-        'Found prev verse: $foundPrevVerse, '
-        'Found start verse: $foundStartVerse, '
-        'Found end verse: $foundEndVerse');
-
-    // Check if we're within the page range for highlighting
-    bool isInPageRange =
-        currentPage >= startPage && (endPage == 0 || currentPage <= endPage);
-
-    // If we're outside the page range, don't highlight anything
-    if (!isInPageRange) {
-      return _StyledTextResult(
-        widget: Text(
-          text,
-          style: _getTextStyle(context, text, highlighted: false),
-          textAlign: TextAlign.justify,
-          textDirection: TextDirection.rtl,
-        ),
-        foundStartVerse: foundStartVerse,
-        foundEndVerse: foundEndVerse,
-        foundPrevVerse: foundPrevVerse,
-        pageToHighlight: pageToHighlight,
-        endPageToHighlight: endPageToHighlight,
-      );
-    }
-
-    // CRITICAL CHANGE: On pages after the start page, we should consider the start verse as already found
-    // This ensures highlighting continues across pages
-    if (currentPage > startPage) {
-      foundStartVerse = true;
-      foundPrevVerse =
-          true; // Also consider prev verse found on subsequent pages
-    }
-
-    // If we're on or after the start page and we haven't found the end verse yet,
-    // we should be in highlighting mode
-    bool isInHighlightRange =
-        (currentPage >= startPage && currentPage <= endPage) && !foundEndVerse;
-
-    // If no verse numbers in this line
+    // If no verse numbers in this text
     if (matches.isEmpty) {
-      // Highlight all text if we're in highlighting range and either:
-      // 1. We've found the start verse
-      // 2. OR we've found the prev verse and not the start verse yet (key for highlighting start verse content)
-      bool shouldHighlight = isInHighlightRange &&
-          (foundStartVerse || (foundPrevVerse && !foundStartVerse));
+      // Check if we're in highlight range
+      bool isInPageRange =
+          currentPage >= startPage && (endPage == 0 || currentPage <= endPage);
+
+      // Determine if we should highlight this text without verse numbers
+      bool shouldHighlight = false;
+
+      // If we're on or after the start page and within end page range
+      if (isInPageRange) {
+        // On the start page, highlight if we've found the start verse or prev verse
+        if (currentPage == startPage) {
+          shouldHighlight = (foundStartVerse && !foundEndVerse) ||
+              (foundPrevVerse && !foundStartVerse);
+        }
+        // On pages after start page but before or on end page, highlight if we haven't found end verse
+        else if (currentPage > startPage && !foundEndVerse) {
+          shouldHighlight = true;
+        }
+      }
 
       return _StyledTextResult(
         widget: Text(
@@ -338,7 +240,31 @@ class QuranPage extends StatelessWidget {
       );
     }
 
-    // Build RichText with multiple spans for precise highlighting
+    // For debugging
+    developer.log(
+        'Current page: $currentPage, Start page: $startPage, End page: $endPage, '
+        'Found prev verse: $foundPrevVerse, '
+        'Found start verse: $foundStartVerse, '
+        'Found end verse: $foundEndVerse');
+
+    // Check if we're within the page range for highlighting
+    bool isInPageRange =
+        currentPage >= startPage && (endPage == 0 || currentPage <= endPage);
+
+    // CRITICAL CHANGE: On pages after the start page, we should consider the start verse as already found
+    // This ensures highlighting continues across pages
+    if (currentPage > startPage) {
+      foundStartVerse = true;
+      foundPrevVerse =
+          true; // Also consider prev verse found on subsequent pages
+    }
+
+    // If we're on or after the start page and we haven't found the end verse yet,
+    // we should be in highlighting mode
+    bool isInHighlightRange =
+        (currentPage >= startPage && currentPage <= endPage) && !foundEndVerse;
+
+    // Build RichText with multiple spans for verse styling and highlighting
     List<InlineSpan> spans = [];
     int lastEnd = 0;
     bool localFoundStartVerse = foundStartVerse;
