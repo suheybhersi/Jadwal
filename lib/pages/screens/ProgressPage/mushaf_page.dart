@@ -2,33 +2,33 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
-class ProgressPage extends StatelessWidget {
-  const ProgressPage({super.key});
+class MushafPage extends StatelessWidget {
+  const MushafPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       resizeToAvoidBottomInset: true,
-      body: ProgressContent(),
+      body: MushafContent(),
     );
   }
 }
 
-class ProgressContent extends StatefulWidget {
-  const ProgressContent({super.key});
+class MushafContent extends StatefulWidget {
+  const MushafContent({super.key});
 
   @override
-  State<ProgressContent> createState() => _ProgressContentState();
+  State<MushafContent> createState() => _MushafContentState();
 }
 
-class _ProgressContentState extends State<ProgressContent> {
+class _MushafContentState extends State<MushafContent> {
   final FirestoreService _firestoreService = FirestoreService(
     auth: FirebaseAuth.instance,
     uid: FirebaseAuth.instance.currentUser!.uid,
@@ -57,7 +57,7 @@ class _ProgressContentState extends State<ProgressContent> {
     );
   }
 
-  // Title bar with settings button
+  // Title bar with quiz button
   Widget _buildTitleBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(
@@ -70,7 +70,7 @@ class _ProgressContentState extends State<ProgressContent> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Progress',
+            'Quran',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
               fontSize: 22,
@@ -82,11 +82,11 @@ class _ProgressContentState extends State<ProgressContent> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
+                  builder: (context) => const QuizCreationPage(),
                 ),
               );
             },
-            icon: const Icon(Iconsax.setting_2),
+            icon: const Icon(Iconsax.message_question),
           ),
         ],
       ),
@@ -123,7 +123,7 @@ class _ProgressContentState extends State<ProgressContent> {
                 const Icon(Iconsax.book_1, color: Colors.white, size: 24),
                 const SizedBox(width: 10),
                 Text(
-                  'Track Your Progress',
+                  'Quran',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -134,7 +134,7 @@ class _ProgressContentState extends State<ProgressContent> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Keep track of how much you\'ve memorised for each surah',
+              'Read and memorise the Quran',
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.9),

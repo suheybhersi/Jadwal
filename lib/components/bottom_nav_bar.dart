@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jadwal/pages/screens/HomePage/home_page.dart';
 import 'package:jadwal/pages/screens/PlanPage/plan_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/profile_page.dart';
-import 'package:jadwal/pages/screens/ProgressPage/progress_page.dart';
+import 'package:jadwal/pages/screens/ProgressPage/mushaf_page.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/components/network_status_banner.dart';
 
@@ -18,8 +18,8 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
 
   final List<Widget> _screens = [
     HomePage(),
+    MushafPage(),
     PlanPage(),
-    ProgressPage(),
     ProfilePage(),
   ];
 
@@ -89,27 +89,25 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                   ),
                   NavigationDestination(
                     icon: Icon(
-                      _selectedIndex == 1
-                          ? Iconsax.clipboard_text5
-                          : Iconsax.clipboard_text,
+                      Iconsax.book,
                       color: _selectedIndex == 1
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),
                       size: 24,
                     ),
-                    label: 'Plan',
+                    label: 'Quran',
                   ),
                   NavigationDestination(
                     icon: Icon(
                       _selectedIndex == 2
-                          ? Iconsax.status_up5
-                          : Iconsax.status_up,
+                          ? Iconsax.clipboard_text5
+                          : Iconsax.clipboard_text,
                       color: _selectedIndex == 2
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),
                       size: 24,
                     ),
-                    label: 'Progress',
+                    label: 'Plan',
                   ),
                   NavigationDestination(
                     icon: Icon(
