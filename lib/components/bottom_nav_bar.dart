@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jadwal/pages/screens/HomePage/home_page.dart';
 import 'package:jadwal/pages/screens/PlanPage/plan_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/profile_page.dart';
-import 'package:jadwal/pages/screens/ProgressPage/mushaf_page.dart';
+import 'package:jadwal/pages/screens/MushafPage/mushaf_page.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/components/network_status_banner.dart';
 

@@ -47,7 +47,6 @@ class _MushafContentState extends State<MushafContent> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                _buildHeaderBanner(),
                 _buildSurahList(),
               ],
             ),
@@ -89,59 +88,6 @@ class _MushafContentState extends State<MushafContent> {
             icon: const Icon(Iconsax.message_question),
           ),
         ],
-      ),
-    );
-  }
-
-  // Header with gradient background
-  SliverToBoxAdapter _buildHeaderBanner() {
-    return SliverToBoxAdapter(
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4979FB).withOpacity(0.2),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Iconsax.book_1, color: Colors.white, size: 24),
-                const SizedBox(width: 10),
-                Text(
-                  'Quran',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Read and memorise the Quran',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

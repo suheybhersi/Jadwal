@@ -116,7 +116,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                           width: 4,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade700,
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -143,17 +143,23 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Colors.blue.shade500,
-                            Colors.blue.shade700,
-                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.8),
+                            Theme.of(context).colorScheme.primary,
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blue.shade200.withOpacity(0.5),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.5),
                             blurRadius: 4,
                           ),
                         ],
@@ -290,7 +296,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                     child: ElevatedButton(
                       onPressed: () => setState(() => widget.onStart(0)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade700,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(

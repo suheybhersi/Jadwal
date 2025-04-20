@@ -113,12 +113,14 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
 
                           return GestureDetector(
                             onTap: () {
-                              setState(() {
-                                selectedSurahIndex = index;
-                                selectedVerseNumber = null; // Reset verse
-                                // Scroll to the selected Surah
-                                _scrollToCenter(surahScrollController, index);
-                              });
+                              // Update state directly without triggering a full refresh
+                              // We only need to update the UI to show selection state
+                              selectedSurahIndex = index;
+                              selectedVerseNumber = null; // Reset verse
+                              // Scroll to the selected Surah
+                              _scrollToCenter(surahScrollController, index);
+                              // Force update only this widget
+                              setState(() {});
                             },
                             child: Container(
                               margin: const EdgeInsets.only(
@@ -196,16 +198,16 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
 
                           return GestureDetector(
                             onTap: () {
-                              setState(() {
-                                selectedVerseNumber = verseNumber;
-                                widget.onVerseSelected(
-                                  surahs[selectedSurahIndex]['surah'],
-                                  verseNumber,
-                                );
-                                // Scroll to the selected Verse
-                                _scrollToCenter(
-                                    verseScrollController, verseNumber - 1);
-                              });
+                              // Update the local state without full setState refresh
+                              selectedVerseNumber = verseNumber;
+                              // Scroll to the selected Verse
+                              _scrollToCenter(
+                                  verseScrollController, verseNumber - 1);
+                              // Call the callback to update parent
+                              widget.onVerseSelected(
+                                surahs[selectedSurahIndex]['surah'],
+                                verseNumber,
+                              );
                             },
                             child: Container(
                               margin: const EdgeInsets.only(

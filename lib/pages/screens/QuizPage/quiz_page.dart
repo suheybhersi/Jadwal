@@ -17,6 +17,12 @@ class QuizPage extends StatefulWidget {
   final String id;
   final Function(String, String, String) updateReview;
 
+  // Question type flags
+  final bool includeFillBlank;
+  final bool includeDragDrop;
+  final bool includeWhatNext;
+  final bool includeVersePairing;
+
   const QuizPage({
     super.key,
     required this.versesList,
@@ -24,6 +30,10 @@ class QuizPage extends StatefulWidget {
     required this.review,
     required this.id,
     required this.updateReview,
+    this.includeFillBlank = true,
+    this.includeDragDrop = true,
+    this.includeWhatNext = true,
+    this.includeVersePairing = true,
   });
 
   @override
@@ -136,133 +146,256 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     List<Map<String, dynamic>> whatComesNextQuestions = [];
     List<Map<String, dynamic>> versePairingQuestions = [];
 
-    // Determine target question count based on verse count
+    // Get list of enabled question types
+    List<String> enabledTypes = [];
+    if (widget.includeFillBlank) enabledTypes.add('fill_blank');
+    if (widget.includeDragDrop) enabledTypes.add('drag_drop');
+    if (widget.includeWhatNext) enabledTypes.add('what_next');
+    if (widget.includeVersePairing) enabledTypes.add('verse_pairing');
+
+    // If no types were selected, return empty list
+    if (enabledTypes.isEmpty) {
+      return [];
+    }
+
+    // Determine target question count dynamically based on verse count
     int targetQuestionCount;
     final verseCount = widget.versesList.length;
 
-    if (verseCount <= 3) {
-      targetQuestionCount = 5;
-    } else if (verseCount <= 7) {
-      targetQuestionCount = 10;
-    } else if (verseCount <= 12) {
-      targetQuestionCount = 15;
-    } else if (verseCount <= 20) {
-      targetQuestionCount = 20;
-    } else {
-      targetQuestionCount = 30;
+    // Scale question count with number of verses (approximately 1.3-1.5 questions per verse)
+    // but ensure it's a multiple of 5 and within bounds
+    double scaleFactor = 1.2; // Questions per verse
+    int rawCount = (verseCount * scaleFactor).round();
+
+    // Round to nearest multiple of 5
+    targetQuestionCount = ((rawCount + 2) ~/ 5) * 5;
+
+    // Set minimum and maximum bounds
+    targetQuestionCount = max(5, min(targetQuestionCount, 50));
+
+    // Ensure we have at least the number of enabled types
+    targetQuestionCount = max(targetQuestionCount, enabledTypes.length);
+
+    // Calculate questions per type
+    int questionsPerType = (targetQuestionCount / enabledTypes.length).ceil();
+
+    // Create a randomized list of all verse indices
+    final allVerseIndices = List.generate(verseCount, (i) => i)..shuffle();
+
+    // Split the verses evenly among enabled types
+    Map<String, List<int>> verseIndicesPerType = {};
+
+    // First, calculate how many verses each type needs
+    int versesPerType = (allVerseIndices.length / enabledTypes.length).ceil();
+
+    // Distribute verses to each enabled type
+    for (int i = 0; i < enabledTypes.length; i++) {
+      int start = i * versesPerType;
+      int end = min((i + 1) * versesPerType, allVerseIndices.length);
+
+      // Handle edge case where we might run out of indices
+      if (start >= allVerseIndices.length) {
+        // Reuse some indices from the beginning
+        start = 0;
+        end = min(versesPerType, allVerseIndices.length);
+      }
+
+      verseIndicesPerType[enabledTypes[i]] =
+          allVerseIndices.sublist(start, end);
     }
 
-    // Create and distribute verse indices for diverse question types
-    final verseIndices = List.generate(verseCount, (i) => i)..shuffle();
-    final totalTypes = 4; // Fill blank, drag-drop, what-next, verse-pairing
-    final baseIndicesPerType = verseIndices.length ~/ totalTypes;
+    // Generate questions for each enabled type
+    if (widget.includeFillBlank) {
+      List<int> fillBlankVerses = verseIndicesPerType['fill_blank'] ?? [];
+      // For fill-blank, limit the max number of questions
+      int count = min(questionsPerType, fillBlankVerses.length);
 
-    // Distribute indices among question types
-    final typeIndices = List.generate(totalTypes, (i) {
-      final start = i * baseIndicesPerType;
-      final end = (i == totalTypes - 1)
-          ? verseIndices.length
-          : (i + 1) * baseIndicesPerType;
-      return verseIndices.sublist(start, end);
-    });
+      // Use the first 'count' verses for fill-blank questions
+      for (int i = 0; i < count; i++) {
+        if (!mounted || !_isActive) break;
+        if (i >= fillBlankVerses.length) break;
 
-    // Handle fill-in-blank questions (limit to 5)
-    final fillInBlankLimit = 5;
-    var fillBlankIndices = typeIndices[0];
+        int verseIndex = fillBlankVerses[i];
+        String verse = widget.versesList[verseIndex];
+        List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-    // Ensure we have enough indices for fill-in-blank
-    if (fillBlankIndices.length < fillInBlankLimit) {
-      for (int i = 1;
-          i < typeIndices.length && fillBlankIndices.length < fillInBlankLimit;
-          i++) {
-        if (typeIndices[i].isNotEmpty) {
-          fillBlankIndices.add(typeIndices[i].removeAt(0));
+        if (words.length > 1 && !words.contains('')) {
+          var question =
+              await _generateFillInTheBlankQuestion(verse, verseIndex);
+          fillInTheBlankQuestions.add(question);
         }
       }
     }
-    // Get evenly distributed indices for fill-in-blank
-    fillBlankIndices = List.generate(fillBlankIndices.length, (i) => i)
-        .where((i) =>
-            i %
-                (fillBlankIndices.length /
-                        min(fillInBlankLimit, fillBlankIndices.length))
-                    .ceil() ==
-            0)
-        .map((i) => fillBlankIndices[i])
-        .take(min(fillInBlankLimit, fillBlankIndices.length))
-        .toList();
 
-    // Generate all question types
-    await _generateAllQuestionTypes(
-      fillBlankIndices: fillBlankIndices,
-      typeIndices: typeIndices,
-      fillInTheBlankQuestions: fillInTheBlankQuestions,
-      dragAndDropQuestions: dragAndDropQuestions,
-      whatComesNextQuestions: whatComesNextQuestions,
-      versePairingQuestions: versePairingQuestions,
-    );
+    if (widget.includeDragDrop) {
+      List<int> dragDropVerses = verseIndicesPerType['drag_drop'] ?? [];
+      int count = min(questionsPerType, dragDropVerses.length);
 
-    // Add questions based on target distribution
-    generatedQuestions = _assembleQuestionSet(
-      targetQuestionCount: targetQuestionCount,
-      fillInTheBlankQuestions: fillInTheBlankQuestions,
-      dragAndDropQuestions: dragAndDropQuestions,
-      whatComesNextQuestions: whatComesNextQuestions,
-      versePairingQuestions: versePairingQuestions,
-      fillBlankIndices: fillBlankIndices,
-    );
+      for (int i = 0; i < count; i++) {
+        if (!mounted || !_isActive) break;
+        if (i >= dragDropVerses.length) break;
 
-    return generatedQuestions;
-  }
+        int verseIndex = dragDropVerses[i];
+        String verse = widget.versesList[verseIndex];
+        List<String> words = splitVerseManuallyWithSpecialChars(verse);
 
-  // Generate all question types from their respective indices
-  Future<void> _generateAllQuestionTypes({
-    required List<int> fillBlankIndices,
-    required List<List<int>> typeIndices,
-    required List<Map<String, dynamic>> fillInTheBlankQuestions,
-    required List<Map<String, dynamic>> dragAndDropQuestions,
-    required List<Map<String, dynamic>> whatComesNextQuestions,
-    required List<Map<String, dynamic>> versePairingQuestions,
-  }) async {
-    // CHANGE ORDER: Start with drag & drop questions first due to length restrictions
-    // 1. Generate Drag & Drop questions FIRST
-    for (int verseIndex in typeIndices[1]) {
-      if (!mounted || !_isActive) break;
-
-      String verse = widget.versesList[verseIndex];
-      List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-      if (!words.contains('')) {
-        dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
+        if (!words.contains('')) {
+          dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
+        }
       }
     }
 
-    // 2. Generate Fill-in-Blank questions
-    for (int i = 0; i < fillBlankIndices.length; i++) {
-      if (!mounted || !_isActive) break;
+    if (widget.includeWhatNext) {
+      List<int> whatNextVerses = verseIndicesPerType['what_next'] ?? [];
+      int count = min(questionsPerType, whatNextVerses.length);
 
-      int verseIndex = fillBlankIndices[i];
-      String verse = widget.versesList[verseIndex];
-      List<String> words = splitVerseManuallyWithSpecialChars(verse);
+      for (int i = 0; i < count; i++) {
+        if (!mounted || !_isActive) break;
+        if (i >= whatNextVerses.length) break;
 
-      if (words.length > 1 && !words.contains('')) {
-        fillInTheBlankQuestions
-            .add(await _generateFillInTheBlankQuestion(verse, verseIndex));
+        int verseIndex = whatNextVerses[i];
+        // Only create question if there's a next verse
+        if (verseIndex < widget.versesList.length - 1) {
+          whatComesNextQuestions
+              .add(_generateWhatComesNextQuestion(verseIndex));
+        } else if (i < whatNextVerses.length - 1) {
+          // Try the next verse if this one doesn't work
+          i++;
+          verseIndex = whatNextVerses[i];
+          if (verseIndex < widget.versesList.length - 1) {
+            whatComesNextQuestions
+                .add(_generateWhatComesNextQuestion(verseIndex));
+          }
+        }
       }
     }
 
-    // 3. Generate What Comes Next questions
-    for (int verseIndex in typeIndices[2]) {
-      if (!mounted || !_isActive) break;
-      if (verseIndex < widget.versesList.length - 1) {
+    if (widget.includeVersePairing) {
+      List<int> pairingVerses = verseIndicesPerType['verse_pairing'] ?? [];
+      int count = min(questionsPerType, pairingVerses.length);
+
+      for (int i = 0; i < count; i++) {
+        if (!mounted || !_isActive) break;
+        if (i >= pairingVerses.length) break;
+
+        int verseIndex = pairingVerses[i];
+        // Only create question if there's a verse before and after
+        if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
+          versePairingQuestions.add(_generateVersePairingQuestion(verseIndex));
+        } else if (i < pairingVerses.length - 1) {
+          // Try the next verse if this one doesn't work
+          i++;
+          verseIndex = pairingVerses[i];
+          if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
+            versePairingQuestions
+                .add(_generateVersePairingQuestion(verseIndex));
+          }
+        }
+      }
+    }
+
+    // If we have fewer questions than expected for some type, try to use more verses
+    if (widget.includeFillBlank &&
+        fillInTheBlankQuestions.length < questionsPerType) {
+      // Find unused verses
+      List<int> usedVerses = fillInTheBlankQuestions.map((q) {
+        return widget.versesList.indexOf(q['verseWords']?.first ?? '');
+      }).toList();
+
+      List<int> unusedVerses =
+          allVerseIndices.where((idx) => !usedVerses.contains(idx)).toList();
+      unusedVerses.shuffle();
+
+      for (int i = 0;
+          i < unusedVerses.length &&
+              fillInTheBlankQuestions.length < questionsPerType;
+          i++) {
+        int verseIndex = unusedVerses[i];
+        String verse = widget.versesList[verseIndex];
+        List<String> words = splitVerseManuallyWithSpecialChars(verse);
+
+        if (words.length > 1 && !words.contains('')) {
+          var question =
+              await _generateFillInTheBlankQuestion(verse, verseIndex);
+          fillInTheBlankQuestions.add(question);
+        }
+      }
+    }
+
+    if (widget.includeDragDrop &&
+        dragAndDropQuestions.length < questionsPerType) {
+      // Find unused verses for drag and drop
+      List<int> usedVerses = [];
+      for (var q in dragAndDropQuestions) {
+        String firstWord = q['firstWord'];
+        for (int i = 0; i < widget.versesList.length; i++) {
+          if (widget.versesList[i].startsWith(firstWord)) {
+            usedVerses.add(i);
+            break;
+          }
+        }
+      }
+
+      List<int> unusedVerses =
+          allVerseIndices.where((idx) => !usedVerses.contains(idx)).toList();
+      unusedVerses.shuffle();
+
+      for (int i = 0;
+          i < unusedVerses.length &&
+              dragAndDropQuestions.length < questionsPerType;
+          i++) {
+        int verseIndex = unusedVerses[i];
+        String verse = widget.versesList[verseIndex];
+        List<String> words = splitVerseManuallyWithSpecialChars(verse);
+
+        if (!words.contains('')) {
+          dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
+        }
+      }
+    }
+
+    if (widget.includeWhatNext &&
+        whatComesNextQuestions.length < questionsPerType) {
+      // Find unused verses for what comes next
+      List<int> usedVerses = whatComesNextQuestions.map((q) {
+        return widget.versesList.indexOf(q['verse']);
+      }).toList();
+
+      List<int> unusedVerses = allVerseIndices
+          .where((idx) =>
+              !usedVerses.contains(idx) && idx < widget.versesList.length - 1)
+          .toList();
+      unusedVerses.shuffle();
+
+      for (int i = 0;
+          i < unusedVerses.length &&
+              whatComesNextQuestions.length < questionsPerType;
+          i++) {
+        int verseIndex = unusedVerses[i];
         whatComesNextQuestions.add(_generateWhatComesNextQuestion(verseIndex));
       }
     }
 
-    // 4. Generate Verse Pairing questions
-    for (int verseIndex in typeIndices[3]) {
-      if (!mounted || !_isActive) break;
-      if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
+    if (widget.includeVersePairing &&
+        versePairingQuestions.length < questionsPerType) {
+      // Find unused verses for verse pairing
+      List<int> usedVerses = versePairingQuestions.map((q) {
+        return widget.versesList.indexOf(q['currentVerse']);
+      }).toList();
+
+      List<int> unusedVerses = allVerseIndices
+          .where((idx) =>
+              !usedVerses.contains(idx) &&
+              idx > 0 &&
+              idx < widget.versesList.length - 1)
+          .toList();
+      unusedVerses.shuffle();
+
+      for (int i = 0;
+          i < unusedVerses.length &&
+              versePairingQuestions.length < questionsPerType;
+          i++) {
+        int verseIndex = unusedVerses[i];
         versePairingQuestions.add(_generateVersePairingQuestion(verseIndex));
       }
     }
@@ -272,354 +405,77 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     dragAndDropQuestions.shuffle();
     whatComesNextQuestions.shuffle();
     versePairingQuestions.shuffle();
-  }
 
-  // Assemble the final question set with balanced distribution
-  List<Map<String, dynamic>> _assembleQuestionSet({
-    required int targetQuestionCount,
-    required List<Map<String, dynamic>> fillInTheBlankQuestions,
-    required List<Map<String, dynamic>> dragAndDropQuestions,
-    required List<Map<String, dynamic>> whatComesNextQuestions,
-    required List<Map<String, dynamic>> versePairingQuestions,
-    required List<int> fillBlankIndices,
-  }) {
-    // First, collect all questions by type
-    List<Map<String, dynamic>> generatedQuestions = [];
-
-    // IMPROVED BALANCING: Create a more even distribution
-    // Target a quarter of questions for each type, with minimum 0 and maximum 40% of total
-    int perTypeTarget = (targetQuestionCount / 4).ceil();
-    int maxPerType = (targetQuestionCount * 0.4).ceil(); // Max 40% per type
-
-    // Calculate how many questions we want of each type
-    int fillBlankTarget =
-        min(min(perTypeTarget, fillInTheBlankQuestions.length), maxPerType);
-    int dragDropTarget =
-        min(min(perTypeTarget, dragAndDropQuestions.length), maxPerType);
-    int whatNextTarget =
-        min(min(perTypeTarget, whatComesNextQuestions.length), maxPerType);
-    int verseMatchTarget =
-        min(min(perTypeTarget, versePairingQuestions.length), maxPerType);
-
-    // Take the desired number from each type
-    List<Map<String, dynamic>> fillBlankList =
-        fillInTheBlankQuestions.take(fillBlankTarget).toList();
-    List<Map<String, dynamic>> dragDropList =
-        dragAndDropQuestions.take(dragDropTarget).toList();
-    List<Map<String, dynamic>> whatNextList =
-        whatComesNextQuestions.take(whatNextTarget).toList();
-    List<Map<String, dynamic>> pairingList =
-        versePairingQuestions.take(verseMatchTarget).toList();
-    // Create a list of question type groups to alternate between
-    List<List<Map<String, dynamic>>> questionGroups = [
-      fillBlankList,
-      dragDropList,
-      whatNextList,
-      pairingList,
-    ];
-
-    // Remove any empty groups
-    questionGroups.removeWhere((group) => group.isEmpty);
-
-    // Arrange questions by alternating types
-    // This ensures we don't get clusters of the same type
-    String? lastType;
-    while (generatedQuestions.length < targetQuestionCount &&
-        questionGroups.any((g) => g.isNotEmpty)) {
-      // Try to find a group with a different type than the last one
-      List<List<Map<String, dynamic>>>? availableGroups;
-
-      if (lastType != null) {
-        // Look for non-empty groups with a different type
-        availableGroups = questionGroups
-            .where(
-                (group) => group.isNotEmpty && group.first['type'] != lastType)
-            .toList();
-
-        // If all remaining groups are the same type, just use what we have
-        if (availableGroups.isEmpty) {
-          availableGroups =
-              questionGroups.where((group) => group.isNotEmpty).toList();
-        }
-      } else {
-        // For the first question, use any non-empty group
-        availableGroups =
-            questionGroups.where((group) => group.isNotEmpty).toList();
-      }
-
-      // Break if no groups are available
-      if (availableGroups.isEmpty) break;
-
-      // Pick a random group from available ones
-      final randomIndex = Random().nextInt(availableGroups.length);
-      final selectedGroup = availableGroups[randomIndex];
-
-      // Add a question from this group
-      if (selectedGroup.isNotEmpty) {
-        final question = selectedGroup.removeAt(0);
-        generatedQuestions.add(question);
-        lastType = question['type'];
-      }
-
-      // Update our groups list by removing empty ones
-      questionGroups.removeWhere((group) => group.isEmpty);
+    // Make sure we have the correct number per type
+    if (widget.includeFillBlank &&
+        fillInTheBlankQuestions.length > questionsPerType) {
+      fillInTheBlankQuestions =
+          fillInTheBlankQuestions.sublist(0, questionsPerType);
+    }
+    if (widget.includeDragDrop &&
+        dragAndDropQuestions.length > questionsPerType) {
+      dragAndDropQuestions = dragAndDropQuestions.sublist(0, questionsPerType);
+    }
+    if (widget.includeWhatNext &&
+        whatComesNextQuestions.length > questionsPerType) {
+      whatComesNextQuestions =
+          whatComesNextQuestions.sublist(0, questionsPerType);
+    }
+    if (widget.includeVersePairing &&
+        versePairingQuestions.length > questionsPerType) {
+      versePairingQuestions =
+          versePairingQuestions.sublist(0, questionsPerType);
     }
 
-    // If we still don't have enough questions, generate additional ones
-    if (generatedQuestions.length < targetQuestionCount) {
-      List<Map<String, dynamic>> additionalQuestions = [];
-      _generateAdditionalQuestions(
-        generatedQuestions: additionalQuestions,
-        targetQuestionCount: targetQuestionCount - generatedQuestions.length,
-        fillBlankIndices: fillBlankIndices,
-      );
-
-      // Add additional questions with alternating types
-      for (var question in additionalQuestions) {
-        if (generatedQuestions.length >= targetQuestionCount) break;
-
-        // Only add if different from the last type, or if we have no choice
-        if (lastType == null ||
-            question['type'] != lastType ||
-            additionalQuestions.length == 1) {
-          generatedQuestions.add(question);
-          lastType = question['type'];
-        }
-      }
+    // Combine questions from all enabled types
+    if (widget.includeFillBlank) {
+      generatedQuestions.addAll(fillInTheBlankQuestions);
+    }
+    if (widget.includeDragDrop) {
+      generatedQuestions.addAll(dragAndDropQuestions);
+    }
+    if (widget.includeWhatNext) {
+      generatedQuestions.addAll(whatComesNextQuestions);
+    }
+    if (widget.includeVersePairing) {
+      generatedQuestions.addAll(versePairingQuestions);
     }
 
-    // Ensure we have multiples of 5 for question count
-    int desiredCount = (targetQuestionCount ~/ 5) * 5;
-    if (generatedQuestions.length > desiredCount) {
-      // Trim questions if we have too many, but maintain type alternation
-      generatedQuestions = generatedQuestions.take(desiredCount).toList();
-    }
+    // Shuffle for variety but maintain equal distribution
+    generatedQuestions.shuffle();
 
-    // If we're still under target, add more questions to reach exact count
-    if (generatedQuestions.length < desiredCount &&
-        generatedQuestions.isNotEmpty) {
-      // Calculate how many more questions we need
-      int shortfall = desiredCount - generatedQuestions.length;
-
-      // Track which verses have been used for which question types
-      Map<int, Set<String>> usedVerseQuestionTypes = {};
-
-      // Map existing questions to track which verses were used for which types
-      for (var question in generatedQuestions) {
-        int verseIndex = -1;
-
-        // Extract verse index based on question type
-        if (question['type'] == 'what_next' && question.containsKey('verse')) {
-          // For what-comes-next, extract from the verse data
-          String verse = question['verse'];
-          verseIndex = widget.versesList.indexOf(verse);
-        } else if (question['type'] == 'verse_pairing' &&
-            question.containsKey('currentVerse')) {
-          // For verse pairing, extract from currentVerse
-          String verse = question['currentVerse'];
-          verseIndex = widget.versesList.indexOf(verse);
-        } else if (question['type'] == 'drag_drop' &&
-            question.containsKey('correctOrder')) {
-          // For drag & drop, reconstruct verse and find index
-          String firstWord = question['firstWord'];
-          List<String> fullWords = [firstWord, ...question['correctOrder']];
-          String verse = fullWords.join(' ');
-          verseIndex = widget.versesList.indexOf(verse);
-
-          // If exact match fails, try containment search
-          if (verseIndex == -1) {
-            for (int i = 0; i < widget.versesList.length; i++) {
-              if (widget.versesList[i].contains(firstWord)) {
-                verseIndex = i;
-                break;
-              }
-            }
-          }
-        } else if (question['type'] == 'fill_blank' &&
-            question.containsKey('verseWords')) {
-          // We won't generate more fill_blank, but track them to avoid verse reuse
-          // This is approximate since we can't easily recover the full verse
-          // Just mark all verses as used for this type to be safe
-          continue;
+    // Ensure we have multiples of 5 for question count if we have enough questions
+    if (generatedQuestions.length >= 5) {
+      int desiredCount = (generatedQuestions.length ~/ 5) * 5;
+      if (generatedQuestions.length > desiredCount) {
+        // When trimming, make sure we maintain equal distribution
+        Map<String, int> typeCounts = {};
+        for (var question in generatedQuestions) {
+          typeCounts[question['type']] =
+              (typeCounts[question['type']] ?? 0) + 1;
         }
 
-        // Track this verse and question type combination
-        if (verseIndex >= 0) {
-          usedVerseQuestionTypes[verseIndex] ??= {};
-          usedVerseQuestionTypes[verseIndex]!.add(question['type']);
-        }
-      }
+        // Find types with more questions to remove from
+        while (generatedQuestions.length > desiredCount) {
+          String typeToRemove = typeCounts.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key;
 
-      // Define allowed padding question types (excluding fill_blank)
-      List<String> paddingTypes = ['drag_drop', 'what_next', 'verse_pairing'];
-
-      // Calculate how many questions of each type to generate
-      int baseCount = shortfall ~/ paddingTypes.length;
-      List<int> typeCounts = List.filled(paddingTypes.length, baseCount);
-
-      // Distribute any remainder questions
-      int remainder = shortfall - (baseCount * paddingTypes.length);
-      for (int i = 0; i < remainder; i++) {
-        typeCounts[i]++;
-      }
-
-      // Get all possible verse indices
-      List<int> allVerseIndices =
-          List.generate(widget.versesList.length, (i) => i);
-
-      // Add padding questions of each type
-      List<Map<String, dynamic>> paddingQuestions = [];
-
-      for (int typeIndex = 0; typeIndex < paddingTypes.length; typeIndex++) {
-        String questionType = paddingTypes[typeIndex];
-        int targetCount = typeCounts[typeIndex];
-
-        // Handle each question type
-        if (questionType == 'drag_drop') {
-          // Find verses that haven't been used for drag_drop
-          List<int> candidateIndices = allVerseIndices
-              .where((i) =>
-                  !usedVerseQuestionTypes.containsKey(i) ||
-                  !usedVerseQuestionTypes[i]!.contains('drag_drop'))
-              .toList()
-            ..shuffle();
-
-          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
-            int verseIndex = candidateIndices[i];
-            String verse = widget.versesList[verseIndex];
-            List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-            if (!words.contains('')) {
-              paddingQuestions.add(_generateDragAndDropQuestion(verse));
-
-              // Mark as used
-              usedVerseQuestionTypes[verseIndex] ??= {};
-              usedVerseQuestionTypes[verseIndex]!.add('drag_drop');
-            }
-          }
-        } else if (questionType == 'what_next') {
-          // Find verses that haven't been used for what_next
-          List<int> candidateIndices = allVerseIndices
-              .where((i) =>
-                  i < widget.versesList.length - 1 &&
-                  (!usedVerseQuestionTypes.containsKey(i) ||
-                      !usedVerseQuestionTypes[i]!.contains('what_next')))
-              .toList()
-            ..shuffle();
-
-          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
-            int verseIndex = candidateIndices[i];
-            paddingQuestions.add(_generateWhatComesNextQuestion(verseIndex));
-
-            // Mark as used
-            usedVerseQuestionTypes[verseIndex] ??= {};
-            usedVerseQuestionTypes[verseIndex]!.add('what_next');
-          }
-        } else if (questionType == 'verse_pairing') {
-          // Find verses that haven't been used for verse_pairing
-          List<int> candidateIndices = allVerseIndices
-              .where((i) =>
-                  i > 0 &&
-                  i < widget.versesList.length - 1 &&
-                  (!usedVerseQuestionTypes.containsKey(i) ||
-                      !usedVerseQuestionTypes[i]!.contains('verse_pairing')))
-              .toList()
-            ..shuffle();
-
-          for (int i = 0; i < min(targetCount, candidateIndices.length); i++) {
-            int verseIndex = candidateIndices[i];
-            paddingQuestions.add(_generateVersePairingQuestion(verseIndex));
-
-            // Mark as used
-            usedVerseQuestionTypes[verseIndex] ??= {};
-            usedVerseQuestionTypes[verseIndex]!.add('verse_pairing');
+          // Find the index of a question of this type
+          int indexToRemove =
+              generatedQuestions.indexWhere((q) => q['type'] == typeToRemove);
+          if (indexToRemove >= 0) {
+            generatedQuestions.removeAt(indexToRemove);
+            typeCounts[typeToRemove] = typeCounts[typeToRemove]! - 1;
+          } else {
+            // Shouldn't happen, but just in case
+            generatedQuestions.removeLast();
           }
         }
       }
-
-      // If we still need more questions due to verse constraints
-      if (paddingQuestions.length < shortfall) {
-        // Get all verses as candidates
-        List<int> allIndices = List.generate(widget.versesList.length, (i) => i)
-          ..shuffle();
-        int typeIndex = 0;
-
-        for (int i = 0;
-            i < allIndices.length && paddingQuestions.length < shortfall;
-            i++) {
-          int verseIndex = allIndices[i];
-          String questionType = paddingTypes[typeIndex % paddingTypes.length];
-
-          // Try generating this type of question for this verse
-          Map<String, dynamic>? question;
-
-          if (questionType == 'drag_drop') {
-            String verse = widget.versesList[verseIndex];
-            List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-            if (!words.contains('')) {
-              question = _generateDragAndDropQuestion(verse);
-            }
-          } else if (questionType == 'what_next' &&
-              verseIndex < widget.versesList.length - 1) {
-            question = _generateWhatComesNextQuestion(verseIndex);
-          } else if (questionType == 'verse_pairing' &&
-              verseIndex > 0 &&
-              verseIndex < widget.versesList.length - 1) {
-            question = _generateVersePairingQuestion(verseIndex);
-          }
-
-          // Add question if successfully generated
-          if (question != null) {
-            paddingQuestions.add(question);
-            typeIndex++; // Move to next type for balance
-          }
-        }
-      }
-
-      // Add all padding questions to the final list
-      generatedQuestions.addAll(paddingQuestions);
     }
 
     return generatedQuestions;
-  }
-
-  // Generate additional questions if needed to meet target count
-  void _generateAdditionalQuestions({
-    required List<Map<String, dynamic>> generatedQuestions,
-    required int targetQuestionCount,
-    required List<int> fillBlankIndices,
-  }) {
-    // Get unused verse indices
-    List<int> unusedIndices = List.generate(widget.versesList.length, (i) => i);
-    unusedIndices.removeWhere((i) => fillBlankIndices.contains(i));
-    unusedIndices.shuffle();
-
-    int i = 0;
-    // Generate additional questions using the unused indices
-    while (generatedQuestions.length < targetQuestionCount &&
-        i < unusedIndices.length) {
-      int verseIndex = unusedIndices[i];
-      String verse = widget.versesList[verseIndex];
-
-      // Generate question based on rotation pattern
-      if (i % 3 == 0 && verseIndex < widget.versesList.length - 1) {
-        // What comes next
-        generatedQuestions.add(_generateWhatComesNextQuestion(verseIndex));
-      } else if (i % 3 == 1 &&
-          verseIndex > 0 &&
-          verseIndex < widget.versesList.length - 1) {
-        // Verse pairing
-        generatedQuestions.add(_generateVersePairingQuestion(verseIndex));
-      } else {
-        // Drag and drop
-        List<String> words = splitVerseManuallyWithSpecialChars(verse);
-        if (!words.contains('')) {
-          generatedQuestions.add(_generateDragAndDropQuestion(verse));
-        }
-      }
-      i++;
-    }
   }
 
   List<String> splitVerseManuallyWithSpecialChars(String verse) {
