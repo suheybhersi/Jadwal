@@ -312,11 +312,13 @@ class QuranPage extends StatelessWidget {
         // 1. We're in the page range AND
         // 2. Either:
         //    a. We've found the start verse but not the end verse
-        //    b. OR we've found the previous verse but haven't found the start verse yet
+        //    b. OR we've found the previous verse but haven't found the start verse yet (only if this verse is the start verse)
         //    c. OR we're on a page after the start page but before finding the end verse
         bool shouldHighlight = isInPageRange &&
             ((localFoundStartVerse && !localFoundEndVerse) ||
-                (localFoundPrevVerse && !localFoundStartVerse) ||
+                (localFoundPrevVerse &&
+                    !localFoundStartVerse &&
+                    isStartVerse) ||
                 (currentPage > startPage &&
                     currentPage <= endPage &&
                     !localFoundEndVerse));

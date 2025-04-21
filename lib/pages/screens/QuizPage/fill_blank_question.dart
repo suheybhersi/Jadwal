@@ -406,7 +406,6 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
   Widget build(BuildContext context) {
     // Colors for question elements
     final textColor = Theme.of(context).colorScheme.inversePrimary;
-    final containerBgColor = const Color(0xFFF5F9FF);
 
     return Column(
       children: [

@@ -61,6 +61,10 @@ class FirestoreService extends ChangeNotifier {
   CollectionReference get surahsProgressCollection =>
       usersCollection.doc(uid).collection('surahsProgress');
 
+  // Collection reference for quiz history
+  CollectionReference get quizHistoryCollection =>
+      usersCollection.doc(uid).collection('quizHistory');
+
   Future<void> updateUserProfile(Map<String, dynamic> userData) async {
     return await _executeWithRetry(
         () => userDocument.set(userData, SetOptions(merge: true)));
@@ -820,10 +824,24 @@ class FirestoreService extends ChangeNotifier {
                 value.docs[0].reference.update({'weekDays': currentWeek}),
           );
 
-      final hifdhSnapshot = await hifdhsCollection
-          .where('hifdh', isEqualTo: hifdh['hifdh'])
-          .get();
-      hifdhSnapshot.docs[0].reference.update({'completed': true});
+      try {
+        final hifdhSnapshot = await hifdhsCollection
+            .where('hifdh', isEqualTo: hifdh['hifdh'])
+            .get();
+
+        if (hifdhSnapshot.docs.isNotEmpty) {
+          await hifdhSnapshot.docs[0].reference.update({'completed': true});
+        } else {
+          if (kDebugMode) {
+            print('No hifdh document found with hifdh: ${hifdh['hifdh']}');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error updating hifdh completion status: $e');
+        }
+        // Continue execution despite error to ensure other operations complete
+      }
 
       //create review for hifdh
       String reviewDate = hifdh['date'];
@@ -2017,6 +2035,117 @@ class FirestoreService extends ChangeNotifier {
 
     if (updated) {
       await plansCollection.doc(planId).update({'reviews': reviews});
+    }
+  }
+
+  /*----------------------------------------Q U I Z   H I S T O R Y---------------------------------------*/
+
+  /// Save quiz results to Firestore
+  Future<void> saveQuizHistory({
+    required String dateCompleted,
+    required bool isCustomQuiz,
+    required int score,
+    required int totalQuestions,
+    required List<Map<String, dynamic>> questions,
+    required Map<String, dynamic> answeredQuestions,
+    required String quizId,
+  }) async {
+    try {
+      Map<String, dynamic> quizResult = {
+        'dateCompleted': dateCompleted,
+        'isCustomQuiz': isCustomQuiz,
+        'score': score,
+        'totalQuestions': totalQuestions,
+        'questions': questions,
+        'answeredQuestions': answeredQuestions,
+        'quizId': quizId,
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+
+      await quizHistoryCollection.add(quizResult);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving quiz history: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Get stream of custom quiz history with client-side sorting
+  Stream<List<QueryDocumentSnapshot>> getCustomQuizHistoryStream() {
+    return quizHistoryCollection
+        .where('isCustomQuiz', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+      var docs = snapshot.docs;
+      docs.sort((a, b) {
+        var aData = a.data() as Map<String, dynamic>;
+        var bData = b.data() as Map<String, dynamic>;
+        Timestamp aTime = aData['timestamp'] ?? Timestamp.now();
+        Timestamp bTime = bData['timestamp'] ?? Timestamp.now();
+        return bTime.compareTo(aTime); // Descending order
+      });
+      return docs;
+    });
+  }
+
+  /// Get stream of review quiz history with client-side sorting
+  Stream<List<QueryDocumentSnapshot>> getReviewQuizHistoryStream() {
+    return quizHistoryCollection
+        .where('isCustomQuiz', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) {
+      var docs = snapshot.docs;
+      docs.sort((a, b) {
+        var aData = a.data() as Map<String, dynamic>;
+        var bData = b.data() as Map<String, dynamic>;
+        Timestamp aTime = aData['timestamp'] ?? Timestamp.now();
+        Timestamp bTime = bData['timestamp'] ?? Timestamp.now();
+        return bTime.compareTo(aTime); // Descending order
+      });
+      return docs;
+    });
+  }
+
+  /// Get all quiz history without filtering, with client-side sorting
+  Stream<List<QueryDocumentSnapshot>> getAllQuizHistoryStream() {
+    return quizHistoryCollection.snapshots().map((snapshot) {
+      var docs = snapshot.docs;
+      docs.sort((a, b) {
+        var aData = a.data() as Map<String, dynamic>;
+        var bData = b.data() as Map<String, dynamic>;
+        Timestamp aTime = aData['timestamp'] ?? Timestamp.now();
+        Timestamp bTime = bData['timestamp'] ?? Timestamp.now();
+        return bTime.compareTo(aTime); // Descending order
+      });
+      return docs;
+    });
+  }
+
+  /// Delete a quiz history entry
+  Future<void> deleteQuizHistory(String quizHistoryId) async {
+    try {
+      await quizHistoryCollection.doc(quizHistoryId).delete();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting quiz history: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Get a specific quiz history detail
+  Future<Map<String, dynamic>?> getQuizHistoryDetail(
+      String quizHistoryId) async {
+    try {
+      DocumentSnapshot doc =
+          await quizHistoryCollection.doc(quizHistoryId).get();
+      return doc.exists ? doc.data() as Map<String, dynamic>? : null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting quiz history detail: $e');
+      }
+      rethrow;
     }
   }
 }

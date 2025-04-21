@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:jadwal/services/firestore.dart';
 
 class QuizResultsPage extends StatefulWidget {
   int score;
@@ -9,6 +11,7 @@ class QuizResultsPage extends StatefulWidget {
   final Function(String, String, String) updateReview;
   final Map<int, Map<String, dynamic>> answeredQuestions;
   int currentQuestionIndex;
+  final bool isCustomQuiz;
 
   QuizResultsPage({
     super.key,
@@ -19,6 +22,7 @@ class QuizResultsPage extends StatefulWidget {
     required this.updateReview,
     required this.answeredQuestions,
     required this.currentQuestionIndex,
+    this.isCustomQuiz = false,
   });
 
   @override
@@ -27,6 +31,45 @@ class QuizResultsPage extends StatefulWidget {
 
 class _QuizResultsPageState extends State<QuizResultsPage> {
   bool showAllQuestions = false;
+  bool _isSaving = false;
+
+  // Function to save quiz results to Firestore
+  Future<void> _saveQuizResultsToFirestore() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      // Get FirestoreService instance
+      final firestoreService =
+          Provider.of<FirestoreService>(context, listen: false);
+      // Format date as DD-MM-YYYY
+      String dateCompleted = DateTime.now().toString().split(' ')[0];
+      final dateComponents = dateCompleted.split('-');
+      dateCompleted =
+          '${dateComponents[2]}-${dateComponents[1]}-${dateComponents[0]}';
+
+      // Save quiz history using FirestoreService
+      await firestoreService.saveQuizHistory(
+        dateCompleted: dateCompleted,
+        isCustomQuiz: widget.isCustomQuiz,
+        score: widget.score,
+        totalQuestions: widget.questions.length,
+        questions: widget.questions,
+        answeredQuestions: widget.answeredQuestions
+            .map((key, value) => MapEntry(key.toString(), value)),
+        quizId: widget.id,
+      );
+    } catch (e) {
+      // Handle errors
+      print('Error saving quiz results: $e');
+      // Could show a snackbar here if needed
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
 
   String joinVerseManuallyWithSpecialChars(List<String> words) {
     const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
@@ -355,14 +398,19 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
               child: SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    String rating =
-                        ((widget.score / widget.questions.length) * 5)
-                            .round()
-                            .toString();
-                    widget.updateReview(widget.id, widget.review, rating);
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          String rating =
+                              ((widget.score / widget.questions.length) * 5)
+                                  .round()
+                                  .toString();
+                          widget.updateReview(widget.id, widget.review, rating);
+                          await _saveQuizResultsToFirestore();
+                          if (mounted) {
+                            Navigator.pop(context);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
@@ -374,13 +422,22 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Finish',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      _isSaving
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Finish',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ],
                   ),
                 ),
@@ -620,7 +677,6 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                   color: Theme.of(context).colorScheme.inversePrimary,
                 ),
                 textAlign: TextAlign.justify,
-                textDirection: TextDirection.rtl,
               ),
               const SizedBox(height: 16),
 
@@ -644,7 +700,6 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.justify,
-                textDirection: TextDirection.rtl,
               ),
               const SizedBox(height: 16),
 
@@ -667,7 +722,6 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.justify,
-                textDirection: TextDirection.rtl,
               ),
             ],
           ),

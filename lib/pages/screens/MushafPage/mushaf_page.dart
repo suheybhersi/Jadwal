@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:iconsax/iconsax.dart';
@@ -47,6 +46,9 @@ class _MushafContentState extends State<MushafContent> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                SliverToBoxAdapter(
+                  child: _buildMushafCard(context),
+                ),
                 _buildSurahList(),
               ],
             ),
@@ -76,16 +78,243 @@ class _MushafContentState extends State<MushafContent> {
               color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QuizCreationPage(),
+        ],
+      ),
+    );
+  }
+
+  // Mushaf Card
+  Widget _buildMushafCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF4979FB),
+            Color(0xFF5C89FF),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4979FB).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(
+                  Iconsax.book_1,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Holy Quran',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Text(
+            'Continue your Quran journey',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.9),
+            ),
+          ),
+          const SizedBox(height: 20),
+          StreamBuilder<QuerySnapshot>(
+            stream: _firestoreService.getSurahProgressStream(),
+            builder: (context, snapshot) {
+              int totalSurahs = 0;
+              int completedSurahs = 0;
+
+              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                totalSurahs = snapshot.data!.docs.length;
+                for (var doc in snapshot.data!.docs) {
+                  final surah = doc.data() as Map<String, dynamic>;
+                  final completedLines = surah['completedLines'] as num;
+                  final totalLines = surah['totalLines'] as num;
+                  if (completedLines / totalLines >= 1) {
+                    completedSurahs++;
+                  }
+                }
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Overall Progress',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                      Text(
+                        '$completedSurahs/$totalSurahs Surahs',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  LinearPercentIndicator(
+                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                    lineHeight: 8,
+                    percent:
+                        totalSurahs > 0 ? completedSurahs / totalSurahs : 0,
+                    progressColor: Colors.white,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    barRadius: const Radius.circular(20),
+                  ),
+                ],
               );
             },
-            icon: const Icon(Iconsax.message_question),
+          ),
+          const SizedBox(height: 15),
+          GestureDetector(
+            onTap: () async {
+              // Only proceed if we have plan data
+              if (_planData != null &&
+                  _planData!['hifdhs'] != null &&
+                  _planData!['hifdhs'].isNotEmpty) {
+                try {
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                  );
+
+                  // Extract the verse keys from latest hifdh data
+                  final verseToHighlight =
+                      _planData!['hifdhs'].last['hifdh'].split('-')[0].trim();
+                  final endVerseToHighlight =
+                      _planData!['hifdhs'].last['hifdh'].split('-')[1].trim();
+
+                  // Get previous verse key for context
+                  String prevVerseKey = '';
+                  try {
+                    final parts = verseToHighlight.split(':');
+                    if (parts.length == 2) {
+                      int chapter = int.parse(parts[0]);
+                      int verse = int.parse(parts[1]);
+                      if (verse > 1) {
+                        prevVerseKey = '$chapter:${verse - 1}';
+                      }
+                    }
+                  } catch (e) {
+                    print('Error determining previous verse: $e');
+                  }
+
+                  // Get the page numbers
+                  final pageNumber = await _firestoreService
+                      .getPageForVerseKey(verseToHighlight);
+                  final startPageNumber = await _firestoreService
+                      .getPageForVerseKey(verseToHighlight);
+                  final endPageNumber = await _firestoreService
+                      .getPageForVerseKey(endVerseToHighlight);
+
+                  // Close the loading dialog
+                  Navigator.pop(context);
+
+                  // Navigate to QuranViewer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => QuranViewer(
+                        initialPage: pageNumber,
+                        verseToHighlight: verseToHighlight,
+                        pageToHighlight: startPageNumber.toString(),
+                        endVerseToHighlight: endVerseToHighlight,
+                        prevVerseKey: prevVerseKey,
+                        endPageToHighlight: endPageNumber.toString(),
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  // Close the loading dialog if there was an error
+                  Navigator.pop(context);
+
+                  // Show error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error loading Quran: $e')),
+                  );
+                }
+              } else {
+                // Show a message if no plan data is available
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                          'No memorization plan found. Start a plan to continue reading.')),
+                );
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Iconsax.book_square,
+                    color: Color(0xFF4979FB),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Continue Reading',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF4979FB),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

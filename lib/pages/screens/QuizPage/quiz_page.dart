@@ -1040,6 +1040,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         updateReview: widget.updateReview,
         answeredQuestions: answeredQuestions,
         currentQuestionIndex: currentQuestionIndex,
+        isCustomQuiz: widget.review == 'custom',
       );
     }
 

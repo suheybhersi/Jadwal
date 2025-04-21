@@ -3,6 +3,7 @@ import 'package:jadwal/pages/screens/HomePage/home_page.dart';
 import 'package:jadwal/pages/screens/PlanPage/plan_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/profile_page.dart';
 import 'package:jadwal/pages/screens/MushafPage/mushaf_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_home_page.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/components/network_status_banner.dart';
 
@@ -19,6 +20,7 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
   final List<Widget> _screens = [
     HomePage(),
     MushafPage(),
+    QuizHomePage(),
     PlanPage(),
     ProfilePage(),
   ];
@@ -100,9 +102,21 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                   NavigationDestination(
                     icon: Icon(
                       _selectedIndex == 2
+                          ? Iconsax.message_question5
+                          : Iconsax.message_question,
+                      color: _selectedIndex == 2
+                          ? const Color.fromARGB(255, 73, 121, 251)
+                          : const Color.fromARGB(255, 127, 131, 141),
+                      size: 26,
+                    ),
+                    label: 'Quiz',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(
+                      _selectedIndex == 3
                           ? Iconsax.clipboard_text5
                           : Iconsax.clipboard_text,
-                      color: _selectedIndex == 2
+                      color: _selectedIndex == 3
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),
                       size: 24,
@@ -111,10 +125,10 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                   ),
                   NavigationDestination(
                     icon: Icon(
-                      _selectedIndex == 3
+                      _selectedIndex == 4
                           ? Iconsax.profile_circle5
                           : Iconsax.profile_circle,
-                      color: _selectedIndex == 3
+                      color: _selectedIndex == 4
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),
                       size: 26,
