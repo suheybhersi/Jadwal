@@ -281,7 +281,7 @@ class QuizCreationController extends GetxController {
       Get.to(() => QuizPage(
             versesList: versesList,
             reviewTitle: reviewTitle,
-            review: 'custom',
+            review: '$startSurahNumber:$startVerse - $endSurahNumber:$endVerse',
             id: quizId,
             updateReview: (id, title, review) {
               // For custom quizzes, we don't need to update anything in Firestore
@@ -290,6 +290,7 @@ class QuizCreationController extends GetxController {
             includeDragDrop: includeDragDrop.value,
             includeWhatNext: includeWhatNext.value,
             includeVersePairing: includeVersePairing.value,
+            isCustomQuiz: true,
           ));
     } catch (e) {
       // Show error message

@@ -2049,6 +2049,7 @@ class FirestoreService extends ChangeNotifier {
     required List<Map<String, dynamic>> questions,
     required Map<String, dynamic> answeredQuestions,
     required String quizId,
+    String quizContent = '',
   }) async {
     try {
       Map<String, dynamic> quizResult = {
@@ -2059,6 +2060,7 @@ class FirestoreService extends ChangeNotifier {
         'questions': questions,
         'answeredQuestions': answeredQuestions,
         'quizId': quizId,
+        'quizContent': quizContent,
         'timestamp': FieldValue.serverTimestamp(),
       };
 

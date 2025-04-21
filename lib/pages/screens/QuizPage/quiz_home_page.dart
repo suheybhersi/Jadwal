@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_history_details_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -362,52 +363,112 @@ class _QuizHomePageState extends State<QuizHomePage>
     final totalQuestions = quizData['totalQuestions'] ?? 1;
     final percentage = (score / totalQuestions) * 100;
     final date = quizData['dateCompleted'] ?? 'Unknown date';
+    final questions = quizData['questions'] ?? [];
+    final answeredQuestions = quizData['answeredQuestions'] ?? {};
+    final quizId = quizData['quizId'] ?? '';
+    final isCustomQuiz = quizData['isCustomQuiz'] ?? false;
+    final quizContent = quizData['quizContent'] ?? '';
 
     // Determine color based on score percentage
-    Color cardColor;
-    IconData resultIcon;
+    Color resultColor;
 
     if (percentage >= 90) {
-      cardColor = Colors.green.shade700;
-      resultIcon = Icons.emoji_events;
+      resultColor = Colors.green.shade600;
     } else if (percentage >= 70) {
-      cardColor = Colors.blue.shade700;
-      resultIcon = Icons.thumb_up;
+      resultColor = Colors.blue.shade600;
     } else if (percentage >= 50) {
-      cardColor = Colors.amber.shade700;
-      resultIcon = Icons.trending_up;
+      resultColor = Colors.amber.shade600;
     } else {
-      cardColor = Colors.red.shade700;
-      resultIcon = Icons.refresh;
+      resultColor = Colors.red.shade600;
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    // Get display title
+    String displayTitle = quizContent.isNotEmpty
+        ? quizContent
+        : isCustomQuiz
+            ? 'Custom Quiz'
+            : 'Review Quiz';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 12,
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date and score row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Date
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 16,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .inversePrimary
-                          .withOpacity(0.7),
+      margin: const EdgeInsets.only(bottom: 20),
+      child: InkWell(
+        onTap: () {
+          // Navigate to detailed quiz results
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuizHistoryDetailsPage(
+                score: score,
+                questions: List<Map<String, dynamic>>.from(questions),
+                quizId: quizId,
+                answeredQuestions: Map<int, Map<String, dynamic>>.from(
+                    answeredQuestions.map((key, value) => MapEntry(
+                        int.parse(key), Map<String, dynamic>.from(value)))),
+                isCustomQuiz: isCustomQuiz,
+                date: date,
+                quizContent: quizContent,
+              ),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Score indicator with color
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: resultColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    '$score/$totalQuestions',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: resultColor,
                     ),
-                    const SizedBox(width: 8),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              // Quiz info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quiz title
+                    Text(
+                      displayTitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // Date
                     Text(
                       date,
                       style: GoogleFonts.poppins(
@@ -420,72 +481,16 @@ class _QuizHomePageState extends State<QuizHomePage>
                     ),
                   ],
                 ),
-
-                // Score
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        resultIcon,
-                        size: 14,
-                        color: cardColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$score/$totalQuestions',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: cardColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Progress bar
-            LinearProgressIndicator(
-              value: score / totalQuestions,
-              backgroundColor: Colors.grey.withOpacity(0.2),
-              color: cardColor,
-              borderRadius: BorderRadius.circular(10),
-              minHeight: 8,
-            ),
-
-            const SizedBox(height: 12),
-
-            // Percentage
-            Text(
-              '${percentage.toInt()}% Correct',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.inversePrimary,
               ),
-            ),
 
-            // Quiz type
-            Text(
-              quizData['isCustomQuiz'] ? 'Custom Quiz' : 'Review Quiz',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: Theme.of(context)
-                    .colorScheme
-                    .inversePrimary
-                    .withOpacity(0.7),
+              // Arrow icon
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

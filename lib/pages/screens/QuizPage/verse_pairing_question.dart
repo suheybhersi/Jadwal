@@ -256,6 +256,10 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () {
+                              if (!isChecking) {
+                                // First click: Check answers
+                                checkAnswers();
+                              }
                               widget.answeredQuestions[
                                   widget.currentQuestionIndex] = {
                                 'question': widget.question,

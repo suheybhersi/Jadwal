@@ -22,7 +22,7 @@ class QuizPage extends StatefulWidget {
   final bool includeDragDrop;
   final bool includeWhatNext;
   final bool includeVersePairing;
-
+  final bool isCustomQuiz;
   const QuizPage({
     super.key,
     required this.versesList,
@@ -34,6 +34,7 @@ class QuizPage extends StatefulWidget {
     this.includeDragDrop = true,
     this.includeWhatNext = true,
     this.includeVersePairing = true,
+    this.isCustomQuiz = false,
   });
 
   @override
@@ -680,30 +681,34 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   }
 
   Map<String, dynamic> _generateVersePairingQuestion(int verseIndex) {
+    // Skip first and last verses since they don't have verses before/after them respectively
+    // First, make sure we're not trying to generate a question for the first or last verse
+    if (verseIndex == 0 || verseIndex == widget.versesList.length - 1) {
+      // If we somehow got the first or last verse, pick a verse from the middle
+      int middleIndex = widget.versesList.length ~/ 2;
+      verseIndex =
+          (middleIndex > 0 && middleIndex < widget.versesList.length - 1)
+              ? middleIndex
+              : 1; // Fallback to second verse if we have a very small list
+    }
+
     String currentVerse = widget.versesList[verseIndex];
-    String? verseBefore =
-        verseIndex > 0 ? widget.versesList[verseIndex - 1] : null;
-    String? verseAfter = verseIndex < widget.versesList.length - 1
-        ? widget.versesList[verseIndex + 1]
-        : null;
+    String verseBefore = widget
+        .versesList[verseIndex - 1]; // Safe now that we've excluded first verse
+    String verseAfter = widget
+        .versesList[verseIndex + 1]; // Safe now that we've excluded last verse
 
     // Generate options for the "verse before" section
-    List<String> beforeOptions = [];
-    if (verseBefore != null) {
-      beforeOptions.add(verseBefore); // Add correct answer
-    }
+    List<String> beforeOptions = [verseBefore]; // Add correct answer
 
     // Generate options for the "verse after" section
-    List<String> afterOptions = [];
-    if (verseAfter != null) {
-      afterOptions.add(verseAfter); // Add correct answer
-    }
+    List<String> afterOptions = [verseAfter]; // Add correct answer
 
     // Add incorrect options from other verses
     List<String> allVerses = List.from(widget.versesList);
     allVerses.remove(currentVerse);
-    if (verseBefore != null) allVerses.remove(verseBefore);
-    if (verseAfter != null) allVerses.remove(verseAfter);
+    allVerses.remove(verseBefore);
+    allVerses.remove(verseAfter);
 
     // Shuffle remaining verses
     allVerses.shuffle();
@@ -722,44 +727,38 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     nearbyVerses.shuffle();
 
     // Fill options for "before" section
-    if (verseBefore != null) {
-      // Add nearby verses first (more challenging)
-      for (int i = 0;
-          i < nearbyVerses.length && beforeOptions.length < 4;
-          i++) {
-        if (!beforeOptions.contains(nearbyVerses[i])) {
-          beforeOptions.add(nearbyVerses[i]);
-        }
+    // Add nearby verses first (more challenging)
+    for (int i = 0; i < nearbyVerses.length && beforeOptions.length < 4; i++) {
+      if (!beforeOptions.contains(nearbyVerses[i])) {
+        beforeOptions.add(nearbyVerses[i]);
       }
-
-      // Fill with random verses if needed
-      for (int i = 0; i < allVerses.length && beforeOptions.length < 4; i++) {
-        if (!beforeOptions.contains(allVerses[i])) {
-          beforeOptions.add(allVerses[i]);
-        }
-      }
-      beforeOptions.shuffle(); // Randomize order
     }
+
+    // Fill with random verses if needed
+    for (int i = 0; i < allVerses.length && beforeOptions.length < 4; i++) {
+      if (!beforeOptions.contains(allVerses[i])) {
+        beforeOptions.add(allVerses[i]);
+      }
+    }
+    beforeOptions.shuffle(); // Randomize order
 
     // Fill options for "after" section
-    if (verseAfter != null) {
-      // Add nearby verses first (more challenging)
-      for (int i = 0; i < nearbyVerses.length && afterOptions.length < 4; i++) {
-        if (!afterOptions.contains(nearbyVerses[i]) &&
-            !beforeOptions.contains(nearbyVerses[i])) {
-          afterOptions.add(nearbyVerses[i]);
-        }
+    // Add nearby verses first (more challenging)
+    for (int i = 0; i < nearbyVerses.length && afterOptions.length < 4; i++) {
+      if (!afterOptions.contains(nearbyVerses[i]) &&
+          !beforeOptions.contains(nearbyVerses[i])) {
+        afterOptions.add(nearbyVerses[i]);
       }
-
-      // Fill with random verses if needed
-      for (int i = 0; i < allVerses.length && afterOptions.length < 4; i++) {
-        if (!afterOptions.contains(allVerses[i]) &&
-            !beforeOptions.contains(allVerses[i])) {
-          afterOptions.add(allVerses[i]);
-        }
-      }
-      afterOptions.shuffle(); // Randomize order
     }
+
+    // Fill with random verses if needed
+    for (int i = 0; i < allVerses.length && afterOptions.length < 4; i++) {
+      if (!afterOptions.contains(allVerses[i]) &&
+          !beforeOptions.contains(allVerses[i])) {
+        afterOptions.add(allVerses[i]);
+      }
+    }
+    afterOptions.shuffle(); // Randomize order
 
     return {
       'type': 'verse_pairing',
@@ -1040,7 +1039,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         updateReview: widget.updateReview,
         answeredQuestions: answeredQuestions,
         currentQuestionIndex: currentQuestionIndex,
-        isCustomQuiz: widget.review == 'custom',
+        isCustomQuiz: widget.isCustomQuiz,
       );
     }
 

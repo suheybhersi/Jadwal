@@ -59,6 +59,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
         answeredQuestions: widget.answeredQuestions
             .map((key, value) => MapEntry(key.toString(), value)),
         quizId: widget.id,
+        quizContent: widget.review,
       );
     } catch (e) {
       // Handle errors

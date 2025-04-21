@@ -62,13 +62,11 @@ class _MushafContentState extends State<MushafContent> {
   Widget _buildTitleBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(
-        left: 20,
-        right: 10,
         top: 10,
         bottom: 15,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             'Quran',
@@ -137,15 +135,6 @@ class _MushafContentState extends State<MushafContent> {
             ],
           ),
           const SizedBox(height: 15),
-          Text(
-            'Continue your Quran journey',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 20),
           StreamBuilder<QuerySnapshot>(
             stream: _firestoreService.getSurahProgressStream(),
             builder: (context, snapshot) {
