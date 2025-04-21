@@ -81,8 +81,12 @@ class QuizCreationPage extends StatelessWidget {
                         _buildQuestionTypesPage(
                             controller, Theme.of(context).colorScheme.primary),
 
-                        // Step 2: Verse Selection
-                        _buildVerseSelectionPage(controller, allData,
+                        // Step 2: Start Verse Selection
+                        _buildStartVerseSelectionPage(controller, allData,
+                            Theme.of(context).colorScheme.primary, textColor),
+
+                        // Step 3: End Verse Selection
+                        _buildEndVerseSelectionPage(controller, allData,
                             Theme.of(context).colorScheme.primary, textColor),
                       ],
                     ),
@@ -113,9 +117,11 @@ class QuizCreationPage extends StatelessWidget {
       child: Obx(() => Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStepCircle(controller, 0, 'Question Types', context),
+              _buildStepCircle(controller, 0, 'Types', context),
               _buildStepLine(controller, 0),
-              _buildStepCircle(controller, 1, 'Verse Selection', context),
+              _buildStepCircle(controller, 1, 'Start', context),
+              _buildStepLine(controller, 1),
+              _buildStepCircle(controller, 2, 'End', context),
             ],
           )),
     );
@@ -332,7 +338,7 @@ class QuizCreationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildVerseSelectionPage(QuizCreationController controller,
+  Widget _buildStartVerseSelectionPage(QuizCreationController controller,
       List<Map<String, dynamic>> allData, Color primaryColor, Color textColor) {
     return SingleChildScrollView(
       child: Padding(
@@ -374,7 +380,7 @@ class QuizCreationPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Select Verse Range',
+                          'Select Starting Verse',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -386,7 +392,7 @@ class QuizCreationPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Choose the range of verses to include in your quiz.',
+                    'Choose the starting verse for your quiz.',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -399,34 +405,106 @@ class QuizCreationPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Use a single Obx for all the dynamic content
-            Obx(() => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Range Summary
-                    if (controller.isRangeSelected())
-                      _buildRangeSummary(controller, primaryColor),
+            // Start verse selection
+            _buildVersePicker(
+              allData,
+              controller.selectedStartSurahData.value,
+              controller.selectedStartVerse.value,
+              (surahName, verseNumber) => controller.handleStartVerseSelection(
+                  allData, surahName, verseNumber),
+            ),
 
-                    // First Verse Selection
-                    if (controller.selectedStartVerse.value == null)
-                      _buildStartVerseSelection(
-                          controller, allData, primaryColor, textColor),
+            // Error Message
+            Obx(() => controller.selectionErrorMessage.value.isNotEmpty
+                ? _buildErrorMessage(controller)
+                : const SizedBox.shrink()),
+          ],
+        ),
+      ),
+    );
+  }
 
-                    // Second Verse Selection
-                    if (controller.selectedStartVerse.value != null &&
-                        (controller.selectedEndVerse.value == null ||
-                            controller.selectedStartVerse.value ==
-                                controller.selectedEndVerse.value))
-                      _buildEndVerseSelection(
-                          controller, allData, primaryColor, textColor),
-
-                    // Error Message
-                    if (controller.selectionErrorMessage.value.isNotEmpty)
-                      _buildErrorMessage(controller),
+  Widget _buildEndVerseSelectionPage(QuizCreationController controller,
+      List<Map<String, dynamic>> allData, Color primaryColor, Color textColor) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    primaryColor.withOpacity(0.8),
+                    primaryColor,
                   ],
-                )),
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Iconsax.book_1,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Select Ending Verse',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Choose the ending verse for your quiz.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+
+            // End verse selection
+            _buildVersePicker(
+              allData,
+              controller.selectedEndSurahData.value ??
+                  controller.selectedStartSurahData.value,
+              controller.selectedEndVerse.value,
+              (surahName, verseNumber) => controller.handleEndVerseSelection(
+                  allData, surahName, verseNumber),
+            ),
+
+            // Error Message
+            Obx(() => controller.selectionErrorMessage.value.isNotEmpty
+                ? _buildErrorMessage(controller)
+                : const SizedBox.shrink()),
           ],
         ),
       ),
@@ -490,8 +568,59 @@ class QuizCreationPage extends StatelessWidget {
             ),
           ),
         );
+      } else if (controller.currentPage.value == 1) {
+        // Start verse selection page - Next button
+        return Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 30.0),
+          child: Container(
+            width: double.infinity,
+            height: 60,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: controller.selectedStartVerse.value != null
+                  ? [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: ElevatedButton(
+              onPressed: controller.selectedStartVerse.value != null
+                  ? () => controller.goToNextPage()
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade300,
+                disabledForegroundColor: Colors.grey.shade500,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Next',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 20),
+                ],
+              ),
+            ),
+          ),
+        );
       } else {
-        // Verse selection page - Create Quiz button
+        // End verse selection page - Create Quiz button
         return Padding(
           padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 30.0),
           child: Container(
@@ -609,210 +738,34 @@ class QuizCreationPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Switch(
-                  value: isSelected,
-                  onChanged: onToggle,
-                  activeColor: const Color(0xFF4979FB),
-                  inactiveThumbColor: Theme.of(context).colorScheme.tertiary,
-                  trackOutlineColor: WidgetStateProperty.all(
-                    isSelected
-                        ? Colors.transparent
-                        : Theme.of(context).colorScheme.tertiary,
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected
+                        ? const Color.fromARGB(255, 73, 121, 251)
+                        : Colors.grey.withOpacity(0.1),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color.fromARGB(255, 73, 121, 251)
+                          : Colors.grey.shade400,
+                      width: 1.5,
+                    ),
                   ),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check,
+                          size: 18,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildRangeSummary(
-      QuizCreationController controller, Color primaryColor) {
-    return Builder(
-      builder: (context) => AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primaryColor.withOpacity(0.8),
-              primaryColor,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withOpacity(0.3),
-              blurRadius: 15,
-              spreadRadius: 2,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Iconsax.tick_circle,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Quiz Range Selected',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          'FROM',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${controller.selectedStartSurahName.value}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Verse ${controller.selectedStartVerse.value}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    height: 50,
-                    width: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          'TO',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${controller.selectedEndSurahName.value}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Verse ${controller.selectedEndVerse.value}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: controller.resetSelection,
-              icon: const Icon(Iconsax.edit, size: 16, color: Colors.white),
-              label: Text(
-                'Change Selection',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStartVerseSelection(QuizCreationController controller,
-      List<Map<String, dynamic>> allData, Color primaryColor, Color textColor) {
-    return Column(
-      children: [
-        // Verse picker
-        _buildVersePicker(
-          allData,
-          controller.selectedStartSurahData.value,
-          controller.selectedStartVerse.value,
-          (surahName, verseNumber) => controller.handleStartVerseSelection(
-              allData, surahName, verseNumber),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEndVerseSelection(QuizCreationController controller,
-      List<Map<String, dynamic>> allData, Color primaryColor, Color textColor) {
-    return Column(
-      children: [
-        // Verse picker
-        _buildVersePicker(
-          allData,
-          controller.selectedEndSurahData.value ??
-              controller.selectedStartSurahData.value,
-          controller.selectedEndVerse.value ??
-              controller.selectedStartVerse.value,
-          (surahName, verseNumber) => controller.handleEndVerseSelection(
-              allData, surahName, verseNumber),
-        ),
-      ],
     );
   }
 
@@ -822,28 +775,14 @@ class QuizCreationPage extends StatelessWidget {
     int? selectedVerse,
     Function(String, int) onVerseSelected,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Get.theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Get.theme.colorScheme.tertiary.withOpacity(0.2),
-            blurRadius: 10,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: QuranVersePicker(
-        key: ValueKey(
-            '${selectedSurahData?.hashCode ?? 0}-${selectedVerse ?? 0}'),
-        surahData: allData,
-        initialSurahIndex:
-            selectedSurahData != null ? allData.indexOf(selectedSurahData) : 0,
-        initialVerseNumber: selectedVerse,
-        onVerseSelected: onVerseSelected,
-      ),
+    return QuranVersePicker(
+      key:
+          ValueKey('${selectedSurahData?.hashCode ?? 0}-${selectedVerse ?? 0}'),
+      surahData: allData,
+      initialSurahIndex:
+          selectedSurahData != null ? allData.indexOf(selectedSurahData) : 0,
+      initialVerseNumber: selectedVerse,
+      onVerseSelected: onVerseSelected,
     );
   }
 

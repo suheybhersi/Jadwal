@@ -58,7 +58,7 @@ class QuizCreationController extends GetxController {
   }
 
   void goToNextPage() {
-    if (currentPage.value < 1) {
+    if (currentPage.value < 2) {
       currentPage.value++;
       _pageController.value.jumpToPage(currentPage.value);
     }

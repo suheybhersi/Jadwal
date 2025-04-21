@@ -22,8 +22,12 @@ class QuranVersePicker extends StatefulWidget {
 class _QuranVersePickerState extends State<QuranVersePicker> {
   late int selectedSurahIndex;
   int? selectedVerseNumber;
-  late ScrollController surahScrollController;
-  late ScrollController verseScrollController;
+  late FixedExtentScrollController? surahScrollController;
+  late FixedExtentScrollController? verseScrollController;
+
+  // Constants for the wheel picker
+  static const double itemHeight = 50.0;
+  static const double pickerHeight = 200.0;
 
   @override
   void initState() {
@@ -31,32 +35,61 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
     selectedSurahIndex =
         widget.initialSurahIndex.clamp(0, widget.surahData.length - 1);
     selectedVerseNumber = widget.initialVerseNumber;
-    surahScrollController = ScrollController();
-    verseScrollController = ScrollController();
 
-    // Scroll to the initial Surah and Verse
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToCenter(surahScrollController, selectedSurahIndex);
-      if (selectedVerseNumber != null) {
-        _scrollToCenter(verseScrollController, selectedVerseNumber! - 1);
-      }
+    surahScrollController = FixedExtentScrollController(
+      initialItem: selectedSurahIndex,
+    );
+
+    verseScrollController = FixedExtentScrollController(
+      initialItem: selectedVerseNumber != null ? selectedVerseNumber! - 1 : 0,
+    );
+  }
+
+  void _onSurahSelected(int index) {
+    setState(() {
+      selectedSurahIndex = index;
+      selectedVerseNumber = null;
+      verseScrollController?.jumpToItem(0);
     });
   }
 
-  void _scrollToCenter(ScrollController controller, int index) {
-    // Assuming each item has a height of 56.0 (adjust as necessary)
-    final itemHeight = 56.0;
-    final offset = (index * itemHeight) -
-        (controller.position.viewportDimension / 2) +
-        (itemHeight / 2);
-    controller.jumpTo(offset.clamp(0.0, controller.position.maxScrollExtent));
+  void _onVerseSelected(int index) {
+    final verseNumber = index + 1;
+    setState(() {
+      selectedVerseNumber = verseNumber;
+    });
+
+    // Auto-confirm selection
+    widget.onVerseSelected(
+      widget.surahData[selectedSurahIndex]['surah'],
+      verseNumber,
+    );
   }
 
   @override
   void dispose() {
-    surahScrollController.dispose();
-    verseScrollController.dispose();
+    surahScrollController?.dispose();
+    verseScrollController?.dispose();
     super.dispose();
+  }
+
+  Widget _buildWheelPicker({
+    required List<Widget> children,
+    required FixedExtentScrollController controller,
+    required ValueChanged<int> onSelectedItemChanged,
+    double diameterRatio = 1.5,
+  }) {
+    return ListWheelScrollView.useDelegate(
+      controller: controller,
+      itemExtent: itemHeight,
+      diameterRatio: diameterRatio,
+      perspective: 0.001,
+      physics: const FixedExtentScrollPhysics(),
+      onSelectedItemChanged: onSelectedItemChanged,
+      childDelegate: ListWheelChildListDelegate(
+        children: children,
+      ),
+    );
   }
 
   @override
@@ -65,189 +98,184 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
     final selectedSurahVerses =
         surahs[selectedSurahIndex]['verses'] as int? ?? 0;
 
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+    final Color unselectedTextColor = Theme.of(context).colorScheme.onSurface;
+    final Color highlightColor = primaryColor.withOpacity(0.1);
+
+    // Build surah items
+    final surahItems = List<Widget>.generate(surahs.length, (index) {
+      final surahName = surahs[index]['surah'] as String;
+      final surahNumber = surahs[index]['surahNumber'];
+      final isSelected = index == selectedSurahIndex;
+
+      return Container(
+        height: itemHeight,
+        alignment: Alignment.center,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: GoogleFonts.lato(
+            fontSize: isSelected ? 18 : 16,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? primaryColor
+                : unselectedTextColor.withOpacity(0.8),
+          ),
+          child: Text(
+            '$surahNumber. $surahName',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    });
+
+    // Build verse items
+    final verseItems = List<Widget>.generate(selectedSurahVerses, (index) {
+      final verseNumber = index + 1;
+      final isSelected = verseNumber == selectedVerseNumber;
+
+      return Container(
+        height: itemHeight,
+        alignment: Alignment.center,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: GoogleFonts.lato(
+            fontSize: isSelected ? 20 : 18,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? primaryColor
+                : unselectedTextColor.withOpacity(0.8),
+          ),
+          child: Text(
+            verseNumber.toString(),
+          ),
+        ),
+      );
+    });
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Main Verse Picker UI
+        // Wheel picker UI
         Container(
-          height: 350,
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          height: pickerHeight,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
-                blurRadius: 12,
-                spreadRadius: 2,
-                offset: const Offset(2, 4),
+                color: Theme.of(context).shadowColor.withOpacity(0.1),
+                blurRadius: 15,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
             children: [
-              // Surah Column
+              // Surah wheel picker
               Expanded(
-                flex: 5,
+                flex: 3,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding:
+                          const EdgeInsets.only(top: 12, left: 16, right: 16),
                       child: Text(
-                        'Surahs',
+                        'Surah',
                         style: GoogleFonts.lato(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+                          color: primaryColor,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Expanded(
-                      child: ListView.builder(
-                        controller: surahScrollController,
-                        itemCount: surahs.length,
-                        itemBuilder: (context, index) {
-                          final surahName = surahs[index]['surah'] as String;
-
-                          return GestureDetector(
-                            onTap: () {
-                              // Update state directly without triggering a full refresh
-                              // We only need to update the UI to show selection state
-                              selectedSurahIndex = index;
-                              selectedVerseNumber = null; // Reset verse
-                              // Scroll to the selected Surah
-                              _scrollToCenter(surahScrollController, index);
-                              // Force update only this widget
-                              setState(() {});
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  top: 4, bottom: 4, left: 16, right: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: selectedSurahIndex == index
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .tertiary
-                                        .withOpacity(0.3),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
+                      child: Stack(
+                        children: [
+                          // Center highlight
+                          Positioned.fill(
+                            child: Center(
+                              child: Container(
+                                height: itemHeight,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: highlightColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: primaryColor.withOpacity(0.2),
+                                    width: 1,
                                   ),
-                                ],
-                              ),
-                              child: Text(
-                                ' ${surahs[index]['surahNumber']}. $surahName',
-                                style: GoogleFonts.lato(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: selectedSurahIndex == index
-                                      ? Colors.white
-                                      : Theme.of(context).colorScheme.tertiary,
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          _buildWheelPicker(
+                            children: surahItems,
+                            controller: surahScrollController!,
+                            onSelectedItemChanged: _onSurahSelected,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Divider
-              VerticalDivider(
-                color: Theme.of(context).colorScheme.tertiary,
-                thickness: 1,
-                indent: 35,
-                width: 10,
+              // Vertical divider
+              Container(
+                width: 1,
+                margin: const EdgeInsets.symmetric(vertical: 20),
+                color: Theme.of(context).dividerColor,
               ),
 
-              // Verses Column
+              // Verse wheel picker
               Expanded(
                 flex: 2,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding:
+                          const EdgeInsets.only(top: 12, left: 16, right: 16),
                       child: Text(
-                        'Verses',
+                        'Verse',
                         style: GoogleFonts.lato(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+                          color: primaryColor,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Expanded(
-                      child: ListView.builder(
-                        controller: verseScrollController,
-                        itemCount: selectedSurahVerses,
-                        itemBuilder: (context, verseIndex) {
-                          final verseNumber = verseIndex + 1;
-
-                          return GestureDetector(
-                            onTap: () {
-                              // Update the local state without full setState refresh
-                              selectedVerseNumber = verseNumber;
-                              // Scroll to the selected Verse
-                              _scrollToCenter(
-                                  verseScrollController, verseNumber - 1);
-                              // Call the callback to update parent
-                              widget.onVerseSelected(
-                                surahs[selectedSurahIndex]['surah'],
-                                verseNumber,
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  top: 4, bottom: 4, left: 8, right: 16),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: selectedVerseNumber == verseNumber
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .tertiary
-                                        .withOpacity(0.3),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  verseNumber.toString(),
-                                  style: GoogleFonts.lato(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: selectedVerseNumber == verseNumber
-                                        ? Colors.white
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .tertiary,
+                      child: Stack(
+                        children: [
+                          // Center highlight
+                          Positioned.fill(
+                            child: Center(
+                              child: Container(
+                                height: itemHeight,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: highlightColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: primaryColor.withOpacity(0.2),
+                                    width: 1,
                                   ),
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          _buildWheelPicker(
+                            children: verseItems,
+                            controller: verseScrollController!,
+                            onSelectedItemChanged: _onVerseSelected,
+                            diameterRatio: 2.0,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -256,47 +284,41 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
             ],
           ),
         ),
-        selectedVerseNumber != null
-            ? Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.blue.shade200,
-                  ),
-                ),
-                child: Text(
-                  'Surah ${surahs[selectedSurahIndex]['surah']}, Verse $selectedVerseNumber',
-                  style: GoogleFonts.lato(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.blue.shade700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            : Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.blue.shade200,
-                  ),
-                ),
-                child: Text(
-                  'Please select the surah and verse',
-                  style: GoogleFonts.lato(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.blue.shade700,
-                  ),
-                  textAlign: TextAlign.center,
+
+        // Selection indicator
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: primaryColor.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.bookmark,
+                size: 18,
+                color: primaryColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                selectedVerseNumber != null
+                    ? 'Surah ${surahs[selectedSurahIndex]['surah']}, Verse $selectedVerseNumber'
+                    : 'Select a verse',
+                style: GoogleFonts.lato(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: primaryColor,
                 ),
               ),
+            ],
+          ),
+        ),
       ],
     );
   }
