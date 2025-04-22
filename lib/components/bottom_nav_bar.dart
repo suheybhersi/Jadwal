@@ -107,7 +107,7 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                       color: _selectedIndex == 2
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),
-                      size: 26,
+                      size: 24,
                     ),
                     label: 'Quiz',
                   ),

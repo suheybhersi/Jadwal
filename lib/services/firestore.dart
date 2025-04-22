@@ -1735,28 +1735,6 @@ class FirestoreService extends ChangeNotifier {
         .update({'hifdhIn': hifdhIn}); //update plan with hifdhIn
   }
 
-/*---------------------------------------D E L E T E   P L A N----------------------------------------*/
-  Future<void> deletePlan(String id) async {
-    await plansCollection.doc(id).delete();
-    final hifdhsSnapshot = await hifdhsCollection.get();
-    final reviewsSnapshot = await reviewsCollection.get();
-    final weeksSnapshot = await weeksCollection.get();
-    final surahsSnapshot = await surahsProgressCollection.get();
-
-    for (int i = 0; i < hifdhsSnapshot.docs.length; i++) {
-      await hifdhsSnapshot.docs[i].reference.delete();
-    }
-    for (int i = 0; i < reviewsSnapshot.docs.length; i++) {
-      await reviewsSnapshot.docs[i].reference.delete();
-    }
-    for (int i = 0; i < weeksSnapshot.docs.length; i++) {
-      await weeksSnapshot.docs[i].reference.delete();
-    }
-    for (int i = 0; i < surahsSnapshot.docs.length; i++) {
-      await surahsSnapshot.docs[i].reference.delete();
-    }
-  }
-
   /*---------------------------------------D E L E T E   U S E R   A C C O U N T----------------------------------------*/
   Future<void> deleteUserAccount() async {
     try {
@@ -1773,6 +1751,8 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('weeks');
       final CollectionReference userSurahsProgressCollection =
           userDocRef.collection('surahsProgress');
+      final CollectionReference userQuizHistoryCollection =
+          userDocRef.collection('quizHistory');
 
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
@@ -1780,7 +1760,7 @@ class FirestoreService extends ChangeNotifier {
       final reviewsSnapshot = await userReviewsCollection.get();
       final weeksSnapshot = await userWeeksCollection.get();
       final surahsProgressSnapshot = await userSurahsProgressCollection.get();
-
+      final quizHistorySnapshot = await userQuizHistoryCollection.get();
       // Delete the user document itself
       await userDocRef.delete();
 
@@ -1810,6 +1790,10 @@ class FirestoreService extends ChangeNotifier {
       for (var doc in surahsProgressSnapshot.docs) {
         await doc.reference.delete();
       }
+
+      for (var doc in quizHistorySnapshot.docs) {
+        await doc.reference.delete();
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error deleting user account: $e');
@@ -1834,6 +1818,8 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('weeks');
       final CollectionReference userSurahsProgressCollection =
           userDocRef.collection('surahsProgress');
+      final CollectionReference userQuizHistoryCollection =
+          userDocRef.collection('quizHistory');
 
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
@@ -1841,7 +1827,7 @@ class FirestoreService extends ChangeNotifier {
       final reviewsSnapshot = await userReviewsCollection.get();
       final weeksSnapshot = await userWeeksCollection.get();
       final surahsProgressSnapshot = await userSurahsProgressCollection.get();
-
+      final quizHistorySnapshot = await userQuizHistoryCollection.get();
       // Delete all documents in each subcollection
       for (var doc in plansSnapshot.docs) {
         await doc.reference.delete();
@@ -1860,6 +1846,10 @@ class FirestoreService extends ChangeNotifier {
       }
 
       for (var doc in surahsProgressSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in quizHistorySnapshot.docs) {
         await doc.reference.delete();
       }
     } catch (e) {
@@ -1885,18 +1875,6 @@ class FirestoreService extends ChangeNotifier {
     } catch (e) {
       if (kDebugMode) {
         print('Error getting page for verse key: $e');
-      }
-      rethrow;
-    }
-  }
-
-  /*---------------------------------------G E T   P A G E   S T R E A M----------------------------------------*/
-  Stream<DocumentSnapshot> getPageStream(int pageNumber) {
-    try {
-      return pagesCollection.doc(pageNumber.toString()).snapshots();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting page stream: $e');
       }
       rethrow;
     }
