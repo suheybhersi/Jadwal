@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:jadwal/firebase_options.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/services/connectivity_service.dart';
+import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: "assets/.env");
+
+  // Initialize and preload Quran database in background
+  _preloadQuranData();
 
   runApp(
     MultiProvider(
@@ -52,6 +56,18 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+// Function to preload Quran data in background
+Future<void> _preloadQuranData() async {
+  // Run in a separate isolate or background task to not block UI
+  final dbService = DatabaseService();
+  try {
+    await dbService.initialize();
+    print('Database preloading completed successfully');
+  } catch (e) {
+    print('Error preloading database: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {
