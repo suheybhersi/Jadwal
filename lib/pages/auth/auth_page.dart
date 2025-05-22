@@ -23,6 +23,12 @@ class AuthPage extends StatelessWidget {
             auth: FirebaseAuth.instance,
             uid: FirebaseAuth.instance.currentUser!.uid,
           );
+
+          // Update user activity and check achievements when user logs in
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            firestoreService.updateUserAchievements();
+          });
+
           return StreamBuilder(
             stream: firestoreService.getHifdhsStream(),
             builder: (context, snapshot) {

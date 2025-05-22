@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:get/get.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 
 class QuizResultsPage extends StatefulWidget {
   int score;
@@ -140,7 +142,14 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      if (widget.isCustomQuiz) {
+                        // For custom quizzes, pop until we reach the quiz history page
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                      } else {
+                        // For regular quizzes, just pop once
+                        Navigator.pop(context);
+                      }
                     },
                     icon: const Icon(Icons.close),
                     color: Theme.of(context).colorScheme.inversePrimary,
@@ -409,7 +418,18 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                           widget.updateReview(widget.id, widget.review, rating);
                           await _saveQuizResultsToFirestore();
                           if (mounted) {
-                            Navigator.pop(context);
+                            if (widget.isCustomQuiz) {
+                              // Reset quiz creation state
+                              final controller =
+                                  Get.find<QuizCreationController>();
+                              controller.resetAllState();
+                              // Pop until we reach the quiz history page
+                              Navigator.of(context)
+                                  .popUntil((route) => route.isFirst);
+                            } else {
+                              // For regular quizzes, just pop once
+                              Navigator.pop(context);
+                            }
                           }
                         },
                   style: ElevatedButton.styleFrom(

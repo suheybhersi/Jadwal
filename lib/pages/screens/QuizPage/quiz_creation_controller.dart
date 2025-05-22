@@ -48,11 +48,29 @@ class QuizCreationController extends GetxController {
     _pageController.value.jumpToPage(page);
   }
 
+  void resetAllState() {
+    selectedStartSurahName.value = null;
+    selectedStartSurahData.value = null;
+    selectedStartVerse.value = null;
+    selectedEndSurahName.value = null;
+    selectedEndSurahData.value = null;
+    selectedEndVerse.value = null;
+    includeFillBlank.value = true;
+    includeDragDrop.value = true;
+    includeWhatNext.value = true;
+    includeVersePairing.value = true;
+    selectionErrorMessage.value = '';
+    currentPage.value = 0;
+    _pageController.value.jumpToPage(0);
+    update();
+  }
+
   void goBack() {
     if (currentPage.value > 0) {
       currentPage.value--;
       _pageController.value.jumpToPage(currentPage.value);
     } else {
+      resetAllState();
       Get.back(); // Exit quiz creation
     }
   }

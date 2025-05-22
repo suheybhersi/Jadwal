@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/ProfilePage/achievements_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/achievement_service.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
@@ -177,14 +179,6 @@ class ProfilePage extends StatelessWidget {
 
                             const SizedBox(height: 24),
 
-                            // Progress Overview section
-                            _buildSectionHeader(
-                                'Progress Overview', Iconsax.graph, context),
-                            const SizedBox(height: 12),
-                            _buildLearningStatsWidget(plan, context),
-
-                            const SizedBox(height: 24),
-
                             // Achievements section
                             _buildSectionHeader(
                                 'Achievements', Iconsax.medal_star, context),
@@ -303,7 +297,7 @@ class ProfilePage extends StatelessWidget {
           _buildStatItem(
               value:
                   '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
-              label: 'Completion Rate',
+              label: 'Completed',
               icon: Iconsax.chart,
               color: Colors.blue,
               context: context),
@@ -395,160 +389,228 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLearningStatsWidget(
-      Map<String, dynamic> plan, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildStatRow(
-              title: 'Completion Rate',
-              value:
-                  '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
-              icon: Iconsax.chart,
-              color: const Color(0xFF4979FB),
-              context: context),
-          const SizedBox(height: 16),
-          _buildStatRow(
-              title: 'Average Rating',
-              value: '4.7/5',
-              icon: Iconsax.star,
-              color: Colors.amber,
-              context: context),
-          const SizedBox(height: 16),
-          _buildStatRow(
-              title: 'Completed Reviews',
-              value: plan['reviews'] != null
-                  ? (plan['reviews'] is List
-                      ? '${plan['reviews'].length}'
-                      : '${plan['reviews']}')
-                  : '0',
-              icon: Iconsax.clock,
-              color: Colors.green,
-              context: context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatRow({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required BuildContext context,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.inversePrimary,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAchievementsWidget(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildAchievementItem(
-                title: '5 Day Streak',
-                icon: Iconsax.flash_1,
-                color: Colors.orange,
-                isUnlocked: true,
-                context: context,
+    final user = FirebaseAuth.instance.currentUser;
+
+    return StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .collection('achievements')
+            .doc('user_achievements')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 12,
+                  ),
+                ],
               ),
-              _buildAchievementItem(
-                title: 'First Surah',
-                icon: Iconsax.book_1,
-                color: const Color(0xFF4979FB),
-                isUnlocked: true,
-                context: context,
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF4979FB)),
               ),
-              _buildAchievementItem(
-                title: '1 Month',
-                icon: Iconsax.calendar,
-                color: Colors.purple,
-                isUnlocked: false,
-                context: context,
+            );
+          }
+
+          // If no data exists, create the achievements document
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            // Create the document asynchronously
+            AchievementService(
+              auth: FirebaseAuth.instance,
+              uid: user.uid,
+            ).ensureAchievementsDocExists();
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 12,
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton(
-            onPressed: () {
-              // Navigate to full achievements page
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF4979FB)),
+              ),
+            );
+          }
+
+          final achievementsData =
+              snapshot.data!.data() as Map<String, dynamic>;
+          final achievements =
+              achievementsData['achievements'] as Map<String, dynamic>? ?? {};
+
+          // Get all unlocked achievements
+          final unlockedAchievements = achievements.entries
+              .where((entry) => entry.value == true)
+              .map((entry) => entry.key)
+              .toList();
+
+          // Get the last 3 unlocked achievements
+          final lastThreeAchievements = unlockedAchievements.length > 3
+              ? unlockedAchievements.sublist(unlockedAchievements.length - 3)
+              : unlockedAchievements;
+
+          // Map achievement IDs to their display data
+          final achievementDisplayData = {
+            'firstVerses': {
+              'title': 'First Verses',
+              'icon': Iconsax.book_1,
+              'color': const Color(0xFF4979FB),
             },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFF4979FB)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            'firstReview': {
+              'title': 'First Review',
+              'icon': Iconsax.refresh,
+              'color': Colors.green,
+            },
+            'firstQuiz': {
+              'title': 'First Quiz',
+              'icon': Iconsax.message_question,
+              'color': Colors.deepPurple,
+            },
+            'oneWeek': {
+              'title': '5 Days',
+              'icon': Iconsax.calendar,
+              'color': Colors.purple,
+            },
+            'perfectScore': {
+              'title': 'Perfect Score',
+              'icon': Iconsax.star,
+              'color': Colors.amber,
+            },
+            'quizMaster': {
+              'title': 'Quiz Master',
+              'icon': Iconsax.award,
+              'color': Colors.deepPurple,
+            },
+            'tenReviews': {
+              'title': '10 Reviews',
+              'icon': Iconsax.refresh_circle,
+              'color': Colors.green,
+            },
+            'oneMonth': {
+              'title': '10 Days',
+              'icon': Iconsax.calendar,
+              'color': Colors.purple,
+            },
+            'progress25': {
+              'title': '25% Complete',
+              'icon': Iconsax.chart,
+              'color': Colors.teal,
+            },
+            'tenQuizzes': {
+              'title': '10 Quizzes',
+              'icon': Iconsax.message_question,
+              'color': Colors.deepPurple,
+            },
+            'fiftyReviews': {
+              'title': '50 Reviews',
+              'icon': Iconsax.refresh_right_square,
+              'color': Colors.green,
+            },
+            'threeMonths': {
+              'title': '25 Days',
+              'icon': Iconsax.calendar_1,
+              'color': Colors.purple,
+            },
+            'progress50': {
+              'title': '50% Complete',
+              'icon': Iconsax.chart_1,
+              'color': Colors.teal,
+            },
+            'twentyFiveQuizzes': {
+              'title': '25 Quizzes',
+              'icon': Iconsax.teacher,
+              'color': Colors.deepPurple,
+            },
+            'progress75': {
+              'title': '75% Complete',
+              'icon': Iconsax.chart_2,
+              'color': Colors.teal,
+            },
+            'quizLegend': {
+              'title': 'Quiz Legend',
+              'icon': Iconsax.crown,
+              'color': Colors.deepPurple,
+            },
+            'oneYear': {
+              'title': '50 Days',
+              'icon': Iconsax.calendar_circle,
+              'color': Colors.purple,
+            },
+            'progress100': {
+              'title': '100 Days',
+              'icon': Iconsax.calendar_circle,
+              'color': Colors.purple,
+            },
+          };
+
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 12,
+                ),
+              ],
             ),
-            child: Text(
-              'View All Achievements',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF4979FB),
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: lastThreeAchievements.map((achievementId) {
+                    final displayData = achievementDisplayData[achievementId]!;
+                    return _buildAchievementItem(
+                      title: displayData['title'] as String,
+                      icon: displayData['icon'] as IconData,
+                      color: displayData['color'] as Color,
+                      isUnlocked: true,
+                      context: context,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AchievementsPage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'View All Achievements',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF4979FB),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
+        });
   }
 
   Widget _buildAchievementItem({
@@ -595,87 +657,268 @@ class ProfilePage extends StatelessWidget {
     // Create a combined list of activities
     List<Map<String, dynamic>> activities = [];
 
+    // Get today's date for comparison
+    final today = DateTime.now();
+    final todayString = '${today.day}-${today.month}-${today.year}';
+    final todayTimestamp = _parseDate(todayString);
+
     // Add hifdhs to activities
     if (plan['hifdhs'] != null && plan['hifdhs'].isNotEmpty) {
       for (var hifdh in plan['hifdhs']) {
-        activities.add({
-          'type': 'hifdh',
-          'title': 'Memorised new verses',
-          'subtitle':
-              '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}-${hifdh['surah'].split(' ')[1] == hifdh['surah'].split(' ')[0] ? '' : hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-          'icon': Iconsax.book_1,
-          'color': const Color(0xFF4979FB),
-          'date': hifdh['date'],
-        });
+        if (hifdh['completed'] == true) {
+          // Only add completed hifdhs
+          final hifdhTimestamp = _parseDate(hifdh['date']);
+          // Only add if the hifdh date is not in the future
+          if (!hifdhTimestamp.isAfter(todayTimestamp)) {
+            activities.add({
+              'type': 'hifdh',
+              'title': 'Memorised new verses',
+              'subtitle':
+                  '${hifdh['surah'].split(' ')[0]} ${hifdh['hifdh'].split('-')[0].split(':')[1]}-${hifdh['surah'].split(' ')[1] == hifdh['surah'].split(' ')[0] ? '' : hifdh['surah'].split(' ')[1]} ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+              'icon': Iconsax.book_1,
+              'color': const Color(0xFF4979FB),
+              'date': hifdh['date'],
+              'timestamp': hifdhTimestamp,
+            });
+          }
+        }
       }
     }
 
-    // Add reviews to activities
-    if (plan['reviews'] != null &&
-        plan['reviews'] is List &&
-        plan['reviews'].isNotEmpty) {
-      for (var review in plan['reviews']) {
-        activities.add({
-          'type': 'review',
-          'title': 'Completed review',
-          'subtitle': '${review['surah']} ${review['verses'] ?? ''}',
-          'icon': Iconsax.refresh,
-          'color': Colors.green,
-          'date': review['date'],
-        });
-      }
-    }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('quizHistory')
+          .orderBy('timestamp', descending: true)
+          .limit(10)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          // Add completed reviews from quiz history
+          for (var doc in snapshot.data!.docs) {
+            var quizData = doc.data() as Map<String, dynamic>;
+            if (quizData['quizContent'] != null &&
+                quizData['quizContent'].isNotEmpty) {
+              final reviewTimestamp = _parseDate(quizData['dateCompleted']);
+              // Only add if the review date is not in the future
+              if (!reviewTimestamp.isAfter(todayTimestamp)) {
+                activities.add({
+                  'type': 'review',
+                  'title': 'Completed review',
+                  'subtitle': quizData['quizContent'],
+                  'icon': Iconsax.refresh,
+                  'color': Colors.green,
+                  'date': quizData['dateCompleted'],
+                  'timestamp': reviewTimestamp,
+                });
+              }
+            }
+          }
+        }
 
-    // Sort activities by date (most recent first)
-    activities.sort((a, b) => b['date'].compareTo(a['date']));
+        // Sort activities by timestamp (most recent first)
+        activities.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 12,
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                spreadRadius: 1,
+                blurRadius: 12,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              if (activities.isNotEmpty)
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: activities.length > 3 ? 3 : activities.length,
+                  separatorBuilder: (context, index) => Divider(
+                    height: 1,
+                    indent: 16,
+                    endIndent: 16,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withOpacity(0.4),
+                  ),
+                  itemBuilder: (context, index) {
+                    final activity = activities[index];
+                    return _buildActivityItem(
+                      title: activity['title'],
+                      subtitle: activity['subtitle'],
+                      icon: activity['icon'],
+                      color: activity['color'],
+                      date: activity['date'],
+                      context: context,
+                    );
+                  },
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Center(
+                    child: Text(
+                      'No recent activity',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              if (activities.length > 3)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AllActivitiesPage(activities: activities),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'See All Activities',
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF4979FB),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  DateTime _parseDate(String dateStr) {
+    final parts = dateStr.split('-');
+    return DateTime(
+      int.parse(parts[2]), // year
+      int.parse(parts[1]), // month
+      int.parse(parts[0]), // day
+    );
+  }
+
+  Widget _buildActivityItem({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required String date,
+    required BuildContext context,
+  }) {
+    List<String> dateParts = date.split('-');
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${dateParts[0]}/${dateParts[1]}',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+            ),
           ),
         ],
       ),
-      child: activities.isNotEmpty
-          ? ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: activities.length > 3 ? 3 : activities.length,
-              separatorBuilder: (context, index) => Divider(
-                height: 1,
-                indent: 16,
-                endIndent: 16,
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
-              ),
-              itemBuilder: (context, index) {
-                final activity = activities[index];
-                return _buildActivityItem(
-                  title: activity['title'],
-                  subtitle: activity['subtitle'],
-                  icon: activity['icon'],
-                  color: activity['color'],
-                  date: activity['date'],
-                  context: context,
-                );
-              },
-            )
-          : Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Center(
-                child: Text(
-                  'No recent activity',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ),
+    );
+  }
+}
+
+class AllActivitiesPage extends StatelessWidget {
+  final List<Map<String, dynamic>> activities;
+
+  const AllActivitiesPage({
+    super.key,
+    required this.activities,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Iconsax.arrow_left_2),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'All Activities',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+        ),
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: activities.length,
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+        ),
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          return _buildActivityItem(
+            title: activity['title'],
+            subtitle: activity['subtitle'],
+            icon: activity['icon'],
+            color: activity['color'],
+            date: activity['date'],
+            context: context,
+          );
+        },
+      ),
     );
   }
 

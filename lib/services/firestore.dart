@@ -6,6 +6,7 @@ import 'package:jadwal/models/hifdh.dart';
 import 'package:jadwal/models/plan.dart';
 import 'package:jadwal/models/review.dart';
 import 'package:jadwal/services/connectivity_service.dart';
+import 'package:jadwal/services/achievement_service.dart';
 import 'dart:math';
 
 class FirestoreService extends ChangeNotifier {
@@ -66,8 +67,11 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('quizHistory');
 
   Future<void> updateUserProfile(Map<String, dynamic> userData) async {
-    return await _executeWithRetry(
+    await _executeWithRetry(
         () => userDocument.set(userData, SetOptions(merge: true)));
+
+    // Update user activity and check achievements
+    await updateUserAchievements();
   }
 
   Future<Map<String, dynamic>?> getUserProfile() async {
@@ -1328,6 +1332,9 @@ class FirestoreService extends ChangeNotifier {
         await updateNextHifdh(id);
       }
     }
+
+    // After hifdh is created, update achievements
+    await updateUserAchievements();
   }
 
 /*----------------------------------U P D A T E   N E X T   H I F D H----------------------------------*/
@@ -1559,6 +1566,9 @@ class FirestoreService extends ChangeNotifier {
         'reviews': planData['reviews'],
       });
     }
+
+    // After review is completed, update achievements
+    await updateUserAchievements();
   }
 
 /*---------------------------------------H I F D H   M I S S E D---------------------------------------*/
@@ -2043,6 +2053,9 @@ class FirestoreService extends ChangeNotifier {
       };
 
       await quizHistoryCollection.add(quizResult);
+
+      // After quiz is saved, update achievements
+      await updateUserAchievements();
     } catch (e) {
       if (kDebugMode) {
         print('Error saving quiz history: $e');
@@ -2126,6 +2139,27 @@ class FirestoreService extends ChangeNotifier {
         print('Error getting quiz history detail: $e');
       }
       rethrow;
+    }
+  }
+
+  // New method to update user activity and check achievements
+  Future<void> updateUserAchievements() async {
+    try {
+      final AchievementService achievementService = AchievementService(
+        auth: auth,
+        uid: uid,
+      );
+
+      // Update user's daily activity (tracks logins and streaks)
+      await achievementService.updateUserActivity();
+
+      // Check and update achievements based on current progress
+      await achievementService.checkAndUpdateAchievements();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error updating achievements: $e');
+      }
+      // Don't rethrow - achievement updates should not block main functionality
     }
   }
 }

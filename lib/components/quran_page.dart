@@ -190,7 +190,7 @@ class _QuranPageState extends State<QuranPage> {
         });
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         extendBodyBehindAppBar: true,
         appBar: _showControls
             ? PreferredSize(
@@ -220,7 +220,7 @@ class _QuranPageState extends State<QuranPage> {
           padding: const EdgeInsets.only(
               top: 70.0, bottom: 40.0, left: 8.0, right: 8.0),
           child: Container(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             child: Column(
               children: [
                 Expanded(
