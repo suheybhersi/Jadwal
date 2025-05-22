@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:jadwal/services/firestore.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -59,41 +62,72 @@ class _FeedbackPageState extends State<FeedbackPage> {
       _isSubmitting = true;
     });
 
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Here you would typically send feedback to your backend
-    // For now, we'll just show a success message
-
-    if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Iconsax.tick_circle, color: Colors.white),
-              const SizedBox(width: 10),
-              const Text('Thank you for your feedback!',
-                  style: TextStyle(color: Colors.white)),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF4979FB),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
+    try {
+      final firestoreService = FirestoreService(
+        auth: FirebaseAuth.instance,
+        uid: FirebaseAuth.instance.currentUser!.uid,
       );
 
-      // Clear the form
-      _feedbackController.clear();
-      setState(() {
-        _selectedCategory = 'General';
+      await firestoreService.feedbackCollection.add({
+        'category': _selectedCategory,
+        'message': _feedbackController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
       });
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Iconsax.tick_circle, color: Colors.white),
+                const SizedBox(width: 10),
+                const Text('Thank you for your feedback!',
+                    style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF4979FB),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+
+        _feedbackController.clear();
+        setState(() {
+          _selectedCategory = 'General';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Iconsax.warning_2, color: Colors.white),
+                const SizedBox(width: 10),
+                const Text('Failed to submit feedback.',
+                    style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     }
   }
 

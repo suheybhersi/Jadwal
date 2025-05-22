@@ -61,6 +61,8 @@ class FirestoreService extends ChangeNotifier {
       usersCollection.doc(uid).collection('weeks');
   CollectionReference get surahsProgressCollection =>
       usersCollection.doc(uid).collection('surahsProgress');
+  CollectionReference get feedbackCollection =>
+      usersCollection.doc(uid).collection('feedback');
 
   // Collection reference for quiz history
   CollectionReference get quizHistoryCollection =>

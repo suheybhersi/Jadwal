@@ -2,11 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/SettingsPage/about_app_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/delete_account_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/feedback_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/help_support_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/password_security_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 
@@ -281,25 +285,53 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Iconsax.message_question,
                     title: 'Help & Support',
                     description: 'Get assistance with the app',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.shield,
                     title: 'Privacy Policy',
                     description: 'View our privacy policy',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AboutAppPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.document_text,
                     title: 'Terms of Service',
                     description: 'View our terms of service',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsServicePage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingTile(
                     icon: Iconsax.information,
                     title: 'About App',
                     description: 'Version 1.0.0',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PrivacyPolicyPage(),
+                        ),
+                      );
+                    },
                     isLast: true,
                   ),
                 ]),

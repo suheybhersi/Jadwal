@@ -46,10 +46,9 @@ class AchievementService {
           'maxStreak': 0,
           'daysActive': 0,
         });
-        print('Created new achievements document for user: $uid');
       }
     } catch (e) {
-      print('Error ensuring achievements doc exists: $e');
+      throw Exception(e);
     }
   }
 
@@ -64,8 +63,7 @@ class AchievementService {
       }
       return null;
     } catch (e) {
-      print('Error getting plan data: $e');
-      return null;
+      throw Exception(e);
     }
   }
 
@@ -249,7 +247,7 @@ class AchievementService {
         await achievementDocument.update({'achievements': achievements});
       }
     } catch (e) {
-      print('Error checking achievements: $e');
+      throw Exception(e);
     }
   }
 
@@ -269,14 +267,11 @@ class AchievementService {
   // Helper method to count perfect quiz scores
   int _countPerfectQuizzes(dynamic quizzes) {
     if (quizzes is! List) {
-      print('Quizzes is not a list: ${quizzes.runtimeType}');
       return 0;
     }
 
-    print('Processing ${quizzes.length} quizzes');
     int count = 0;
     for (final quiz in quizzes) {
-      print('Quiz data: $quiz');
       if (quiz is Map<String, dynamic> &&
           quiz['score'] != null &&
           quiz['totalQuestions'] != null) {
@@ -285,19 +280,12 @@ class AchievementService {
         final totalQuestions = quiz['totalQuestions'] as int;
         final percentage = (score / totalQuestions) * 100;
 
-        print('Score: $score, Total: $totalQuestions, Percentage: $percentage');
-
         // Count as perfect if score is 100%
         if (percentage == 100) {
           count++;
-          print('Found perfect score!');
         }
-      } else {
-        print(
-            'Quiz missing required fields: score=${quiz['score']}, totalQuestions=${quiz['totalQuestions']}');
       }
     }
-    print('Total perfect quizzes found: $count');
     return count;
   }
 
@@ -418,7 +406,7 @@ class AchievementService {
 
       await achievementDocument.update(updateData);
     } catch (e) {
-      print('Error updating user activity: $e');
+      throw Exception(e);
     }
   }
 }
