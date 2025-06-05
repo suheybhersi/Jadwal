@@ -12,14 +12,16 @@ class ConnectivityService extends ChangeNotifier {
   ConnectivityService() {
     _initConnectivity();
     _connectivitySubscription =
-        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+        _connectivity.onConnectivityChanged.listen((result) {
+      _updateConnectionStatus(result.first);
+    });
   }
 
   // Initialise connectivity
   Future<void> _initConnectivity() async {
     try {
-      ConnectivityResult result = await _connectivity.checkConnectivity();
-      _updateConnectionStatus(result);
+      List<ConnectivityResult> result = await _connectivity.checkConnectivity();
+      _updateConnectionStatus(result.first);
     } catch (e) {
       if (kDebugMode) {}
       _isConnected = false;
