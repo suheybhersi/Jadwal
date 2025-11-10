@@ -261,7 +261,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             onChanged: (value) {
                               themeProvider.toggleTheme();
                             },
-                            activeColor: const Color(0xFF4979FB),
+                            activeThumbColor: const Color(0xFF4979FB),
                             inactiveThumbColor: Colors.grey[300],
                             trackOutlineColor: WidgetStateProperty.all(
                               themeProvider.isDarkMode
@@ -302,7 +302,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AboutAppPage(),
+                          builder: (context) => const PrivacyPolicyPage(),
                         ),
                       );
                     },
@@ -328,7 +328,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const PrivacyPolicyPage(),
+                          builder: (context) => const AboutAppPage(),
                         ),
                       );
                     },

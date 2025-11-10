@@ -2164,4 +2164,159 @@ class FirestoreService extends ChangeNotifier {
       // Don't rethrow - achievement updates should not block main functionality
     }
   }
+
+  /*----------------------------------A D J U S T   L A S T   H I F D H   E N D----------------------------------*/
+  Future<void> adjustLastHifdhEnd(String planId, String newEndKey) async {
+    // Load plan
+    final planSnapshot = await plansCollection.doc(planId).get();
+    if (!planSnapshot.exists) return;
+    final planData = planSnapshot.data() as Map<String, dynamic>;
+
+    if ((planData['hifdhs'] as List).isEmpty) return;
+
+    final bool backToFront = (planData['backToFront'] ?? false) as bool;
+    final List<dynamic> hifdhs = List.from(planData['hifdhs']);
+    final Map<String, dynamic> last = Map<String, dynamic>.from(hifdhs.last);
+
+    final String startKey = (last['hifdh'] as String).split('-')[0].trim();
+
+    // Fetch start and end verse documents
+    final startSnap =
+        await versesCollection.where('key', isEqualTo: startKey).get();
+    final endSnap =
+        await versesCollection.where('key', isEqualTo: newEndKey).get();
+    if (startSnap.docs.isEmpty || endSnap.docs.isEmpty) {
+      throw Exception(
+          'Invalid verse keys for adjustment: $startKey to $newEndKey');
+    }
+
+    String currentId = startSnap.docs[0].reference.id;
+    final String targetId = endSnap.docs[0].reference.id;
+
+    Map<String, dynamic> current = (await versesCollection.doc(currentId).get())
+        .data() as Map<String, dynamic>;
+
+    // Build verses list and accumulate length from after start to inclusive end
+    final List<String> versesList = [];
+    double accumulatedLength = 0.0;
+
+    // Move at least one step from start towards end
+    int safety = 0;
+    while (true) {
+      if (safety++ > 7000) {
+        throw Exception('Traversal safety stop while adjusting hifdh end');
+      }
+
+      // Step to next verse according to direction rules used in createNewHifdh
+      String nextId;
+      if (!backToFront) {
+        nextId = (int.parse(currentId) + 1).toString();
+        if (nextId == '6237') break; // end of Quran
+      } else {
+        // Back to front requires switching surah boundaries differently
+        nextId = (int.parse(currentId) + 1).toString();
+        if (nextId == '6237') {
+          // Jump to An-Nas offset used elsewhere (6226 is used to wrap)
+          nextId = '6226';
+        } else {
+          final nextDoc = await versesCollection.doc(nextId).get();
+          final nextData = nextDoc.data() as Map<String, dynamic>;
+          if (nextData['surah'] != current['surah']) {
+            final prevSurahFirst = await versesCollection
+                .where('key',
+                    isEqualTo:
+                        '${int.parse(current['key'].split(':')[0]) - 1}:1')
+                .get();
+            nextId = prevSurahFirst.docs.isNotEmpty
+                ? prevSurahFirst.docs[0].reference.id
+                : nextId;
+          }
+        }
+      }
+
+      // Append current before moving if not the very first start verse
+      versesList.add(current['text'] as String);
+      accumulatedLength += double.parse(current['length'].toString());
+
+      currentId = nextId;
+      current = (await versesCollection.doc(currentId).get()).data()
+          as Map<String, dynamic>;
+
+      if (current['key'] == newEndKey) {
+        // Include end verse
+        versesList.add(current['text'] as String);
+        accumulatedLength += double.parse(current['length'].toString());
+        break;
+      }
+    }
+
+    final endVerseText =
+        (endSnap.docs[0].data() as Map<String, dynamic>)['text'] as String;
+
+    // Compute nextKey after end
+    String nextKey;
+    {
+      // Start from end
+      String eid = targetId;
+      Map<String, dynamic> edata = (await versesCollection.doc(eid).get())
+          .data() as Map<String, dynamic>;
+      String nid;
+      if (!backToFront) {
+        nid = (int.parse(eid) + 1).toString();
+        if (nid == '6237') {
+          nid = eid; // stay at end
+        }
+      } else {
+        nid = (int.parse(eid) + 1).toString();
+        if (nid == '6237') {
+          nid = '6226';
+        } else {
+          final ndoc = await versesCollection.doc(nid).get();
+          final ndata = ndoc.data() as Map<String, dynamic>;
+          if (ndata['surah'] != edata['surah']) {
+            final prevSurahFirst = await versesCollection
+                .where('key',
+                    isEqualTo: '${int.parse(edata['key'].split(':')[0]) - 1}:1')
+                .get();
+            nid = prevSurahFirst.docs.isNotEmpty
+                ? prevSurahFirst.docs[0].reference.id
+                : nid;
+          }
+        }
+      }
+      final nd = (await versesCollection.doc(nid).get()).data()
+          as Map<String, dynamic>;
+      nextKey = nd['key'] as String;
+    }
+
+    // Build combined surah label like in createNewHifdh
+    final startSurah =
+        (startSnap.docs[0].data() as Map<String, dynamic>)['surah'] as String;
+    final endSurah =
+        (endSnap.docs[0].data() as Map<String, dynamic>)['surah'] as String;
+    final combinedSurah = '$startSurah $endSurah';
+
+    final updated = {
+      'hifdh': '$startKey - $newEndKey',
+      'endVerse': endVerseText,
+      'length': accumulatedLength,
+      'versesList': versesList,
+      'nextKey': nextKey,
+      'surah': combinedSurah,
+    };
+
+    // Update plan's last hifdh entry
+    final List<dynamic> updatedHifdhs = List.from(hifdhs);
+    final Map<String, dynamic> lastUpdated = Map<String, dynamic>.from(last)
+      ..addAll(updated);
+    updatedHifdhs[updatedHifdhs.length - 1] = lastUpdated;
+    await plansCollection.doc(planId).update({'hifdhs': updatedHifdhs});
+
+    // Update corresponding hifdh document in collection
+    final existingHifdhQuery =
+        await hifdhsCollection.where('hifdh', isEqualTo: last['hifdh']).get();
+    if (existingHifdhQuery.docs.isNotEmpty) {
+      await hifdhsCollection.doc(existingHifdhQuery.docs[0].id).update(updated);
+    }
+  }
 }

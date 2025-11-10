@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
+import 'package:jadwal/components/verse_picker.dart';
 
 class UpcomingSection extends StatelessWidget {
   const UpcomingSection({
@@ -212,7 +214,7 @@ class UpcomingSection extends StatelessWidget {
                                   Row(
                                     children: [
                                       Text(
-                                        '${plan['hifdhs'].last['surah'].split(' ')[0]}',
+                                        '${plan['hifdhs'].last['surah'].contains(' ') ? plan['hifdhs'].last['surah'].split(' ').first : plan['hifdhs'].last['surah']}',
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -240,7 +242,9 @@ class UpcomingSection extends StatelessWidget {
                                                         .last['surah']
                                                         .split(' ')[0] !=
                                                     'Al-Fatiha'
-                                            ? '...${plan['hifdhs'].last['startVerse'].substring(0, plan['hifdhs'].last['startVerse'].substring(0, 35).lastIndexOf(' '))}'
+                                            ? _buildStartVersePreview(
+                                                plan['hifdhs'].last,
+                                              )
                                             : plan['hifdhs'].last['startVerse'],
                                         style: GoogleFonts.scheherazadeNew(
                                           fontSize: 22,
@@ -863,6 +867,8 @@ class UpcomingSection extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: EdgeInsets.all(10),
@@ -878,31 +884,47 @@ class UpcomingSection extends StatelessWidget {
                                           ),
                                         ),
                                         SizedBox(width: 12),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Surah ${hifdh['surah'].split(' ')[1]}',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Surah ${hifdh['surah'].substring(hifdh['surah'].indexOf(' ') + 1)}',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface,
+                                                ),
                                               ),
-                                            ),
-                                            Text(
-                                              'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .inversePrimary
-                                                    .withOpacity(0.5),
+                                              Text(
+                                                'Verse ${hifdh['hifdh'].split('-')[1].split(':')[1]}',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 12,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .inversePrimary
+                                                      .withOpacity(0.5),
+                                                ),
                                               ),
+                                            ],
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _openEditEndPicker(context, hifdh);
+                                          },
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Color(0xFF4979FB),
+                                          ),
+                                          child: Text(
+                                            'Edit',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -974,6 +996,288 @@ class UpcomingSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _openEditEndPicker(BuildContext context, Map<String, dynamic> hifdh) {
+    final firestoreService = FirestoreService(
+      auth: FirebaseAuth.instance,
+      uid: FirebaseAuth.instance.currentUser!.uid,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.6,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Adjust End Verse',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(
+                            Icons.close,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: firestoreService.getSurahsStream(),
+                      builder:
+                          (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        final docs = snapshot.data!.docs;
+                        final List<Map<String, dynamic>> surahData = docs
+                            .map((d) => d.data() as Map<String, dynamic>)
+                            .toList();
+
+                        int parseSurahNumber(Map<String, dynamic> data) {
+                          final dynamic raw = data['surahNumber'];
+                          if (raw is int) return raw;
+                          if (raw is String) {
+                            return int.tryParse(raw) ?? 0;
+                          }
+                          return 0;
+                        }
+
+                        // Determine direction-aware allowed surah range
+                        final endKey = hifdh['hifdh'].split('-')[1].trim();
+                        final endSurahNumber = int.parse(endKey.split(':')[0]);
+                        final initialVerse = int.parse(endKey.split(':')[1]);
+
+                        final startKey = hifdh['hifdh'].split('-')[0].trim();
+                        final startSurahNumber =
+                            int.tryParse(startKey.split(':')[0]) ?? 0;
+                        final bool isBackToFront =
+                            (plan['backToFront'] ?? false) == true;
+
+                        List<Map<String, dynamic>> allowedSurahs = surahData
+                            .where((s) => isBackToFront
+                                ? parseSurahNumber(s) <= startSurahNumber
+                                : parseSurahNumber(s) >= startSurahNumber)
+                            .toList();
+
+                        if (allowedSurahs.isEmpty) {
+                          allowedSurahs =
+                              List<Map<String, dynamic>>.from(surahData);
+                        }
+
+                        if (allowedSurahs.isEmpty) {
+                          return const Center(
+                            child: Text('No surah data available.'),
+                          );
+                        }
+
+                        allowedSurahs.sort((a, b) {
+                          final aNum = parseSurahNumber(a);
+                          final bNum = parseSurahNumber(b);
+                          return isBackToFront
+                              ? bNum.compareTo(aNum)
+                              : aNum.compareTo(bNum);
+                        });
+
+                        final initialIndex = allowedSurahs.indexWhere(
+                            (s) => parseSurahNumber(s) == endSurahNumber);
+                        final resolvedInitialIndex =
+                            initialIndex >= 0 ? initialIndex : 0;
+                        final int initialPickerIndex =
+                            allowedSurahs.isEmpty ? 0 : resolvedInitialIndex;
+
+                        String? selectedSurahName;
+                        int? selectedVerseNumber;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: QuranVersePicker(
+                                  surahData: allowedSurahs,
+                                  initialSurahIndex: initialPickerIndex,
+                                  initialVerseNumber: initialVerse,
+                                  onVerseSelected:
+                                      (String surahName, int verseNumber) {
+                                    selectedSurahName = surahName;
+                                    selectedVerseNumber = verseNumber;
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20.0, vertical: 16.0),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  height: 56,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      try {
+                                        // Resolve picked surah to its number
+                                        final sel = selectedSurahName ??
+                                            allowedSurahs[initialPickerIndex]
+                                                ['surah'];
+                                        final chosen = allowedSurahs.firstWhere(
+                                            (s) => s['surah'] == sel,
+                                            orElse: () => allowedSurahs[
+                                                initialPickerIndex]);
+                                        final surahNumber =
+                                            parseSurahNumber(chosen);
+                                        final verseNumber =
+                                            selectedVerseNumber ?? initialVerse;
+                                        final newEndKey =
+                                            '$surahNumber:$verseNumber';
+
+                                        final bool isInvalidSelection =
+                                            (!isBackToFront &&
+                                                    surahNumber <
+                                                        startSurahNumber) ||
+                                                (isBackToFront &&
+                                                    surahNumber >
+                                                        startSurahNumber);
+
+                                        if (isInvalidSelection) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'You cannot select a previously memorised surah.',
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        // Show spinner
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (_) => const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+
+                                        // Adjust on backend
+                                        await firestoreService
+                                            .adjustLastHifdhEnd(id, newEndKey);
+
+                                        Navigator.of(context)
+                                            .pop(); // close spinner
+                                        Navigator.of(context)
+                                            .pop(); // close sheet
+
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'End verse updated successfully')),
+                                        );
+                                      } catch (e) {
+                                        Navigator.of(context)
+                                            .pop(); // close spinner if open
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content:
+                                                  Text('Failed to update: $e')),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      backgroundColor: Color(0xFF4979FB),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      'Save',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _buildStartVersePreview(dynamic lastHifdhData) {
+    if (lastHifdhData is! Map) {
+      return '';
+    }
+
+    final startVerse = lastHifdhData['startVerse'];
+    if (startVerse is! String || startVerse.isEmpty) {
+      return '';
+    }
+
+    const maxLength = 35;
+    if (startVerse.length <= maxLength) {
+      return startVerse;
+    }
+
+    final previewCandidate = startVerse.substring(0, maxLength);
+    final lastSpace = previewCandidate.lastIndexOf(' ');
+
+    if (lastSpace == -1) {
+      return '...$previewCandidate';
+    }
+
+    return '...${previewCandidate.substring(0, lastSpace)}';
   }
 
   String _convertToArabicNumbers(String number) {
