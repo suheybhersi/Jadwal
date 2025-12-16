@@ -1,1 +1,33 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"jadwal-dca2a","appId":"1:1040296089716:android:1287912e8e10f6f8b51921","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"jadwal-dca2a","appId":"1:1040296089716:ios:11b14f7c8c2269a8b51921","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"jadwal-dca2a","configurations":{"android":"1:1040296089716:android:1287912e8e10f6f8b51921","ios":"1:1040296089716:ios:11b14f7c8c2269a8b51921"}}}}}}
+{
+  "functions": {
+    "source": "functions"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "jadwal-dca2a",
+          "appId": "1:1040296089716:android:1287912e8e10f6f8b51921",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "jadwal-dca2a",
+          "appId": "1:1040296089716:ios:11b14f7c8c2269a8b51921",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "jadwal-dca2a",
+          "configurations": {
+            "android": "1:1040296089716:android:1287912e8e10f6f8b51921",
+            "ios": "1:1040296089716:ios:11b14f7c8c2269a8b51921"
+          }
+        }
+      }
+    }
+  }
+}

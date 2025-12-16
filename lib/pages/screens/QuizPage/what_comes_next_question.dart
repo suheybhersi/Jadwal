@@ -16,9 +16,8 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Network & API packages
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WhatComesNextQuestion extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -55,8 +54,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   Timer? _amplitudeTimer;
   // Timer for maximum recording duration
   Timer? _recordingDurationTimer;
-
-  String? apiKey = dotenv.env['API_KEY'];
 
   List<Map<String, dynamic>> comparison = [];
 
@@ -131,20 +128,11 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   Future<String> convertSpeechToText(String filePath) async {
     try {
-      var url = Uri.https('api.openai.com', 'v1/audio/transcriptions');
-
-      // Validate API key exists
-      if (apiKey == null || apiKey!.isEmpty) {
-        throw Exception(
-            'API key is missing. Please check your environment variables.');
+      // Verify user is authenticated
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User must be authenticated to use speech-to-text');
       }
-
-      var request = http.MultipartRequest('POST', url);
-      request.headers.addAll({
-        'Authorization': 'Bearer $apiKey',
-      });
-      request.fields['model'] = 'whisper-1';
-      request.fields['language'] = 'ar';
 
       // Check if file exists before reading
       final file = File(filePath);
@@ -152,36 +140,30 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         throw Exception('Recording file not found: $filePath');
       }
 
-      request.files.add(http.MultipartFile.fromBytes(
-        'file',
-        file.readAsBytesSync(),
-        filename: 'recording.wav',
-        contentType: MediaType('audio', 'wav'),
-      ));
+      // Read file and convert to base64
+      final fileBytes = await file.readAsBytes();
+      final audioBase64 = base64Encode(fileBytes);
 
-      // Add timeout for network requests
-      var streamedResponse = await request.send().timeout(
-        const Duration(seconds: 10),
+      // Call the Firebase Function proxy (API key stays on server)
+      final callable = FirebaseFunctions.instanceFor(region: 'us-central1')
+          .httpsCallable('convertSpeechToText');
+
+      final result = await callable.call({
+        'audioBase64': audioBase64,
+        'filename': 'recording.wav',
+      }).timeout(
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception(
-              'Network request timed out. Please check your internet connection.');
+              'Request timed out. Please check your internet connection.');
         },
       );
 
-      var newResponse = await http.Response.fromStream(streamedResponse);
-
-      // Check for API errors
-      if (newResponse.statusCode != 200) {
-        final error = json.decode(utf8.decode(newResponse.bodyBytes));
-        throw Exception(
-            'API Error (${newResponse.statusCode}): ${error['error']?['message'] ?? 'Unknown error'}');
-      }
-
-      // Decode the response body explicitly with UTF-8
-      final responseData = json.decode(utf8.decode(newResponse.bodyBytes));
-
-      // Return the text value from the JSON response
-      return responseData['text'] ?? '';
+      // Extract text from response
+      final text = result.data['text'] as String?;
+      return text ?? '';
+    } on FirebaseFunctionsException catch (e) {
+      return 'Error: Unable to convert speech to text. ${e.message}';
     } catch (e) {
       return 'Error: Unable to convert speech to text. ${e.toString()}';
     }

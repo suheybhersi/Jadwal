@@ -10,12 +10,10 @@ import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await dotenv.load(fileName: "assets/.env");
 
   // Initialize and preload Quran database in background
   _preloadQuranData();
