@@ -149,7 +149,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                             Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.8),
+                                .withValues(alpha: 0.8),
                             Theme.of(context).colorScheme.primary,
                           ],
                         ),
@@ -159,7 +159,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             blurRadius: 4,
                           ),
                         ],
@@ -172,7 +172,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(
@@ -190,7 +190,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                                       'Topic',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withValues(alpha: 0.8),
                                       ),
                                     ),
                                     Text(
@@ -213,7 +213,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -260,7 +260,7 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                           color: Theme.of(context)
                               .colorScheme
                               .tertiary
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 10),
                         ),

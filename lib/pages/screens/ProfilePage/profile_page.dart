@@ -117,7 +117,7 @@ class ProfilePage extends StatelessWidget {
                                           gradient: LinearGradient(
                                             colors: [
                                               Color.fromARGB(255, 73, 121, 251)
-                                                  .withOpacity(0.7),
+                                                  .withValues(alpha: 0.7),
                                               Color.fromARGB(255, 73, 121, 251),
                                             ],
                                             begin: Alignment.topLeft,
@@ -271,7 +271,7 @@ class ProfilePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -355,7 +355,7 @@ class ProfilePage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),
@@ -385,7 +385,7 @@ class ProfilePage extends StatelessWidget {
     return Container(
       height: 40,
       width: 1,
-      color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
     );
   }
 
@@ -409,7 +409,7 @@ class ProfilePage extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color:
-                        Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                     spreadRadius: 1,
                     blurRadius: 12,
                   ),
@@ -437,7 +437,7 @@ class ProfilePage extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color:
-                        Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                     spreadRadius: 1,
                     blurRadius: 12,
                   ),
@@ -567,7 +567,7 @@ class ProfilePage extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                   spreadRadius: 1,
                   blurRadius: 12,
                 ),
@@ -626,8 +626,8 @@ class ProfilePage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isUnlocked
-                ? color.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.1),
+                ? color.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -726,7 +726,7 @@ class ProfilePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                 spreadRadius: 1,
                 blurRadius: 12,
               ),
@@ -746,7 +746,7 @@ class ProfilePage extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .secondary
-                        .withOpacity(0.4),
+                        .withValues(alpha: 0.4),
                   ),
                   itemBuilder: (context, index) {
                     final activity = activities[index];
@@ -827,7 +827,7 @@ class ProfilePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -905,7 +905,7 @@ class AllActivitiesPage extends StatelessWidget {
         itemCount: activities.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
-          color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
         ),
         itemBuilder: (context, index) {
           final activity = activities[index];
@@ -938,7 +938,7 @@ class AllActivitiesPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

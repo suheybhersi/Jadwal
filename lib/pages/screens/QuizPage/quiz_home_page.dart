@@ -38,7 +38,7 @@ class _QuizHomePageState extends State<QuizHomePage>
       _customQuizStream = firestoreService.getCustomQuizHistoryStream();
       _reviewQuizStream = firestoreService.getReviewQuizHistoryStream();
     } catch (e) {
-      print('Error initializing quiz history streams: $e');
+      debugPrint('Error initializing quiz history streams: $e');
     }
   }
 
@@ -106,7 +106,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                 boxShadow: [
                   BoxShadow(
                     color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -129,11 +129,11 @@ class _QuizHomePageState extends State<QuizHomePage>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
+        color: Colors.grey.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withValues(alpha: 0.05),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -147,7 +147,7 @@ class _QuizHomePageState extends State<QuizHomePage>
           color: Theme.of(context).colorScheme.primary,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -206,7 +206,7 @@ class _QuizHomePageState extends State<QuizHomePage>
         }
 
         if (snapshot.hasError) {
-          print('Error in custom quiz stream: ${snapshot.error}');
+          debugPrint('Error in custom quiz stream: ${snapshot.error}');
           return Center(
             child: Text(
               'Error loading quiz history',
@@ -223,7 +223,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                 Icon(
                   Iconsax.clipboard_text,
                   size: 60,
-                  color: Colors.grey.withOpacity(0.5),
+                  color: Colors.grey.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -298,7 +298,7 @@ class _QuizHomePageState extends State<QuizHomePage>
         }
 
         if (snapshot.hasError) {
-          print('Error in review quiz stream: ${snapshot.error}');
+          debugPrint('Error in review quiz stream: ${snapshot.error}');
           return Center(
             child: Text(
               'Error loading review history',
@@ -315,7 +315,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                 Icon(
                   Iconsax.refresh,
                   size: 60,
-                  color: Colors.grey.withOpacity(0.5),
+                  color: Colors.grey.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -395,7 +395,7 @@ class _QuizHomePageState extends State<QuizHomePage>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -432,7 +432,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: resultColor.withOpacity(0.1),
+                  color: resultColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -476,7 +476,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                         color: Theme.of(context)
                             .colorScheme
                             .inversePrimary
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -487,7 +487,7 @@ class _QuizHomePageState extends State<QuizHomePage>
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
               ),
             ],
           ),

@@ -404,7 +404,7 @@ class AchievementsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -517,8 +517,8 @@ class AchievementsPage extends StatelessWidget {
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
               color: isUnlocked
-                  ? color.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
+                  ? color.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -591,8 +591,8 @@ class AchievementsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: isUnlocked
-                        ? color.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
+                        ? color.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

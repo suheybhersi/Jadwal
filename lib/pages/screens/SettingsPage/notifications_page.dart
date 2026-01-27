@@ -78,7 +78,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4979FB).withOpacity(0.2),
+                        color: const Color(0xFF4979FB).withValues(alpha: 0.2),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       ),
@@ -90,7 +90,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         height: 50,
                         width: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -117,7 +117,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               'Manage how you receive notifications',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -144,7 +144,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           isPushNotificationsEnabled = value;
                         });
                       },
-                      activeColor: const Color(0xFF4979FB),
+                      activeThumbColor: const Color(0xFF4979FB),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
@@ -165,7 +165,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           isEmailNotificationsEnabled = value;
                         });
                       },
-                      activeColor: const Color(0xFF4979FB),
+                      activeThumbColor: const Color(0xFF4979FB),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
@@ -197,7 +197,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               });
                             }
                           : null,
-                      activeColor: const Color(0xFF4979FB),
+                      activeThumbColor: const Color(0xFF4979FB),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
@@ -220,7 +220,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               });
                             }
                           : null,
-                      activeColor: const Color(0xFF4979FB),
+                      activeThumbColor: const Color(0xFF4979FB),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
@@ -243,7 +243,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               });
                             }
                           : null,
-                      activeColor: const Color(0xFF4979FB),
+                      activeThumbColor: const Color(0xFF4979FB),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.tertiary,
                       trackOutlineColor: WidgetStateProperty.all(
@@ -331,7 +331,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -362,7 +362,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4979FB).withOpacity(0.1),
+                    color: const Color(0xFF4979FB).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -420,7 +420,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),

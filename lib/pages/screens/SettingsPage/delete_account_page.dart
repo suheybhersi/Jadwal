@@ -131,7 +131,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         spreadRadius: 1,
                         blurRadius: 12,
                       ),

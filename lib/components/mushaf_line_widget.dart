@@ -123,7 +123,6 @@ class MushafLineWidget extends StatelessWidget {
   Widget _buildWordWidget(Word word, String fontFamily, BuildContext context) {
     // Check if this word should be highlighted
     bool shouldHighlight = false;
-    bool isPrevVerse = false;
 
     if (verseToHighlight.isNotEmpty && !word.isSpecial) {
       final parts = verseToHighlight.split(':');
@@ -179,7 +178,7 @@ class MushafLineWidget extends StatelessWidget {
             prevAyah != null &&
             word.surah == prevSurah &&
             word.ayah == prevAyah) {
-          isPrevVerse = true;
+          // Previous verse detected
         }
       }
     }
@@ -187,7 +186,8 @@ class MushafLineWidget extends StatelessWidget {
     return Container(
       decoration: shouldHighlight
           ? BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
             )
           : null,
       child: Text(

@@ -131,7 +131,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -211,7 +211,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              resultColor.withOpacity(0.7),
+                              resultColor.withValues(alpha: 0.7),
                               resultColor,
                             ],
                             begin: Alignment.topLeft,
@@ -220,7 +220,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: resultColor.withOpacity(0.2),
+                              color: resultColor.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -232,7 +232,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
@@ -252,7 +252,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                                     'Your Score',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                     ),
                                   ),
                                   Row(
@@ -273,7 +273,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                                         style: GoogleFonts.poppins(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(alpha: 0.9),
                                         ),
                                       ),
                                     ],
@@ -287,7 +287,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                               width: 70,
                               height: 70,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: Stack(
@@ -301,7 +301,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                                           widget.questions.length,
                                       strokeWidth: 8,
                                       backgroundColor:
-                                          Colors.white.withOpacity(0.2),
+                                          Colors.white.withValues(alpha: 0.2),
                                       valueColor:
                                           const AlwaysStoppedAnimation<Color>(
                                               Colors.white),
@@ -468,8 +468,8 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: isCorrect
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -500,7 +500,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                         color: Theme.of(context)
                             .colorScheme
                             .inversePrimary
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -516,7 +516,7 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
                 color: Theme.of(context)
                     .colorScheme
                     .inversePrimary
-                    .withOpacity(0.5),
+                    .withValues(alpha: 0.5),
               ),
             ],
           ),

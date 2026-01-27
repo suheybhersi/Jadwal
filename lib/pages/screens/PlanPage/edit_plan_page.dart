@@ -149,7 +149,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                   color: Theme.of(context)
                       .colorScheme
                       .inversePrimary
-                      .withOpacity(0.7),
+                      .withValues(alpha: 0.7),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -190,7 +190,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           color: Theme.of(context)
                               .colorScheme
                               .inversePrimary
-                              .withOpacity(0.7),
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -225,6 +225,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         // Reset the plan
                         firestoreService.resetPlan().then((_) {
                           // Close loading dialog
+                          if (!context.mounted) return;
                           Navigator.pop(context);
                           // Close confirmation dialog
                           Navigator.pop(context);
@@ -244,6 +245,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           );
                         }).catchError((error) {
                           // Handle errors
+                          if (!context.mounted) return;
                           Navigator.pop(context); // Close loading dialog
                           Navigator.pop(context); // Close confirmation dialog
 
@@ -325,7 +327,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       color: Theme.of(context)
                           .colorScheme
                           .tertiary
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -352,7 +354,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .inversePrimary
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -370,7 +372,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -488,7 +490,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       color: Theme.of(context)
                           .colorScheme
                           .tertiary
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -515,7 +517,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .inversePrimary
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -555,7 +557,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                         BoxShadow(
                                           color: const Color.fromARGB(
                                                   255, 73, 121, 251)
-                                              .withOpacity(0.3),
+                                              .withValues(alpha: 0.3),
                                           blurRadius: 8,
                                           spreadRadius: 0,
                                         )
@@ -572,7 +574,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                       : Theme.of(context)
                                           .colorScheme
                                           .inversePrimary
-                                          .withOpacity(0.7),
+                                          .withValues(alpha: 0.7),
                                 ),
                               ),
                             ),

@@ -143,7 +143,7 @@ class QuizCreationPage extends StatelessWidget {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: primaryColor.withOpacity(0.3),
+                      color: primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 2,
                       offset: const Offset(0, 2),
@@ -206,14 +206,14 @@ class QuizCreationPage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    primaryColor.withOpacity(0.8),
+                    primaryColor.withValues(alpha: 0.8),
                     primaryColor,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     blurRadius: 15,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -354,14 +354,14 @@ class QuizCreationPage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    primaryColor.withOpacity(0.8),
+                    primaryColor.withValues(alpha: 0.8),
                     primaryColor,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     blurRadius: 15,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -440,14 +440,14 @@ class QuizCreationPage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    primaryColor.withOpacity(0.8),
+                    primaryColor.withValues(alpha: 0.8),
                     primaryColor,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     blurRadius: 15,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -529,7 +529,7 @@ class QuizCreationPage extends StatelessWidget {
               boxShadow: controller.isAnyTypeSelected()
                   ? [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.4),
+                        color: primaryColor.withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -580,7 +580,7 @@ class QuizCreationPage extends StatelessWidget {
               boxShadow: controller.selectedStartVerse.value != null
                   ? [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.4),
+                        color: primaryColor.withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -631,7 +631,7 @@ class QuizCreationPage extends StatelessWidget {
               boxShadow: controller.canCreateQuiz()
                   ? [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.4),
+                        color: primaryColor.withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -688,15 +688,15 @@ class QuizCreationPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isSelected
-                ? const Color.fromARGB(255, 73, 121, 251).withOpacity(0.5)
-                : Colors.grey.withOpacity(0.2),
+                ? const Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.5)
+                : Colors.grey.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -712,7 +712,7 @@ class QuizCreationPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color.fromARGB(255, 73, 121, 251)
-                        : Colors.grey.withOpacity(0.1),
+                        : Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -745,7 +745,7 @@ class QuizCreationPage extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: isSelected
                         ? const Color.fromARGB(255, 73, 121, 251)
-                        : Colors.grey.withOpacity(0.1),
+                        : Colors.grey.withValues(alpha: 0.1),
                     border: Border.all(
                       color: isSelected
                           ? const Color.fromARGB(255, 73, 121, 251)
@@ -833,7 +833,7 @@ class QuizCreationPage extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
@@ -842,7 +842,7 @@ class QuizCreationPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -899,7 +899,7 @@ class QuizCreationPage extends StatelessWidget {
           Icon(
             Iconsax.information,
             size: 60,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(

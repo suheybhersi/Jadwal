@@ -286,7 +286,7 @@ class IntroPage extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                   spreadRadius: 5,
                   blurRadius: 12,
                   offset: Offset(0, 3),
@@ -304,7 +304,7 @@ class IntroPage extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .inversePrimary
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -344,7 +344,7 @@ class IntroPage extends StatelessWidget {
                         controller.selectedToVerse.value = null;
                         controller.selectedToSurahData.value = null;
                       },
-                      activeColor: Color.fromARGB(255, 73, 121, 251),
+                      activeThumbColor: Color.fromARGB(255, 73, 121, 251),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.secondary,
                       activeTrackColor: Colors.blue.shade200,
@@ -368,7 +368,7 @@ class IntroPage extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                   spreadRadius: 5,
                   blurRadius: 12,
                   offset: Offset(0, 3),
@@ -386,7 +386,7 @@ class IntroPage extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .inversePrimary
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -423,7 +423,7 @@ class IntroPage extends StatelessWidget {
                       onChanged: (value) {
                         controller.isBackToFront.value = value;
                       },
-                      activeColor: Color.fromARGB(255, 73, 121, 251),
+                      activeThumbColor: Color.fromARGB(255, 73, 121, 251),
                       inactiveThumbColor:
                           Theme.of(context).colorScheme.secondary,
                       activeTrackColor: Colors.blue.shade200,
@@ -575,7 +575,7 @@ class PlanDetailsPage extends StatelessWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .tertiary
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       spreadRadius: 5,
                       blurRadius: 12,
                     ),
@@ -617,7 +617,7 @@ class PlanDetailsPage extends StatelessWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -757,7 +757,7 @@ class PlanDetailsPage extends StatelessWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .tertiary
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       spreadRadius: 5,
                       blurRadius: 12,
                     ),
@@ -821,7 +821,7 @@ class PlanDetailsPage extends StatelessWidget {
                                           BoxShadow(
                                             color: const Color.fromARGB(
                                                     255, 73, 121, 251)
-                                                .withOpacity(0.3),
+                                                .withValues(alpha: 0.3),
                                             blurRadius: 8,
                                             spreadRadius: 0,
                                           )
@@ -838,7 +838,7 @@ class PlanDetailsPage extends StatelessWidget {
                                         : Theme.of(context)
                                             .colorScheme
                                             .inversePrimary
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                   ),
                                 ),
                               ),

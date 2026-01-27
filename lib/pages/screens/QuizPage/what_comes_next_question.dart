@@ -1009,6 +1009,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         text = 'Error recording audio. Please try again.';
       });
 
+      if (!mounted) return;
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1175,7 +1176,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: primaryAccent.withOpacity(0.1),
+                                color: primaryAccent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -1243,7 +1244,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 5,
                         spreadRadius: 1,
                       ),
@@ -1395,7 +1396,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .tertiary
-                                                .withOpacity(0.3),
+                                                .withValues(alpha: 0.3),
                                             blurRadius: 5,
                                             spreadRadius: 1,
                                           )
@@ -1444,7 +1445,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .tertiary
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 5,
                                         spreadRadius: 1,
                                       ),
@@ -1638,7 +1639,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                                           .underline,
                                                       decorationColor: Colors
                                                           .red
-                                                          .withOpacity(0.7),
+                                                          .withValues(alpha: 0.7),
                                                       decorationThickness: 1,
                                                     ),
                                                   ),
@@ -1737,7 +1738,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    backgroundColor: const Color(0xFF4979FB).withOpacity(0.2),
+                    backgroundColor: const Color(0xFF4979FB).withValues(alpha: 0.2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

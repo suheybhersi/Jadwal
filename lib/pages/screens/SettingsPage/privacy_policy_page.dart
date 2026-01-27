@@ -48,7 +48,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4979FB).withOpacity(0.2),
+                        color: const Color(0xFF4979FB).withValues(alpha: 0.2),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       ),
@@ -60,7 +60,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                         height: 50,
                         width: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -87,7 +87,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                               'Last updated: March 11, 2025',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -200,7 +200,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         text,
         style: GoogleFonts.poppins(
           fontSize: 14,
-          color: Colors.black87.withOpacity(0.8),
+          color: Colors.black87.withValues(alpha: 0.8),
           height: 1.5,
         ),
       ),
@@ -228,7 +228,7 @@ class PrivacyPolicyPage extends StatelessWidget {
               text,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.black87.withOpacity(0.8),
+                color: Colors.black87.withValues(alpha: 0.8),
                 height: 1.5,
               ),
             ),

@@ -62,9 +62,9 @@ Future<void> _preloadQuranData() async {
   final dbService = DatabaseService();
   try {
     await dbService.initialize();
-    print('Database preloading completed successfully');
+    debugPrint('Database preloading completed successfully');
   } catch (e) {
-    print('Error preloading database: $e');
+    debugPrint('Error preloading database: $e');
   }
 }
 

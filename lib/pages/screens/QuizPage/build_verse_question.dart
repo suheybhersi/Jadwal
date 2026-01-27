@@ -241,7 +241,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: primaryAccent.withOpacity(0.1),
+                                color: primaryAccent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -323,7 +323,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 5,
                         spreadRadius: 1,
                       )
@@ -923,7 +923,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                             ? Theme.of(context)
                                                 .colorScheme
                                                 .inversePrimary
-                                                .withOpacity(0.1)
+                                                .withValues(alpha: 0.1)
                                             : isFocused
                                                 ? primaryAccent
                                                 : Theme.of(context)
@@ -937,7 +937,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .tertiary
-                                                      .withOpacity(0.3),
+                                                      .withValues(alpha: 0.3),
                                                   blurRadius: 5,
                                                   spreadRadius: 1,
                                                 )

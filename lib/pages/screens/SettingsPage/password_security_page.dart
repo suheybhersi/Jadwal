@@ -71,7 +71,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4979FB).withOpacity(0.2),
+                        color: const Color(0xFF4979FB).withValues(alpha: 0.2),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       ),
@@ -83,7 +83,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                         height: 50,
                         width: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -110,7 +110,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                               'Update your account password',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -133,7 +133,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 12,
                         spreadRadius: 1,
                       ),
@@ -314,7 +314,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -370,7 +370,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF4979FB).withOpacity(0.1),
+                color: const Color(0xFF4979FB).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -544,7 +544,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                 color: Theme.of(context)
                     .colorScheme
                     .inversePrimary
-                    .withOpacity(0.5),
+                    .withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -561,6 +561,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                 await FirebaseAuth.instance.signOut();
                 // In a real app, you'd use a method to invalidate all sessions
                 // FirebaseAuth.instance.currentUser?.getIdToken(true);
+                if (!mounted) return;
                 if (mounted) {
                   Navigator.pop(context); // Close dialog
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -576,6 +577,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 }
               } catch (e) {
+                if (!mounted) return;
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(

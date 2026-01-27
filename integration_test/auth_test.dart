@@ -101,7 +101,9 @@ void main() {
                     await tester.pumpAndSettle();
                     await Future.delayed(const Duration(seconds: 2));
                   }
-                } catch (e) {}
+                } catch (e) {
+                  // Ignore navigation errors during test
+                }
               }
             }
 
@@ -559,7 +561,9 @@ void main() {
                       reason:
                           'Email should match the pattern test_user_*@example.com');
                 }
-              } catch (e) {}
+              } catch (e) {
+                // Ignore validation errors during profile data checks
+              }
             }
           }
 
@@ -607,7 +611,9 @@ void main() {
                 await tester.pumpAndSettle();
               }
             }
-          } catch (e) {}
+          } catch (e) {
+            // Ignore gesture errors during test navigation
+          }
 
           await Future.delayed(const Duration(seconds: 2));
         } else {

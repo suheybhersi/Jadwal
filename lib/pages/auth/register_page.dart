@@ -250,7 +250,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       elevation: 0,
                       backgroundColor: _agreedToTerms
                           ? Color.fromARGB(255, 73, 121, 251)
-                          : Color.fromARGB(255, 73, 121, 251).withOpacity(0.5),
+                          : Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),

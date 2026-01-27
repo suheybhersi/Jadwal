@@ -132,7 +132,7 @@ class _PlanPageState extends State<PlanPage> {
                                   Icon(
                                     Iconsax.clipboard_close,
                                     size: 60,
-                                    color: Colors.grey.withOpacity(0.5),
+                                    color: Colors.grey.withValues(alpha: 0.5),
                                   ),
                                   SizedBox(height: 16),
                                   Text(
@@ -159,7 +159,7 @@ class _PlanPageState extends State<PlanPage> {
                 Icon(
                   Iconsax.document_text,
                   size: 60,
-                  color: Colors.grey.withOpacity(0.5),
+                  color: Colors.grey.withValues(alpha: 0.5),
                 ),
                 SizedBox(height: 16),
                 Text(
@@ -210,7 +210,7 @@ class PlanProgress extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.2),
+            color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -240,7 +240,7 @@ class PlanProgress extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -253,13 +253,13 @@ class PlanProgress extends StatelessWidget {
                 lineWidth: 10,
                 percent: percentage,
                 progressColor: Colors.white,
-                backgroundColor: Colors.white.withOpacity(0.3),
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
                 circularStrokeCap: CircularStrokeCap.round,
                 center: Container(
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -318,7 +318,7 @@ class PreviousMemorisation extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: Offset(0, -5),
               ),
@@ -368,11 +368,11 @@ class PreviousMemorisation extends StatelessWidget {
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color:
-                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Column(
@@ -479,13 +479,13 @@ class PreviousMemorisation extends StatelessWidget {
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color:
-                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: Theme.of(context)
                           .colorScheme
                           .tertiary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                     ),
                   ),
                   child: Column(
@@ -557,11 +557,11 @@ class PreviousMemorisation extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color:
-                        Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
@@ -643,7 +643,7 @@ class PreviousMemorisation extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .tertiary
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                             spreadRadius: 1,
                             blurRadius: 10,
                           ),
@@ -738,7 +738,7 @@ class PreviousReviews extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: Offset(0, -5),
                   ),
@@ -753,7 +753,7 @@ class PreviousReviews extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: Offset(0, -5),
                     ),
@@ -793,13 +793,13 @@ class PreviousReviews extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .tertiary
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: Theme.of(context)
                                 .colorScheme
                                 .tertiary
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                           ),
                         ),
                         child: Column(
@@ -914,13 +914,13 @@ class PreviousReviews extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .tertiary
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: Theme.of(context)
                                   .colorScheme
                                   .tertiary
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                             ),
                           ),
                           child: Column(
@@ -999,13 +999,13 @@ class PreviousReviews extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .tertiary
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: Theme.of(context)
                                 .colorScheme
                                 .tertiary
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(
@@ -1045,13 +1045,13 @@ class PreviousReviews extends StatelessWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: Theme.of(context)
                                       .colorScheme
                                       .tertiary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Center(
@@ -1198,7 +1198,7 @@ class PreviousReviews extends StatelessWidget {
                               color: Theme.of(context)
                                   .colorScheme
                                   .tertiary
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               spreadRadius: 1,
                               blurRadius: 10,
                             ),

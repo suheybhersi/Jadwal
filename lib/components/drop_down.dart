@@ -21,7 +21,7 @@ class MyDropDown extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(8),
       ),

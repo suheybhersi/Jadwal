@@ -822,7 +822,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                               height: 200 + (_pulseController!.value * 20),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: primaryColor.withOpacity(0.03),
+                                color: primaryColor.withValues(alpha: 0.03),
                               ),
                             );
                           },
@@ -837,7 +837,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                               height: 160 + (_pulseController!.value * 15),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: primaryColor.withOpacity(0.08),
+                                color: primaryColor.withValues(alpha: 0.08),
                               ),
                             );
                           },
@@ -852,7 +852,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                             color: Theme.of(context).colorScheme.surface,
                             boxShadow: [
                               BoxShadow(
-                                color: primaryColor.withOpacity(0.2),
+                                color: primaryColor.withValues(alpha: 0.2),
                                 blurRadius: 15,
                                 spreadRadius: 5,
                               ),
@@ -879,7 +879,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: primaryColor.withOpacity(0.15),
+                                    color: primaryColor.withValues(alpha: 0.15),
                                     width: 2,
                                     strokeAlign: BorderSide.strokeAlignOutside,
                                   ),
@@ -974,7 +974,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 12,
                         spreadRadius: 1,
                       ),

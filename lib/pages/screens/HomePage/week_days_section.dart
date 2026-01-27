@@ -18,7 +18,7 @@ class WeekDaysSection extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5)),
+            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,13 +115,13 @@ class WeekDaysSection extends StatelessWidget {
                                   : Theme.of(context)
                                       .colorScheme
                                       .tertiary
-                                      .withOpacity(0.5),
+                                      .withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               boxShadow: isToday
                                   ? [
                                       BoxShadow(
                                         color: Color.fromARGB(255, 73, 121, 251)
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                         blurRadius: 8,
                                         offset: Offset(0, 2),
                                       ),
@@ -139,7 +139,7 @@ class WeekDaysSection extends StatelessWidget {
                                       : Theme.of(context)
                                           .colorScheme
                                           .inversePrimary
-                                          .withOpacity(0.6),
+                                          .withValues(alpha: 0.6),
                                 ),
                               ),
                             ),
@@ -270,7 +270,7 @@ class WeekDaysSection extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color:
                                               Color.fromARGB(255, 73, 121, 251)
-                                                  .withOpacity(0.1),
+                                                  .withValues(alpha: 0.1),
                                           borderRadius:
                                               BorderRadius.circular(16),
                                         ),
@@ -317,9 +317,9 @@ class WeekDaysSection extends StatelessWidget {
                                           ? Theme.of(context)
                                               .colorScheme
                                               .inversePrimary
-                                              .withOpacity(0.1)
+                                              .withValues(alpha: 0.1)
                                           : Color.fromARGB(255, 73, 121, 251)
-                                              .withOpacity(0.1),
+                                              .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -372,7 +372,7 @@ class WeekDaysSection extends StatelessWidget {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .tertiary
-                                        .withOpacity(0.5),
+                                        .withValues(alpha: 0.5),
                                   ),
                                   _buildSummaryItem(
                                       reviewTasks.length,
@@ -511,7 +511,7 @@ class WeekDaysSection extends StatelessWidget {
           width: 80,
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -596,7 +596,7 @@ class WeekDaysSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.15),
+            color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.15),
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -624,11 +624,11 @@ class WeekDaysSection extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 3,
                         offset: Offset(0, 1),
                       ),
@@ -670,7 +670,7 @@ class WeekDaysSection extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -695,7 +695,7 @@ class WeekDaysSection extends StatelessWidget {
                               'Verse $startVerse',
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -711,14 +711,14 @@ class WeekDaysSection extends StatelessWidget {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           Container(
                             margin: EdgeInsets.symmetric(horizontal: 8),
                             padding: EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -730,7 +730,7 @@ class WeekDaysSection extends StatelessWidget {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                         ],
@@ -743,7 +743,7 @@ class WeekDaysSection extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -768,7 +768,7 @@ class WeekDaysSection extends StatelessWidget {
                               'Verse $endVerse',
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -815,7 +815,7 @@ class WeekDaysSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color.fromARGB(255, 100, 163, 119).withOpacity(0.15),
+            color: Color.fromARGB(255, 100, 163, 119).withValues(alpha: 0.15),
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -843,11 +843,11 @@ class WeekDaysSection extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 3,
                         offset: Offset(0, 1),
                       ),
@@ -892,7 +892,7 @@ class WeekDaysSection extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -917,7 +917,7 @@ class WeekDaysSection extends StatelessWidget {
                                   'Verse $startVerse',
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],
@@ -935,14 +935,14 @@ class WeekDaysSection extends StatelessWidget {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                           Container(
                             margin: EdgeInsets.symmetric(horizontal: 8),
                             padding: EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -954,7 +954,7 @@ class WeekDaysSection extends StatelessWidget {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ),
                         ],
@@ -967,7 +967,7 @@ class WeekDaysSection extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -992,7 +992,7 @@ class WeekDaysSection extends StatelessWidget {
                               'Verse $endVerse',
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],

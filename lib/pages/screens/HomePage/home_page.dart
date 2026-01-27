@@ -268,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -375,7 +375,7 @@ class _HomePageState extends State<HomePage> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .inversePrimary
-                                                .withOpacity(0.7),
+                                                .withValues(alpha: 0.7),
                                           ),
                                           textAlign: TextAlign.right,
                                         ),
@@ -450,7 +450,7 @@ class _HomePageState extends State<HomePage> {
                         setState(() => isLoading = false); // Hide loading
 
                         // Close both dialogs
-
+                        if (!context.mounted) return;
                         Navigator.pop(context);
                       },
                       child: const Text('Yes'),

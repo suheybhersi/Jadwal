@@ -6,9 +6,9 @@ class MyTextField extends StatelessWidget {
   final bool obscureText;
   final dynamic prefixIcon;
   final dynamic suffixIcon;
-  String? Function(dynamic value) validator;
+  final String? Function(dynamic value) validator;
 
-  MyTextField({
+  const MyTextField({
     super.key,
     required this.controller,
     required this.hintText,

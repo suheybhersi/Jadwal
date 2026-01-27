@@ -189,7 +189,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4979FB).withOpacity(0.2),
+                                color: const Color(0xFF4979FB).withValues(alpha: 0.2),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -203,7 +203,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
@@ -228,7 +228,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                 'It helps us improve our app and better serve your needs.',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -249,7 +249,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -361,7 +361,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .tertiary
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),

@@ -40,7 +40,7 @@ class UpcomingSection extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.1),
+                      color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -63,7 +63,7 @@ class UpcomingSection extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 73, 121, 251).withOpacity(0.1),
+                  color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -114,7 +114,7 @@ class UpcomingSection extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color:
-                            Color.fromARGB(255, 73, 121, 251).withOpacity(0.2),
+                            Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.2),
                         blurRadius: 15,
                         offset: Offset(0, 5),
                       ),
@@ -137,7 +137,7 @@ class UpcomingSection extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -159,7 +159,7 @@ class UpcomingSection extends StatelessWidget {
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Icon(
@@ -185,7 +185,7 @@ class UpcomingSection extends StatelessWidget {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -205,7 +205,7 @@ class UpcomingSection extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -226,7 +226,7 @@ class UpcomingSection extends StatelessWidget {
                                         'Verse ${plan['hifdhs'].last['hifdh'].split('-')[0].split(':')[1]}',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(alpha: 0.9),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -322,7 +322,7 @@ class UpcomingSection extends StatelessWidget {
                               boxShadow: [
                                 BoxShadow(
                                   color: Color.fromARGB(255, 100, 163, 119)
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   blurRadius: 15,
                                   offset: Offset(0, 5),
                                 ),
@@ -341,7 +341,7 @@ class UpcomingSection extends StatelessWidget {
                                           padding: EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color:
-                                                Colors.white.withOpacity(0.2),
+                                                Colors.white.withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
@@ -368,7 +368,7 @@ class UpcomingSection extends StatelessWidget {
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -386,7 +386,7 @@ class UpcomingSection extends StatelessWidget {
                                 Container(
                                   padding: EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.white.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Column(
@@ -409,7 +409,7 @@ class UpcomingSection extends StatelessWidget {
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               color:
-                                                  Colors.white.withOpacity(0.9),
+                                                  Colors.white.withValues(alpha: 0.9),
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -512,7 +512,7 @@ class UpcomingSection extends StatelessWidget {
                   borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: Offset(0, -5),
                     ),
@@ -531,7 +531,7 @@ class UpcomingSection extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .secondary
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -577,13 +577,13 @@ class UpcomingSection extends StatelessWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .tertiary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .tertiary
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                   ),
                                 ),
                                 child: Column(
@@ -630,7 +630,7 @@ class UpcomingSection extends StatelessWidget {
                                                     color: Theme.of(context)
                                                         .colorScheme
                                                         .inversePrimary
-                                                        .withOpacity(0.5),
+                                                        .withValues(alpha: 0.5),
                                                   ),
                                                 ),
                                               ],
@@ -668,7 +668,7 @@ class UpcomingSection extends StatelessWidget {
                                               }
                                             } catch (e) {
                                               // If we can't parse, we'll just proceed without a previous verse key
-                                              print(
+                                              debugPrint(
                                                   'Error determining previous verse: $e');
                                             }
 
@@ -723,6 +723,7 @@ class UpcomingSection extends StatelessWidget {
                                               // }
 
                                               // Close the loading dialog
+                                              if (!context.mounted) return;
                                               Navigator.pop(context);
 
                                               // Navigate to QuranViewer
@@ -749,6 +750,7 @@ class UpcomingSection extends StatelessWidget {
                                               );
                                             } catch (e) {
                                               // Close the loading dialog if there was an error
+                                              if (!context.mounted) return;
                                               Navigator.pop(context);
 
                                               // Show error message
@@ -854,13 +856,13 @@ class UpcomingSection extends StatelessWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .tertiary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .tertiary
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                   ),
                                 ),
                                 child: Column(
@@ -906,7 +908,7 @@ class UpcomingSection extends StatelessWidget {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .inversePrimary
-                                                      .withOpacity(0.5),
+                                                      .withValues(alpha: 0.5),
                                                 ),
                                               ),
                                             ],
@@ -1029,7 +1031,7 @@ class UpcomingSection extends StatelessWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .secondary
-                          .withOpacity(0.5),
+                          .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1199,6 +1201,7 @@ class UpcomingSection extends StatelessWidget {
                                         await firestoreService
                                             .adjustLastHifdhEnd(id, newEndKey);
 
+                                        if (!context.mounted) return;
                                         Navigator.of(context)
                                             .pop(); // close spinner
                                         Navigator.of(context)
@@ -1211,6 +1214,7 @@ class UpcomingSection extends StatelessWidget {
                                                   'End verse updated successfully')),
                                         );
                                       } catch (e) {
+                                        if (!context.mounted) return;
                                         Navigator.of(context)
                                             .pop(); // close spinner if open
                                         ScaffoldMessenger.of(context)

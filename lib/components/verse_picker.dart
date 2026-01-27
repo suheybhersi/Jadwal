@@ -16,10 +16,10 @@ class QuranVersePicker extends StatefulWidget {
   final int? initialVerseNumber;
 
   @override
-  _QuranVersePickerState createState() => _QuranVersePickerState();
+  QuranVersePickerState createState() => QuranVersePickerState();
 }
 
-class _QuranVersePickerState extends State<QuranVersePicker> {
+class QuranVersePickerState extends State<QuranVersePicker> {
   late int selectedSurahIndex;
   int? selectedVerseNumber;
   late FixedExtentScrollController? surahScrollController;
@@ -100,7 +100,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
 
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     final Color unselectedTextColor = Theme.of(context).colorScheme.onSurface;
-    final Color highlightColor = primaryColor.withOpacity(0.1);
+    final Color highlightColor = primaryColor.withValues(alpha: 0.1);
 
     // Build surah items
     final surahItems = List<Widget>.generate(surahs.length, (index) {
@@ -118,7 +118,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
                 ? primaryColor
-                : unselectedTextColor.withOpacity(0.8),
+                : unselectedTextColor.withValues(alpha: 0.8),
           ),
           child: Text(
             '$surahNumber. $surahName',
@@ -144,7 +144,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
                 ? primaryColor
-                : unselectedTextColor.withOpacity(0.8),
+                : unselectedTextColor.withValues(alpha: 0.8),
           ),
           child: Text(
             verseNumber.toString(),
@@ -165,7 +165,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(0.1),
+                color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
                 blurRadius: 15,
                 spreadRadius: 1,
                 offset: const Offset(0, 4),
@@ -205,7 +205,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                   color: highlightColor,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: primaryColor.withOpacity(0.2),
+                                    color: primaryColor.withValues(alpha: 0.2),
                                     width: 1,
                                   ),
                                 ),
@@ -262,7 +262,7 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
                                   color: highlightColor,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: primaryColor.withOpacity(0.2),
+                                    color: primaryColor.withValues(alpha: 0.2),
                                     width: 1,
                                   ),
                                 ),
@@ -290,10 +290,10 @@ class _QuranVersePickerState extends State<QuranVersePicker> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: primaryColor.withOpacity(0.2),
+              color: primaryColor.withValues(alpha: 0.2),
               width: 1,
             ),
           ),

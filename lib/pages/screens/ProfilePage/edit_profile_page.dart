@@ -64,6 +64,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -82,6 +84,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update profile'),
@@ -149,7 +153,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                           gradient: LinearGradient(
                                             colors: [
                                               Color.fromARGB(255, 73, 121, 251)
-                                                  .withOpacity(0.7),
+                                                  .withValues(alpha: 0.7),
                                               Color.fromARGB(255, 73, 121, 251),
                                             ],
                                             begin: Alignment.topLeft,

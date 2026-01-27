@@ -475,7 +475,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: primaryAccent.withOpacity(0.1),
+                                color: primaryAccent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -542,7 +542,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                         color: Theme.of(context)
                             .colorScheme
                             .tertiary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                         spreadRadius: 1,
@@ -560,7 +560,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                primaryAccent.withOpacity(0.1),
+                                primaryAccent.withValues(alpha: 0.1),
                                 Colors.transparent,
                               ],
                               begin: Alignment.topCenter,
@@ -879,7 +879,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? primaryAccent.withOpacity(0.1)
+                    ? primaryAccent.withValues(alpha: 0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -924,14 +924,14 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
             decoration: BoxDecoration(
               color: isChecking
                   ? (isCorrectHere ? Colors.green.shade50 : Colors.red.shade50)
-                  : primaryAccent.withOpacity(0.1),
+                  : primaryAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isChecking
                     ? (isCorrectHere
                         ? Colors.green.shade300
                         : Colors.red.shade300)
-                    : primaryAccent.withOpacity(0.5),
+                    : primaryAccent.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),

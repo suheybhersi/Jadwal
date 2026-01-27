@@ -6,16 +6,16 @@ import 'package:get/get.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 
 class QuizResultsPage extends StatefulWidget {
-  int score;
+  final int score;
   final List<Map<String, dynamic>> questions;
   final String id;
   final String review;
   final Function(String, String, String) updateReview;
   final Map<int, Map<String, dynamic>> answeredQuestions;
-  int currentQuestionIndex;
+  final int currentQuestionIndex;
   final bool isCustomQuiz;
 
-  QuizResultsPage({
+  const QuizResultsPage({
     super.key,
     required this.score,
     required this.questions,
@@ -28,10 +28,10 @@ class QuizResultsPage extends StatefulWidget {
   });
 
   @override
-  State<QuizResultsPage> createState() => _QuizResultsPageState();
+  State<QuizResultsPage> createState() => QuizResultsPageState();
 }
 
-class _QuizResultsPageState extends State<QuizResultsPage> {
+class QuizResultsPageState extends State<QuizResultsPage> {
   bool showAllQuestions = false;
   bool _isSaving = false;
 
@@ -65,7 +65,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
       );
     } catch (e) {
       // Handle errors
-      print('Error saving quiz results: $e');
+      debugPrint('Error saving quiz results: $e');
       // Could show a snackbar here if needed
     } finally {
       setState(() {
@@ -226,7 +226,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              resultColor.withOpacity(0.7),
+                              resultColor.withValues(alpha: 0.7),
                               resultColor,
                             ],
                             begin: Alignment.topLeft,
@@ -235,7 +235,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: resultColor.withOpacity(0.2),
+                              color: resultColor.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -247,7 +247,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
@@ -267,7 +267,8 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                                     'Your Score',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.9),
                                     ),
                                   ),
                                   Row(
@@ -288,7 +289,8 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                                         style: GoogleFonts.poppins(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.9),
                                         ),
                                       ),
                                     ],
@@ -302,7 +304,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                               width: 70,
                               height: 70,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: Stack(
@@ -316,7 +318,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                                           widget.questions.length,
                                       strokeWidth: 8,
                                       backgroundColor:
-                                          Colors.white.withOpacity(0.2),
+                                          Colors.white.withValues(alpha: 0.2),
                                       valueColor:
                                           const AlwaysStoppedAnimation<Color>(
                                               Colors.white),
@@ -417,19 +419,19 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                                   .toString();
                           widget.updateReview(widget.id, widget.review, rating);
                           await _saveQuizResultsToFirestore();
-                          if (mounted) {
-                            if (widget.isCustomQuiz) {
-                              // Reset quiz creation state
-                              final controller =
-                                  Get.find<QuizCreationController>();
-                              controller.resetAllState();
-                              // Pop until we reach the quiz history page
-                              Navigator.of(context)
-                                  .popUntil((route) => route.isFirst);
-                            } else {
-                              // For regular quizzes, just pop once
-                              Navigator.pop(context);
-                            }
+                          if (!mounted) return;
+                          if (!context.mounted) return;
+                          if (widget.isCustomQuiz) {
+                            // Reset quiz creation state
+                            final controller =
+                                Get.find<QuizCreationController>();
+                            controller.resetAllState();
+                            // Pop until we reach the quiz history page
+                            Navigator.of(context)
+                                .popUntil((route) => route.isFirst);
+                          } else {
+                            // For regular quizzes, just pop once
+                            Navigator.pop(context);
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -511,8 +513,8 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: isCorrect
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -543,7 +545,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                         color: Theme.of(context)
                             .colorScheme
                             .inversePrimary
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -559,7 +561,7 @@ class _QuizResultsPageState extends State<QuizResultsPage> {
                 color: Theme.of(context)
                     .colorScheme
                     .inversePrimary
-                    .withOpacity(0.5),
+                    .withValues(alpha: 0.5),
               ),
             ],
           ),

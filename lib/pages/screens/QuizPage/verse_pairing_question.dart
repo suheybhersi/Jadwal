@@ -21,10 +21,10 @@ class VersePairingQuestion extends StatefulWidget {
   });
 
   @override
-  _VersePairingQuestionState createState() => _VersePairingQuestionState();
+  VersePairingQuestionState createState() => VersePairingQuestionState();
 }
 
-class _VersePairingQuestionState extends State<VersePairingQuestion>
+class VersePairingQuestionState extends State<VersePairingQuestion>
     with SingleTickerProviderStateMixin {
   String? selectedBeforeVerse;
   String? selectedAfterVerse;
@@ -294,7 +294,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: primaryAccent.withOpacity(0.1),
+                                color: primaryAccent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -366,7 +366,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: activeSection == 'before'
-                                    ? primaryAccent.withOpacity(0.08)
+                                    ? primaryAccent.withValues(alpha: 0.08)
                                     : isChecking
                                         ? (allCorrect ||
                                                 selectedBeforeVerse ==
@@ -456,7 +456,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                         correctBeforeVerse
                                                 ? Colors.green.shade50
                                                 : Colors.red.shade50)
-                                            : primaryAccent.withOpacity(0.05),
+                                            : primaryAccent.withValues(
+                                                alpha: 0.05),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: isChecking
@@ -465,7 +466,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                           correctBeforeVerse
                                                   ? Colors.green.shade200
                                                   : Colors.red.shade200)
-                                              : primaryAccent.withOpacity(0.3),
+                                              : primaryAccent.withValues(
+                                                  alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -557,7 +559,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                 decoration: BoxDecoration(
                                                   color: isSelected
                                                       ? primaryAccent
-                                                          .withOpacity(0.1)
+                                                          .withValues(
+                                                              alpha: 0.1)
                                                       : Theme.of(context)
                                                           .colorScheme
                                                           .surface,
@@ -610,7 +613,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                                 spreadRadius: 1,
@@ -675,7 +678,7 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: activeSection == 'after'
-                                    ? primaryAccent.withOpacity(0.08)
+                                    ? primaryAccent.withValues(alpha: 0.08)
                                     : isChecking
                                         ? (allCorrect ||
                                                 selectedAfterVerse ==
@@ -765,7 +768,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                         correctAfterVerse
                                                 ? Colors.green.shade50
                                                 : Colors.red.shade50)
-                                            : primaryAccent.withOpacity(0.05),
+                                            : primaryAccent.withValues(
+                                                alpha: 0.05),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: isChecking
@@ -774,7 +778,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                           correctAfterVerse
                                                   ? Colors.green.shade200
                                                   : Colors.red.shade200)
-                                              : primaryAccent.withOpacity(0.3),
+                                              : primaryAccent.withValues(
+                                                  alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -864,7 +869,8 @@ class _VersePairingQuestionState extends State<VersePairingQuestion>
                                                 decoration: BoxDecoration(
                                                   color: isSelected
                                                       ? primaryAccent
-                                                          .withOpacity(0.1)
+                                                          .withValues(
+                                                              alpha: 0.1)
                                                       : Theme.of(context)
                                                           .colorScheme
                                                           .surface,

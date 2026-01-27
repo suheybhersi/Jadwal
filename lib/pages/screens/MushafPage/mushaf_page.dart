@@ -98,7 +98,7 @@ class _MushafContentState extends State<MushafContent> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4979FB).withOpacity(0.2),
+            color: const Color(0xFF4979FB).withValues(alpha: 0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -112,7 +112,7 @@ class _MushafContentState extends State<MushafContent> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -164,7 +164,7 @@ class _MushafContentState extends State<MushafContent> {
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                       Text(
@@ -172,7 +172,7 @@ class _MushafContentState extends State<MushafContent> {
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -184,7 +184,7 @@ class _MushafContentState extends State<MushafContent> {
                     percent:
                         totalSurahs > 0 ? completedSurahs / totalSurahs : 0,
                     progressColor: Colors.white,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     barRadius: const Radius.circular(20),
                   ),
                 ],
@@ -228,7 +228,7 @@ class _MushafContentState extends State<MushafContent> {
                       }
                     }
                   } catch (e) {
-                    print('Error determining previous verse: $e');
+                    debugPrint('Error determining previous verse: $e');
                   }
 
                   // Get the page numbers
@@ -240,6 +240,7 @@ class _MushafContentState extends State<MushafContent> {
                       .getPageForVerseKey(endVerseToHighlight);
 
                   // Close the loading dialog
+                  if (!context.mounted) return;
                   Navigator.pop(context);
 
                   // Navigate to QuranViewer
@@ -258,6 +259,7 @@ class _MushafContentState extends State<MushafContent> {
                   );
                 } catch (e) {
                   // Close the loading dialog if there was an error
+                  if (!context.mounted) return;
                   Navigator.pop(context);
 
                   // Show error message
@@ -478,7 +480,7 @@ class _SurahProgressCard extends StatelessWidget {
             }
           } catch (e) {
             // If we can't parse, we'll just proceed without a previous verse key
-            print('Error determining previous verse: $e');
+            debugPrint('Error determining previous verse: $e');
           }
 
           // Get the page number for the start verse
@@ -490,6 +492,7 @@ class _SurahProgressCard extends StatelessWidget {
               await firestoreService.getPageForVerseKey(endVerseToHighlight);
 
           // Close the loading dialog
+          if (!context.mounted) return;
           Navigator.pop(context);
 
           // Navigate to QuranViewer
@@ -508,6 +511,7 @@ class _SurahProgressCard extends StatelessWidget {
           );
         } catch (e) {
           // Close the loading dialog if there was an error
+          if (!context.mounted) return;
           Navigator.pop(context);
 
           // Show error message
@@ -524,7 +528,7 @@ class _SurahProgressCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
               spreadRadius: 1,
               blurRadius: 8,
             ),
@@ -643,7 +647,7 @@ class _SurahProgressCard extends StatelessWidget {
             percent: progress > 1 ? 1 : progress,
             progressColor: const Color(0xFF4979FB),
             backgroundColor:
-                Theme.of(context).colorScheme.inversePrimary.withOpacity(0.1),
+                Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.1),
             barRadius: const Radius.circular(20),
           ),
         ),
