@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_history_details_page.dart';
+import 'package:jadwal/components/smart_showcase.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/tutorial_service.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class QuizHomePage extends StatefulWidget {
   const QuizHomePage({super.key});
@@ -17,6 +20,7 @@ class QuizHomePage extends StatefulWidget {
 class _QuizHomePageState extends State<QuizHomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey _createQuizKey = GlobalKey();
 
   // Streams for quiz history data
   late Stream<List<QueryDocumentSnapshot>> _customQuizStream;
@@ -26,6 +30,21 @@ class _QuizHomePageState extends State<QuizHomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startShowcaseIfNeeded();
+    });
+  }
+
+  void _startShowcaseIfNeeded() {
+    final tutorialService = Provider.of<TutorialService>(context, listen: false);
+    if (!tutorialService.hasSeenTooltip('create_quiz_button')) {
+      // Add a delay to ensure widget is fully built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          ShowcaseView.get().startShowCase([_createQuizKey]);
+        }
+      });
+    }
   }
 
   @override
@@ -89,17 +108,22 @@ class _QuizHomePageState extends State<QuizHomePage>
               color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QuizCreationPage(),
-                ),
-              );
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(8),
+          SmartShowcase(
+            tooltipId: 'create_quiz_button',
+            title: 'Create Custom Quiz',
+            description: 'Tap here to create a custom quiz with your selected verses and question types.',
+            globalKey: _createQuizKey,
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QuizCreationPage(),
+                  ),
+                );
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
@@ -112,10 +136,11 @@ class _QuizHomePageState extends State<QuizHomePage>
                   ),
                 ],
               ),
-              child: const Icon(
-                Iconsax.add,
-                color: Colors.white,
-                size: 20,
+                child: const Icon(
+                  Iconsax.add,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
           ),

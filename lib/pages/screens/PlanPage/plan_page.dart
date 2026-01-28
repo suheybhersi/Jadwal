@@ -6,6 +6,9 @@ import 'package:jadwal/pages/screens/PlanPage/edit_plan_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
+import 'package:jadwal/services/tutorial_service.dart';
+import 'package:jadwal/components/smart_showcase.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +25,29 @@ class _PlanPageState extends State<PlanPage> {
     auth: FirebaseAuth.instance,
     uid: FirebaseAuth.instance.currentUser!.uid,
   );
+  
+  final GlobalKey _editPlanKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Start showcase after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startShowcaseIfNeeded();
+    });
+  }
+
+  void _startShowcaseIfNeeded() {
+    final tutorialService = Provider.of<TutorialService>(context, listen: false);
+    if (!tutorialService.hasSeenTooltip('edit_plan_button')) {
+      // Add a delay to ensure widget is fully built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          ShowcaseView.get().startShowCase([_editPlanKey]);
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,19 +80,25 @@ class _PlanPageState extends State<PlanPage> {
 
             return Padding(
               padding: const EdgeInsets.only(left: 10, top: 10),
-              child: IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditPlanPage(
-                        plan: plan,
-                        id: id,
+              child: SmartShowcase(
+                tooltipId: 'edit_plan_button',
+                title: 'Edit Your Plan',
+                description: 'Tap here to modify your memorization plan, change schedule, or update your progress.',
+                globalKey: _editPlanKey,
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditPlanPage(
+                          plan: plan,
+                          id: id,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                icon: const Icon(Iconsax.edit),
+                    );
+                  },
+                  icon: const Icon(Iconsax.edit),
+                ),
               ),
             );
           },

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:jadwal/services/firestore.dart';
 
 /// Usage mode for the app
 enum UsageMode {
@@ -14,9 +16,41 @@ class UserPreferencesService with ChangeNotifier {
   bool _enableReviews = true;
   bool _showMissedItems = true;
   bool _hasCompletedModeSelection = false;
+  
+  FirestoreService? _firestoreService;
+  bool _isLoading = false;
 
   UserPreferencesService() {
     _loadPreferences();
+    _initializeFirestore();
+  }
+
+  // Initialize Firestore service if user is logged in
+  void _initializeFirestore() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _firestoreService = FirestoreService(
+        auth: FirebaseAuth.instance,
+        uid: user.uid,
+      );
+      _loadFromFirestore();
+    }
+    
+    // Listen for auth state changes
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        _firestoreService = FirestoreService(
+          auth: FirebaseAuth.instance,
+          uid: user.uid,
+        );
+        _loadFromFirestore();
+      } else {
+        _firestoreService = null;
+        // Reset to defaults when logged out
+        _hasCompletedModeSelection = false;
+        notifyListeners();
+      }
+    });
   }
 
   // Getters
@@ -31,7 +65,7 @@ class UserPreferencesService with ChangeNotifier {
       _usageMode != UsageMode.flexible && _enableReviews;
   bool get shouldShowPressureMetrics => _usageMode != UsageMode.flexible;
 
-  // Load preferences from storage
+  // Load preferences from local storage (fallback/cache)
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -56,6 +90,9 @@ class UserPreferencesService with ChangeNotifier {
     _showStreaks = prefs.getBool('showStreaks') ?? true;
     _enableReviews = prefs.getBool('enableReviews') ?? true;
     _showMissedItems = prefs.getBool('showMissedItems') ?? true;
+    
+    // Note: hasCompletedModeSelection is now loaded from Firestore
+    // This is just a fallback for offline scenarios
     _hasCompletedModeSelection =
         prefs.getBool('hasCompletedModeSelection') ?? false;
 
@@ -63,6 +100,50 @@ class UserPreferencesService with ChangeNotifier {
     _applyModeDefaults();
 
     notifyListeners();
+  }
+
+  // Load mode selection status from Firestore (per-user)
+  Future<void> _loadFromFirestore() async {
+    if (_firestoreService == null || _isLoading) return;
+    
+    try {
+      _isLoading = true;
+      final userProfile = await _firestoreService!.getUserProfile();
+      
+      if (userProfile != null) {
+        // Load hasCompletedModeSelection from Firestore
+        if (userProfile.containsKey('hasCompletedModeSelection')) {
+          _hasCompletedModeSelection = userProfile['hasCompletedModeSelection'] as bool? ?? false;
+        }
+        
+        // Load usage mode from Firestore if available
+        if (userProfile.containsKey('usageMode')) {
+          final modeString = userProfile['usageMode'] as String?;
+          if (modeString != null) {
+            final modeName = modeString.split('.').last;
+            _usageMode = UsageMode.values.firstWhere(
+              (mode) => mode.name == modeName,
+              orElse: () => UsageMode.intensive,
+            );
+            
+            // Migrate old "balanced" mode
+            if (modeName == 'balanced') {
+              _usageMode = UsageMode.intensive;
+            }
+          }
+        }
+        
+        // Sync to local storage as cache
+        await _savePreferences();
+        _applyModeDefaults();
+        notifyListeners();
+      }
+    } catch (e) {
+      // If Firestore fails, use local storage values
+      debugPrint('Error loading preferences from Firestore: $e');
+    } finally {
+      _isLoading = false;
+    }
   }
 
   // Save preferences to storage
@@ -96,6 +177,18 @@ class UserPreferencesService with ChangeNotifier {
     _usageMode = mode;
     _applyModeDefaults();
     await _savePreferences();
+    
+    // Also save to Firestore if available
+    if (_firestoreService != null) {
+      try {
+        await _firestoreService!.updateUserProfile({
+          'usageMode': mode.toString(),
+        });
+      } catch (e) {
+        debugPrint('Error saving usage mode to Firestore: $e');
+      }
+    }
+    
     notifyListeners();
   }
 
@@ -103,6 +196,20 @@ class UserPreferencesService with ChangeNotifier {
   Future<void> completeModeSelection() async {
     _hasCompletedModeSelection = true;
     await _savePreferences();
+    
+    // Save to Firestore (per-user storage)
+    if (_firestoreService != null) {
+      try {
+        await _firestoreService!.updateUserProfile({
+          'hasCompletedModeSelection': true,
+          'usageMode': _usageMode.toString(),
+        });
+      } catch (e) {
+        debugPrint('Error saving mode selection to Firestore: $e');
+        // Still save locally as fallback
+      }
+    }
+    
     notifyListeners();
   }
 

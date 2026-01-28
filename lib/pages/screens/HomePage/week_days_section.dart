@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
+import 'package:jadwal/services/tutorial_service.dart';
+import 'package:jadwal/components/smart_showcase.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:provider/provider.dart';
 
 class WeekDaysSection extends StatelessWidget {
@@ -101,7 +104,25 @@ class WeekDaysSection extends StatelessWidget {
                       }
                     }
 
-                    return GestureDetector(
+                    // Show showcase on first day with hifdh task
+                    final shouldShowcase = index == 0 && hasHifdh;
+                    final dayKey = shouldShowcase ? GlobalKey() : null;
+                    
+                    // Start showcase if needed
+                    if (shouldShowcase) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final tutorialService = Provider.of<TutorialService>(context, listen: false);
+                        if (!tutorialService.hasSeenTooltip('tap_day_this_week')) {
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            if (context.mounted && dayKey != null) {
+                              ShowcaseView.get().startShowCase([dayKey!]);
+                            }
+                          });
+                        }
+                      });
+                    }
+
+                    Widget dayWidget = GestureDetector(
                       onTap: () {
                         _showDayDetails(context, dayDate, formattedDate, plan,
                             isPast, hasHifdh);
@@ -171,6 +192,19 @@ class WeekDaysSection extends StatelessWidget {
                         ],
                       ),
                     );
+                    
+                    // Wrap with showcase if needed
+                    if (shouldShowcase && dayKey != null) {
+                      return SmartShowcase(
+                        tooltipId: 'tap_day_this_week',
+                        title: 'Tap Any Day',
+                        description: 'Tap on any day in "This Week" to see detailed tasks, memorization assignments, and reviews for that day.',
+                        globalKey: dayKey!,
+                        child: dayWidget,
+                      );
+                    }
+                    
+                    return dayWidget;
                   }),
                 ),
               ],

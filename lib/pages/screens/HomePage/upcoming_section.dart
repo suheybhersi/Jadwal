@@ -789,18 +789,18 @@ class UpcomingSection extends StatelessWidget {
                                             backgroundColor: Color(0xFF4979FB),
                                             elevation: 0,
                                           ),
-                                          child: Container(
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'Go',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                'Go',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                     SizedBox(height: 16),

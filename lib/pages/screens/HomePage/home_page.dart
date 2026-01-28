@@ -203,7 +203,8 @@ class _HomePageState extends State<HomePage> {
                               Consumer<UserPreferencesService>(
                                 builder: (context, prefsService, child) {
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -222,17 +223,24 @@ class _HomePageState extends State<HomePage> {
                                               vertical: 3,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: prefsService.usageMode == UsageMode.flexible
-                                                  ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                                                  : const Color(0xFF4979FB).withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(6),
+                                              color: prefsService.usageMode ==
+                                                      UsageMode.flexible
+                                                  ? const Color(0xFF10B981)
+                                                      .withValues(alpha: 0.1)
+                                                  : const Color(0xFF4979FB)
+                                                      .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: Text(
-                                              UserPreferencesService.getModeName(prefsService.usageMode),
+                                              UserPreferencesService
+                                                  .getModeName(
+                                                      prefsService.usageMode),
                                               style: GoogleFonts.poppins(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.w600,
-                                                color: prefsService.usageMode == UsageMode.flexible
+                                                color: prefsService.usageMode ==
+                                                        UsageMode.flexible
                                                     ? const Color(0xFF10B981)
                                                     : const Color(0xFF4979FB),
                                               ),
@@ -481,15 +489,19 @@ class _HomePageState extends State<HomePage> {
                     MaterialButton(
                       onPressed: () async {
                         setState(() => isLoading = true); // Show loading
-                        
+
                         // Get plan data before creating hifdh to show stats
-                        final planSnapshot = await firestoreService.plansCollection.doc(id).get();
-                        final planData = planSnapshot.data() as Map<String, dynamic>;
+                        final planSnapshot = await firestoreService
+                            .plansCollection
+                            .doc(id)
+                            .get();
+                        final planData =
+                            planSnapshot.data() as Map<String, dynamic>;
                         final currentStreak = planData['streak'] ?? 0;
                         final totalLines = planData['totalLines'] ?? 1;
                         final completedLines = planData['completedLines'] ?? 0;
                         final progress = completedLines / totalLines;
-                        
+
                         // Parse key to get surah and verses
                         final keyParts = key.split(':');
                         String surah = '';
@@ -501,16 +513,17 @@ class _HomePageState extends State<HomePage> {
                             verses = '${verseParts[0]}-${verseParts[1]}';
                           }
                         }
-                        
+
                         await firestoreService.createNewHifdh(key, lines, id);
                         setState(() => isLoading = false); // Hide loading
 
                         // Close confirmation dialog
                         if (!context.mounted) return;
                         Navigator.pop(context);
-                        
+
                         // Show celebration
-                        await CompletionFeedbackService.showMemorizationCelebration(
+                        await CompletionFeedbackService
+                            .showMemorizationCelebration(
                           context: context,
                           surah: surah,
                           verses: verses,

@@ -9,8 +9,10 @@ import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
+import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +54,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
         ChangeNotifierProvider(create: ((context) => UserPreferencesService())),
+        ChangeNotifierProvider(create: ((context) => TutorialService())),
       ],
       child: const MyApp(),
     ),
@@ -85,6 +88,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Register ShowcaseView for tooltip functionality
+    ShowcaseView.register();
 
     // Initial theme setting with a slight delay to ensure context is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {

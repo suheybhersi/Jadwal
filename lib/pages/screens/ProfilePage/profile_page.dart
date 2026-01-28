@@ -6,13 +6,18 @@ import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/screens/ProfilePage/achievements_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
+import 'package:jadwal/components/smart_showcase.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/achievement_service.dart';
+import 'package:jadwal/services/tutorial_service.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static final GlobalKey _achievementsKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -589,23 +594,45 @@ class ProfilePage extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AchievementsPage(),
+                Builder(
+                  builder: (context) {
+                    // Start showcase if needed
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final tutorialService = Provider.of<TutorialService>(context, listen: false);
+                      if (!tutorialService.hasSeenTooltip('view_achievements_button')) {
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (context.mounted) {
+                            ShowcaseView.get().startShowCase([ProfilePage._achievementsKey]);
+                          }
+                        });
+                      }
+                    });
+                    
+                    return SmartShowcase(
+                      tooltipId: 'view_achievements_button',
+                      title: 'View All Achievements',
+                      description: 'Tap here to see all your achievements, badges, and progress milestones.',
+                      globalKey: ProfilePage._achievementsKey,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AchievementsPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'View All Achievements',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF4979FB),
+                          ),
+                        ),
                       ),
                     );
                   },
-                  child: Text(
-                    'View All Achievements',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF4979FB),
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -12,6 +12,7 @@ import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/usage_mode_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/features_tour_page.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 
@@ -300,6 +301,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildSectionHeader('Support & About', Iconsax.info_circle),
                 const SizedBox(height: 10),
                 _buildSettingCard([
+                  _buildSettingTile(
+                    icon: Iconsax.discover,
+                    title: 'Features Tour',
+                    description: 'Learn about all app features',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FeaturesTourPage(),
+                        ),
+                      );
+                    },
+                  ),
                   _buildSettingTile(
                     icon: Iconsax.message_question,
                     title: 'Help & Support',
