@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
+import 'package:provider/provider.dart';
 
 class WeekDaysSection extends StatelessWidget {
   const WeekDaysSection({
@@ -202,9 +204,10 @@ class WeekDaysSection extends StatelessWidget {
           .toList();
     }
 
-    // Find review tasks for this day
+    // Find review tasks for this day (only if not in Flexible mode)
     List<dynamic> reviewTasks = [];
-    if (plan['reviews'] != null) {
+    final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
+    if (prefsService.shouldScheduleReviews && plan['reviews'] != null) {
       reviewTasks = plan['reviews']
           .where((review) => review['date'] == formattedDate)
           .toList();
@@ -374,20 +377,29 @@ class WeekDaysSection extends StatelessWidget {
                                         .tertiary
                                         .withValues(alpha: 0.5),
                                   ),
-                                  _buildSummaryItem(
-                                      reviewTasks.length,
-                                      'Reviews',
-                                      Iconsax.refresh,
-                                      Color.fromARGB(255, 100, 163, 119)),
+                                  // Only show review count if reviews are enabled
+                                  if (Provider.of<UserPreferencesService>(context, listen: false).shouldScheduleReviews)
+                                    _buildSummaryItem(
+                                        reviewTasks.length,
+                                        'Reviews',
+                                        Iconsax.refresh,
+                                        Color.fromARGB(255, 100, 163, 119)),
                                 ],
                               ),
                             ),
 
                             // No tasks message
-                            if (hifdhTasks.isEmpty &&
-                                reviewTasks.isEmpty &&
-                                missedHifdhTasks.isEmpty)
-                              Container(
+                            Builder(
+                              builder: (context) {
+                                final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
+                                final showReviews = prefsService.shouldScheduleReviews;
+                                final hasNoTasks = hifdhTasks.isEmpty &&
+                                    (!showReviews || reviewTasks.isEmpty) &&
+                                    missedHifdhTasks.isEmpty;
+                                
+                                if (!hasNoTasks) return SizedBox();
+                                
+                                return Container(
                                 margin: EdgeInsets.symmetric(vertical: 40),
                                 child: Column(
                                   children: [
@@ -427,7 +439,9 @@ class WeekDaysSection extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                              ),
+                              );
+                              },
+                            ),
 
                             // Hifdh tasks
                             if (hifdhTasks.isNotEmpty) ...[
@@ -449,15 +463,26 @@ class WeekDaysSection extends StatelessWidget {
                               SizedBox(height: 24),
                             ],
 
-                            // Review tasks
-                            if (reviewTasks.isNotEmpty) ...[
-                              _buildSectionHeader(
-                                  'Review Tasks', Iconsax.refresh),
-                              SizedBox(height: 12),
-                              ...reviewTasks.map(
-                                  (review) => _buildReviewCard(review, isPast)),
-                              SizedBox(height: 24),
-                            ],
+                            // Review tasks (only show if reviews are enabled)
+                            Builder(
+                              builder: (context) {
+                                final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
+                                if (!prefsService.shouldScheduleReviews || reviewTasks.isEmpty) {
+                                  return SizedBox();
+                                }
+                                
+                                return Column(
+                                  children: [
+                                    _buildSectionHeader(
+                                        'Review Tasks', Iconsax.refresh),
+                                    SizedBox(height: 12),
+                                    ...reviewTasks.map(
+                                        (review) => _buildReviewCard(review, isPast)),
+                                    SizedBox(height: 24),
+                                  ],
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ),

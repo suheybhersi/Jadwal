@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:jadwal/components/bottom_nav_bar.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
+import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class AuthPage extends StatelessWidget {
   AuthPage({super.key}) {
@@ -29,29 +32,44 @@ class AuthPage extends StatelessWidget {
             firestoreService.updateUserAchievements();
           });
 
-          return StreamBuilder(
-            stream: firestoreService.getHifdhsStream(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                return Scaffold(
-                  body: Padding(
-                    padding: EdgeInsets.only(
-                      top: Platform.isIOS
-                          ? MediaQuery.of(context).padding.top - 10
-                          : MediaQuery.of(context).padding.top,
-                      bottom: 5,
-                    ),
-                    child: MediaQuery.removePadding(
-                      context: context,
-                      removeTop: true,
-                      removeBottom: true,
-                      child: const MyBottomNavBar(),
-                    ),
-                  ),
+          return Consumer<UserPreferencesService>(
+            builder: (context, prefsService, child) {
+              // Check if user has completed mode selection
+              // Show mode selection for ALL users who haven't selected yet
+              if (!prefsService.hasCompletedModeSelection) {
+                return UsageModeSelectionPage(
+                  onComplete: () {
+                    // Force rebuild after mode selection
+                    (context as Element).markNeedsBuild();
+                  },
                 );
-              } else {
-                return const NewPlanScreen();
               }
+
+              return StreamBuilder(
+                stream: firestoreService.getHifdhsStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    return Scaffold(
+                      body: Padding(
+                        padding: EdgeInsets.only(
+                          top: Platform.isIOS
+                              ? MediaQuery.of(context).padding.top - 10
+                              : MediaQuery.of(context).padding.top,
+                          bottom: 5,
+                        ),
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeTop: true,
+                          removeBottom: true,
+                          child: const MyBottomNavBar(),
+                        ),
+                      ),
+                    );
+                  } else {
+                    return const NewPlanScreen();
+                  }
+                },
+              );
             },
           );
         } else {

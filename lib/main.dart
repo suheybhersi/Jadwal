@@ -8,6 +8,7 @@ import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -50,6 +51,7 @@ void main() async {
           },
         ),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
+        ChangeNotifierProvider(create: ((context) => UserPreferencesService())),
       ],
       child: const MyApp(),
     ),

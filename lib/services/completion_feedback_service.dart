@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:jadwal/components/celebration_widget.dart';
-import 'package:jadwal/services/firestore.dart';
-import 'package:jadwal/services/spaced_repetition_service.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 
 /// Service to provide interactive feedback for completions
 class CompletionFeedbackService {
@@ -15,6 +15,30 @@ class CompletionFeedbackService {
     required int streak,
     required double totalProgress,
   }) async {
+    final prefsService =
+        Provider.of<UserPreferencesService>(context, listen: false);
+
+    // Build statistics list based on preferences
+    final statistics = <StatisticItem>[
+      StatisticItem(
+        label: 'Lines Memorized',
+        value: '$lines',
+        icon: Iconsax.document,
+      ),
+      // Only show streak in Intensive mode
+      if (prefsService.showStreaks)
+        StatisticItem(
+          label: 'Current Streak',
+          value: '$streak days',
+          icon: Iconsax.flash,
+        ),
+      StatisticItem(
+        label: 'Total Progress',
+        value: '${(totalProgress * 100).toStringAsFixed(1)}%',
+        icon: Iconsax.chart,
+      ),
+    ];
+
     await showCelebrationDialog(
       context: context,
       title: 'Memorization Complete! 🎉',
@@ -22,23 +46,7 @@ class CompletionFeedbackService {
       subtitle: 'Keep up the excellent work!',
       icon: Iconsax.book_1,
       color: const Color(0xFF4979FB),
-      statistics: [
-        StatisticItem(
-          label: 'Lines Memorized',
-          value: '$lines',
-          icon: Iconsax.document,
-        ),
-        StatisticItem(
-          label: 'Current Streak',
-          value: '$streak days',
-          icon: Iconsax.flash,
-        ),
-        StatisticItem(
-          label: 'Total Progress',
-          value: '${(totalProgress * 100).toStringAsFixed(1)}%',
-          icon: Iconsax.chart,
-        ),
-      ],
+      statistics: statistics,
       continueText: 'Continue',
     );
   }
@@ -77,7 +85,8 @@ class CompletionFeedbackService {
       ];
     } else if (status == 'fail') {
       title = 'Keep Practicing 💪';
-      message = 'Don\'t worry! This verse has been rescheduled for more practice.';
+      message =
+          'Don\'t worry! This verse has been rescheduled for more practice.';
       icon = Iconsax.refresh;
       color = const Color(0xFFF59E0B); // Orange
       statistics = [

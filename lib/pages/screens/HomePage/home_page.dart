@@ -7,8 +7,10 @@ import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -198,35 +200,67 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Welcome back',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  FutureBuilder<Map<String, dynamic>?>(
-                                    future: userData,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Text(
-                                          '${snapshot.data!['firstName']}',
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary,
+                              Consumer<UserPreferencesService>(
+                                builder: (context, prefsService, child) {
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Welcome back',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              color: Colors.grey.shade600,
+                                            ),
                                           ),
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    },
-                                  ),
-                                ],
+                                          const SizedBox(width: 8),
+                                          // Mode indicator badge
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: prefsService.usageMode == UsageMode.flexible
+                                                  ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                                  : const Color(0xFF4979FB).withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              UserPreferencesService.getModeName(prefsService.usageMode),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: prefsService.usageMode == UsageMode.flexible
+                                                    ? const Color(0xFF10B981)
+                                                    : const Color(0xFF4979FB),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      FutureBuilder<Map<String, dynamic>?>(
+                                        future: userData,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            return Text(
+                                              '${snapshot.data!['firstName']}',
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .inversePrimary,
+                                              ),
+                                            );
+                                          }
+                                          return const SizedBox.shrink();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                               IconButton(
                                 onPressed: () {

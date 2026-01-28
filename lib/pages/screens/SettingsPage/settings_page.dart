@@ -11,6 +11,7 @@ import 'package:jadwal/pages/screens/SettingsPage/password_security_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/usage_mode_page.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 
@@ -176,6 +177,24 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildSectionHeader('Preferences', Iconsax.setting),
                 const SizedBox(height: 10),
                 _buildSettingCard([
+                  _buildSettingTile(
+                    icon: Iconsax.chart,
+                    title: 'Memorization Mode',
+                    description: 'Choose how structured your experience is',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UsageModePage(),
+                        ),
+                      );
+                    },
+                    trailing: Icon(
+                      Iconsax.arrow_right_3,
+                      size: 16,
+                      color: Colors.grey[400],
+                    ),
+                  ),
                   _buildSettingTile(
                     icon: Iconsax.notification,
                     title: 'Notifications',

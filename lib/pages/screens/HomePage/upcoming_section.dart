@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/components/verse_picker.dart';
+import 'package:provider/provider.dart';
 
 class UpcomingSection extends StatelessWidget {
   const UpcomingSection({
@@ -297,16 +300,29 @@ class UpcomingSection extends StatelessWidget {
                 ),
               ),
 
-              // Review Card
-              reviews.isEmpty
-                  ? SizedBox()
-                  : Column(
-                      children: [
-                        SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () {
-                            markReviewAsComplete(context, reviews, id);
-                          },
+              // Review Card (only show if reviews are enabled)
+              // Use Selector to specifically listen to usageMode changes
+              Builder(
+                builder: (context) {
+                  final prefsService = Provider.of<UserPreferencesService>(context, listen: true);
+                  final currentMode = prefsService.usageMode;
+                  
+                  // Hide reviews in Flexible mode - check mode directly
+                  final isFlexibleMode = currentMode == UsageMode.flexible;
+                  final hasReviews = reviews.isNotEmpty;
+                  final shouldHide = isFlexibleMode || !hasReviews;
+                  
+                  if (shouldHide) {
+                    return SizedBox();
+                  }
+                  
+                  return Column(
+                    children: [
+                      SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () {
+                          markReviewAsComplete(context, reviews, id);
+                        },
                           child: Container(
                             padding: EdgeInsets.all(20),
                             decoration: BoxDecoration(
@@ -474,9 +490,11 @@ class UpcomingSection extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
