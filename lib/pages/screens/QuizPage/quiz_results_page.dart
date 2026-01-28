@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 
@@ -10,7 +11,7 @@ class QuizResultsPage extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
   final String id;
   final String review;
-  final Function(String, String, String) updateReview;
+  final Future<Map<String, dynamic>?> Function(String, String, String) updateReview;
   final Map<int, Map<String, dynamic>> answeredQuestions;
   final int currentQuestionIndex;
   final bool isCustomQuiz;
@@ -417,10 +418,43 @@ class QuizResultsPageState extends State<QuizResultsPage> {
                               ((widget.score / widget.questions.length) * 5)
                                   .round()
                                   .toString();
-                          widget.updateReview(widget.id, widget.review, rating);
+                          
+                          // Update review and get result
+                          final reviewResult = await widget.updateReview(widget.id, widget.review, rating);
                           await _saveQuizResultsToFirestore();
                           if (!mounted) return;
                           if (!context.mounted) return;
+                          
+                          // Calculate percentage
+                          final percentage = (widget.score / widget.questions.length) * 100;
+                          
+                          // Show quiz celebration first
+                          await CompletionFeedbackService.showQuizCelebration(
+                            context: context,
+                            score: widget.score,
+                            totalQuestions: widget.questions.length,
+                            percentage: percentage,
+                            reviewTitle: widget.review,
+                          );
+                          
+                          if (!mounted) return;
+                          if (!context.mounted) return;
+                          
+                          // Show review celebration if review was updated
+                          if (reviewResult != null) {
+                            await CompletionFeedbackService.showReviewCelebration(
+                              context: context,
+                              status: reviewResult['status'] as String,
+                              nextInterval: reviewResult['nextInterval'] as int,
+                              successRate: (reviewResult['successRate'] as num).toDouble(),
+                              consecutiveCorrect: reviewResult['consecutiveCorrect'] as int,
+                              surah: reviewResult['surah'] as String?,
+                            );
+                          }
+                          
+                          if (!mounted) return;
+                          if (!context.mounted) return;
+                          
                           if (widget.isCustomQuiz) {
                             // Reset quiz creation state
                             final controller =

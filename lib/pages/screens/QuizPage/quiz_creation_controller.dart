@@ -301,7 +301,9 @@ class QuizCreationController extends GetxController {
             reviewTitle: reviewTitle,
             review: '$startSurahNumber:$startVerse - $endSurahNumber:$endVerse',
             id: quizId,
-            updateReview: (id, title, review) {
+            updateReview: (id, title, review) async {
+              return null;
+
               // For custom quizzes, we don't need to update anything in Firestore
             },
             includeFillBlank: includeFillBlank.value,

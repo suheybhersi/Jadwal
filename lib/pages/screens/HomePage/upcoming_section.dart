@@ -425,7 +425,7 @@ class UpcomingSection extends StatelessWidget {
                                                     reviews.first['surah']
                                                             .split(' ')[0] !=
                                                         'Al-Fatiha'
-                                                ? '...${reviews.first['startVerse'].substring(0, reviews.first['startVerse'].substring(0, 40).lastIndexOf(' '))}'
+                                                ? _buildStartVersePreview(reviews.first['startVerse'])
                                                 : reviews.first['startVerse'],
                                             style: GoogleFonts.scheherazadeNew(
                                               fontSize: 22,

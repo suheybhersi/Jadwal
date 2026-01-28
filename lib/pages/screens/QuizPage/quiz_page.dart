@@ -15,7 +15,7 @@ class QuizPage extends StatefulWidget {
   final String reviewTitle;
   final String review;
   final String id;
-  final Function(String, String, String) updateReview;
+  final Future<Map<String, dynamic>?> Function(String, String, String) updateReview;
 
   // Question type flags
   final bool includeFillBlank;

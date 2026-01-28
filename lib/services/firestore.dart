@@ -7,6 +7,7 @@ import 'package:jadwal/models/plan.dart';
 import 'package:jadwal/models/review.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/achievement_service.dart';
+import 'package:jadwal/services/spaced_repetition_service.dart';
 import 'dart:math';
 
 class FirestoreService extends ChangeNotifier {
@@ -1397,44 +1398,42 @@ class FirestoreService extends ChangeNotifier {
   }
 
   Future<List<dynamic>> sm2(String id, List<dynamic> arr) async {
+    final service = SpacedRepetitionService();
+    
+    // Extract rating (first element) and state (rest)
+    if (arr.isEmpty || arr.length < 4) {
+      throw ArgumentError('Array must contain [rating, consecutiveCorrect, EF, interval]');
+    }
+    
+    final rating = arr[0] as int;
+    
+    // Get existing ratings from review document
     final reviewSnapshot = await reviewsCollection.doc(id).get();
     final review = reviewSnapshot.data() as Map<String, dynamic>;
-
-    List<dynamic> ratings = review['ratings'];
-
-    int corrects = ratings.where((i) => i > 2).toList().length;
-    int wrongs = ratings.where((i) => i < 3).toList().length;
-
-    //add rating to ratings list
-
-    if (arr[0] >= 3) {
-      corrects++;
-      arr[1]++;
-      if (corrects == 3) {
-        return ['success'];
-      }
-      if (arr[1] == 1) {
-        arr[3] = 3;
-      } else {
-        arr[3] = double.parse((arr[3] * arr[2]).toStringAsFixed(2));
-      }
-    } else {
-      wrongs++;
-      if (wrongs == 3) {
-        return ['fail'];
-      }
-      arr[1] = 0;
-      arr[3] = 1;
-    }
-    arr[2] =
-        arr[2] + ((0.1 - (5 - arr[0]) * (0.08 + (5 - arr[0]) * 0.02)) * 0.75);
-    if (arr[2] < 1.3) {
-      arr[2] = 1.3;
-    }
-    return ([arr[1], arr[2], arr[3].truncate()]);
+    final existingRatings = (review['ratings'] as List<dynamic>?)
+        ?.map((r) => r as int)
+        .toList() ?? [];
+    
+    // Create state from legacy array format [consecutiveCorrect, EF, interval]
+    final currentState = ReviewState.fromLegacyArray(
+      arr.sublist(1),
+      ratings: existingRatings,
+    );
+    
+    // Calculate next review using new service
+    final result = service.calculateNextReview(
+      rating: rating,
+      currentState: currentState,
+      reviewDate: DateTime.now(),
+    );
+    
+    // Return in legacy format for backward compatibility
+    return result.toLegacyFormat();
   }
 
-  Future<void> updateReview(String id, String review, String rating) async {
+  /// Update review and return result information
+  /// Returns a map with: status, nextInterval, successRate, consecutiveCorrect, surah
+  Future<Map<String, dynamic>?> updateReview(String id, String review, String rating) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
 
@@ -1446,19 +1445,36 @@ class FirestoreService extends ChangeNotifier {
       if (kDebugMode) {
         print('No review found with review ID: $review');
       }
-      return;
+      return null;
     }
 
     String reviewId = reviewQuery.docs[0].id;
     final reviewSnapshot = await reviewsCollection.doc(reviewId).get();
     final reviewData = reviewSnapshot.data() as Map<String, dynamic>;
-    List<dynamic> prevSm2 = reviewData['sm2'];
+    
+    // Get existing ratings and SM-2 state
+    final existingRatings = (reviewData['ratings'] as List<dynamic>?)
+        ?.map((r) => r as int)
+        .toList() ?? [];
+    List<dynamic> prevSm2 = List<dynamic>.from(reviewData['sm2']);
+    
+    // Calculate statistics for celebration BEFORE updating (using current state)
+    final service = SpacedRepetitionService();
+    final currentState = ReviewState.fromLegacyArray(prevSm2, ratings: existingRatings);
+    final celebrationResult = service.calculateNextReview(
+      rating: int.parse(rating),
+      currentState: currentState,
+    );
+    final successRate = celebrationResult.statistics.successRate;
+    final consecutiveCorrect = celebrationResult.newState.consecutiveCorrect;
+    
+    // Prepare array in format expected by sm2: [rating, consecutiveCorrect, EF, interval]
     prevSm2.insert(0, int.parse(rating));
     List<dynamic> updatedSm2 = await sm2(reviewId, prevSm2);
 
-    List<dynamic> ratings = reviewData['ratings'];
-    ratings = List.from(ratings)..add(int.parse(rating));
-
+    // Update ratings list
+    List<int> ratings = List<int>.from(existingRatings)..add(int.parse(rating));
+    
     // Find the matching review in the plan data, with null safety
     final matchingReviews =
         planData['reviews'].where((rev) => rev['review'] == review).toList();
@@ -1466,14 +1482,18 @@ class FirestoreService extends ChangeNotifier {
       if (kDebugMode) {
         print('No matching review found in plan data for review: $review');
       }
-      return;
+      return null;
     }
 
     Map<String, dynamic> rev = matchingReviews[0];
+    
+    // Get surah info for celebration
+    final surah = reviewData['surah'] as String? ?? '';
 
     if (updatedSm2.length == 1) {
       if (updatedSm2[0] == 'success') {
         //* A D D   T O   D A I L Y   R E A D I N G   L I S T
+        // Review is mastered - no further action needed
       } else if (updatedSm2[0] == 'fail') {
         // Find the next hifdh day (that is not today)
         DateTime today = DateTime.now();
@@ -1542,6 +1562,15 @@ class FirestoreService extends ChangeNotifier {
         'reviews': planData['reviews'],
       });
       await reviewsCollection.doc(reviewId).delete();
+      
+      // Return result info for celebration
+      return {
+        'status': updatedSm2[0] == 'success' ? 'success' : 'fail',
+        'nextInterval': 0,
+        'successRate': successRate,
+        'consecutiveCorrect': consecutiveCorrect,
+        'surah': surah,
+      };
     } else {
       String reviewST = reviewData['date'];
       DateTime reviewDT = DateTime(
@@ -1551,7 +1580,11 @@ class FirestoreService extends ChangeNotifier {
         0,
         0,
       );
-      DateTime newReviewDT = reviewDT.add(Duration(days: updatedSm2[2]));
+      
+      // Calculate next review date using the interval from updated SM-2
+      final service = SpacedRepetitionService();
+      final nextInterval = updatedSm2[2] as int;
+      DateTime newReviewDT = service.calculateNextReviewDate(reviewDT, nextInterval);
 
       await reviewsCollection.doc(reviewId).update({
         'date': '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}',
@@ -1567,10 +1600,19 @@ class FirestoreService extends ChangeNotifier {
       await plansCollection.doc(id).update({
         'reviews': planData['reviews'],
       });
+      
+      // Return result info for celebration
+      return {
+        'status': 'continue',
+        'nextInterval': nextInterval,
+        'successRate': successRate,
+        'consecutiveCorrect': consecutiveCorrect,
+        'surah': surah,
+      };
     }
-
-    // After review is completed, update achievements
-    await updateUserAchievements();
+    
+    // This should never be reached, but return null as fallback
+    return null;
   }
 
 /*---------------------------------------H I F D H   M I S S E D---------------------------------------*/

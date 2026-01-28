@@ -6,6 +6,7 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -446,12 +447,43 @@ class _HomePageState extends State<HomePage> {
                     MaterialButton(
                       onPressed: () async {
                         setState(() => isLoading = true); // Show loading
+                        
+                        // Get plan data before creating hifdh to show stats
+                        final planSnapshot = await firestoreService.plansCollection.doc(id).get();
+                        final planData = planSnapshot.data() as Map<String, dynamic>;
+                        final currentStreak = planData['streak'] ?? 0;
+                        final totalLines = planData['totalLines'] ?? 1;
+                        final completedLines = planData['completedLines'] ?? 0;
+                        final progress = completedLines / totalLines;
+                        
+                        // Parse key to get surah and verses
+                        final keyParts = key.split(':');
+                        String surah = '';
+                        String verses = '';
+                        if (keyParts.length >= 2) {
+                          surah = keyParts[0];
+                          final verseParts = keyParts[1].split('-');
+                          if (verseParts.length >= 2) {
+                            verses = '${verseParts[0]}-${verseParts[1]}';
+                          }
+                        }
+                        
                         await firestoreService.createNewHifdh(key, lines, id);
                         setState(() => isLoading = false); // Hide loading
 
-                        // Close both dialogs
+                        // Close confirmation dialog
                         if (!context.mounted) return;
                         Navigator.pop(context);
+                        
+                        // Show celebration
+                        await CompletionFeedbackService.showMemorizationCelebration(
+                          context: context,
+                          surah: surah,
+                          verses: verses,
+                          lines: lines,
+                          streak: currentStreak + 1,
+                          totalProgress: progress,
+                        );
                       },
                       child: const Text('Yes'),
                     ),
