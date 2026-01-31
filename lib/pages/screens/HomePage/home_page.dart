@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
@@ -150,12 +151,77 @@ class _HomePageState extends State<HomePage> {
                       updateHifdhCalled = false;
                     });
                   } else if (plan['planCompleted'] == true) {
-                    return Center(
-                      child: Text(
-                        'Plan Completed',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 30,
+                    return SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Iconsax.tick_circle5,
+                                size: 72,
+                                color: Color(0xFF4979FB),
+                              ),
+                              SizedBox(height: 24),
+                              Text(
+                                'Memorisation finished',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 24,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                'For now you can create custom quizzes to keep your revision on track. More features to come for huffadh.',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  color: Colors.grey[600],
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 32),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const QuizCreationPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: Icon(
+                                    Iconsax.clipboard_text,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                  label: Text(
+                                    'Create custom quiz',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF4979FB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );

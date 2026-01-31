@@ -579,6 +579,65 @@ class FirestoreService extends ChangeNotifier {
     }
   }
 
+/*--------------------------------A D D   C O M P L E T E D   M E M O R I S A T I O N   P L A N--------------------------------*/
+  /// Creates a plan for users who have already completed memorising the Quran (huffadh).
+  /// Skips plan creation questions and sets up a completed plan so they can use quizzes etc.
+  Future<void> addCompletedMemorisationPlan() async {
+    final today = DateTime.now();
+    final todayString = '${today.day}-${today.month}-${today.year}';
+
+    final completedHifdhMap = {
+      'hifdh': '1:1 - 114:6',
+      'date': todayString,
+      'completed': true,
+      'nextKey': '114:6',
+      'surah': 'Al-Fatihah An-Nas',
+      'startVerse': '',
+      'endVerse': '',
+      'length': 8820.0,
+      'versesList': <dynamic>[],
+    };
+
+    final planMap = {
+      'backToFront': false,
+      'start': '114:6',
+      'lines': 0,
+      'hifdhDays': [false, false, false, false, false, false, false],
+      'totalLines': 8820.0,
+      'completedLines': 8820.0,
+      'hifdhs': [completedHifdhMap],
+      'hifdhIn': -1,
+      'reviews': <dynamic>[],
+      'streak': 0,
+      'missedReviews': 0,
+      'currentWeek': <Map<String, dynamic>>[],
+      'planCompleted': true,
+      'missedHifdhs': <Map<String, dynamic>>[],
+    };
+
+    final planDoc = await plansCollection.add(planMap);
+    final planId = planDoc.id;
+
+    await updateCurrentWeek(planId);
+
+    final surahsSnapshot = await surahsCollection.get();
+    for (var doc in surahsSnapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      await surahsProgressCollection.doc(doc.id).set({
+        'surah': data['surah'],
+        'surahNumber': data['surahNumber'],
+        'verses': data['verses'],
+        'totalLines': data['totalLines'],
+        'tempCompletedLines': data['totalLines'],
+        'completedLines': data['totalLines'],
+      });
+    }
+
+    await hifdhsCollection.add(completedHifdhMap);
+
+    await updateUserProfile({'finishedMemorisingQuran': true});
+  }
+
 /*------------------------------------G E T   P L A N   S T R E A M------------------------------------*/
   Stream<QuerySnapshot> getPlansStream() {
     return plansCollection.snapshots();
@@ -1399,41 +1458,43 @@ class FirestoreService extends ChangeNotifier {
 
   Future<List<dynamic>> sm2(String id, List<dynamic> arr) async {
     final service = SpacedRepetitionService();
-    
+
     // Extract rating (first element) and state (rest)
     if (arr.isEmpty || arr.length < 4) {
-      throw ArgumentError('Array must contain [rating, consecutiveCorrect, EF, interval]');
+      throw ArgumentError(
+          'Array must contain [rating, consecutiveCorrect, EF, interval]');
     }
-    
+
     final rating = arr[0] as int;
-    
+
     // Get existing ratings from review document
     final reviewSnapshot = await reviewsCollection.doc(id).get();
     final review = reviewSnapshot.data() as Map<String, dynamic>;
-    final existingRatings = (review['ratings'] as List<dynamic>?)
-        ?.map((r) => r as int)
-        .toList() ?? [];
-    
+    final existingRatings =
+        (review['ratings'] as List<dynamic>?)?.map((r) => r as int).toList() ??
+            [];
+
     // Create state from legacy array format [consecutiveCorrect, EF, interval]
     final currentState = ReviewState.fromLegacyArray(
       arr.sublist(1),
       ratings: existingRatings,
     );
-    
+
     // Calculate next review using new service
     final result = service.calculateNextReview(
       rating: rating,
       currentState: currentState,
       reviewDate: DateTime.now(),
     );
-    
+
     // Return in legacy format for backward compatibility
     return result.toLegacyFormat();
   }
 
   /// Update review and return result information
   /// Returns a map with: status, nextInterval, successRate, consecutiveCorrect, surah
-  Future<Map<String, dynamic>?> updateReview(String id, String review, String rating) async {
+  Future<Map<String, dynamic>?> updateReview(
+      String id, String review, String rating) async {
     final planSnapshot = await plansCollection.doc(id).get();
     final planData = planSnapshot.data() as Map<String, dynamic>;
 
@@ -1451,30 +1512,32 @@ class FirestoreService extends ChangeNotifier {
     String reviewId = reviewQuery.docs[0].id;
     final reviewSnapshot = await reviewsCollection.doc(reviewId).get();
     final reviewData = reviewSnapshot.data() as Map<String, dynamic>;
-    
+
     // Get existing ratings and SM-2 state
     final existingRatings = (reviewData['ratings'] as List<dynamic>?)
-        ?.map((r) => r as int)
-        .toList() ?? [];
+            ?.map((r) => r as int)
+            .toList() ??
+        [];
     List<dynamic> prevSm2 = List<dynamic>.from(reviewData['sm2']);
-    
+
     // Calculate statistics for celebration BEFORE updating (using current state)
     final service = SpacedRepetitionService();
-    final currentState = ReviewState.fromLegacyArray(prevSm2, ratings: existingRatings);
+    final currentState =
+        ReviewState.fromLegacyArray(prevSm2, ratings: existingRatings);
     final celebrationResult = service.calculateNextReview(
       rating: int.parse(rating),
       currentState: currentState,
     );
     final successRate = celebrationResult.statistics.successRate;
     final consecutiveCorrect = celebrationResult.newState.consecutiveCorrect;
-    
+
     // Prepare array in format expected by sm2: [rating, consecutiveCorrect, EF, interval]
     prevSm2.insert(0, int.parse(rating));
     List<dynamic> updatedSm2 = await sm2(reviewId, prevSm2);
 
     // Update ratings list
     List<int> ratings = List<int>.from(existingRatings)..add(int.parse(rating));
-    
+
     // Find the matching review in the plan data, with null safety
     final matchingReviews =
         planData['reviews'].where((rev) => rev['review'] == review).toList();
@@ -1486,7 +1549,7 @@ class FirestoreService extends ChangeNotifier {
     }
 
     Map<String, dynamic> rev = matchingReviews[0];
-    
+
     // Get surah info for celebration
     final surah = reviewData['surah'] as String? ?? '';
 
@@ -1562,7 +1625,7 @@ class FirestoreService extends ChangeNotifier {
         'reviews': planData['reviews'],
       });
       await reviewsCollection.doc(reviewId).delete();
-      
+
       // Return result info for celebration
       return {
         'status': updatedSm2[0] == 'success' ? 'success' : 'fail',
@@ -1580,11 +1643,12 @@ class FirestoreService extends ChangeNotifier {
         0,
         0,
       );
-      
+
       // Calculate next review date using the interval from updated SM-2
       final service = SpacedRepetitionService();
       final nextInterval = updatedSm2[2] as int;
-      DateTime newReviewDT = service.calculateNextReviewDate(reviewDT, nextInterval);
+      DateTime newReviewDT =
+          service.calculateNextReviewDate(reviewDT, nextInterval);
 
       await reviewsCollection.doc(reviewId).update({
         'date': '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}',
@@ -1600,7 +1664,7 @@ class FirestoreService extends ChangeNotifier {
       await plansCollection.doc(id).update({
         'reviews': planData['reviews'],
       });
-      
+
       // Return result info for celebration
       return {
         'status': 'continue',
@@ -1610,7 +1674,7 @@ class FirestoreService extends ChangeNotifier {
         'surah': surah,
       };
     }
-    
+
     // This should never be reached, but return null as fallback
     return null;
   }
@@ -1807,6 +1871,10 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('surahsProgress');
       final CollectionReference userQuizHistoryCollection =
           userDocRef.collection('quizHistory');
+      final CollectionReference userAchievementsCollection =
+          userDocRef.collection('achievements');
+      final CollectionReference userFeedbackCollection =
+          userDocRef.collection('feedback');
 
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
@@ -1815,6 +1883,8 @@ class FirestoreService extends ChangeNotifier {
       final weeksSnapshot = await userWeeksCollection.get();
       final surahsProgressSnapshot = await userSurahsProgressCollection.get();
       final quizHistorySnapshot = await userQuizHistoryCollection.get();
+      final achievementsSnapshot = await userAchievementsCollection.get();
+      final feedbackSnapshot = await userFeedbackCollection.get();
       // Delete the user document itself
       await userDocRef.delete();
 
@@ -1848,6 +1918,14 @@ class FirestoreService extends ChangeNotifier {
       for (var doc in quizHistorySnapshot.docs) {
         await doc.reference.delete();
       }
+
+      for (var doc in achievementsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in feedbackSnapshot.docs) {
+        await doc.reference.delete();
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error deleting user account: $e');
@@ -1874,6 +1952,10 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('surahsProgress');
       final CollectionReference userQuizHistoryCollection =
           userDocRef.collection('quizHistory');
+      final CollectionReference userAchievementsCollection =
+          userDocRef.collection('achievements');
+      final CollectionReference userFeedbackCollection =
+          userDocRef.collection('feedback');
 
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
@@ -1882,6 +1964,8 @@ class FirestoreService extends ChangeNotifier {
       final weeksSnapshot = await userWeeksCollection.get();
       final surahsProgressSnapshot = await userSurahsProgressCollection.get();
       final quizHistorySnapshot = await userQuizHistoryCollection.get();
+      final achievementsSnapshot = await userAchievementsCollection.get();
+      final feedbackSnapshot = await userFeedbackCollection.get();
       // Delete all documents in each subcollection
       for (var doc in plansSnapshot.docs) {
         await doc.reference.delete();
@@ -1904,6 +1988,14 @@ class FirestoreService extends ChangeNotifier {
       }
 
       for (var doc in quizHistorySnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in achievementsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      for (var doc in feedbackSnapshot.docs) {
         await doc.reference.delete();
       }
     } catch (e) {

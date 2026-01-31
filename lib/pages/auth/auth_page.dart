@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jadwal/components/bottom_nav_bar.dart';
+import 'package:jadwal/pages/onboarding/finished_memorising_question_page.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
 import 'package:jadwal/services/firestore.dart';
-import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/onboarding/app_tutorial_page.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +38,8 @@ class _TutorialWrapperState extends State<_TutorialWrapper> {
   void _showTutorialIfNeeded() async {
     if (_hasShownTutorial || !mounted) return;
 
-    final tutorialService = Provider.of<TutorialService>(context, listen: false);
+    final tutorialService =
+        Provider.of<TutorialService>(context, listen: false);
     if (!tutorialService.hasCompletedTutorial) {
       _hasShownTutorial = true;
       await Future.delayed(const Duration(milliseconds: 500));
@@ -55,6 +57,34 @@ class _TutorialWrapperState extends State<_TutorialWrapper> {
   @override
   Widget build(BuildContext context) {
     return widget.child;
+  }
+}
+
+/// When user has no hifdhs: first ask if they've finished memorising the Quran.
+/// If yes, create completed plan and stream updates to home.
+/// If no, show plan creation; after plan, mode selection is shown (has hifdhs branch).
+class _NoHifdhsRouter extends StatefulWidget {
+  final FirestoreService firestoreService;
+
+  const _NoHifdhsRouter({required this.firestoreService});
+
+  @override
+  State<_NoHifdhsRouter> createState() => _NoHifdhsRouterState();
+}
+
+class _NoHifdhsRouterState extends State<_NoHifdhsRouter> {
+  /// question → plan (only if No)
+  String _step = 'question';
+
+  @override
+  Widget build(BuildContext context) {
+    if (_step == 'plan') {
+      return const NewPlanScreen();
+    }
+    return FinishedMemorisingQuestionPage(
+      firestoreService: widget.firestoreService,
+      onNo: () => setState(() => _step = 'plan'),
+    );
   }
 }
 
@@ -79,26 +109,23 @@ class AuthPage extends StatelessWidget {
             firestoreService.updateUserAchievements();
           });
 
-          return Consumer<UserPreferencesService>(
-            builder: (context, prefsService, child) {
-              // Check if user has completed mode selection
-              // Show mode selection for ALL users who haven't selected yet
-              if (!prefsService.hasCompletedModeSelection) {
-                return UsageModeSelectionPage(
-                  onComplete: () {
-                    // Force rebuild after mode selection
-                    (context as Element).markNeedsBuild();
-                  },
-                );
-              }
+          return StreamBuilder(
+            stream: firestoreService.getHifdhsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                return Consumer<UserPreferencesService>(
+                  builder: (context, prefsService, child) {
+                    // After plan creation: show mode selection if not done yet
+                    if (!prefsService.hasCompletedModeSelection) {
+                      return UsageModeSelectionPage(
+                        onComplete: () {
+                          (context as Element).markNeedsBuild();
+                        },
+                      );
+                    }
 
-              return Consumer<TutorialService>(
-                builder: (context, tutorialService, child) {
-                  return StreamBuilder(
-                    stream: firestoreService.getHifdhsStream(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                        // Show tutorial if not completed - use a separate widget to handle navigation
+                    return Consumer<TutorialService>(
+                      builder: (context, tutorialService, child) {
                         if (!tutorialService.hasCompletedTutorial) {
                           return _TutorialWrapper(
                             child: Scaffold(
@@ -136,12 +163,14 @@ class AuthPage extends StatelessWidget {
                             ),
                           ),
                         );
-                      } else {
-                        return const NewPlanScreen();
-                      }
-                    },
-                  );
-                },
+                      },
+                    );
+                  },
+                );
+              }
+              // No hifdhs: question first; if No → plan (then mode when they have hifdhs)
+              return _NoHifdhsRouter(
+                firestoreService: firestoreService,
               );
             },
           );
