@@ -88,16 +88,12 @@ class ProfilePage extends StatelessWidget {
                 }
 
                 final plans = snapshot.data!.docs;
+                if (plans.isEmpty) {
+                  return const Center(
+                      child: Text('No plan yet',
+                          style: TextStyle(color: Colors.grey)));
+                }
                 final plan = plans.first.data() as Map<String, dynamic>;
-
-                // Calculate progress percentage
-                double progressPercentage = plan['totalLines'] > 0
-                    ? plan['completedLines'] / plan['totalLines']
-                    : 0.0;
-
-                // Cap at 100%
-                progressPercentage =
-                    progressPercentage > 1.0 ? 1.0 : progressPercentage;
 
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -276,7 +272,8 @@ class ProfilePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             spreadRadius: 1,
             blurRadius: 12,
           ),
@@ -301,7 +298,7 @@ class ProfilePage extends StatelessWidget {
           _buildDivider(context),
           _buildStatItem(
               value:
-                  '${(plan['completedLines'] / plan['totalLines'] * 100).toStringAsFixed(1)}%',
+                  '${(_cappedProgressPercentage(plan) * 100).toStringAsFixed(1)}%',
               label: 'Completed',
               icon: Iconsax.chart,
               color: Colors.blue,
@@ -311,10 +308,23 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  /// Progress as 0.0–1.0, with completedLines capped at totalLines so never > 100%.
+  double _cappedProgressPercentage(Map<String, dynamic> plan) {
+    final double total = (plan['totalLines'] as num?)?.toDouble() ?? 8820.0;
+    final num? completedNum = plan['completedLines'] as num?;
+    final double completed = completedNum != null
+        ? (completedNum.toDouble()).clamp(0.0, total)
+        : 0.0;
+    return total > 0 ? (completed / total).clamp(0.0, 1.0) : 0.0;
+  }
+
   DateTime _calculateDaysLeft(Map<String, dynamic> plan) {
-    // Get the remaining lines
-    double completed = plan['completedLines'];
-    double total = plan['totalLines'];
+    // Get the remaining lines (cap completed so remaining is never negative)
+    final double total = (plan['totalLines'] as num?)?.toDouble() ?? 8820.0;
+    final num? completedNum = plan['completedLines'] as num?;
+    final double completed = completedNum != null
+        ? (completedNum.toDouble()).clamp(0.0, total)
+        : 0.0;
     double remaining = total - completed;
 
     // Get the daily target/rate from plan details
@@ -413,8 +423,10 @@ class ProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiary
+                        .withValues(alpha: 0.3),
                     spreadRadius: 1,
                     blurRadius: 12,
                   ),
@@ -441,8 +453,10 @@ class ProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiary
+                        .withValues(alpha: 0.3),
                     spreadRadius: 1,
                     blurRadius: 12,
                   ),
@@ -571,8 +585,10 @@ class ProfilePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color:
-                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.3),
                   spreadRadius: 1,
                   blurRadius: 12,
                 ),
@@ -583,7 +599,8 @@ class ProfilePage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: lastThreeAchievements.map((achievementId) {
-                    final displayData = achievementDisplayData[achievementId]!;
+                    final displayData = achievementDisplayData[achievementId];
+                    if (displayData == null) return const SizedBox.shrink();
                     return _buildAchievementItem(
                       title: displayData['title'] as String,
                       icon: displayData['icon'] as IconData,
@@ -598,20 +615,24 @@ class ProfilePage extends StatelessWidget {
                   builder: (context) {
                     // Start showcase if needed
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      final tutorialService = Provider.of<TutorialService>(context, listen: false);
-                      if (!tutorialService.hasSeenTooltip('view_achievements_button')) {
+                      final tutorialService =
+                          Provider.of<TutorialService>(context, listen: false);
+                      if (!tutorialService
+                          .hasSeenTooltip('view_achievements_button')) {
                         Future.delayed(const Duration(milliseconds: 500), () {
                           if (context.mounted) {
-                            ShowcaseView.get().startShowCase([ProfilePage._achievementsKey]);
+                            ShowcaseView.get()
+                                .startShowCase([ProfilePage._achievementsKey]);
                           }
                         });
                       }
                     });
-                    
+
                     return SmartShowcase(
                       tooltipId: 'view_achievements_button',
                       title: 'View All Achievements',
-                      description: 'Tap here to see all your achievements, badges, and progress milestones.',
+                      description:
+                          'Tap here to see all your achievements, badges, and progress milestones.',
                       globalKey: ProfilePage._achievementsKey,
                       child: TextButton(
                         onPressed: () {
@@ -753,7 +774,10 @@ class ProfilePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .tertiary
+                    .withValues(alpha: 0.3),
                 spreadRadius: 1,
                 blurRadius: 12,
               ),

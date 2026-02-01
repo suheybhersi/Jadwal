@@ -5,12 +5,13 @@ import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
+import 'package:jadwal/pages/screens/HomePage/wird_section.dart';
+import 'package:jadwal/pages/screens/MushafPage/mushaf_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -57,10 +58,14 @@ class _HomePageState extends State<HomePage> {
             if (plansList.isNotEmpty) {
               Map<String, dynamic> plan =
                   plansList[0].data() as Map<String, dynamic>;
-
-              if (plan['hifdhs'].isNotEmpty && plan['hifdhs'] != null) {
+              final hifdhsList = plan['hifdhs'] as List<dynamic>?;
+              final currentWeekList = plan['currentWeek'] as List<dynamic>?;
+              if (hifdhsList != null &&
+                  hifdhsList.isNotEmpty &&
+                  currentWeekList != null &&
+                  currentWeekList.isNotEmpty) {
                 id = plansList[0].id;
-                String weekStart = plan['currentWeek'][0]['weekStart'];
+                String weekStart = currentWeekList[0]['weekStart'];
                 DateTime currWeekStartDT = DateTime.now().subtract(
                   Duration(days: DateTime.now().weekday - 1),
                 );
@@ -74,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                   });
                 }
 
-                if (plan['currentWeek'] != null && !currentWeekCalled) {
+                if (!currentWeekCalled) {
                   DateTime todayDT = DateTime(
                     DateTime.now().year,
                     DateTime.now().month,
@@ -85,12 +90,12 @@ class _HomePageState extends State<HomePage> {
 
                   // Check each day of the week
                   bool needsUpdate = false;
-                  List updatedWeek = List.from(plan['currentWeek']);
+                  List updatedWeek = List.from(currentWeekList);
 
-                  for (int i = 0; i < plan['currentWeek'].length; i++) {
-                    dynamic day = plan['currentWeek'][i];
+                  for (int i = 0; i < currentWeekList.length; i++) {
+                    dynamic day = currentWeekList[i];
                     List<String> weekStartString =
-                        plan['currentWeek'][0]['weekStart'].split('-');
+                        currentWeekList[0]['weekStart'].split('-');
                     DateTime weekStart = DateTime(
                       int.parse(weekStartString[2]),
                       int.parse(weekStartString[1]),
@@ -143,103 +148,33 @@ class _HomePageState extends State<HomePage> {
                 }
                 hifdhIn = plan['hifdhIn'];
 
+                // Completed hifdh: always show the completed home page (not "No memorisation tasks")
+                if (plan['planCompleted'] == true) {
+                  return _buildCompletedHifdhHome(context, userData);
+                }
+
                 if ((hifdhDate == today || todayDT.isAfter(hifdhDT)) &&
                     completed) {
-                  if (plan['planCompleted'] != true && !updateHifdhCalled) {
+                  if (!updateHifdhCalled) {
                     updateHifdhCalled = true;
                     firestoreService.updateNextHifdh(id).then((_) {
                       updateHifdhCalled = false;
                     });
-                  } else if (plan['planCompleted'] == true) {
-                    return SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Iconsax.tick_circle5,
-                                size: 72,
-                                color: Color(0xFF4979FB),
-                              ),
-                              SizedBox(height: 24),
-                              Text(
-                                'Memorisation finished',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 24,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'For now you can create custom quizzes to keep your revision on track. More features to come for huffadh.',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  color: Colors.grey[600],
-                                  height: 1.5,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 32),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 52,
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const QuizCreationPage(),
-                                      ),
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Iconsax.clipboard_text,
-                                    size: 22,
-                                    color: Colors.white,
-                                  ),
-                                  label: Text(
-                                    'Create custom quiz',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF4979FB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Color.fromARGB(255, 73, 121, 251),
-                      ),
-                    );
                   }
-                } else if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Color.fromARGB(255, 73, 121, 251),
+                    ),
+                  );
+                }
+
+                if (todayDT.isAfter(hifdhDT) && !hifdhMissedCalled) {
                   hifdhMissedCalled = true;
                   firestoreService.hifdhMissed(id).then((_) {
                     hifdhMissedCalled = false;
                   });
                 }
 
-                // Call reviewMissed if there are reviews in the past not completed
                 if (!reviewsMissedCalled) {
                   reviewsMissedCalled = true;
                   firestoreService.reviewMissed(id).then((_) {
@@ -254,254 +189,146 @@ class _HomePageState extends State<HomePage> {
                     .toList();
 
                 return SafeArea(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header with name and settings
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 20, right: 10, top: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Consumer<UserPreferencesService>(
-                                builder: (context, prefsService, child) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Welcome back',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          // Mode indicator badge
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: prefsService.usageMode ==
-                                                      UsageMode.flexible
-                                                  ? const Color(0xFF10B981)
-                                                      .withValues(alpha: 0.1)
-                                                  : const Color(0xFF4979FB)
-                                                      .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              UserPreferencesService
-                                                  .getModeName(
-                                                      prefsService.usageMode),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                                color: prefsService.usageMode ==
-                                                        UsageMode.flexible
-                                                    ? const Color(0xFF10B981)
-                                                    : const Color(0xFF4979FB),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      FutureBuilder<Map<String, dynamic>?>(
-                                        future: userData,
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            return Text(
-                                              '${snapshot.data!['firstName']}',
-                                              style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .inversePrimary,
-                                              ),
-                                            );
-                                          }
-                                          return const SizedBox.shrink();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SettingsPage(),
-                                    ),
-                                  );
-                                },
-                                icon: Icon(
-                                  Iconsax.setting_2,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        WeekDaysSection(plan: plan),
-
-                        // Today's Tasks Section
-                        UpcomingSection(
-                          plan: plan,
-                          hifdhIn: hifdhIn,
-                          markHifdhAsComplete: markHifdhAsComplete,
-                          markReviewAsComplete: markReviewAsComplete,
-                          id: id,
-                          reviews: reviews,
-                        ),
-
-                        Container(
-                          margin: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .tertiary
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: StreamBuilder<DocumentSnapshot>(
-                            stream: firestoreService.getRandomVerseStream(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: CircularProgressIndicator(
-                                      color: Color.fromARGB(255, 73, 121, 251),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              if (!snapshot.hasData || snapshot.data == null) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Text(
-                                      'Verse not available',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final verseData = snapshot.data!.data()
-                                  as Map<String, dynamic>?;
-                              if (verseData == null) return SizedBox();
-
-                              final verseText = verseData['text'] as String? ??
-                                  'Verse not available';
-                              final surah = verseData['surah'] as String? ?? '';
-                              final key = verseData['key'] as String? ?? '';
-                              final verseNumber = key.split(':').length > 1
-                                  ? key.split(':')[1]
-                                  : '';
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.all(20),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
+                              // Header with name and settings
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 20, right: 10, top: 16),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Consumer<UserPreferencesService>(
+                                      builder: (context, prefsService, child) {
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Icon(
-                                              Iconsax.book_1,
-                                              color: Color.fromARGB(
-                                                  255, 73, 121, 251),
-                                              size: 20,
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  'Welcome back',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    color: prefsService
+                                                                .usageMode ==
+                                                            UsageMode.flexible
+                                                        ? const Color(
+                                                                0xFF10B981)
+                                                            .withValues(
+                                                                alpha: 0.1)
+                                                        : const Color(
+                                                                0xFF4979FB)
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            6),
+                                                  ),
+                                                  child: Text(
+                                                    UserPreferencesService
+                                                        .getModeName(
+                                                            prefsService
+                                                                .usageMode),
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: prefsService
+                                                                  .usageMode ==
+                                                              UsageMode.flexible
+                                                          ? const Color(
+                                                              0xFF10B981)
+                                                          : const Color(
+                                                              0xFF4979FB),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Verse of the Day',
-                                              style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16,
-                                              ),
+                                            FutureBuilder<
+                                                Map<String, dynamic>?>(
+                                              future: userData,
+                                              builder: (context, snapshot) {
+                                                if (snapshot.hasData) {
+                                                  return Text(
+                                                    '${snapshot.data!['firstName']}',
+                                                    style: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 16,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .inversePrimary,
+                                                    ),
+                                                  );
+                                                }
+                                                return const SizedBox.shrink();
+                                              },
                                             ),
                                           ],
-                                        ),
-                                      ],
+                                        );
+                                      },
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 20, right: 20, bottom: 20),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          verseText,
-                                          style: GoogleFonts.scheherazadeNew(
-                                            letterSpacing: 0,
-                                            fontSize: 24,
-                                            height: 1.6,
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary,
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SettingsPage(),
                                           ),
-                                          textAlign: TextAlign.justify,
-                                          textDirection: TextDirection.rtl,
-                                        ),
-                                        SizedBox(height: 12),
-                                        Text(
-                                          '$surah, Verse $verseNumber',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary
-                                                .withValues(alpha: 0.7),
-                                          ),
-                                          textAlign: TextAlign.right,
-                                        ),
-                                      ],
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Iconsax.setting_2,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            },
+                                  ],
+                                ),
+                              ),
+                              WeekDaysSection(plan: plan),
+                              UpcomingSection(
+                                plan: plan,
+                                hifdhIn: hifdhIn,
+                                markHifdhAsComplete: markHifdhAsComplete,
+                                markReviewAsComplete: markReviewAsComplete,
+                                id: id,
+                                reviews: reviews,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
                         ),
-
-                        SizedBox(height: 20),
-                      ],
-                    ),
+                      ),
+                      WirdSection(firestoreService: firestoreService),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 );
+              }
+
+              // Plan exists but has no hifdhs yet — show completed home if they finished
+              if (plan['planCompleted'] == true) {
+                id = plansList[0].id;
+                return _buildCompletedHifdhHome(context, userData);
               }
             }
           }
@@ -524,6 +351,115 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCompletedHifdhHome(
+      BuildContext context, Future<Map<String, dynamic>?> userData) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 10, top: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FutureBuilder<Map<String, dynamic>?>(
+                  future: userData,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData &&
+                        snapshot.data!['firstName'] != null) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Text(
+                            '${snapshot.data!['firstName']}',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Iconsax.setting_2),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4979FB).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Iconsax.tick_circle,
+                          size: 56,
+                          color: Color(0xFF4979FB),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'You\'ve completed the Quran',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 22,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Focus on revision and retention. Create quizzes, read the Quran, and keep your Hifdh strong.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          WirdSection(firestoreService: firestoreService),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
@@ -564,9 +500,16 @@ class _HomePageState extends State<HomePage> {
                         final planData =
                             planSnapshot.data() as Map<String, dynamic>;
                         final currentStreak = planData['streak'] ?? 0;
-                        final totalLines = planData['totalLines'] ?? 1;
-                        final completedLines = planData['completedLines'] ?? 0;
-                        final progress = completedLines / totalLines;
+                        final double totalLines =
+                            (planData['totalLines'] as num?)?.toDouble() ?? 1;
+                        final completedRaw =
+                            (planData['completedLines'] as num?)?.toDouble();
+                        final double completedLines = completedRaw != null
+                            ? completedRaw.clamp(0.0, totalLines)
+                            : 0;
+                        final progress = totalLines > 0
+                            ? (completedLines / totalLines).clamp(0.0, 1.0)
+                            : 0.0;
 
                         // Parse key to get surah and verses
                         final keyParts = key.split(':');

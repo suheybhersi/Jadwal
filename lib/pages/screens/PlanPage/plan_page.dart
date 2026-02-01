@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/pages/screens/PlanPage/edit_plan_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
@@ -25,8 +26,11 @@ class _PlanPageState extends State<PlanPage> {
     auth: FirebaseAuth.instance,
     uid: FirebaseAuth.instance.currentUser!.uid,
   );
-  
+
   final GlobalKey _editPlanKey = GlobalKey();
+
+  /// Plan id we last called reviewMissed for (reschedule missed → today).
+  String? _reviewMissedPlanId;
 
   @override
   void initState() {
@@ -38,7 +42,8 @@ class _PlanPageState extends State<PlanPage> {
   }
 
   void _startShowcaseIfNeeded() {
-    final tutorialService = Provider.of<TutorialService>(context, listen: false);
+    final tutorialService =
+        Provider.of<TutorialService>(context, listen: false);
     if (!tutorialService.hasSeenTooltip('edit_plan_button')) {
       // Add a delay to ensure widget is fully built
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -77,28 +82,37 @@ class _PlanPageState extends State<PlanPage> {
             Map<String, dynamic> plan =
                 snapshot.data!.docs[0].data() as Map<String, dynamic>;
             String id = snapshot.data!.docs[0].id;
+            final bool isHuffadh = plan['planCompleted'] == true;
+
+            // Huffadh: no edit-plan button (revision page only)
+            if (isHuffadh) {
+              return const SizedBox(width: 48, height: 48);
+            }
+
+            final editButton = IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditPlanPage(
+                      plan: plan,
+                      id: id,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Iconsax.edit),
+            );
 
             return Padding(
               padding: const EdgeInsets.only(left: 10, top: 10),
               child: SmartShowcase(
                 tooltipId: 'edit_plan_button',
                 title: 'Edit Your Plan',
-                description: 'Tap here to modify your memorization plan, change schedule, or update your progress.',
+                description:
+                    'Tap here to modify your memorization plan, change schedule, or update your progress.',
                 globalKey: _editPlanKey,
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditPlanPage(
-                          plan: plan,
-                          id: id,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Iconsax.edit),
-                ),
+                child: editButton,
               ),
             );
           },
@@ -137,31 +151,67 @@ class _PlanPageState extends State<PlanPage> {
             if (plansList.isNotEmpty) {
               Map<String, dynamic> plan =
                   plansList[0].data() as Map<String, dynamic>;
+              final String planId = plansList[0].id;
+              final bool isHuffadh = plan['planCompleted'] == true;
 
+              // Reschedule missed reviews to today (same as non-Huffadh flow)
+              if (_reviewMissedPlanId != planId) {
+                _reviewMissedPlanId = planId;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  firestoreService.reviewMissed(planId);
+                });
+              }
+
+              // Huffadh: Revision page only — incomplete reviews (if intensive) then custom revision plans
+              if (isHuffadh) {
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                    child: Consumer<UserPreferencesService>(
+                      builder: (context, prefsService, child) {
+                        final bool showReviews =
+                            prefsService.shouldScheduleReviews;
+                        final List<dynamic> incompleteReviews =
+                            _getIncompleteReviews(plan);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showReviews && incompleteReviews.isNotEmpty)
+                              IncompleteReviewsSection(
+                                plan: plan,
+                                planId: planId,
+                                incompleteReviews: incompleteReviews,
+                                firestoreService: firestoreService,
+                              ),
+                            if (showReviews && incompleteReviews.isNotEmpty)
+                              const SizedBox(height: 24),
+                            RevisionPlansSection(plan: plan),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                );
+              }
+
+              // Still memorising: no "Reviews to complete" — only shown when whole Quran memorisation is completed (Huffadh)
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PlanProgress(
-                      plan: plan,
-                    ),
+                    PlanProgress(plan: plan),
                     plan['hifdhs']
                             .where((hifdh) => hifdh['completed'] == true)
                             .isNotEmpty
                         ? Column(
                             children: [
-                              PreviousMemorisation(
-                                plan: plan,
-                              ),
-                              // Only show reviews if not in Flexible mode
+                              PreviousMemorisation(plan: plan),
                               Consumer<UserPreferencesService>(
                                 builder: (context, prefsService, child) {
                                   if (!prefsService.shouldScheduleReviews) {
                                     return SizedBox();
                                   }
-                                  return PreviousReviews(
-                                    plan: plan,
-                                  );
+                                  return PreviousReviews(plan: plan);
                                 },
                               ),
                             ],
@@ -221,6 +271,45 @@ class _PlanPageState extends State<PlanPage> {
   }
 }
 
+/// Returns reviews that are due or overdue (date <= today, not completed), sorted by date ascending.
+List<dynamic> _getIncompleteReviews(Map<String, dynamic> plan) {
+  final List<dynamic> allReviews = (plan['reviews'] as List<dynamic>?) ?? [];
+  final today = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+  final incomplete = allReviews.where((r) {
+    try {
+      final parts = (r['date'] as String).split('-');
+      final reviewDate = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+      return !reviewDate.isAfter(today) && (r['completed'] != true);
+    } catch (_) {
+      return false;
+    }
+  }).toList();
+  incomplete.sort((a, b) {
+    final partsA = (a['date'] as String).split('-');
+    final partsB = (b['date'] as String).split('-');
+    final dateA = DateTime(
+      int.parse(partsA[2]),
+      int.parse(partsA[1]),
+      int.parse(partsA[0]),
+    );
+    final dateB = DateTime(
+      int.parse(partsB[2]),
+      int.parse(partsB[1]),
+      int.parse(partsB[0]),
+    );
+    return dateA.compareTo(dateB);
+  });
+  return incomplete;
+}
+
 class PlanProgress extends StatelessWidget {
   const PlanProgress({
     super.key,
@@ -237,6 +326,9 @@ class PlanProgress extends StatelessWidget {
         : 0.0;
     // Ensure percentage doesn't exceed 1.0
     percentage = percentage > 1.0 ? 1.0 : percentage;
+
+    final String title = 'Memorisation Progress';
+    final String subtitle = 'Keep up your progress!';
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -269,7 +361,7 @@ class PlanProgress extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Memorisation Progress',
+                    title,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 20,
@@ -278,7 +370,7 @@ class PlanProgress extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Keep up your progress!',
+                    subtitle,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
@@ -321,6 +413,306 @@ class PlanProgress extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Reusable section wrapper for the Plan page. Use for Memorisation, Revision plans, etc.
+class PlanPageSection extends StatelessWidget {
+  const PlanPageSection({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.iconColor,
+  });
+
+  final String title;
+  final IconData icon;
+  final Color? iconColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = iconColor ?? Theme.of(context).colorScheme.primary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        child,
+      ],
+    );
+  }
+}
+
+/// Placeholder for custom revision plans. Replace content when implementing
+/// recurring revision by Juz, surah, or range.
+/// Displays reviews that are due or overdue (incomplete) when mode is intensive.
+/// Shown above Custom revision plans on the plan page.
+class IncompleteReviewsSection extends StatelessWidget {
+  const IncompleteReviewsSection({
+    super.key,
+    required this.plan,
+    required this.planId,
+    required this.incompleteReviews,
+    required this.firestoreService,
+  });
+
+  final Map<String, dynamic> plan;
+  final String planId;
+  final List<dynamic> incompleteReviews;
+  final FirestoreService firestoreService;
+
+  void _openReviewQuiz(
+      BuildContext context, Map<String, dynamic> review, String id) {
+    final surahParts = (review['surah'] as String).split(' ');
+    final endSurah = surahParts.length > 1 ? surahParts[1] : surahParts[0];
+    final reviewTitle =
+        '${surahParts[0]}  ${review['review'].toString().split('-')[0].split(':')[1]}-${surahParts[0] == endSurah ? '' : '$endSurah '}${review['review'].toString().split('-')[1].split(':')[1]}';
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizPage(
+          reviewTitle: reviewTitle.trim(),
+          versesList: review['versesList'],
+          review: review['review'],
+          id: id,
+          updateReview: firestoreService.updateReview,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.15),
+            spreadRadius: 0,
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4979FB).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Iconsax.refresh_circle,
+                  color: Color(0xFF4979FB),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Reviews to complete',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${incompleteReviews.length} review${incompleteReviews.length == 1 ? '' : 's'} due',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: incompleteReviews.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final review = incompleteReviews[index] as Map<String, dynamic>;
+              final dateStr = review['date'] as String;
+              final parts = dateStr.split('-');
+              final day = parts[0];
+              final month = parts[1];
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _openReviewQuiz(context, review, planId),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ').length > 1 ? review['surah'].split(' ')[1] : review['surah'].split(' ')[0]} ${review['review'].split('-')[1].split(':')[1]}',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Due today · $day/$month',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Iconsax.arrow_right_3,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RevisionPlansSection extends StatelessWidget {
+  const RevisionPlansSection({
+    super.key,
+    required this.plan,
+  });
+
+  final Map<String, dynamic> plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isHuffadh = plan['planCompleted'] == true;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.15),
+            spreadRadius: 0,
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF64A377).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Iconsax.calendar_tick,
+                  color: Color(0xFF64A377),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Custom revision plans',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isHuffadh
+                          ? 'Schedule recurring revision by Juz, surah, or range. Coming soon.'
+                          : 'After memorisation, schedule revision to keep your Hifdh strong. Coming soon.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Reserve space for future "Add plan" or list of plans
+        ],
       ),
     );
   }
@@ -409,12 +801,16 @@ class PreviousMemorisation extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color:
-                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiary
+                        .withValues(alpha: 0.1),
                   ),
                 ),
                 child: Column(
@@ -520,8 +916,10 @@ class PreviousMemorisation extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiary
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: Theme.of(context)
@@ -598,12 +996,16 @@ class PreviousMemorisation extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color:
-                        Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiary
+                        .withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(

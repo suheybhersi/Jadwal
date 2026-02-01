@@ -28,13 +28,16 @@ class _FinishedMemorisingQuestionPageState
     if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
-      await widget.firestoreService.addCompletedMemorisationPlan();
-      // Huffadh skip mode selection: mark complete with default so they go straight to home
+      // Set mode and mark complete *before* adding the plan so that when
+      // getHifdhsStream() emits, auth_page sees hasCompletedModeSelection and
+      // skips the mode selection screen.
       if (!mounted) return;
       final prefsService =
           Provider.of<UserPreferencesService>(context, listen: false);
       await prefsService.setUsageMode(UsageMode.flexible);
       await prefsService.completeModeSelection();
+      if (!mounted) return;
+      await widget.firestoreService.addCompletedMemorisationPlan();
       // Stream will update and auth_page will show home
     } catch (e) {
       if (!mounted) return;

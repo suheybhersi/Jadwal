@@ -43,7 +43,8 @@ class UpcomingSection extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.1),
+                      color: Color.fromARGB(255, 73, 121, 251)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -66,7 +67,8 @@ class UpcomingSection extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.1),
+                  color:
+                      Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -98,8 +100,11 @@ class UpcomingSection extends StatelessWidget {
               // New Memorisation Card
               GestureDetector(
                 onTap: () {
-                  if (!plan['hifdhs'].last['completed']) {
-                    newDraggableBottomSheet(context, plan['hifdhs'].last);
+                  final hifdhs = plan['hifdhs'] as List<dynamic>?;
+                  if (hifdhs != null &&
+                      hifdhs.isNotEmpty &&
+                      hifdhs.last['completed'] != true) {
+                    newDraggableBottomSheet(context, hifdhs.last);
                   }
                 },
                 child: Container(
@@ -116,8 +121,8 @@ class UpcomingSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            Color.fromARGB(255, 73, 121, 251).withValues(alpha: 0.2),
+                        color: Color.fromARGB(255, 73, 121, 251)
+                            .withValues(alpha: 0.2),
                         blurRadius: 15,
                         offset: Offset(0, 5),
                       ),
@@ -162,7 +167,8 @@ class UpcomingSection extends StatelessWidget {
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Icon(
@@ -229,7 +235,8 @@ class UpcomingSection extends StatelessWidget {
                                         'Verse ${plan['hifdhs'].last['hifdh'].split('-')[0].split(':')[1]}',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
-                                          color: Colors.white.withValues(alpha: 0.9),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.9),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -304,18 +311,20 @@ class UpcomingSection extends StatelessWidget {
               // Use Selector to specifically listen to usageMode changes
               Builder(
                 builder: (context) {
-                  final prefsService = Provider.of<UserPreferencesService>(context, listen: true);
+                  final prefsService = Provider.of<UserPreferencesService>(
+                      context,
+                      listen: true);
                   final currentMode = prefsService.usageMode;
-                  
+
                   // Hide reviews in Flexible mode - check mode directly
                   final isFlexibleMode = currentMode == UsageMode.flexible;
                   final hasReviews = reviews.isNotEmpty;
                   final shouldHide = isFlexibleMode || !hasReviews;
-                  
+
                   if (shouldHide) {
                     return SizedBox();
                   }
-                  
+
                   return Column(
                     children: [
                       SizedBox(height: 20),
@@ -323,173 +332,172 @@ class UpcomingSection extends StatelessWidget {
                         onTap: () {
                           markReviewAsComplete(context, reviews, id);
                         },
-                          child: Container(
-                            padding: EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color.fromARGB(255, 100, 163, 119),
-                                  Color.fromARGB(255, 129, 186, 145),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color.fromARGB(255, 100, 163, 119)
-                                      .withValues(alpha: 0.2),
-                                  blurRadius: 15,
-                                  offset: Offset(0, 5),
-                                ),
+                        child: Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color.fromARGB(255, 100, 163, 119),
+                                Color.fromARGB(255, 129, 186, 145),
                               ],
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color.fromARGB(255, 100, 163, 119)
+                                    .withValues(alpha: 0.2),
+                                blurRadius: 15,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          Iconsax.refresh,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        'Review',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Quiz',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 16),
+                              Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        Container(
-                                          padding: EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withValues(alpha: 0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Icon(
-                                            Iconsax.refresh,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                        ),
-                                        SizedBox(width: 12),
                                         Text(
-                                          'Review',
+                                          '${reviews.first['surah'].split(' ')[0]}',
                                           style: GoogleFonts.poppins(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                           ),
                                         ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.9),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'Quiz',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
+                                    SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          reviews.first['length'] >= 0.6 &&
+                                                  reviews.first['surah']
+                                                          .split(' ')[0] !=
+                                                      'Al-Fatiha'
+                                              ? _buildStartVersePreview(
+                                                  reviews.first['startVerse'])
+                                              : reviews.first['startVerse'],
+                                          style: GoogleFonts.scheherazadeNew(
+                                            fontSize: 22,
+                                            height: 1.8,
+                                            color: Colors.white,
+                                          ),
                                         ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Iconsax.play,
+                                      color: Color.fromARGB(255, 100, 163, 119),
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Start Quiz',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            Color.fromARGB(255, 100, 163, 119),
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 16),
-                                Container(
-                                  padding: EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            '${reviews.first['surah'].split(' ')[0]}',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Verse ${reviews.first['review'].split('-')[0].split(':')[1]}',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              color:
-                                                  Colors.white.withValues(alpha: 0.9),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            reviews.first['length'] >= 0.6 &&
-                                                    reviews.first['surah']
-                                                            .split(' ')[0] !=
-                                                        'Al-Fatiha'
-                                                ? _buildStartVersePreview(reviews.first['startVerse'])
-                                                : reviews.first['startVerse'],
-                                            style: GoogleFonts.scheherazadeNew(
-                                              fontSize: 22,
-                                              height: 1.8,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(height: 16),
-                                Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Iconsax.play,
-                                        color:
-                                            Color.fromARGB(255, 100, 163, 119),
-                                        size: 18,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Start Quiz',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color.fromARGB(
-                                              255, 100, 163, 119),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                        ),
                       ),
                     ],
                   );
@@ -789,18 +797,18 @@ class UpcomingSection extends StatelessWidget {
                                             backgroundColor: Color(0xFF4979FB),
                                             elevation: 0,
                                           ),
-                                            child: Container(
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                'Go',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              'Go',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
                                               ),
                                             ),
                                           ),
+                                        ),
                                       ],
                                     ),
                                     SizedBox(height: 16),

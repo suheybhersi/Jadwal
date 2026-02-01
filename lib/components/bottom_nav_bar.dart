@@ -55,8 +55,10 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
               color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color:
-                      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.5),
                   spreadRadius: 1,
                 ),
               ],
@@ -69,8 +71,10 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                 surfaceTintColor: Colors.transparent,
                 animationDuration: Duration.zero,
                 indicatorColor: Theme.of(context).colorScheme.surface,
-                backgroundColor:
-                    Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.9),
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (value) {
                   setState(() {
@@ -114,8 +118,8 @@ class _MyBottomNavBarState extends State<MyBottomNavBar> {
                   NavigationDestination(
                     icon: Icon(
                       _selectedIndex == 3
-                          ? Iconsax.clipboard_text5
-                          : Iconsax.clipboard_text,
+                          ? Iconsax.calendar_tick5
+                          : Iconsax.calendar_tick,
                       color: _selectedIndex == 3
                           ? const Color.fromARGB(255, 73, 121, 251)
                           : const Color.fromARGB(255, 127, 131, 141),

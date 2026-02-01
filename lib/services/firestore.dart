@@ -69,6 +69,31 @@ class FirestoreService extends ChangeNotifier {
   CollectionReference get quizHistoryCollection =>
       usersCollection.doc(uid).collection('quizHistory');
 
+  // Wird: daily Quran reading portion (one document per user)
+  static const int quranTotalPages = 604;
+
+  /// Max completed lines for a plan (Quran total). Cap completedLines so progress never exceeds 100%.
+  static const double planTotalLines = 8820.0;
+
+  /// Last verse of the Quran (An-Nas 114:6). Memorisation cannot extend past this.
+  static const String lastVerseKey = '114:6';
+
+  /// First verse range end (Al-Fatiha 1:7). In back-to-front mode, reaching here means the user has memorised the whole Quran.
+  static const String firstVerseKey = '1:7';
+
+  /// Returns true if [key] is after the last verse of the Quran (114:6).
+  static bool isVerseKeyPastEnd(String key) {
+    final parts = key.split(':');
+    if (parts.length != 2) return true;
+    final surah = int.tryParse(parts[0]) ?? 0;
+    final verse = int.tryParse(parts[1]) ?? 0;
+    return surah > 114 || (surah == 114 && verse > 6);
+  }
+
+  CollectionReference get wirdCollection =>
+      usersCollection.doc(uid).collection('wird');
+  DocumentReference get wirdDocument => wirdCollection.doc('current');
+
   Future<void> updateUserProfile(Map<String, dynamic> userData) async {
     await _executeWithRetry(
         () => userDocument.set(userData, SetOptions(merge: true)));
@@ -142,6 +167,10 @@ class FirestoreService extends ChangeNotifier {
     int lines,
     List<bool> hifdhDays,
   ) async {
+    // Prevent memorisation past the last verse (114:6) in forward mode
+    if (!backToFront && isVerseKeyPastEnd(memorisedTo)) {
+      memorisedTo = lastVerseKey;
+    }
     double memorisedLines = 0;
     double lastPageMemorisedLines = 0;
     Map<String, dynamic> memorisedFromData = {};
@@ -329,19 +358,21 @@ class FirestoreService extends ChangeNotifier {
                 (int.parse(firstPageLastSurahId) + 1).toString();
             dynamic tempVerseDoc =
                 await versesCollection.doc(firstPageLastSurahId).get();
-            Map<String, dynamic> tempVerseData =
-                tempVerseDoc.data() as Map<String, dynamic>;
+            Map<String, dynamic>? tempVerseData =
+                tempVerseDoc.data() as Map<String, dynamic>?;
 
-            //calculate memorisedLines for first page
-            while (firstPageLastSurahData['page'] == tempVerseData['page']) {
+            //calculate memorisedLines for first page (stop at end of Quran — no verse 6237)
+            while (tempVerseData != null &&
+                firstPageLastSurahData['page'] == tempVerseData['page']) {
               firstPageLastSurahMemorisedLines +=
                   tempVerseData['length'].toDouble();
               firstPageLastSurahId =
                   (int.parse(firstPageLastSurahId) + 1).toString();
+              if (firstPageLastSurahId == '6237') break;
 
               tempVerseDoc =
                   await versesCollection.doc(firstPageLastSurahId).get();
-              tempVerseData = tempVerseDoc.data() as Map<String, dynamic>;
+              tempVerseData = tempVerseDoc.data() as Map<String, dynamic>?;
             }
 
             double memorisedToSurahCompletedLines = lastPageMemorisedLines +
@@ -666,6 +697,54 @@ class FirestoreService extends ChangeNotifier {
     return versesCollection.doc(verseId.toString()).snapshots();
   }
 
+  /*--------------------------------W I R D--------------------------------*/
+  /// Creates a daily reading portion (wird). startPage and pagesPerDay are 1-based (1–604).
+  Future<void> createWird(
+      {required int startPage, required int pagesPerDay}) async {
+    final startPg = startPage.clamp(1, quranTotalPages);
+    final perDay = pagesPerDay.clamp(1, quranTotalPages);
+    await _executeWithRetry(() => wirdDocument.set({
+          'startPage': startPg,
+          'pagesPerDay': perDay,
+          'currentPage': startPg,
+          'createdAt': FieldValue.serverTimestamp(),
+        }));
+  }
+
+  Stream<DocumentSnapshot<Object?>> getWirdStream() {
+    return wirdDocument.snapshots();
+  }
+
+  /// Advances the wird by one day (currentPage += pagesPerDay). If past end, loops to 1.
+  Future<void> markWirdComplete() async {
+    final snap = await wirdDocument.get();
+    if (!snap.exists) return;
+    final data = snap.data() as Map<String, dynamic>? ?? {};
+    final current = (data['currentPage'] as num?)?.toInt() ?? 1;
+    final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
+    int next = current + perDay;
+    if (next > quranTotalPages) next = 1;
+    await _executeWithRetry(() => wirdDocument.update({'currentPage': next}));
+  }
+
+  /// Sets the current page (where to read from tomorrow). Use for "did more" / "did less".
+  Future<void> setWirdCurrentPage(int page) async {
+    final p = page.clamp(1, quranTotalPages);
+    await _executeWithRetry(() => wirdDocument.update({'currentPage': p}));
+  }
+
+  /// Adjust current page by offset (positive = did more, negative = did less).
+  Future<void> adjustWirdByPages(int offset) async {
+    final snap = await wirdDocument.get();
+    if (!snap.exists) return;
+    final data = snap.data() as Map<String, dynamic>? ?? {};
+    final current = (data['currentPage'] as num?)?.toInt() ?? 1;
+    int next = current + offset;
+    if (next < 1) next = 1;
+    if (next > quranTotalPages) next = quranTotalPages;
+    await _executeWithRetry(() => wirdDocument.update({'currentPage': next}));
+  }
+
   Stream<QuerySnapshot> getSurahsStream() {
     final User? user = auth.currentUser;
     if (user == null) {
@@ -942,13 +1021,27 @@ class FirestoreService extends ChangeNotifier {
       List<dynamic> planReviews = planData['reviews'];
       planReviews = List.from(planReviews)..add(newReview.toMap());
       planData['streak'] += 1;
-      plansCollection.doc(id).update({
+      final double currentCompleted =
+          (planData['completedLines'] as num?)?.toDouble() ?? 0.0;
+      final double newCompleted =
+          (currentCompleted + length).clamp(0.0, planTotalLines);
+      // If the hifdh we just completed is the one that completes the Quran, mark plan completed
+      final bool backToFrontPlan = (planData['backToFront'] ?? false) as bool;
+      final String hifdhNextKey = (hifdh['nextKey'] as String?) ?? '';
+      final bool lastHifdhCompletesPlan = (hifdhNextKey == lastVerseKey) ||
+          (backToFrontPlan &&
+              (hifdhNextKey == firstVerseKey || hifdhNextKey == '2:1'));
+      await plansCollection.doc(id).update({
         'streak': planData['streak'],
         'reviews': planReviews,
         'hifdhs': hifdhs,
-        'completedLines': planData['completedLines'] + length,
-        'currentWeek': currentWeek
+        'completedLines': newCompleted,
+        'currentWeek': currentWeek,
+        if (lastHifdhCompletesPlan) 'planCompleted': true,
       });
+      if (lastHifdhCompletesPlan) {
+        await updateUserProfile({'finishedMemorisingQuran': true});
+      }
 
       final surahSnapshot = await surahsProgressCollection
           .where('surah', isEqualTo: surah.split(' ')[0])
@@ -993,6 +1086,19 @@ class FirestoreService extends ChangeNotifier {
       }
     }
 
+    // Back-to-front: user just completed up to 1:7 — mark plan complete, do not create next hifdh (2:1)
+    final bool backToFront = (planData['backToFront'] ?? false) as bool;
+    if (backToFront && key == '2:1') {
+      hifdhs.last['nextKey'] = firstVerseKey;
+      await plansCollection.doc(id).update({
+        'planCompleted': true,
+        'hifdhs': hifdhs,
+      });
+      await updateUserProfile({'finishedMemorisingQuran': true});
+      await updateUserAchievements();
+      return;
+    }
+
     final verseSnapshot =
         await versesCollection.where('key', isEqualTo: key).get();
     String verseId = verseSnapshot.docs[0].reference.id;
@@ -1002,7 +1108,15 @@ class FirestoreService extends ChangeNotifier {
     startVerse = verseData['text'];
     verseLength = double.parse(verseData['length'].toString());
 
-    if (verseId != '6236') {
+    // User is completing the last verse (114:6) — mark plan completed and set end/next
+    if (verseId == '6236' || key == lastVerseKey) {
+      endKey = lastVerseKey;
+      endVerse = verseData['text'];
+      nextKey = lastVerseKey;
+      versesList = [verseData['text'] as String];
+      await plansCollection.doc(id).update({'planCompleted': true});
+      await updateUserProfile({'finishedMemorisingQuran': true});
+    } else if (verseId != '6236') {
       double total = double.parse(verseData['length'].toString());
       double tempTotal = total;
       dynamic prevVerseDoc;
@@ -1055,10 +1169,12 @@ class FirestoreService extends ChangeNotifier {
       //     planData['lines'] % 15 != 0) {
       double prevTotal = 0.0;
       bool calculated = false;
+      bool backToFrontCompletedAtStart = false;
       while (!calculated) {
         if (int.parse(verseId) == 6237 || int.parse(verseId) == 0) {
           verseData = prevVerseData;
-          plansCollection.doc(id).update({'planCompleted': true});
+          await plansCollection.doc(id).update({'planCompleted': true});
+          await updateUserProfile({'finishedMemorisingQuran': true});
           break;
         }
         if (length < total) {
@@ -1083,12 +1199,23 @@ class FirestoreService extends ChangeNotifier {
             Map<String, dynamic> tempData =
                 tempDoc.data() as Map<String, dynamic>;
             if (tempData['surah'] != verseData['surah']) {
-              final tempDoc = await versesCollection
-                  .where('key',
-                      isEqualTo:
-                          '${int.parse(verseData['key'].split(':')[0]) - 1}:1')
+              final int currentSurahNum =
+                  int.parse(verseData['key'].split(':')[0]);
+              if (currentSurahNum <= 1) {
+                // Reached start of Quran (1:7) in back-to-front — no surah 0:1
+                versesList.add(verseData['text']);
+                endKey = firstVerseKey;
+                endVerse = verseData['text'] as String;
+                nextKey = firstVerseKey;
+                await updateUserProfile({'finishedMemorisingQuran': true});
+                backToFrontCompletedAtStart = true;
+                calculated = true;
+                break;
+              }
+              final prevSurahFirst = await versesCollection
+                  .where('key', isEqualTo: '${currentSurahNum - 1}:1')
                   .get();
-              verseId = tempDoc.docs[0].reference.id;
+              verseId = prevSurahFirst.docs[0].reference.id;
             }
           }
         } else {
@@ -1255,38 +1382,41 @@ class FirestoreService extends ChangeNotifier {
       endKey = verseData['key'];
       endVerse = verseData['text'];
       surah += ' ${verseData['surah']}';
-      if (verseId != '6237' || (planData['backToFront'] && verseId != '8')) {
-        final nextVerse = await versesCollection.doc(verseId).get();
-        verseData = nextVerse.data() as Map<String, dynamic>;
+      if (!backToFrontCompletedAtStart) {
+        if (verseId != '6237' || (planData['backToFront'] && verseId != '8')) {
+          final nextVerse = await versesCollection.doc(verseId).get();
+          verseData = nextVerse.data() as Map<String, dynamic>;
 
-        // Check if we're at the end of a surah in back-to-front mode
-        if (planData['backToFront'] && verseData['key'].split(':')[1] == '1') {
-          // We need to get the first verse of the previous surah
-          final prevSurahId =
-              (int.parse(verseData['key'].split(':')[0]) - 2).toString();
-          if (prevSurahId != '0') {
-            // Check to avoid going past Surah 1
-            final prevSurahVerseSnapshot = await versesCollection
-                .where('key', isEqualTo: '$prevSurahId:1')
-                .get();
-            if (prevSurahVerseSnapshot.docs.isNotEmpty) {
-              final prevSurahVerseDoc = await versesCollection
-                  .doc(prevSurahVerseSnapshot.docs[0].id)
+          // Check if we're at the end of a surah in back-to-front mode
+          if (planData['backToFront'] &&
+              verseData['key'].split(':')[1] == '1') {
+            // We need to get the first verse of the previous surah
+            final prevSurahId =
+                (int.parse(verseData['key'].split(':')[0]) - 2).toString();
+            if (prevSurahId != '0') {
+              // Check to avoid going past Surah 1
+              final prevSurahVerseSnapshot = await versesCollection
+                  .where('key', isEqualTo: '$prevSurahId:1')
                   .get();
-              Map<String, dynamic> prevSurahVerseData =
-                  prevSurahVerseDoc.data() as Map<String, dynamic>;
-              nextKey = prevSurahVerseData['key'];
+              if (prevSurahVerseSnapshot.docs.isNotEmpty) {
+                final prevSurahVerseDoc = await versesCollection
+                    .doc(prevSurahVerseSnapshot.docs[0].id)
+                    .get();
+                Map<String, dynamic> prevSurahVerseData =
+                    prevSurahVerseDoc.data() as Map<String, dynamic>;
+                nextKey = prevSurahVerseData['key'];
+              } else {
+                nextKey = verseData['key']; // Fallback
+              }
             } else {
-              nextKey = verseData['key']; // Fallback
+              nextKey = verseData['key']; // At Surah 1, can't go further back
             }
           } else {
-            nextKey = verseData['key']; // At Surah 1, can't go further back
+            nextKey = verseData['key'];
           }
         } else {
-          nextKey = verseData['key'];
+          nextKey = endKey;
         }
-      } else {
-        nextKey = endKey;
       }
     }
 
@@ -1404,7 +1534,19 @@ class FirestoreService extends ChangeNotifier {
     var planSnapshot = await plansCollection.doc(id).get();
     var planData = planSnapshot.data() as Map<String, dynamic>;
 
-    String weekStart = planData['currentWeek'][0]['weekStart'];
+    // Plan already completed (user finished Quran) or last hifdh at end — no next hifdh
+    if (planData['planCompleted'] == true) return;
+    final hifdhs = planData['hifdhs'] as List<dynamic>?;
+    if (hifdhs == null || hifdhs.isEmpty) return;
+    final bool backToFront = (planData['backToFront'] ?? false) as bool;
+    final String lastNextKey = hifdhs.last['nextKey'] as String? ?? '';
+    if (lastNextKey == lastVerseKey) return; // Forward: finished at 114:6
+    if (backToFront && lastNextKey == firstVerseKey)
+      return; // Back-to-front: finished at 1:7
+
+    final currentWeek = planData['currentWeek'] as List<dynamic>?;
+    if (currentWeek == null || currentWeek.isEmpty) return;
+    String weekStart = currentWeek[0]['weekStart'];
 
     DateTime currWeekStartDT = DateTime.now().subtract(
       Duration(days: DateTime.now().weekday - 1),
@@ -1441,6 +1583,8 @@ class FirestoreService extends ChangeNotifier {
     if (hifdhData.length != planData['hifdhs'].length) {
       final nextHifdh =
           await hifdhsCollection.where('completed', isEqualTo: false).get();
+
+      if (nextHifdh.docs.isEmpty) return;
 
       final hifdhSnapshot =
           await hifdhsCollection.doc(nextHifdh.docs.last.id).get();
@@ -1875,6 +2019,8 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('achievements');
       final CollectionReference userFeedbackCollection =
           userDocRef.collection('feedback');
+      final CollectionReference userWirdCollection =
+          userDocRef.collection('wird');
 
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
@@ -1885,6 +2031,7 @@ class FirestoreService extends ChangeNotifier {
       final quizHistorySnapshot = await userQuizHistoryCollection.get();
       final achievementsSnapshot = await userAchievementsCollection.get();
       final feedbackSnapshot = await userFeedbackCollection.get();
+      final wirdsSnapshot = await userWirdCollection.get();
       // Delete the user document itself
       await userDocRef.delete();
 
@@ -1926,6 +2073,10 @@ class FirestoreService extends ChangeNotifier {
       for (var doc in feedbackSnapshot.docs) {
         await doc.reference.delete();
       }
+
+      for (var doc in wirdsSnapshot.docs) {
+        await doc.reference.delete();
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error deleting user account: $e');
@@ -1956,7 +2107,8 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('achievements');
       final CollectionReference userFeedbackCollection =
           userDocRef.collection('feedback');
-
+      final CollectionReference userWirdCollection =
+          userDocRef.collection('wird');
       // Get all documents from subcollections
       final plansSnapshot = await userPlansCollection.get();
       final hifdhsSnapshot = await userHifdhsCollection.get();
@@ -1966,6 +2118,7 @@ class FirestoreService extends ChangeNotifier {
       final quizHistorySnapshot = await userQuizHistoryCollection.get();
       final achievementsSnapshot = await userAchievementsCollection.get();
       final feedbackSnapshot = await userFeedbackCollection.get();
+      final wirdsSnapshot = await userWirdCollection.get();
       // Delete all documents in each subcollection
       for (var doc in plansSnapshot.docs) {
         await doc.reference.delete();
@@ -1996,6 +2149,9 @@ class FirestoreService extends ChangeNotifier {
       }
 
       for (var doc in feedbackSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      for (var doc in wirdsSnapshot.docs) {
         await doc.reference.delete();
       }
     } catch (e) {
@@ -2251,18 +2407,6 @@ class FirestoreService extends ChangeNotifier {
     });
   }
 
-  /// Delete a quiz history entry
-  Future<void> deleteQuizHistory(String quizHistoryId) async {
-    try {
-      await quizHistoryCollection.doc(quizHistoryId).delete();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error deleting quiz history: $e');
-      }
-      rethrow;
-    }
-  }
-
   /// Get a specific quiz history detail
   Future<Map<String, dynamic>?> getQuizHistoryDetail(
       String quizHistoryId) async {
@@ -2309,6 +2453,10 @@ class FirestoreService extends ChangeNotifier {
     if ((planData['hifdhs'] as List).isEmpty) return;
 
     final bool backToFront = (planData['backToFront'] ?? false) as bool;
+    // Prevent extending past the last verse (114:6) in forward mode
+    if (!backToFront && isVerseKeyPastEnd(newEndKey)) {
+      newEndKey = lastVerseKey;
+    }
     final List<dynamic> hifdhs = List.from(planData['hifdhs']);
     final Map<String, dynamic> last = Map<String, dynamic>.from(hifdhs.last);
 
