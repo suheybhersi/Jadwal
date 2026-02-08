@@ -92,7 +92,6 @@ class FirestoreService extends ChangeNotifier {
 
   CollectionReference get wirdCollection =>
       usersCollection.doc(uid).collection('wird');
-  DocumentReference get wirdDocument => wirdCollection.doc('current');
 
   Future<void> updateUserProfile(Map<String, dynamic> userData) async {
     await _executeWithRetry(
@@ -698,51 +697,140 @@ class FirestoreService extends ChangeNotifier {
   }
 
   /*--------------------------------W I R D--------------------------------*/
-  /// Creates a daily reading portion (wird). startPage and pagesPerDay are 1-based (1–604).
+  /// Date string YYYY-MM-DD for today (document IDs in wird collection).
+  static String _todayString() {
+    final t = DateTime.now();
+    return '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}';
+  }
+
+  /// One doc per day in wird collection; doc ID = date (YYYY-MM-DD). Fields: startPage, endPage, pagesPerDay, completedAt?, createdAt.
+
+  /// Creates today's wird doc. startPage and pagesPerDay are 1-based (1–604).
   Future<void> createWird(
       {required int startPage, required int pagesPerDay}) async {
     final startPg = startPage.clamp(1, quranTotalPages);
     final perDay = pagesPerDay.clamp(1, quranTotalPages);
-    await _executeWithRetry(() => wirdDocument.set({
+    final endPg = (startPg + perDay - 1).clamp(1, quranTotalPages);
+    final today = _todayString();
+    await _executeWithRetry(() => wirdCollection.doc(today).set({
           'startPage': startPg,
+          'endPage': endPg,
           'pagesPerDay': perDay,
-          'currentPage': startPg,
+          'completedAt': null,
           'createdAt': FieldValue.serverTimestamp(),
         }));
   }
 
+  /// Streams today's wird doc. If today's doc is missing but a past day exists, creates today's doc from the latest day and then emits.
   Stream<DocumentSnapshot<Object?>> getWirdStream() {
-    return wirdDocument.snapshots();
+    final today = _todayString();
+    return wirdCollection.doc(today).snapshots().asyncExpand((snap) async* {
+      if (!snap.exists) {
+        final latest = await _getLatestWirdDoc();
+        if (latest != null) {
+          await _createTodayFromLatest(latest);
+          final newSnap = await wirdCollection.doc(today).get();
+          yield newSnap;
+          return;
+        }
+      }
+      yield snap;
+    });
   }
 
-  /// Advances the wird by one day (currentPage += pagesPerDay). If past end, loops to 1.
-  Future<void> markWirdComplete() async {
-    final snap = await wirdDocument.get();
-    if (!snap.exists) return;
-    final data = snap.data() as Map<String, dynamic>? ?? {};
-    final current = (data['currentPage'] as num?)?.toInt() ?? 1;
+  Future<DocumentSnapshot<Object?>?> _getLatestWirdDoc() async {
+    final q = await wirdCollection
+        .orderBy(FieldPath.documentId, descending: true)
+        .limit(1)
+        .get();
+    if (q.docs.isEmpty) return null;
+    final doc = q.docs.first;
+    final id = doc.id;
+    final today = _todayString();
+    if (id.compareTo(today) >= 0) return null;
+    return doc;
+  }
+
+  Future<void> _createTodayFromLatest(DocumentSnapshot<Object?> latest) async {
+    final data = latest.data() as Map<String, dynamic>? ?? {};
+    final endPage = (data['endPage'] as num?)?.toInt() ?? 1;
     final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
-    int next = current + perDay;
-    if (next > quranTotalPages) next = 1;
-    await _executeWithRetry(() => wirdDocument.update({'currentPage': next}));
+    int nextStart = endPage + 1;
+    if (nextStart > quranTotalPages) nextStart = 1;
+    final nextEnd = (nextStart + perDay - 1).clamp(1, quranTotalPages);
+    final today = _todayString();
+    await _executeWithRetry(() => wirdCollection.doc(today).set({
+          'startPage': nextStart,
+          'endPage': nextEnd,
+          'pagesPerDay': perDay,
+          'completedAt': null,
+          'createdAt': FieldValue.serverTimestamp(),
+        }));
   }
 
-  /// Sets the current page (where to read from tomorrow). Use for "did more" / "did less".
-  Future<void> setWirdCurrentPage(int page) async {
-    final p = page.clamp(1, quranTotalPages);
-    await _executeWithRetry(() => wirdDocument.update({'currentPage': p}));
-  }
-
-  /// Adjust current page by offset (positive = did more, negative = did less).
-  Future<void> adjustWirdByPages(int offset) async {
-    final snap = await wirdDocument.get();
+  /// Marks today's portion complete and creates tomorrow's doc.
+  Future<void> markWirdComplete() async {
+    final today = _todayString();
+    final snap = await wirdCollection.doc(today).get();
     if (!snap.exists) return;
     final data = snap.data() as Map<String, dynamic>? ?? {};
-    final current = (data['currentPage'] as num?)?.toInt() ?? 1;
-    int next = current + offset;
-    if (next < 1) next = 1;
-    if (next > quranTotalPages) next = quranTotalPages;
-    await _executeWithRetry(() => wirdDocument.update({'currentPage': next}));
+    final endPage = (data['endPage'] as num?)?.toInt() ?? 1;
+    final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
+    int nextStart = endPage + 1;
+    if (nextStart > quranTotalPages) nextStart = 1;
+    final nextEnd = (nextStart + perDay - 1).clamp(1, quranTotalPages);
+    final tomorrow = _tomorrowString();
+    await _executeWithRetry(() async {
+      await wirdCollection.doc(today).update({
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+      await wirdCollection.doc(tomorrow).set({
+        'startPage': nextStart,
+        'endPage': nextEnd,
+        'pagesPerDay': perDay,
+        'completedAt': null,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  static String _tomorrowString() {
+    final t = DateTime.now().add(const Duration(days: 1));
+    return '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Sets today's end page and creates/updates tomorrow's doc so tomorrow starts at endPage + 1.
+  Future<void> setWirdEndPage(int endPage) async {
+    final ep = endPage.clamp(1, quranTotalPages);
+    final today = _todayString();
+    final snap = await wirdCollection.doc(today).get();
+    if (!snap.exists) return;
+    final data = snap.data() as Map<String, dynamic>? ?? {};
+    final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
+    int nextStart = ep + 1;
+    if (nextStart > quranTotalPages) nextStart = 1;
+    final nextEnd = (nextStart + perDay - 1).clamp(1, quranTotalPages);
+    final tomorrow = _tomorrowString();
+    await _executeWithRetry(() async {
+      await wirdCollection.doc(today).update({'endPage': ep});
+      await wirdCollection.doc(tomorrow).set({
+        'startPage': nextStart,
+        'endPage': nextEnd,
+        'pagesPerDay': perDay,
+        'completedAt': null,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  /// Deletes all docs in wird collection. User sees create-wird again.
+  Future<void> resetWird() async {
+    final snap = await wirdCollection.get();
+    await _executeWithRetry(() async {
+      for (final doc in snap.docs) {
+        await doc.reference.delete();
+      }
+    });
   }
 
   Stream<QuerySnapshot> getSurahsStream() {
@@ -1818,9 +1906,6 @@ class FirestoreService extends ChangeNotifier {
         'surah': surah,
       };
     }
-
-    // This should never be reached, but return null as fallback
-    return null;
   }
 
 /*---------------------------------------H I F D H   M I S S E D---------------------------------------*/

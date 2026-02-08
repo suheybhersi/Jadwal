@@ -39,124 +39,20 @@ class _WirdSectionState extends State<WirdSection> {
     }
   }
 
-  void _showAdjustSheet(BuildContext context, Map<String, dynamic> wird) {
-    final current = (wird['currentPage'] as num?)?.toInt() ?? 1;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Adjust Wird',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Did more or less than today\'s portion? Update where to continue from tomorrow.',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _AdjustTile(
-                label: 'Did 1 more page',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(1);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              _AdjustTile(
-                label: 'Did 2 more pages',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(2);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              _AdjustTile(
-                label: 'Did 5 more pages',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(5);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              const Divider(height: 24),
-              _AdjustTile(
-                label: 'Did 1 less page',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(-1);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              _AdjustTile(
-                label: 'Did 2 less pages',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(-2);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              _AdjustTile(
-                label: 'Did 5 less pages',
-                onTap: () async {
-                  await firestoreService.adjustWirdByPages(-5);
-                  if (context.mounted) Navigator.pop(ctx);
-                },
-              ),
-              const Divider(height: 24),
-              _AdjustTile(
-                label: 'Set current page (where to continue)',
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  _showSetPageDialog(context, current);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSetPageDialog(BuildContext context, int current) {
-    final controller = TextEditingController(text: '$current');
+  void _showEditEndPageDialog(BuildContext context, int endPage) {
+    final controller = TextEditingController(text: '$endPage');
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          'Set current page',
+          'Edit end page',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            hintText: 'Page (1–${FirestoreService.quranTotalPages})',
+            hintText: 'End page (1–${FirestoreService.quranTotalPages})',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -173,11 +69,51 @@ class _WirdSectionState extends State<WirdSection> {
               if (v != null &&
                   v >= 1 &&
                   v <= FirestoreService.quranTotalPages) {
-                await firestoreService.setWirdCurrentPage(v);
+                await firestoreService.setWirdEndPage(v);
                 if (context.mounted) Navigator.pop(ctx);
               }
             },
-            child: const Text('Set'),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmResetWird(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Reset Wird',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'This will delete all wird data. You can create a new daily portion afterward.',
+          style: GoogleFonts.poppins(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await firestoreService.resetWird();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Wird reset. Create a new daily portion when ready.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Reset'),
           ),
         ],
       ),
@@ -314,10 +250,10 @@ class _WirdSectionState extends State<WirdSection> {
           );
         }
 
-        final currentPage = (data['currentPage'] as num?)?.toInt() ?? 1;
-        final pagesPerDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
-        final endPage = (currentPage + pagesPerDay - 1)
-            .clamp(1, FirestoreService.quranTotalPages);
+        final startPage = (data['startPage'] as num?)?.toInt() ?? 1;
+        final endPage = (data['endPage'] as num?)?.toInt() ?? 1;
+        final completedToday = data['completedAt'] != null;
+        final editEndPageDefault = endPage;
 
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -354,7 +290,9 @@ class _WirdSectionState extends State<WirdSection> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Pages $currentPage – $endPage',
+                            completedToday
+                                ? 'Completed for today'
+                                : 'Pages $startPage – $endPage',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -364,17 +302,18 @@ class _WirdSectionState extends State<WirdSection> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () => _showAdjustSheet(context, data),
+                          onPressed: () =>
+                              _showEditEndPageDialog(context, editEndPageDefault),
                           icon: Icon(
-                            Iconsax.setting_2,
+                            Iconsax.edit_2,
                             size: 20,
                             color: Colors.grey.shade600,
                           ),
                           style: IconButton.styleFrom(
-                            minimumSize: const Size(36, 36),
+                            minimumSize: const Size(40, 40),
                             padding: EdgeInsets.zero,
                           ),
-                          tooltip: 'Adjust',
+                          tooltip: 'Edit end page',
                         ),
                         AnimatedRotation(
                           turns: _isExpanded ? 0.5 : 0,
@@ -394,78 +333,141 @@ class _WirdSectionState extends State<WirdSection> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => QuranViewer(
-                                          initialPage: currentPage,
+                          if (completedToday)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'You’ve completed today’s portion. Tomorrow you’ll see the next pages.',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                TextButton(
+                                  onPressed: () =>
+                                      _confirmResetWird(context),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Reset Wird',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => QuranViewer(
+                                                initialPage: startPage,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(
+                                            Iconsax.book, size: 18),
+                                        label: Text(
+                                          'Read',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor:
+                                              const Color(0xFF4979FB),
+                                          side: const BorderSide(
+                                              color: Color(0xFF4979FB)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12),
                                         ),
                                       ),
-                                    );
-                                  },
-                                  icon: const Icon(Iconsax.book, size: 18),
-                                  label: Text(
-                                    'Read',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFF4979FB),
-                                    side: const BorderSide(
-                                        color: Color(0xFF4979FB)),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    await firestoreService.markWirdComplete();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Wird marked complete. Tomorrow\'s portion is set.'),
-                                          behavior: SnackBarBehavior.floating,
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          await firestoreService
+                                              .markWirdComplete();
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Completed for today. See you tomorrow.'),
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(Iconsax.tick_circle,
+                                            size: 18, color: Colors.white),
+                                        label: Text(
+                                          'Complete',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      );
-                                    }
-                                  },
-                                  icon: const Icon(Iconsax.tick_circle,
-                                      size: 18, color: Colors.white),
-                                  label: Text(
-                                    'Mark complete',
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              const Color(0xFF4979FB),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12),
+                                          elevation: 0,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                TextButton(
+                                  onPressed: () =>
+                                      _confirmResetWird(context),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Reset Wird',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.red,
                                     ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF4979FB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                    elevation: 0,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                         ],
                       ),
                       crossFadeState: _isExpanded
@@ -480,33 +482,6 @@ class _WirdSectionState extends State<WirdSection> {
           ),
         );
       },
-    );
-  }
-}
-
-class _AdjustTile extends StatelessWidget {
-  const _AdjustTile({
-    required this.label,
-    required this.onTap,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: Theme.of(context).colorScheme.inversePrimary,
-        ),
-      ),
-      trailing: const Icon(Iconsax.arrow_right_3, size: 18, color: Colors.grey),
-      onTap: onTap,
     );
   }
 }
