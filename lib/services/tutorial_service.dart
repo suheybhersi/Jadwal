@@ -6,7 +6,8 @@ class TutorialService with ChangeNotifier {
   bool _hasCompletedTutorial = false;
   bool _hasSeenFeatureTour = false;
   Map<String, bool> _tooltipSeen = {};
-  
+  bool _initialLoadDone = false;
+
   // Memorization tip IDs
   static const List<String> memorizationTipIds = [
     'go_to_memorization_button',
@@ -21,6 +22,8 @@ class TutorialService with ChangeNotifier {
   // Getters
   bool get hasCompletedTutorial => _hasCompletedTutorial;
   bool get hasSeenFeatureTour => _hasSeenFeatureTour;
+  /// True after preferences have been loaded from storage (avoids showing wrong screen on first frame).
+  bool get initialLoadDone => _initialLoadDone;
   bool hasSeenTooltip(String tooltipId) => _tooltipSeen[tooltipId] ?? false;
   
   // Get count of seen memorization tips
@@ -43,6 +46,7 @@ class TutorialService with ChangeNotifier {
       _tooltipSeen[key.replaceFirst('tooltip_', '')] = prefs.getBool(key) ?? false;
     }
     
+    _initialLoadDone = true;
     notifyListeners();
   }
 

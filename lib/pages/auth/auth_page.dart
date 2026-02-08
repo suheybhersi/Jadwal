@@ -60,6 +60,34 @@ class _TutorialWrapperState extends State<_TutorialWrapper> {
   }
 }
 
+/// Loading screen shown while prefs/tutorial state is loading; avoids flashing mode or tutorial.
+class _AuthLoadingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/app_logo.png',
+              width: 160,
+              height: 160,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+            CircularProgressIndicator(
+              color: const Color(0xFF4979FB),
+              strokeWidth: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// When user has no hifdhs: first ask if they've finished memorising the Quran.
 /// If yes, create completed plan and stream updates to home.
 /// If no, show plan creation; after plan, mode selection is shown (has hifdhs branch).
@@ -112,9 +140,17 @@ class AuthPage extends StatelessWidget {
           return StreamBuilder(
             stream: firestoreService.getHifdhsStream(),
             builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+              // Wait for stream to emit before deciding; avoids flashing "have you memorised" screen
+              if (!snapshot.hasData) {
+                return _AuthLoadingScreen();
+              }
+              if (snapshot.data!.docs.isNotEmpty) {
                 return Consumer<UserPreferencesService>(
                   builder: (context, prefsService, child) {
+                    // Wait for prefs to load so we don't flash mode selection or tutorial
+                    if (!prefsService.initialLoadDone) {
+                      return _AuthLoadingScreen();
+                    }
                     // After plan creation: show mode selection if not done yet
                     if (!prefsService.hasCompletedModeSelection) {
                       return UsageModeSelectionPage(
@@ -126,6 +162,10 @@ class AuthPage extends StatelessWidget {
 
                     return Consumer<TutorialService>(
                       builder: (context, tutorialService, child) {
+                        // Wait for tutorial prefs so we don't flash tutorial
+                        if (!tutorialService.initialLoadDone) {
+                          return _AuthLoadingScreen();
+                        }
                         if (!tutorialService.hasCompletedTutorial) {
                           return _TutorialWrapper(
                             child: Scaffold(
@@ -168,7 +208,7 @@ class AuthPage extends StatelessWidget {
                   },
                 );
               }
-              // No hifdhs: question first; if No → plan (then mode when they have hifdhs)
+              // Stream has data and docs are empty: user really has no hifdhs
               return _NoHifdhsRouter(
                 firestoreService: firestoreService,
               );

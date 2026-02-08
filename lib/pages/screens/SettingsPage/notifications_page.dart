@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/services/notification_service.dart';
 
 class NotificationsPage extends StatefulWidget {
   final bool initialPushNotificationsValue;
@@ -19,15 +20,43 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   late bool isPushNotificationsEnabled;
   late bool isEmailNotificationsEnabled;
-  bool isTaskReminderEnabled = true;
-  bool isEventAlertEnabled = true;
-  bool isWeeklySummaryEnabled = false;
+  late bool isTaskReminderEnabled;
+  late bool isEventAlertEnabled;
+  late bool isWeeklySummaryEnabled;
+  late int dailyNotificationHour;
+  late int dailyNotificationMinute;
+  late int weeklySummaryWeekday;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     isPushNotificationsEnabled = widget.initialPushNotificationsValue;
     isEmailNotificationsEnabled = widget.initialEmailNotificationsValue;
+    isTaskReminderEnabled = true;
+    isEventAlertEnabled = true;
+    isWeeklySummaryEnabled = false;
+    dailyNotificationHour = 8;
+    dailyNotificationMinute = 0;
+    weeklySummaryWeekday = 1;
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await NotificationService.instance.loadPreferences();
+    if (mounted) {
+      setState(() {
+        isPushNotificationsEnabled = prefs.pushNotificationsEnabled;
+        isEmailNotificationsEnabled = prefs.emailNotificationsEnabled;
+        isTaskReminderEnabled = prefs.taskReminderEnabled;
+        isEventAlertEnabled = prefs.eventAlertEnabled;
+        isWeeklySummaryEnabled = prefs.weeklySummaryEnabled;
+        dailyNotificationHour = prefs.dailyNotificationHour;
+        dailyNotificationMinute = prefs.dailyNotificationMinute;
+        weeklySummaryWeekday = prefs.weeklySummaryWeekday;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -48,17 +77,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back,
               color: Theme.of(context).colorScheme.inversePrimary),
-          onPressed: () {
-            // Return the updated values to the previous screen
-            Navigator.pop(context, {
-              'pushNotificationsEnabled': isPushNotificationsEnabled,
-              'emailNotificationsEnabled': isEmailNotificationsEnabled,
-            });
-          },
+          onPressed: () => _popWithResult(),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
@@ -274,14 +299,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Save settings and return to previous screen
-                      Navigator.pop(context, {
-                        'pushNotificationsEnabled': isPushNotificationsEnabled,
-                        'emailNotificationsEnabled':
-                            isEmailNotificationsEnabled,
-                      });
-                    },
+                    onPressed: _loading ? null : _saveAndPop,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4979FB),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -412,6 +430,94 @@ class _NotificationsPageState extends State<NotificationsPage> {
     );
   }
 
+  String get _dailyTimeFormatted {
+    final h = dailyNotificationHour;
+    final m = dailyNotificationMinute;
+    final padM = m.toString().padLeft(2, '0');
+    if (h == 0) return '12:$padM AM';
+    if (h < 12) return '$h:$padM AM';
+    if (h == 12) return '12:$padM PM';
+    return '${h - 12}:$padM PM';
+  }
+
+  Future<void> _pickDailyTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: dailyNotificationHour.clamp(0, 23),
+        minute: dailyNotificationMinute.clamp(0, 59),
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        dailyNotificationHour = picked.hour;
+        dailyNotificationMinute = picked.minute;
+      });
+    }
+  }
+
+  Future<void> _pickWeeklyDay() async {
+    const days = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
+    ];
+    final chosen = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Weekly Summary Day',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+            ),
+            ...List.generate(7, (i) {
+              return ListTile(
+                title: Text(
+                  days[i],
+                  style: GoogleFonts.poppins(),
+                ),
+                onTap: () => Navigator.pop(context, i),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+    if (chosen != null && mounted) {
+      setState(() => weeklySummaryWeekday = chosen);
+    }
+  }
+
+  Future<void> _saveAndPop() async {
+    final prefs = NotificationPreferences(
+      pushNotificationsEnabled: isPushNotificationsEnabled,
+      emailNotificationsEnabled: isEmailNotificationsEnabled,
+      taskReminderEnabled: isTaskReminderEnabled,
+      eventAlertEnabled: isEventAlertEnabled,
+      weeklySummaryEnabled: isWeeklySummaryEnabled,
+      dailyNotificationHour: dailyNotificationHour,
+      dailyNotificationMinute: dailyNotificationMinute,
+      weeklySummaryWeekday: weeklySummaryWeekday,
+    );
+    await NotificationService.instance.savePreferences(prefs);
+    if (mounted) _popWithResult();
+  }
+
+  void _popWithResult() {
+    Navigator.pop(context, {
+      'pushNotificationsEnabled': isPushNotificationsEnabled,
+      'emailNotificationsEnabled': isEmailNotificationsEnabled,
+    });
+  }
+
   Widget _buildTimingCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -440,12 +546,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
           const SizedBox(height: 16),
           _buildTimingRow(
             title: 'Daily Notification Time',
-            time: '08:00 AM',
+            time: _dailyTimeFormatted,
+            onTap: _pickDailyTime,
           ),
           const SizedBox(height: 16),
           _buildTimingRow(
             title: 'Weekly Summary Day',
-            time: 'Monday',
+            time: NotificationPreferences.weekdayNames[weeklySummaryWeekday.clamp(0, 6)],
+            onTap: _pickWeeklyDay,
           ),
         ],
       ),
@@ -455,26 +563,46 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget _buildTimingRow({
     required String title,
     required String time,
+    VoidCallback? onTap,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  time,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+                if (onTap != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Iconsax.arrow_right_3,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ],
+            ),
+          ],
         ),
-        Text(
-          time,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

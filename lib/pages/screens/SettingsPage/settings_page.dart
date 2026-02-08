@@ -13,6 +13,7 @@ import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/usage_mode_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/features_tour_page.dart';
+import 'package:jadwal/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 
@@ -26,6 +27,22 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool isPushNotificationsEnabled = true;
   bool isEmailNotificationsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPrefs();
+  }
+
+  Future<void> _loadNotificationPrefs() async {
+    final prefs = await NotificationService.instance.loadPreferences();
+    if (mounted) {
+      setState(() {
+        isPushNotificationsEnabled = prefs.pushNotificationsEnabled;
+        isEmailNotificationsEnabled = prefs.emailNotificationsEnabled;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,13 +230,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       );
 
-                      if (result != null && result is Map<String, bool>) {
+                      if (result != null && result is Map) {
                         setState(() {
                           isPushNotificationsEnabled =
-                              result['pushNotificationsEnabled'] ??
+                              result['pushNotificationsEnabled'] as bool? ??
                                   isPushNotificationsEnabled;
                           isEmailNotificationsEnabled =
-                              result['emailNotificationsEnabled'] ??
+                              result['emailNotificationsEnabled'] as bool? ??
                                   isEmailNotificationsEnabled;
                         });
                       }

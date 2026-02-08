@@ -19,6 +19,8 @@ class UserPreferencesService with ChangeNotifier {
   
   FirestoreService? _firestoreService;
   bool _isLoading = false;
+  bool _localLoadDone = false;
+  bool _firestoreLoadDone = false;
 
   UserPreferencesService() {
     _loadPreferences();
@@ -59,6 +61,9 @@ class UserPreferencesService with ChangeNotifier {
   bool get enableReviews => _enableReviews;
   bool get showMissedItems => _showMissedItems;
   bool get hasCompletedModeSelection => _hasCompletedModeSelection;
+  /// True after initial prefs (and Firestore for logged-in user) have been loaded; avoids flashing mode/tutorial screens.
+  bool get initialLoadDone =>
+      _localLoadDone && (_firestoreService == null || _firestoreLoadDone);
 
   // Derived properties based on mode
   bool get shouldScheduleReviews =>
@@ -99,6 +104,7 @@ class UserPreferencesService with ChangeNotifier {
     // Override some settings based on mode
     _applyModeDefaults();
 
+    _localLoadDone = true;
     notifyListeners();
   }
 
@@ -143,6 +149,8 @@ class UserPreferencesService with ChangeNotifier {
       debugPrint('Error loading preferences from Firestore: $e');
     } finally {
       _isLoading = false;
+      _firestoreLoadDone = true;
+      notifyListeners();
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/notification_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/themes/theme_provider.dart';
@@ -17,6 +18,9 @@ import 'package:showcaseview/showcaseview.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize notification service (schedules daily reading/hifdh/review reminders)
+  await NotificationService.instance.init();
 
   // Initialize and preload Quran database in background
   _preloadQuranData();
