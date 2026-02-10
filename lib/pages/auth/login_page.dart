@@ -50,9 +50,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void signUserIn() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) {
           return const Center(
             child: CircularProgressIndicator(),
@@ -80,15 +81,6 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     }
-  }
-
-  // Add method to check if form is valid
-  bool _isFormValid() {
-    return emailController.text.isNotEmpty &&
-        passwordController.text.isNotEmpty &&
-        RegExp(r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
-            .hasMatch(emailController.text) &&
-        passwordController.text.length >= 6;
   }
 
   @override
@@ -141,12 +133,13 @@ class _LoginPageState extends State<LoginPage> {
                           suffixIcon: null,
                           obscureText: false,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
+                            final email = value?.trim() ?? '';
+                            if (email.isEmpty) {
                               return 'Please enter your email';
                             }
                             if (!RegExp(
                                     r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
-                                .hasMatch(value)) {
+                                .hasMatch(email)) {
                               return 'Enter a valid email address';
                             }
                             return null;
@@ -173,10 +166,11 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           obscureText: _obscurePassword,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
+                            final password = value ?? '';
+                            if (password.isEmpty) {
                               return 'Please enter your password';
                             }
-                            if (value.length < 6) {
+                            if (password.length < 6) {
                               return 'Password must be at least 6 characters long';
                             }
                             return null;
@@ -232,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                            onPressed: _isFormValid() ? signUserIn : null,
+                            onPressed: signUserIn,
                             child: Text(
                               'Login',
                               style: GoogleFonts.poppins(
@@ -328,18 +322,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Add listeners to trigger rebuild when text changes
-    emailController.addListener(() {
-      setState(() {});
-    });
-    passwordController.addListener(() {
-      setState(() {});
-    });
   }
 
   @override
