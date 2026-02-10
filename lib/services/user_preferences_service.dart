@@ -16,6 +16,7 @@ class UserPreferencesService with ChangeNotifier {
   bool _enableReviews = true;
   bool _showMissedItems = true;
   bool _hasCompletedModeSelection = false;
+  bool _hasCompletedNotificationOnboarding = false;
   
   FirestoreService? _firestoreService;
   bool _isLoading = false;
@@ -50,6 +51,7 @@ class UserPreferencesService with ChangeNotifier {
         _firestoreService = null;
         // Reset to defaults when logged out
         _hasCompletedModeSelection = false;
+        _hasCompletedNotificationOnboarding = false;
         notifyListeners();
       }
     });
@@ -61,6 +63,8 @@ class UserPreferencesService with ChangeNotifier {
   bool get enableReviews => _enableReviews;
   bool get showMissedItems => _showMissedItems;
   bool get hasCompletedModeSelection => _hasCompletedModeSelection;
+  bool get hasCompletedNotificationOnboarding =>
+      _hasCompletedNotificationOnboarding;
   /// True after initial prefs (and Firestore for logged-in user) have been loaded; avoids flashing mode/tutorial screens.
   bool get initialLoadDone =>
       _localLoadDone && (_firestoreService == null || _firestoreLoadDone);
@@ -96,10 +100,12 @@ class UserPreferencesService with ChangeNotifier {
     _enableReviews = prefs.getBool('enableReviews') ?? true;
     _showMissedItems = prefs.getBool('showMissedItems') ?? true;
     
-    // Note: hasCompletedModeSelection is now loaded from Firestore
+    // Note: hasCompletedModeSelection / hasCompletedNotificationOnboarding are now loaded from Firestore
     // This is just a fallback for offline scenarios
     _hasCompletedModeSelection =
         prefs.getBool('hasCompletedModeSelection') ?? false;
+    _hasCompletedNotificationOnboarding =
+        prefs.getBool('hasCompletedNotificationOnboarding') ?? false;
 
     // Override some settings based on mode
     _applyModeDefaults();
@@ -120,6 +126,13 @@ class UserPreferencesService with ChangeNotifier {
         // Load hasCompletedModeSelection from Firestore
         if (userProfile.containsKey('hasCompletedModeSelection')) {
           _hasCompletedModeSelection = userProfile['hasCompletedModeSelection'] as bool? ?? false;
+        }
+        
+        // Load hasCompletedNotificationOnboarding from Firestore
+        if (userProfile.containsKey('hasCompletedNotificationOnboarding')) {
+          _hasCompletedNotificationOnboarding =
+              userProfile['hasCompletedNotificationOnboarding'] as bool? ??
+                  false;
         }
         
         // Load usage mode from Firestore if available
@@ -162,6 +175,8 @@ class UserPreferencesService with ChangeNotifier {
     await prefs.setBool('enableReviews', _enableReviews);
     await prefs.setBool('showMissedItems', _showMissedItems);
     await prefs.setBool('hasCompletedModeSelection', _hasCompletedModeSelection);
+     await prefs.setBool('hasCompletedNotificationOnboarding',
+        _hasCompletedNotificationOnboarding);
   }
 
   // Apply default settings based on mode
@@ -218,6 +233,25 @@ class UserPreferencesService with ChangeNotifier {
       }
     }
     
+    notifyListeners();
+  }
+
+  // Mark notification onboarding as completed (per-user, synced via Firestore).
+  Future<void> completeNotificationOnboarding() async {
+    _hasCompletedNotificationOnboarding = true;
+    await _savePreferences();
+
+    if (_firestoreService != null) {
+      try {
+        await _firestoreService!.updateUserProfile({
+          'hasCompletedNotificationOnboarding': true,
+        });
+      } catch (e) {
+        debugPrint(
+            'Error saving notification onboarding status to Firestore: $e');
+      }
+    }
+
     notifyListeners();
   }
 

@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Handles local notification scheduling and persistence of notification preferences.
 /// Notifies users about daily reading, hifdh, and reviews at a user-selected time.
@@ -104,23 +106,81 @@ class NotificationService {
     // App opens when user taps notification; no extra routing needed for now
   }
 
-  /// Load all notification preferences from SharedPreferences.
+  /// Load all notification preferences, preferring Firestore (per user) and
+  /// falling back to SharedPreferences (per-device cache).
   Future<NotificationPreferences> loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    return NotificationPreferences(
-      pushNotificationsEnabled: prefs.getBool(_keyPushEnabled) ?? true,
-      emailNotificationsEnabled: prefs.getBool(_keyEmailEnabled) ?? false,
-      taskReminderEnabled: prefs.getBool(_keyTaskReminderEnabled) ?? true,
-      eventAlertEnabled: prefs.getBool(_keyEventAlertEnabled) ?? true,
-      weeklySummaryEnabled: prefs.getBool(_keyWeeklySummaryEnabled) ?? false,
-      dailyNotificationHour: prefs.getInt(_keyDailyHour) ?? 8,
-      dailyNotificationMinute: prefs.getInt(_keyDailyMinute) ?? 0,
-      weeklySummaryWeekday: prefs.getInt(_keyWeeklySummaryWeekday) ?? 1,
+    final localPrefs = await SharedPreferences.getInstance();
+
+    // Start with local values as a fallback/cache.
+    NotificationPreferences result = NotificationPreferences(
+      pushNotificationsEnabled: localPrefs.getBool(_keyPushEnabled) ?? true,
+      emailNotificationsEnabled: localPrefs.getBool(_keyEmailEnabled) ?? false,
+      taskReminderEnabled: localPrefs.getBool(_keyTaskReminderEnabled) ?? true,
+      eventAlertEnabled: localPrefs.getBool(_keyEventAlertEnabled) ?? true,
+      weeklySummaryEnabled:
+          localPrefs.getBool(_keyWeeklySummaryEnabled) ?? false,
+      dailyNotificationHour: localPrefs.getInt(_keyDailyHour) ?? 8,
+      dailyNotificationMinute: localPrefs.getInt(_keyDailyMinute) ?? 0,
+      weeklySummaryWeekday:
+          localPrefs.getInt(_keyWeeklySummaryWeekday) ?? 1,
     );
+
+    // If a user is logged in, try to overlay values from Firestore.
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        final data = doc.data();
+        if (data != null) {
+          result = result.copyWith(
+            pushNotificationsEnabled:
+                (data[_keyPushEnabled] as bool?) ??
+                    result.pushNotificationsEnabled,
+            emailNotificationsEnabled:
+                (data[_keyEmailEnabled] as bool?) ??
+                    result.emailNotificationsEnabled,
+            taskReminderEnabled:
+                (data[_keyTaskReminderEnabled] as bool?) ??
+                    result.taskReminderEnabled,
+            eventAlertEnabled:
+                (data[_keyEventAlertEnabled] as bool?) ??
+                    result.eventAlertEnabled,
+            weeklySummaryEnabled:
+                (data[_keyWeeklySummaryEnabled] as bool?) ??
+                    result.weeklySummaryEnabled,
+            dailyNotificationHour:
+                (data[_keyDailyHour] as int?) ?? result.dailyNotificationHour,
+            dailyNotificationMinute:
+                (data[_keyDailyMinute] as int?) ??
+                    result.dailyNotificationMinute,
+            weeklySummaryWeekday:
+                (data[_keyWeeklySummaryWeekday] as int?) ??
+                    result.weeklySummaryWeekday,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint(
+          'NotificationService: error loading preferences from Firestore: $e');
+    }
+
+    // Keep local cache in sync with the latest effective values.
+    await _saveToLocalPrefs(result);
+
+    return result;
   }
 
-  /// Save preferences and reschedule notifications accordingly.
+  /// Save preferences to both local storage and Firestore, then reschedule.
   Future<void> savePreferences(NotificationPreferences prefs) async {
+    await _saveToLocalPrefs(prefs);
+    await _saveToFirestore(prefs);
+    await rescheduleFromPrefs();
+  }
+
+  Future<void> _saveToLocalPrefs(NotificationPreferences prefs) async {
     final p = await SharedPreferences.getInstance();
     await p.setBool(_keyPushEnabled, prefs.pushNotificationsEnabled);
     await p.setBool(_keyEmailEnabled, prefs.emailNotificationsEnabled);
@@ -129,8 +189,35 @@ class NotificationService {
     await p.setBool(_keyWeeklySummaryEnabled, prefs.weeklySummaryEnabled);
     await p.setInt(_keyDailyHour, prefs.dailyNotificationHour);
     await p.setInt(_keyDailyMinute, prefs.dailyNotificationMinute);
-    await p.setInt(_keyWeeklySummaryWeekday, prefs.weeklySummaryWeekday);
-    await rescheduleFromPrefs();
+    await p.setInt(
+        _keyWeeklySummaryWeekday, prefs.weeklySummaryWeekday);
+  }
+
+  Future<void> _saveToFirestore(NotificationPreferences prefs) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          _keyPushEnabled: prefs.pushNotificationsEnabled,
+          _keyEmailEnabled: prefs.emailNotificationsEnabled,
+          _keyTaskReminderEnabled: prefs.taskReminderEnabled,
+          _keyEventAlertEnabled: prefs.eventAlertEnabled,
+          _keyWeeklySummaryEnabled: prefs.weeklySummaryEnabled,
+          _keyDailyHour: prefs.dailyNotificationHour,
+          _keyDailyMinute: prefs.dailyNotificationMinute,
+          _keyWeeklySummaryWeekday: prefs.weeklySummaryWeekday,
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint(
+          'NotificationService: error saving preferences to Firestore: $e');
+    }
   }
 
   /// Cancel all scheduled notifications, then schedule daily (and weekly) if enabled.
@@ -241,6 +328,35 @@ class NotificationPreferences {
     this.dailyNotificationMinute = 0,
     this.weeklySummaryWeekday = 1,
   });
+
+  NotificationPreferences copyWith({
+    bool? pushNotificationsEnabled,
+    bool? emailNotificationsEnabled,
+    bool? taskReminderEnabled,
+    bool? eventAlertEnabled,
+    bool? weeklySummaryEnabled,
+    int? dailyNotificationHour,
+    int? dailyNotificationMinute,
+    int? weeklySummaryWeekday,
+  }) {
+    return NotificationPreferences(
+      pushNotificationsEnabled:
+          pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
+      taskReminderEnabled:
+          taskReminderEnabled ?? this.taskReminderEnabled,
+      eventAlertEnabled: eventAlertEnabled ?? this.eventAlertEnabled,
+      weeklySummaryEnabled:
+          weeklySummaryEnabled ?? this.weeklySummaryEnabled,
+      dailyNotificationHour:
+          dailyNotificationHour ?? this.dailyNotificationHour,
+      dailyNotificationMinute:
+          dailyNotificationMinute ?? this.dailyNotificationMinute,
+      weeklySummaryWeekday:
+          weeklySummaryWeekday ?? this.weeklySummaryWeekday,
+    );
+  }
 
   String get dailyTimeFormatted {
     final h = dailyNotificationHour;

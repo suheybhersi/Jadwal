@@ -7,6 +7,7 @@ import 'package:jadwal/pages/onboarding/finished_memorising_question_page.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
+import 'package:jadwal/pages/onboarding/notification_onboarding_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
@@ -154,6 +155,17 @@ class AuthPage extends StatelessWidget {
                     // After plan creation: show mode selection if not done yet
                     if (!prefsService.hasCompletedModeSelection) {
                       return UsageModeSelectionPage(
+                        onComplete: () {
+                          (context as Element).markNeedsBuild();
+                        },
+                      );
+                    }
+
+                    // After mode selection, ask once for notification preferences
+                    // for new users (stored per user in Firestore so it does not
+                    // re-show on new devices).
+                    if (!prefsService.hasCompletedNotificationOnboarding) {
+                      return NotificationOnboardingPage(
                         onComplete: () {
                           (context as Element).markNeedsBuild();
                         },
