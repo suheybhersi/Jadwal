@@ -62,6 +62,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   String feedbackMessage = '';
   int incorrectWordCount = 0;
   bool hasSubmittedAnswer = false;
+  /// Number of times we've shown the "bad audio, try again" hint for this question (max 2).
+  int badAudioPromptCount = 0;
+  /// True when we should show the "try again, might be bad audio" hint for this result (set only for 1st and 2nd incorrect).
+  bool showBadAudioHintThisAttempt = false;
 
   @override
   void dispose() {
@@ -187,6 +191,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
         })
         .replaceAll('ءا', 'ا') // Normalise hamza+alif
         .replaceAll('ي', 'ى') // Normalise Ya and Alif Maqsura
+        .replaceAll('\u06CC',
+            'ى') // Normalise Persian/Urdu ye (ی) → Arabic ى (transcription APIs may return either)
+        .replaceAll(
+            'ة', 'ه') // Normalise ta marbuta → ha (often same in transcription)
         .replaceAll(tatweelRegex, '') // Remove tatweel characters
         .trim(); // Remove extra spaces
 
@@ -203,16 +211,39 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       return [];
     }
 
+    // Log for debugging transcription vs correct (e.g. small alif vs extra alif)
+    debugPrint(
+        '[FindDifferences] correct raw: "$correct" (${correct.length} chars, runes: ${correct.runes.map((r) => r.toRadixString(16)).join(" ")})');
+    debugPrint(
+        '[FindDifferences] correct processed: "$processedCorrect" (${processedCorrect.length} chars)');
+    debugPrint(
+        '[FindDifferences] transcribed raw: "$transcribed" (${transcribed.length} chars, runes: ${transcribed.runes.map((r) => r.toRadixString(16)).join(" ")})');
+    debugPrint(
+        '[FindDifferences] transcribed processed: "$processedTranscribed" (${processedTranscribed.length} chars)');
+
     int lenCorrect = processedCorrect.length;
     int lenTranscribed = processedTranscribed.length;
     int lengthDifference = (lenCorrect - lenTranscribed).abs();
     List<Map<String, dynamic>> differences = [];
 
-    // Special case: If the only difference is a missing alif ('ا') at index 3 or 4, ignore it
+    // Special case: length difference of 1 — treat as match when it's only an extra/missing alif or ya
     if (lengthDifference == 1) {
-      // Check if longer word has an alif at the position where the shorter word is missing it
+      // Missing character in correct (transcribed is longer): e.g. small alif in correct → full alif in transcription, or API inserts extra ی
+      if (lenTranscribed > lenCorrect) {
+        for (int i = 0; i < lenTranscribed; i++) {
+          final withoutChar = processedTranscribed.substring(0, i) +
+              processedTranscribed.substring(i + 1);
+          if (withoutChar == processedCorrect) {
+            final extraChar = processedTranscribed[i];
+            // Extra alif (small alif often transcribed as full ا) or extra ی/ى (common API insertion)
+            if (extraChar == 'ا' || extraChar == 'ى') {
+              return []; // Ignore: small alif vs full alif, or spurious ی
+            }
+          }
+        }
+      }
+      // Missing character in transcribed (correct is longer): e.g. missing alif at index 3 or 4
       if (lenCorrect > lenTranscribed) {
-        // Find where the first difference occurs
         int diffIndex = -1;
         for (int i = 0; i < lenTranscribed; i++) {
           if (processedCorrect[i] != processedTranscribed[i]) {
@@ -221,8 +252,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           }
         }
 
-        // If difference is at index 3 or 4 (common positions for alif in demonstrative pronouns)
-        // and the difference is just an alif, ignore it
         if ((diffIndex == 3 || diffIndex == 4) &&
             processedCorrect[diffIndex] == 'ا') {
           if (processedCorrect.substring(0, diffIndex) +
@@ -561,6 +590,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
   /// Main function to compare two verses word by word
   List<Map<String, dynamic>> compareVerses(String correct, String transcribed) {
+    debugPrint('[CompareVerses] correct (raw): $correct');
+    debugPrint('[CompareVerses] transcribed (raw): $transcribed');
+
     if (correct.isEmpty || transcribed.isEmpty) {
       return [];
     }
@@ -878,10 +910,13 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 "Processing your recording..."; // Show a processing indicator
             hasSubmittedAnswer = false;
             feedbackMessage = '';
+            showBadAudioHintThisAttempt = false;
           });
 
           // Convert to text with proper error handling
           String transcription = await convertSpeechToText(filePath);
+
+          debugPrint('[Transcription] raw from API: $transcription');
 
           if (transcription.startsWith('Error:')) {
             setState(() {
@@ -896,6 +931,17 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
 
           List<Map<String, dynamic>> comparisonResult =
               compareVerses(question['correctAnswer'], transcription);
+
+          for (int i = 0; i < comparisonResult.length; i++) {
+            final entry = comparisonResult[i];
+            if (entry['isError'] == true) {
+              debugPrint('[CompareVerses] word $i (error): '
+                  'actual_word="${entry['actual_word']}" '
+                  'processed_word="${entry['processed_word']}" '
+                  'processed_transcribed_word="${entry['processed_transcribed_word']}" '
+                  'differences=${entry['differences']}');
+            }
+          }
 
           List<String> processedTranscribedWords = comparisonResult
               .map((e) => e['final_transcribed_word'] as String)
@@ -947,6 +993,14 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
             isRecitationCorrect = isCorrect;
             feedbackMessage = message;
             incorrectWordCount = totalIncorrectWords;
+            hasSubmittedAnswer = true; // Show feedback immediately so one "Continue" moves to next
+            // When incorrect, offer "try again" hint (bad audio / mumbling) at most 2 times
+            if (!isCorrect && badAudioPromptCount < 2) {
+              badAudioPromptCount++;
+              showBadAudioHintThisAttempt = true;
+            } else {
+              showBadAudioHintThisAttempt = false;
+            }
           });
         }
       } else {
@@ -1336,28 +1390,46 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                         : Colors.red.shade300,
                                   ),
                                 ),
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      isRecitationCorrect
-                                          ? Icons.check_circle
-                                          : Icons.error,
-                                      color: isRecitationCorrect
-                                          ? Colors.green.shade700
-                                          : Colors.red.shade700,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        feedbackMessage,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          isRecitationCorrect
+                                              ? Icons.check_circle
+                                              : Icons.error,
                                           color: isRecitationCorrect
                                               ? Colors.green.shade700
                                               : Colors.red.shade700,
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            feedbackMessage,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              color: isRecitationCorrect
+                                                  ? Colors.green.shade700
+                                                  : Colors.red.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                    if (!isRecitationCorrect &&
+                                        showBadAudioHintThisAttempt) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Multiple mistakes can be caused by unclear audio or mumbling. Please try again in a quiet place and speak clearly.',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: Colors.red.shade700,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -1637,9 +1709,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                                       color: Colors.red,
                                                       decoration: TextDecoration
                                                           .underline,
-                                                      decorationColor: Colors
-                                                          .red
-                                                          .withValues(alpha: 0.7),
+                                                      decorationColor:
+                                                          Colors.red.withValues(
+                                                              alpha: 0.7),
                                                       decorationThickness: 1,
                                                     ),
                                                   ),
@@ -1685,34 +1757,23 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (!hasSubmittedAnswer) {
-                        // First press: Show feedback
-                        setState(() {
-                          hasSubmittedAnswer = true;
-                        });
-                      } else {
-                        // Second press: Go to next question
-                        widget.onNext(isRecitationCorrect);
-                        widget.answeredQuestions[widget.currentQuestionIndex] =
-                            {
-                          'user_answer': text,
-                          'is_correct': isRecitationCorrect
-                        };
-                        setState(() {
-                          text = '';
-                          hasSubmittedAnswer = false;
-                          feedbackMessage = '';
-                        });
-                      }
+                      widget.onNext(isRecitationCorrect);
+                      widget.answeredQuestions[widget.currentQuestionIndex] = {
+                        'user_answer': text,
+                        'is_correct': isRecitationCorrect
+                      };
+                      setState(() {
+                        text = '';
+                        hasSubmittedAnswer = false;
+                        feedbackMessage = '';
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      backgroundColor: hasSubmittedAnswer
-                          ? (isRecitationCorrect
-                              ? Colors.green.shade600
-                              : Colors.red.shade600)
-                          : const Color(0xFF4979FB),
+                      backgroundColor: isRecitationCorrect
+                          ? Colors.green.shade600
+                          : Colors.red.shade600,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1738,7 +1799,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    backgroundColor: const Color(0xFF4979FB).withValues(alpha: 0.2),
+                    backgroundColor:
+                        const Color(0xFF4979FB).withValues(alpha: 0.2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

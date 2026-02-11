@@ -8,7 +8,7 @@ String normaliseArabicText(String text) {
   final harakatRegex = RegExp(
       r'[\u064B-\u0652\u06D4\u0670\u0674\u06D5-\u06ED]+'); // Tanween, Fatha, Kasra, Damma, etc.
   final alifVariationsRegex = RegExp(r'[ـٰآٱـٰٓ]');
-  final tatweelRegex = RegExp(r'[ـ]');
+  final tatweelRegex = RegExp(r'[ٓـ]');
   const hamzaVariations = ['ء', 'ؤ', 'ئ', 'أ'];
 
   // Process the text with more efficient chaining of replacements
@@ -20,6 +20,9 @@ String normaliseArabicText(String text) {
       })
       .replaceAll('ءا', 'ا') // Normalise hamza+alif
       .replaceAll('ي', 'ى') // Normalise Ya and Alif Maqsura
+      .replaceAll('\u06CC', 'ى') // Normalise Persian/Urdu ye (ی) → Arabic ى
+      .replaceAll(
+          'ة', 'ه') // Normalise ta marbuta → ha (often same in transcription)
       .replaceAll(tatweelRegex, '') // Remove tatweel characters
       .trim(); // Remove extra spaces
 
@@ -41,11 +44,23 @@ List<Map<String, dynamic>> findDifferences(String correct, String transcribed) {
   int lengthDifference = (lenCorrect - lenTranscribed).abs();
   List<Map<String, dynamic>> differences = [];
 
-  // Special case: If the only difference is a missing alif ('ا') at index 3 or 4, ignore it
+  // Special case: length difference of 1 — treat as match when it's only an extra/missing alif or ya
   if (lengthDifference == 1) {
-    // Check if longer word has an alif at the position where the shorter word is missing it
+    // Transcribed is longer: e.g. small alif → full alif in transcription, or API inserts extra ی
+    if (lenTranscribed > lenCorrect) {
+      for (int i = 0; i < lenTranscribed; i++) {
+        final withoutChar = processedTranscribed.substring(0, i) +
+            processedTranscribed.substring(i + 1);
+        if (withoutChar == processedCorrect) {
+          final extraChar = processedTranscribed[i];
+          if (extraChar == 'ا' || extraChar == 'ى') {
+            return []; // Ignore: small alif vs full alif, or spurious ی
+          }
+        }
+      }
+    }
+    // Correct is longer: e.g. missing alif at index 3 or 4
     if (lenCorrect > lenTranscribed) {
-      // Find where the first difference occurs
       int diffIndex = -1;
       for (int i = 0; i < lenTranscribed; i++) {
         if (processedCorrect[i] != processedTranscribed[i]) {
@@ -54,8 +69,6 @@ List<Map<String, dynamic>> findDifferences(String correct, String transcribed) {
         }
       }
 
-      // If difference is at index 3 or 4 (common positions for alif in demonstrative pronouns)
-      // and the difference is just an alif, ignore it
       if ((diffIndex == 3 || diffIndex == 4) &&
           processedCorrect[diffIndex] == 'ا') {
         if (processedCorrect.substring(0, diffIndex) +
@@ -283,6 +296,64 @@ void main() {
           differences.any(
               (diff) => diff['correct'] == 'ط' && diff['incorrect'] == 'ض');
       expect(hasSubstitution, true);
+    });
+
+    // --- False-difference cases (transcription quirks we ignore) ---
+
+    test('should ignore extra alif in transcribed (small alif → full alif)',
+        () {
+      // Correct: الصراط (6 chars after normalise). Transcribed with extra ا (e.g. small alif heard as full)
+      final correct = "الصراط";
+      final transcribed = "الصرااط"; // extra ا after ر
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences, isEmpty);
+    });
+
+    test('should ignore extra ی in transcribed (common API insertion)', () {
+      // Correct: اهدنا. Transcribed as اهدینا (extra ی)
+      final correct = "اهْدِنَا";
+      final transcribed = "اهدینا"; // ي after د
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences, isEmpty);
+    });
+
+    test('should treat ta marbuta ة and ha ه as same after normalisation', () {
+      // الرحمة vs الرحمه - often same in pronunciation/transcription
+      final correct = "الرحمة";
+      final transcribed = "الرحمه";
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences, isEmpty);
+    });
+
+    // --- Real differences (should still be reported) ---
+
+    test('should report real substitution (ي vs ن)', () {
+      final correct = "مَالِكِ يَوْمِ الدِّينِ";
+      final transcribed = "مالك نوم الدين"; // يَوْم → نوم
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences.isNotEmpty, true);
+    });
+
+    test('should report extra character that is not ا or ى', () {
+      final correct = "اهدنا";
+      final transcribed = "اهودنا"; // extra و (not ignored)
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences.isNotEmpty, true);
+    });
+
+    test(
+        'should report when lengths differ by 2 and strings do not match by removing one ا/ى',
+        () {
+      final correct = "الله";
+      final transcribed = "اللاهه"; // two extra chars, not just one ا
+
+      final differences = findDifferences(correct, transcribed);
+      expect(differences.isNotEmpty, true);
     });
   });
 }
