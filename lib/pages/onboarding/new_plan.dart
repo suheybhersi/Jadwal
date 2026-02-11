@@ -1165,7 +1165,7 @@ class ReviewPage extends StatelessWidget {
     final controller = Get.find<NewPlanController>();
 
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
