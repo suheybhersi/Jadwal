@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:jadwal/pages/screens/QuizPage/build_verse_question.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_intro_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
@@ -1027,6 +1029,16 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
           setState(() => currentQuestionIndex = index);
         },
         questions: questions,
+        onClose: widget.isCustomQuiz
+            ? () {
+                try {
+                  Get.find<QuizCreationController>().resetAllState();
+                } catch (_) {}
+                final navigator = Navigator.of(context);
+                navigator.pop(); // Leave quiz welcome
+                navigator.pop(); // Leave create-quiz form → back to quiz history
+              }
+            : null,
       );
     }
 
@@ -1045,6 +1057,18 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
     var currentQuestion = questions[currentQuestionIndex];
 
+    // For custom quizzes, close goes back to quiz history (pop twice + reset); otherwise just pop once.
+    final void Function() onQuestionClose = widget.isCustomQuiz
+        ? () {
+            try {
+              Get.find<QuizCreationController>().resetAllState();
+            } catch (_) {}
+            final navigator = Navigator.of(context);
+            navigator.pop(); // Leave current question
+            navigator.pop(); // Leave create-quiz form → back to quiz history
+          }
+        : () => Navigator.pop(context);
+
     return Scaffold(
       body: SafeArea(
         child: currentQuestion['type'] == 'fill_blank'
@@ -1059,7 +1083,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                   setState(() => currentQuestionIndex++);
                 },
                 answeredQuestions: answeredQuestions,
-                onClose: () => Navigator.pop(context),
+                onClose: onQuestionClose,
               )
             : currentQuestion['type'] == 'what_next'
                 ? WhatComesNextQuestion(
@@ -1073,7 +1097,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                       setState(() => currentQuestionIndex++);
                     },
                     answeredQuestions: answeredQuestions,
-                    onClose: () => Navigator.pop(context),
+                    onClose: onQuestionClose,
                   )
                 : currentQuestion['type'] == 'verse_pairing'
                     ? VersePairingQuestion(
@@ -1087,7 +1111,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           setState(() => currentQuestionIndex++);
                         },
                         answeredQuestions: answeredQuestions,
-                        onClose: () => Navigator.pop(context),
+                        onClose: onQuestionClose,
                       )
                     : BuildVerseQuestion(
                         currentQuestionIndex: currentQuestionIndex,
@@ -1100,7 +1124,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
                           setState(() => currentQuestionIndex++);
                         },
                         answeredQuestions: answeredQuestions,
-                        onClose: () => Navigator.pop(context),
+                        onClose: onQuestionClose,
                       ),
       ),
     );

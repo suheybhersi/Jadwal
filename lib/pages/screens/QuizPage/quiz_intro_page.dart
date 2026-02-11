@@ -5,12 +5,15 @@ class QuizIntroPage extends StatefulWidget {
   final String reviewTitle;
   final List<Map<String, dynamic>> questions;
   final Function(int) onStart;
+  /// If set, called when the user taps close (X). Otherwise defaults to Navigator.pop(context).
+  final VoidCallback? onClose;
 
   const QuizIntroPage({
     super.key,
     required this.reviewTitle,
     required this.questions,
     required this.onStart,
+    this.onClose,
   });
 
   @override
@@ -33,7 +36,8 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () =>
+                          (widget.onClose ?? () => Navigator.pop(context))(),
                       icon: const Icon(Icons.close),
                       color: Theme.of(context).colorScheme.inversePrimary,
                     ),
@@ -86,7 +90,8 @@ class _QuizIntroPageState extends State<QuizIntroPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () =>
+                        (widget.onClose ?? () => Navigator.pop(context))(),
                     icon: const Icon(Icons.close),
                     color: Theme.of(context).colorScheme.inversePrimary,
                   ),
