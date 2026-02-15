@@ -5,6 +5,7 @@ import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
+import 'package:jadwal/pages/screens/HomePage/create_wird_page.dart';
 import 'package:jadwal/pages/screens/HomePage/wird_section.dart';
 import 'package:jadwal/pages/screens/MushafPage/mushaf_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
@@ -34,6 +35,109 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic> plan = {};
 
   bool reviewsMissedCalled = false;
+
+  Widget _buildDailyReadingButton(BuildContext context) {
+    return StreamBuilder(
+      stream: firestoreService.getWirdStream(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() as Map<String, dynamic>?;
+        final hasWird = snapshot.hasData && data != null;
+        final hasReadingToDo = hasWird && data['completedAt'] == null;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              onPressed: () => _showDailyReadingPopup(context),
+              icon: Icon(
+                Iconsax.book_1,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+              tooltip: 'Daily reading',
+              style: IconButton.styleFrom(
+                padding: const EdgeInsets.all(8),
+                minimumSize: const Size(40, 40),
+              ),
+            ),
+            if (hasReadingToDo)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4979FB),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDailyReadingPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 16, 16),
+        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Iconsax.book_1, color: const Color(0xFF4979FB), size: 26),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Daily reading',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  icon: Icon(Icons.close, size: 22, color: Colors.grey.shade600),
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(6),
+                    minimumSize: const Size(40, 40),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  tooltip: 'Close',
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+          ],
+        ),
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            minWidth: MediaQuery.of(context).size.width * 0.88,
+            maxWidth: MediaQuery.of(context).size.width * 0.92,
+          ),
+          child: _DailyReadingDialogContent(
+            firestoreService: firestoreService,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -287,19 +391,29 @@ class _HomePageState extends State<HomePage> {
                                         );
                                       },
                                     ),
-                                    IconButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const SettingsPage(),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        _buildDailyReadingButton(context),
+                                        IconButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const SettingsPage(),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            Iconsax.setting_2,
                                           ),
-                                        );
-                                      },
-                                      icon: Icon(
-                                        Iconsax.setting_2,
-                                      ),
+                                          style: IconButton.styleFrom(
+                                            padding: const EdgeInsets.all(8),
+                                            minimumSize: const Size(40, 40),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -318,8 +432,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      WirdSection(firestoreService: firestoreService),
-                      const SizedBox(height: 8),
                     ],
                   ),
                 );
@@ -395,16 +507,26 @@ class _HomePageState extends State<HomePage> {
                     return const SizedBox.shrink();
                   },
                 ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDailyReadingButton(context),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Iconsax.setting_2),
+                      style: IconButton.styleFrom(
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(40, 40),
                       ),
-                    );
-                  },
-                  icon: const Icon(Iconsax.setting_2),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -457,8 +579,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          WirdSection(firestoreService: firestoreService),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -569,6 +689,232 @@ class _HomePageState extends State<HomePage> {
           updateReview: firestoreService.updateReview,
         ),
       ),
+    );
+  }
+}
+
+enum _DailyReadingView { main, create, editEndPage, confirmReset }
+
+class _DailyReadingDialogContent extends StatefulWidget {
+  const _DailyReadingDialogContent({
+    required this.firestoreService,
+  });
+
+  final FirestoreService firestoreService;
+
+  @override
+  State<_DailyReadingDialogContent> createState() =>
+      _DailyReadingDialogContentState();
+}
+
+class _DailyReadingDialogContentState extends State<_DailyReadingDialogContent> {
+  _DailyReadingView _view = _DailyReadingView.main;
+  int _editEndPageValue = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: _view == _DailyReadingView.main
+          ? WirdSection(
+              firestoreService: widget.firestoreService,
+              inline: true,
+              onTapCreate: () => setState(() => _view = _DailyReadingView.create),
+              onEditEndPage: (v) => setState(() {
+                    _view = _DailyReadingView.editEndPage;
+                    _editEndPageValue = v;
+                  }),
+              onTapReset: () => setState(() => _view = _DailyReadingView.confirmReset),
+            )
+          : _view == _DailyReadingView.create
+              ? CreateWirdForm(
+                  firestoreService: widget.firestoreService,
+                  onCreated: () => setState(() => _view = _DailyReadingView.main),
+                  onCancel: () => setState(() => _view = _DailyReadingView.main),
+                )
+              : _view == _DailyReadingView.editEndPage
+                  ? _EditEndPageForm(
+                      initialValue: _editEndPageValue,
+                      firestoreService: widget.firestoreService,
+                      onSaved: () => setState(() => _view = _DailyReadingView.main),
+                      onCancel: () => setState(() => _view = _DailyReadingView.main),
+                    )
+                  : _ConfirmResetView(
+                      onReset: () async {
+                        await widget.firestoreService.resetWird();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Wird reset. Create a new daily portion when ready.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          setState(() => _view = _DailyReadingView.main);
+                        }
+                      },
+                      onCancel: () => setState(() => _view = _DailyReadingView.main),
+                    ),
+    );
+  }
+}
+
+class _ConfirmResetView extends StatelessWidget {
+  const _ConfirmResetView({
+    required this.onReset,
+    required this.onCancel,
+  });
+
+  final VoidCallback onCancel;
+  final Future<void> Function() onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'This will delete all wird data. You can create a new daily portion afterward.',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.grey.shade700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: onCancel,
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: () async => await onReset(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Reset',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditEndPageForm extends StatefulWidget {
+  const _EditEndPageForm({
+    required this.initialValue,
+    required this.firestoreService,
+    required this.onSaved,
+    required this.onCancel,
+  });
+
+  final int initialValue;
+  final FirestoreService firestoreService;
+  final VoidCallback onSaved;
+  final VoidCallback onCancel;
+
+  @override
+  State<_EditEndPageForm> createState() => _EditEndPageFormState();
+}
+
+class _EditEndPageFormState extends State<_EditEndPageForm> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.initialValue}');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Edit end page',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'End page (1–${FirestoreService.quranTotalPages})',
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: widget.onCancel,
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () async {
+                final v = int.tryParse(_controller.text);
+                if (v != null &&
+                    v >= 1 &&
+                    v <= FirestoreService.quranTotalPages) {
+                  await widget.firestoreService.setWirdEndPage(v);
+                  if (mounted) widget.onSaved();
+                }
+              },
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Save',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -3,19 +3,24 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/firestore.dart';
 
-class CreateWirdPage extends StatefulWidget {
+/// Reusable create-wird form for full page or inline in a dialog.
+class CreateWirdForm extends StatefulWidget {
   final FirestoreService firestoreService;
+  final VoidCallback onCreated;
+  final VoidCallback onCancel;
 
-  const CreateWirdPage({
+  const CreateWirdForm({
     super.key,
     required this.firestoreService,
+    required this.onCreated,
+    required this.onCancel,
   });
 
   @override
-  State<CreateWirdPage> createState() => _CreateWirdPageState();
+  State<CreateWirdForm> createState() => _CreateWirdFormState();
 }
 
-class _CreateWirdPageState extends State<CreateWirdPage> {
+class _CreateWirdFormState extends State<CreateWirdForm> {
   int _pagesPerDay = 2;
   bool _customPages = false;
   final TextEditingController _customPagesController =
@@ -60,7 +65,7 @@ class _CreateWirdPageState extends State<CreateWirdPage> {
         pagesPerDay: effectivePagesPerDay,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      widget.onCreated();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -82,38 +87,11 @@ class _CreateWirdPageState extends State<CreateWirdPage> {
     final surface = Theme.of(context).colorScheme.surface;
     final onSurface = Theme.of(context).colorScheme.inversePrimary;
 
-    return Scaffold(
-      backgroundColor: surface,
-      appBar: AppBar(
-        surfaceTintColor: Colors.transparent,
-        backgroundColor: surface,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Iconsax.arrow_left, color: onSurface),
-        ),
-        title: Text(
-          'Create Wird',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-            color: onSurface,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Pages per day card
-                    _SectionCard(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -134,28 +112,37 @@ class _CreateWirdPageState extends State<CreateWirdPage> {
                           ),
                           const SizedBox(height: 16),
                           Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [1, 2, 3, 5, 10].map((n) {
-                              final selected =
-                                  !_customPages && _pagesPerDay == n;
-                              return _ChoiceChip(
-                                label: '$n',
-                                selected: selected,
-                                onTap: () {
-                                  setState(() {
-                                    _customPages = false;
-                                    _pagesPerDay = n;
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 12),
-                          _ChoiceChip(
-                            label: 'Custom',
-                            selected: _customPages,
-                            onTap: () => setState(() => _customPages = true),
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ...[1, 2, 3, 5, 10].map((n) {
+                                final selected =
+                                    !_customPages && _pagesPerDay == n;
+                                return SizedBox(
+                                  width: 56,
+                                  height: 44,
+                                  child: _ChoiceChip(
+                                    label: '$n',
+                                    selected: selected,
+                                    onTap: () {
+                                      setState(() {
+                                        _customPages = false;
+                                        _pagesPerDay = n;
+                                      });
+                                    },
+                                  ),
+                                );
+                              }),
+                              SizedBox(
+                                width: 72,
+                                height: 44,
+                                child: _ChoiceChip(
+                                  label: 'Custom',
+                                  selected: _customPages,
+                                  onTap: () => setState(() => _customPages = true),
+                                ),
+                              ),
+                            ],
                           ),
                           if (_customPages) ...[
                             const SizedBox(height: 14),
@@ -273,43 +260,115 @@ class _CreateWirdPageState extends State<CreateWirdPage> {
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            // Create button fixed at bottom
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: SizedBox(
-                height: 54,
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _create,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isLoading ? null : widget.onCancel,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: onSurface,
+                    side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 26,
-                          width: 26,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _create,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 26,
+                            width: 26,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'Create Wird',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        )
-                      : Text(
-                          'Create Wird',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+  }
+}
+
+class CreateWirdPage extends StatelessWidget {
+  final FirestoreService firestoreService;
+
+  const CreateWirdPage({
+    super.key,
+    required this.firestoreService,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surface;
+    final onSurface = Theme.of(context).colorScheme.inversePrimary;
+
+    return Scaffold(
+      backgroundColor: surface,
+      appBar: AppBar(
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: surface,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(Iconsax.arrow_left, color: onSurface),
+        ),
+        title: Text(
+          'Create Wird',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: onSurface,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: CreateWirdForm(
+                  firestoreService: firestoreService,
+                  onCreated: () => Navigator.of(context).pop(true),
+                  onCancel: () => Navigator.of(context).pop(),
                 ),
               ),
             ),
@@ -368,7 +427,7 @@ class _ChoiceChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: selected
                 ? _primary.withValues(alpha: 0.15)
@@ -379,6 +438,7 @@ class _ChoiceChip extends StatelessWidget {
               width: selected ? 1.5 : 1,
             ),
           ),
+          alignment: Alignment.center,
           child: Text(
             label,
             style: GoogleFonts.poppins(
@@ -417,6 +477,7 @@ class _OptionTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: selected

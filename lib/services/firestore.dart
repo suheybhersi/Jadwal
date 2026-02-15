@@ -721,7 +721,7 @@ class FirestoreService extends ChangeNotifier {
         }));
   }
 
-  /// Streams today's wird doc. If today's doc is missing but a past day exists, creates today's doc from the latest day and then emits.
+  /// Streams today's wird doc. If today's doc is missing but a past day exists, reschedules the latest Wird to today (same pages) and emits.
   Stream<DocumentSnapshot<Object?>> getWirdStream() {
     final today = _todayString();
     return wirdCollection.doc(today).snapshots().asyncExpand((snap) async* {
@@ -739,41 +739,50 @@ class FirestoreService extends ChangeNotifier {
   }
 
   Future<DocumentSnapshot<Object?>?> _getLatestWirdDoc() async {
-    final q = await wirdCollection
-        .orderBy(FieldPath.documentId, descending: true)
-        .limit(1)
-        .get();
-    if (q.docs.isEmpty) return null;
-    final doc = q.docs.first;
-    final id = doc.id;
+    final snap = await wirdCollection.get();
+    if (snap.docs.isEmpty) return null;
     final today = _todayString();
-    if (id.compareTo(today) >= 0) return null;
-    return doc;
+    DocumentSnapshot<Object?>? latest;
+    for (final doc in snap.docs) {
+      if (doc.id.compareTo(today) < 0) {
+        if (latest == null || doc.id.compareTo(latest.id) > 0) {
+          latest = doc;
+        }
+      }
+    }
+    return latest;
   }
 
+  /// Creates today's doc by rescheduling the latest Wird (same pages) when a day was missed.
+  /// Marks the source doc as missed so it cannot be completed by changing device date.
   Future<void> _createTodayFromLatest(DocumentSnapshot<Object?> latest) async {
     final data = latest.data() as Map<String, dynamic>? ?? {};
+    final startPage = (data['startPage'] as num?)?.toInt() ?? 1;
     final endPage = (data['endPage'] as num?)?.toInt() ?? 1;
     final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
-    int nextStart = endPage + 1;
-    if (nextStart > quranTotalPages) nextStart = 1;
-    final nextEnd = (nextStart + perDay - 1).clamp(1, quranTotalPages);
     final today = _todayString();
-    await _executeWithRetry(() => wirdCollection.doc(today).set({
-          'startPage': nextStart,
-          'endPage': nextEnd,
-          'pagesPerDay': perDay,
-          'completedAt': null,
-          'createdAt': FieldValue.serverTimestamp(),
-        }));
+    final latestDate = latest.id;
+    await _executeWithRetry(() async {
+      await latest.reference.update({'missed': true});
+      await wirdCollection.doc(today).set({
+        'startPage': startPage,
+        'endPage': endPage,
+        'pagesPerDay': perDay,
+        'completedAt': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'rescheduledFrom': latestDate,
+      });
+    });
   }
 
   /// Marks today's portion complete and creates tomorrow's doc.
+  /// Rejects if the doc is marked missed (can't complete past days by changing device date).
   Future<void> markWirdComplete() async {
     final today = _todayString();
     final snap = await wirdCollection.doc(today).get();
     if (!snap.exists) return;
     final data = snap.data() as Map<String, dynamic>? ?? {};
+    if (data['missed'] == true) return;
     final endPage = (data['endPage'] as num?)?.toInt() ?? 1;
     final perDay = (data['pagesPerDay'] as num?)?.toInt() ?? 1;
     int nextStart = endPage + 1;
