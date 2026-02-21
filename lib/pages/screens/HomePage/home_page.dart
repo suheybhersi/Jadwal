@@ -687,6 +687,8 @@ class _HomePageState extends State<HomePage> {
           review: reviews.first['review'],
           id: id,
           updateReview: firestoreService.updateReview,
+          includeWhatNext: Provider.of<UserPreferencesService>(context)
+              .enableWhatComesNext,
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/pages/screens/PlanPage/edit_plan_page.dart';
+import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
@@ -496,6 +497,8 @@ class IncompleteReviewsSection extends StatelessWidget {
           review: review['review'],
           id: id,
           updateReview: firestoreService.updateReview,
+          includeWhatNext:
+              Provider.of<UserPreferencesService>(context).enableWhatComesNext,
         ),
       ),
     );
@@ -616,6 +619,17 @@ class IncompleteReviewsSection extends StatelessWidget {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.more_vert),
+                          onPressed: () => showQuizOptionsSheet(context),
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                          iconSize: 22,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
                           ),
                         ),
                         Icon(

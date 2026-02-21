@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
@@ -108,7 +109,7 @@ class UpcomingSection extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -333,7 +334,8 @@ class UpcomingSection extends StatelessWidget {
                           markReviewAsComplete(context, reviews, id);
                         },
                         child: Container(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.only(
+                              left: 24, right: 4, top: 16, bottom: 20),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
@@ -387,29 +389,25 @@ class UpcomingSection extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.more_vert,
+                                      color: Colors.white,
+                                      size: 20,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      'Quiz',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    onPressed: () =>
+                                        showQuizOptionsSheet(context),
+                                    constraints: BoxConstraints(
+                                      minWidth: 40,
+                                      minHeight: 40,
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 16),
+                              SizedBox(height: 8),
                               Container(
+                                margin: EdgeInsets.only(
+                                    left: 0, right: 20, top: 0, bottom: 0),
                                 padding: EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.1),
@@ -445,13 +443,8 @@ class UpcomingSection extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         Text(
-                                          reviews.first['length'] >= 0.6 &&
-                                                  reviews.first['surah']
-                                                          .split(' ')[0] !=
-                                                      'Al-Fatiha'
-                                              ? _buildStartVersePreview(
-                                                  reviews.first['startVerse'])
-                                              : reviews.first['startVerse'],
+                                          _getReviewVerseDisplayText(
+                                              reviews.first),
                                           style: GoogleFonts.scheherazadeNew(
                                             fontSize: 22,
                                             height: 1.8,
@@ -465,6 +458,8 @@ class UpcomingSection extends StatelessWidget {
                               ),
                               SizedBox(height: 16),
                               Container(
+                                margin: EdgeInsets.only(
+                                    left: 0, right: 20, top: 0, bottom: 0),
                                 width: double.infinity,
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -1283,6 +1278,25 @@ class UpcomingSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// Returns the verse text to show on the review card. Uses [startVerse] or
+  /// first item of [versesList] as fallback, and truncates for long verses when appropriate.
+  String _getReviewVerseDisplayText(Map<String, dynamic> review) {
+    final startVerse = review['startVerse'] ??
+        ((review['versesList'] is List &&
+                (review['versesList'] as List).isNotEmpty)
+            ? (review['versesList'] as List).first
+            : null);
+    final verseText = startVerse?.toString().trim() ?? '';
+    if (verseText.isEmpty) return '';
+
+    final length = (review['length'] as num?)?.toDouble();
+    final surahFirst = review['surah']?.toString().split(' ').first ?? '';
+    final usePreview =
+        length != null && length >= 0.6 && surahFirst != 'Al-Fatiha';
+    if (usePreview) return _buildStartVersePreview({'startVerse': verseText});
+    return verseText;
   }
 
   String _buildStartVersePreview(dynamic lastHifdhData) {

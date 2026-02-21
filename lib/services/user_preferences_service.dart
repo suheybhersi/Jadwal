@@ -17,7 +17,9 @@ class UserPreferencesService with ChangeNotifier {
   bool _showMissedItems = true;
   bool _hasCompletedModeSelection = false;
   bool _hasCompletedNotificationOnboarding = false;
-  
+  /// When true, "What comes next" (recitation) questions appear in quizzes. Beta feature.
+  bool _enableWhatComesNext = true;
+
   FirestoreService? _firestoreService;
   bool _isLoading = false;
   bool _localLoadDone = false;
@@ -65,6 +67,8 @@ class UserPreferencesService with ChangeNotifier {
   bool get hasCompletedModeSelection => _hasCompletedModeSelection;
   bool get hasCompletedNotificationOnboarding =>
       _hasCompletedNotificationOnboarding;
+  /// When true, "What comes next" (recitation) questions appear in quizzes. Beta feature.
+  bool get enableWhatComesNext => _enableWhatComesNext;
   /// True after initial prefs (and Firestore for logged-in user) have been loaded; avoids flashing mode/tutorial screens.
   bool get initialLoadDone =>
       _localLoadDone && (_firestoreService == null || _firestoreLoadDone);
@@ -106,6 +110,7 @@ class UserPreferencesService with ChangeNotifier {
         prefs.getBool('hasCompletedModeSelection') ?? false;
     _hasCompletedNotificationOnboarding =
         prefs.getBool('hasCompletedNotificationOnboarding') ?? false;
+    _enableWhatComesNext = prefs.getBool('enableWhatComesNext') ?? true;
 
     // Override some settings based on mode
     _applyModeDefaults();
@@ -177,6 +182,14 @@ class UserPreferencesService with ChangeNotifier {
     await prefs.setBool('hasCompletedModeSelection', _hasCompletedModeSelection);
      await prefs.setBool('hasCompletedNotificationOnboarding',
         _hasCompletedNotificationOnboarding);
+    await prefs.setBool('enableWhatComesNext', _enableWhatComesNext);
+  }
+
+  /// Enable or disable "What comes next" (recitation) questions in quizzes. Beta feature.
+  Future<void> setEnableWhatComesNext(bool value) async {
+    _enableWhatComesNext = value;
+    await _savePreferences();
+    notifyListeners();
   }
 
   // Apply default settings based on mode

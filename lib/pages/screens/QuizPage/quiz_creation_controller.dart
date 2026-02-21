@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 
 class QuizCreationController extends GetxController {
@@ -92,6 +94,18 @@ class QuizCreationController extends GetxController {
     selectionErrorMessage.value = '';
 
     // Call update to notify GetBuilder and force rebuild where needed
+    update();
+  }
+
+  /// Sets start verse to Al-Fatiha verse 1 if no start selection has been made yet.
+  void setDefaultStartVerseIfNeeded(List<Map<String, dynamic>> allData) {
+    if (allData.isEmpty || selectedStartSurahName.value != null) return;
+    final firstSurah = allData.first;
+    final surahName = firstSurah['surah'] as String?;
+    if (surahName == null) return;
+    selectedStartSurahName.value = surahName;
+    selectedStartSurahData.value = firstSurah;
+    selectedStartVerse.value = 1;
     update();
   }
 
@@ -308,7 +322,12 @@ class QuizCreationController extends GetxController {
             },
             includeFillBlank: includeFillBlank.value,
             includeDragDrop: includeDragDrop.value,
-            includeWhatNext: includeWhatNext.value,
+            includeWhatNext: includeWhatNext.value &&
+                (Get.context != null
+                    ? Provider.of<UserPreferencesService>(Get.context!,
+                            listen: false)
+                        .enableWhatComesNext
+                    : true),
             includeVersePairing: includeVersePairing.value,
             isCustomQuiz: true,
           ));

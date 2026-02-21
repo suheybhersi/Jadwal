@@ -277,7 +277,7 @@ class QuizCreationPage extends StatelessWidget {
                   },
                 )),
 
-            // What Comes Next
+            // What Comes Next (beta)
             Obx(() => _buildQuestionTypeCard(
                   icon: Iconsax.arrow_right,
                   title: 'What Comes Next',
@@ -285,6 +285,8 @@ class QuizCreationPage extends StatelessWidget {
                   onToggle: (value) {
                     controller.includeWhatNext.value = value;
                   },
+                  showBetaBadge: true,
+                  subtitle: 'In testing — it may not work as expected',
                 )),
 
             // Verse Pairing
@@ -405,13 +407,18 @@ class QuizCreationPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Start verse selection
-            _buildVersePicker(
-              allData,
-              controller.selectedStartSurahData.value,
-              controller.selectedStartVerse.value,
-              (surahName, verseNumber) => controller.handleStartVerseSelection(
-                  allData, surahName, verseNumber),
+            // Start verse selection (default: Al-Fatiha verse 1)
+            _StartVerseSelectionContent(
+              controller: controller,
+              allData: allData,
+              builder: () => _buildVersePicker(
+                allData,
+                controller.selectedStartSurahData.value,
+                controller.selectedStartVerse.value,
+                (surahName, verseNumber) =>
+                    controller.handleStartVerseSelection(
+                        allData, surahName, verseNumber),
+              ),
             ),
 
             // Error Message
@@ -679,6 +686,8 @@ class QuizCreationPage extends StatelessWidget {
     required String title,
     required bool isSelected,
     required Function(bool) onToggle,
+    String? subtitle,
+    bool showBetaBadge = false,
   }) {
     return Builder(
       builder: (context) => Container(
@@ -726,15 +735,52 @@ class QuizCreationPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary,
+                            ),
+                          ),
+                          if (showBetaBadge) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                    color: Colors.amber.shade700, width: 1),
+                              ),
+                              child: Text(
+                                'Beta',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.amber.shade900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 4),
+                      if (subtitle != null && subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ] else
+                        const SizedBox(height: 4),
                     ],
                   ),
                 ),
@@ -913,5 +959,37 @@ class QuizCreationPage extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Wraps the start verse picker and sets default to Al-Fatiha verse 1 when first shown.
+class _StartVerseSelectionContent extends StatefulWidget {
+  const _StartVerseSelectionContent({
+    required this.controller,
+    required this.allData,
+    required this.builder,
+  });
+
+  final QuizCreationController controller;
+  final List<Map<String, dynamic>> allData;
+  final Widget Function() builder;
+
+  @override
+  State<_StartVerseSelectionContent> createState() =>
+      _StartVerseSelectionContentState();
+}
+
+class _StartVerseSelectionContentState extends State<_StartVerseSelectionContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller.setDefaultStartVerseIfNeeded(widget.allData);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => widget.builder());
   }
 }
