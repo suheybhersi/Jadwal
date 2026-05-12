@@ -129,7 +129,7 @@ flutter run
 
 ## Project Background
 
-Developed as a final year Computer Science project at the **University of Birmingham** (2024–25), supervised by Mohammed Bahja. The project involved original research into traditional Hifdh methodologies across different cultures (Mauritanian, Ottoman, Indian-Pakistani, Somali), cognitive science literature on spaced repetition and the Ebbinghaus forgetting curve, and a review of existing Quran apps to identify the gap Jadwal fills.
+Developed as a final year Computer Science project at the **University of Birmingham** (2024–25). The project involved original research into traditional Hifdh methodologies across different cultures (Mauritanian, Ottoman, Indian-Pakistani, Somali), cognitive science literature on spaced repetition and the Ebbinghaus forgetting curve, and a review of existing Quran apps to identify the gap Jadwal fills.
 
 The development followed a hybrid Agile approach (Scrum + Kanban) across 6 two-week sprints over 30 weeks, from requirements gathering through to user testing.
 
