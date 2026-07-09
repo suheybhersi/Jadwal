@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -72,8 +71,8 @@ class _UsageModePageState extends State<UsageModePage> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4979FB)
-                                .withValues(alpha: 0.2),
+                            color:
+                                const Color(0xFF4979FB).withValues(alpha: 0.2),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -112,8 +111,7 @@ class _UsageModePageState extends State<UsageModePage> {
                                   'How structured should your memorization be?',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color:
-                                        Colors.white.withValues(alpha: 0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],
@@ -210,7 +208,7 @@ class _UsageModePageState extends State<UsageModePage> {
                     onPressed: () async {
                       await prefsService.setUsageMode(_selectedMode!);
                       if (!context.mounted) return;
-                      
+
                       final currentMode = prefsService.usageMode;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -225,7 +223,7 @@ class _UsageModePageState extends State<UsageModePage> {
                       setState(() {
                         _hasChanges = false;
                       });
-                      
+
                       // Pop back to trigger rebuild of home page
                       Navigator.pop(context);
                     },
@@ -285,10 +283,8 @@ class _UsageModePageState extends State<UsageModePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context)
-                  .colorScheme
-                  .tertiary
-                  .withValues(alpha: 0.1),
+              color:
+                  Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
               blurRadius: 8,
               spreadRadius: 1,
             ),

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TutorialService with ChangeNotifier {
   bool _hasCompletedTutorial = false;
   bool _hasSeenFeatureTour = false;
-  Map<String, bool> _tooltipSeen = {};
+  final Map<String, bool> _tooltipSeen = {};
   bool _initialLoadDone = false;
 
   // Memorization tip IDs
@@ -22,15 +22,16 @@ class TutorialService with ChangeNotifier {
   // Getters
   bool get hasCompletedTutorial => _hasCompletedTutorial;
   bool get hasSeenFeatureTour => _hasSeenFeatureTour;
+
   /// True after preferences have been loaded from storage (avoids showing wrong screen on first frame).
   bool get initialLoadDone => _initialLoadDone;
   bool hasSeenTooltip(String tooltipId) => _tooltipSeen[tooltipId] ?? false;
-  
+
   // Get count of seen memorization tips
   int get memorizationTipsSeen {
     return memorizationTipIds.where((id) => hasSeenTooltip(id)).length;
   }
-  
+
   // Get total memorization tips
   int get totalMemorizationTips => memorizationTipIds.length;
 
@@ -39,13 +40,15 @@ class TutorialService with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _hasCompletedTutorial = prefs.getBool('hasCompletedTutorial') ?? false;
     _hasSeenFeatureTour = prefs.getBool('hasSeenFeatureTour') ?? false;
-    
+
     // Load tooltip states
-    final tooltipKeys = prefs.getKeys().where((key) => key.startsWith('tooltip_'));
+    final tooltipKeys =
+        prefs.getKeys().where((key) => key.startsWith('tooltip_'));
     for (final key in tooltipKeys) {
-      _tooltipSeen[key.replaceFirst('tooltip_', '')] = prefs.getBool(key) ?? false;
+      _tooltipSeen[key.replaceFirst('tooltip_', '')] =
+          prefs.getBool(key) ?? false;
     }
-    
+
     _initialLoadDone = true;
     notifyListeners();
   }
@@ -55,7 +58,7 @@ class TutorialService with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedTutorial', _hasCompletedTutorial);
     await prefs.setBool('hasSeenFeatureTour', _hasSeenFeatureTour);
-    
+
     // Save tooltip states
     for (final entry in _tooltipSeen.entries) {
       await prefs.setBool('tooltip_${entry.key}', entry.value);

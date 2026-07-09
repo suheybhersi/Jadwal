@@ -23,7 +23,8 @@ class WeekDaysSection extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)),
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,15 +108,18 @@ class WeekDaysSection extends StatelessWidget {
                     // Show showcase on first day with hifdh task
                     final shouldShowcase = index == 0 && hasHifdh;
                     final dayKey = shouldShowcase ? GlobalKey() : null;
-                    
+
                     // Start showcase if needed
                     if (shouldShowcase) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        final tutorialService = Provider.of<TutorialService>(context, listen: false);
-                        if (!tutorialService.hasSeenTooltip('tap_day_this_week')) {
+                        final tutorialService = Provider.of<TutorialService>(
+                            context,
+                            listen: false);
+                        if (!tutorialService
+                            .hasSeenTooltip('tap_day_this_week')) {
                           Future.delayed(const Duration(milliseconds: 500), () {
                             if (context.mounted && dayKey != null) {
-                              ShowcaseView.get().startShowCase([dayKey!]);
+                              ShowcaseView.get().startShowCase([dayKey]);
                             }
                           });
                         }
@@ -192,18 +196,19 @@ class WeekDaysSection extends StatelessWidget {
                         ],
                       ),
                     );
-                    
+
                     // Wrap with showcase if needed
                     if (shouldShowcase && dayKey != null) {
                       return SmartShowcase(
                         tooltipId: 'tap_day_this_week',
                         title: 'Tap Any Day',
-                        description: 'Tap on any day in "This Week" to see detailed tasks, memorization assignments, and reviews for that day.',
-                        globalKey: dayKey!,
+                        description:
+                            'Tap on any day in "This Week" to see detailed tasks, memorization assignments, and reviews for that day.',
+                        globalKey: dayKey,
                         child: dayWidget,
                       );
                     }
-                    
+
                     return dayWidget;
                   }),
                 ),
@@ -240,7 +245,8 @@ class WeekDaysSection extends StatelessWidget {
 
     // Find review tasks for this day (only if not in Flexible mode)
     List<dynamic> reviewTasks = [];
-    final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
+    final prefsService =
+        Provider.of<UserPreferencesService>(context, listen: false);
     if (prefsService.shouldScheduleReviews && plan['reviews'] != null) {
       reviewTasks = plan['reviews']
           .where((review) => review['date'] == formattedDate)
@@ -412,7 +418,10 @@ class WeekDaysSection extends StatelessWidget {
                                         .withValues(alpha: 0.5),
                                   ),
                                   // Only show review count if reviews are enabled
-                                  if (Provider.of<UserPreferencesService>(context, listen: false).shouldScheduleReviews)
+                                  if (Provider.of<UserPreferencesService>(
+                                          context,
+                                          listen: false)
+                                      .shouldScheduleReviews)
                                     _buildSummaryItem(
                                         reviewTasks.length,
                                         'Reviews',
@@ -425,55 +434,58 @@ class WeekDaysSection extends StatelessWidget {
                             // No tasks message
                             Builder(
                               builder: (context) {
-                                final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
-                                final showReviews = prefsService.shouldScheduleReviews;
+                                final prefsService =
+                                    Provider.of<UserPreferencesService>(context,
+                                        listen: false);
+                                final showReviews =
+                                    prefsService.shouldScheduleReviews;
                                 final hasNoTasks = hifdhTasks.isEmpty &&
                                     (!showReviews || reviewTasks.isEmpty) &&
                                     missedHifdhTasks.isEmpty;
-                                
+
                                 if (!hasNoTasks) return SizedBox();
-                                
+
                                 return Container(
-                                margin: EdgeInsets.symmetric(vertical: 40),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      hasHifdh
-                                          ? Iconsax.calendar_1
-                                          : Iconsax.calendar_remove,
-                                      size: 60,
-                                      color: Colors.grey.shade300,
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      hasHifdh
-                                          ? isPast
-                                              ? 'No completed tasks found'
-                                              : 'Tasks will appear here soon'
-                                          : 'No tasks scheduled for this day',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.grey.shade600,
+                                  margin: EdgeInsets.symmetric(vertical: 40),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        hasHifdh
+                                            ? Iconsax.calendar_1
+                                            : Iconsax.calendar_remove,
+                                        size: 60,
+                                        color: Colors.grey.shade300,
                                       ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      hasHifdh
-                                          ? isPast
-                                              ? 'Tasks may have been missed or rescheduled'
-                                              : 'Check back later for updates'
-                                          : 'This is a rest day in your schedule',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade500,
-                                        height: 1.5,
+                                      SizedBox(height: 20),
+                                      Text(
+                                        hasHifdh
+                                            ? isPast
+                                                ? 'No completed tasks found'
+                                                : 'Tasks will appear here soon'
+                                            : 'No tasks scheduled for this day',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey.shade600,
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              );
+                                      SizedBox(height: 8),
+                                      Text(
+                                        hasHifdh
+                                            ? isPast
+                                                ? 'Tasks may have been missed or rescheduled'
+                                                : 'Check back later for updates'
+                                            : 'This is a rest day in your schedule',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade500,
+                                          height: 1.5,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                );
                               },
                             ),
 
@@ -500,18 +512,21 @@ class WeekDaysSection extends StatelessWidget {
                             // Review tasks (only show if reviews are enabled)
                             Builder(
                               builder: (context) {
-                                final prefsService = Provider.of<UserPreferencesService>(context, listen: false);
-                                if (!prefsService.shouldScheduleReviews || reviewTasks.isEmpty) {
+                                final prefsService =
+                                    Provider.of<UserPreferencesService>(context,
+                                        listen: false);
+                                if (!prefsService.shouldScheduleReviews ||
+                                    reviewTasks.isEmpty) {
                                   return SizedBox();
                                 }
-                                
+
                                 return Column(
                                   children: [
                                     _buildSectionHeader(
                                         'Review Tasks', Iconsax.refresh),
                                     SizedBox(height: 12),
-                                    ...reviewTasks.map(
-                                        (review) => _buildReviewCard(review, isPast)),
+                                    ...reviewTasks.map((review) =>
+                                        _buildReviewCard(review, isPast)),
                                     SizedBox(height: 24),
                                   ],
                                 );

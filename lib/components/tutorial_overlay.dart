@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax/iconsax.dart';
 
 /// Tutorial step data
 class TutorialStep {
@@ -53,7 +52,7 @@ class TutorialOverlay extends StatelessWidget {
       children: [
         // Dark overlay with hole
         _buildOverlay(context, step),
-        
+
         // Tutorial card
         _buildTutorialCard(context, step, isLastStep),
       ],
@@ -258,7 +257,7 @@ class TutorialPainter extends CustomPainter {
     // Find target widget position
     final RenderBox? renderBox =
         targetKey.currentContext?.findRenderObject() as RenderBox?;
-    
+
     if (renderBox != null) {
       final position = renderBox.localToGlobal(Offset.zero);
       final targetSize = renderBox.size;

@@ -1638,8 +1638,9 @@ class FirestoreService extends ChangeNotifier {
     final bool backToFront = (planData['backToFront'] ?? false) as bool;
     final String lastNextKey = hifdhs.last['nextKey'] as String? ?? '';
     if (lastNextKey == lastVerseKey) return; // Forward: finished at 114:6
-    if (backToFront && lastNextKey == firstVerseKey)
+    if (backToFront && lastNextKey == firstVerseKey) {
       return; // Back-to-front: finished at 1:7
+    }
 
     final currentWeek = planData['currentWeek'] as List<dynamic>?;
     if (currentWeek == null || currentWeek.isEmpty) return;

@@ -2,12 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
-import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/HomePage/create_wird_page.dart';
 import 'package:jadwal/pages/screens/HomePage/wird_section.dart';
-import 'package:jadwal/pages/screens/MushafPage/mushaf_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
@@ -111,7 +109,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  icon: Icon(Icons.close, size: 22, color: Colors.grey.shade600),
+                  icon:
+                      Icon(Icons.close, size: 22, color: Colors.grey.shade600),
                   style: IconButton.styleFrom(
                     padding: const EdgeInsets.all(6),
                     minimumSize: const Size(40, 40),
@@ -687,8 +686,8 @@ class _HomePageState extends State<HomePage> {
           review: reviews.first['review'],
           id: id,
           updateReview: firestoreService.updateReview,
-          includeWhatNext: Provider.of<UserPreferencesService>(context)
-              .enableWhatComesNext,
+          includeWhatNext:
+              Provider.of<UserPreferencesService>(context).enableWhatComesNext,
         ),
       ),
     );
@@ -709,7 +708,8 @@ class _DailyReadingDialogContent extends StatefulWidget {
       _DailyReadingDialogContentState();
 }
 
-class _DailyReadingDialogContentState extends State<_DailyReadingDialogContent> {
+class _DailyReadingDialogContentState
+    extends State<_DailyReadingDialogContent> {
   _DailyReadingView _view = _DailyReadingView.main;
   int _editEndPageValue = 1;
 
@@ -720,25 +720,31 @@ class _DailyReadingDialogContentState extends State<_DailyReadingDialogContent> 
           ? WirdSection(
               firestoreService: widget.firestoreService,
               inline: true,
-              onTapCreate: () => setState(() => _view = _DailyReadingView.create),
+              onTapCreate: () =>
+                  setState(() => _view = _DailyReadingView.create),
               onEditEndPage: (v) => setState(() {
-                    _view = _DailyReadingView.editEndPage;
-                    _editEndPageValue = v;
-                  }),
-              onTapReset: () => setState(() => _view = _DailyReadingView.confirmReset),
+                _view = _DailyReadingView.editEndPage;
+                _editEndPageValue = v;
+              }),
+              onTapReset: () =>
+                  setState(() => _view = _DailyReadingView.confirmReset),
             )
           : _view == _DailyReadingView.create
               ? CreateWirdForm(
                   firestoreService: widget.firestoreService,
-                  onCreated: () => setState(() => _view = _DailyReadingView.main),
-                  onCancel: () => setState(() => _view = _DailyReadingView.main),
+                  onCreated: () =>
+                      setState(() => _view = _DailyReadingView.main),
+                  onCancel: () =>
+                      setState(() => _view = _DailyReadingView.main),
                 )
               : _view == _DailyReadingView.editEndPage
                   ? _EditEndPageForm(
                       initialValue: _editEndPageValue,
                       firestoreService: widget.firestoreService,
-                      onSaved: () => setState(() => _view = _DailyReadingView.main),
-                      onCancel: () => setState(() => _view = _DailyReadingView.main),
+                      onSaved: () =>
+                          setState(() => _view = _DailyReadingView.main),
+                      onCancel: () =>
+                          setState(() => _view = _DailyReadingView.main),
                     )
                   : _ConfirmResetView(
                       onReset: () async {
@@ -746,14 +752,16 @@ class _DailyReadingDialogContentState extends State<_DailyReadingDialogContent> 
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Wird reset. Create a new daily portion when ready.'),
+                              content: Text(
+                                  'Wird reset. Create a new daily portion when ready.'),
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
                           setState(() => _view = _DailyReadingView.main);
                         }
                       },
-                      onCancel: () => setState(() => _view = _DailyReadingView.main),
+                      onCancel: () =>
+                          setState(() => _view = _DailyReadingView.main),
                     ),
     );
   }
@@ -800,7 +808,8 @@ class _ConfirmResetView extends StatelessWidget {
                 onPressed: () async => await onReset(),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -873,7 +882,8 @@ class _EditEndPageFormState extends State<_EditEndPageForm> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             hintText: 'End page (1–${FirestoreService.quranTotalPages})',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -904,7 +914,8 @@ class _EditEndPageFormState extends State<_EditEndPageForm> {
                 }
               },
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

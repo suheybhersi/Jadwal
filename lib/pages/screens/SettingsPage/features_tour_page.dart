@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:jadwal/services/tutorial_service.dart';
-import 'package:provider/provider.dart';
 
 class FeaturesTourPage extends StatelessWidget {
   const FeaturesTourPage({super.key});
@@ -223,11 +221,13 @@ class FeaturesTourPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildTip('Tap on any day in "This Week" to see detailed tasks'),
+                    _buildTip(
+                        'Tap on any day in "This Week" to see detailed tasks'),
                     _buildTip('Create custom quizzes from the Quiz page'),
                     _buildTip('Edit your plan anytime from the Plan page'),
                     _buildTip('View your achievements in the Profile page'),
-                    _buildTip('Switch between Flexible and Intensive modes in Settings'),
+                    _buildTip(
+                        'Switch between Flexible and Intensive modes in Settings'),
                   ],
                 ),
               ),
@@ -258,10 +258,8 @@ class FeaturesTourPage extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context)
-                .colorScheme
-                .tertiary
-                .withValues(alpha: 0.1),
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 1,
           ),
