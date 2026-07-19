@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/tutorial_service.dart';
@@ -167,6 +168,30 @@ class _MushafContentState extends State<MushafContent> {
           StreamBuilder<QuerySnapshot>(
             stream: _firestoreService.getSurahProgressStream(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Overall Progress',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Unable to load progress',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
               int totalSurahs = 0;
               int completedSurahs = 0;
 
@@ -347,6 +372,12 @@ class _MushafContentState extends State<MushafContent> {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestoreService.getSurahProgressStream(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const SliverFillRemaining(
+            child: FirestoreErrorView(),
+          );
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting &&
             _cachedSurahData == null) {
           return const SliverFillRemaining(
@@ -377,6 +408,12 @@ class _MushafContentState extends State<MushafContent> {
         return StreamBuilder<QuerySnapshot>(
           stream: _firestoreService.getPlansStream(),
           builder: (context, planSnapshot) {
+            if (planSnapshot.hasError && _cachedSurahData == null) {
+              return const SliverFillRemaining(
+                child: FirestoreErrorView(),
+              );
+            }
+
             if (planSnapshot.hasData && planSnapshot.data!.docs.isNotEmpty) {
               _planData =
                   planSnapshot.data!.docs[0].data() as Map<String, dynamic>;
@@ -587,6 +624,9 @@ class _SurahProgressCard extends StatelessWidget {
                         stream: _firestoreService
                             .getVerseJuz('${surah['surahNumber']}:1'),
                         builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return const SizedBox.shrink();
+                          }
                           if (snapshot.hasData && snapshot.data != null) {
                             final juz = snapshot.data!.docs[0].data()
                                 as Map<String, dynamic>;

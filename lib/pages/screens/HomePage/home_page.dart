@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
@@ -38,6 +39,21 @@ class _HomePageState extends State<HomePage> {
     return StreamBuilder(
       stream: firestoreService.getWirdStream(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return IconButton(
+            onPressed: () => _showDailyReadingPopup(context),
+            icon: Icon(
+              Iconsax.book_1,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            tooltip: 'Daily reading',
+            style: IconButton.styleFrom(
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(40, 40),
+            ),
+          );
+        }
+
         final data = snapshot.data?.data() as Map<String, dynamic>?;
         final hasWird = snapshot.hasData && data != null;
         final hasReadingToDo = hasWird && data['completedAt'] == null;
@@ -149,6 +165,10 @@ class _HomePageState extends State<HomePage> {
       body: StreamBuilder(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const FirestoreErrorView();
+          }
+
           if (!snapshot.hasData) {
             return Center(
               child: CircularProgressIndicator(
@@ -370,6 +390,9 @@ class _HomePageState extends State<HomePage> {
                                                 Map<String, dynamic>?>(
                                               future: userData,
                                               builder: (context, snapshot) {
+                                                if (snapshot.hasError) {
+                                                  return const SizedBox.shrink();
+                                                }
                                                 if (snapshot.hasData) {
                                                   return Text(
                                                     '${snapshot.data!['firstName']}',
@@ -479,6 +502,9 @@ class _HomePageState extends State<HomePage> {
                 FutureBuilder<Map<String, dynamic>?>(
                   future: userData,
                   builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const SizedBox.shrink();
+                    }
                     if (snapshot.hasData &&
                         snapshot.data!['firstName'] != null) {
                       return Column(

@@ -135,7 +135,8 @@ void main() {
       expect(result.statistics.totalReviews, 4);
       expect(result.statistics.totalCorrect, 4); // All ratings >= 3
       expect(result.statistics.successRate, 1.0);
-      expect(result.statistics.consecutiveCorrect, 2);
+      expect(result.statistics.consecutiveCorrect, 4);
+      expect(result.newState.consecutiveCorrect, 2);
     });
 
     test('should work with legacy array format', () {

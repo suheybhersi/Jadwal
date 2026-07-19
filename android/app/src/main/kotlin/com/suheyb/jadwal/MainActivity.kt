@@ -1,4 +1,4 @@
-package com.example.jadwal
+package com.suheyb.jadwal
 
 import io.flutter.embedding.android.FlutterActivity
 

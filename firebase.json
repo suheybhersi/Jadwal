@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "functions": {
     "source": "functions"
   },
@@ -15,7 +18,7 @@
         "default": {
           "projectId": "jadwal-dca2a",
           "appId": "1:1040296089716:ios:11b14f7c8c2269a8b51921",
-          "uploadDebugSymbols": false,
+          "uploadDebugSymbols": true,
           "fileOutput": "ios/Runner/GoogleService-Info.plist"
         }
       },

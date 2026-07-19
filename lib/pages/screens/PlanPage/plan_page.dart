@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/screens/PlanPage/edit_plan_page.dart';
 import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
@@ -73,7 +74,9 @@ class _PlanPageState extends State<PlanPage> {
         leading: StreamBuilder<QuerySnapshot>(
           stream: firestoreService.getPlansStream(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data!.docs.isEmpty) {
               return IconButton(
                 onPressed: () {},
                 icon: const Icon(Iconsax.edit, color: Colors.grey),
@@ -138,6 +141,10 @@ class _PlanPageState extends State<PlanPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getPlansStream(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const FirestoreErrorView();
+          }
+
           if (!snapshot.hasData) {
             return Center(
               child: CircularProgressIndicator(

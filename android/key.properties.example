@@ -1,0 +1,10 @@
+# Copy to android/key.properties and fill in values before release builds.
+# Generate a keystore: keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# After changing applicationId to com.suheyb.jadwal, register the Android app
+# in the Firebase console and download an updated google-services.json.
+
+storePassword=your-store-password
+keyPassword=your-key-password
+keyAlias=upload
+storeFile=../upload-keystore.jks

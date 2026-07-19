@@ -56,7 +56,6 @@ class DefaultFirebaseOptions {
     projectId: 'jadwal-dca2a',
     storageBucket: 'jadwal-dca2a.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDBBfnoHeOmC_yWn0OXtV92cgs52lzi43I',
     appId: '1:1040296089716:ios:11b14f7c8c2269a8b51921',

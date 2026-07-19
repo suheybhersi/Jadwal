@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jadwal/components/bottom_nav_bar.dart';
+import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/onboarding/finished_memorising_question_page.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
@@ -127,6 +128,14 @@ class AuthPage extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Scaffold(
+            body: FirestoreErrorView(
+              message: 'Unable to sign in. Please restart the app and try again.',
+            ),
+          );
+        }
+
         if (snapshot.hasData) {
           final FirestoreService firestoreService = FirestoreService(
             auth: FirebaseAuth.instance,
@@ -141,6 +150,12 @@ class AuthPage extends StatelessWidget {
           return StreamBuilder(
             stream: firestoreService.getHifdhsStream(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Scaffold(
+                  body: FirestoreErrorView(),
+                );
+              }
+
               // Wait for stream to emit before deciding; avoids flashing "have you memorised" screen
               if (!snapshot.hasData) {
                 return _AuthLoadingScreen();
