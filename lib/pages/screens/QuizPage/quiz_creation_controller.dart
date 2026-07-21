@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
-import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 
 class QuizCreationController extends GetxController {
@@ -322,12 +320,7 @@ class QuizCreationController extends GetxController {
             },
             includeFillBlank: includeFillBlank.value,
             includeDragDrop: includeDragDrop.value,
-            includeWhatNext: includeWhatNext.value &&
-                (Get.context != null
-                    ? Provider.of<UserPreferencesService>(Get.context!,
-                            listen: false)
-                        .enableWhatComesNext
-                    : true),
+            includeWhatNext: includeWhatNext.value,
             includeVersePairing: includeVersePairing.value,
             isCustomQuiz: true,
           ));

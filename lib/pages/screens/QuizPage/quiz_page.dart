@@ -52,6 +52,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   // Simplified progress tracking
   double _loadingProgress = 0.0;
   bool _isActive = true;
+  bool _didFinishLoading = false;
+  String? _loadError;
   final List<String> _loadingMessages = [
     "Generating questions...",
     "Almost there...",
@@ -130,14 +132,27 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   Future<void> _loadQuestions() async {
     if (!mounted || !_isActive) return;
 
-    // Generate questions
-    final generatedQuestions = await _generateQuestions();
-    if (!mounted || !_isActive) return;
+    try {
+      final generatedQuestions = await _generateQuestions();
+      if (!mounted || !_isActive) return;
 
-    setState(() {
-      questions = generatedQuestions;
-      _loadingProgress = 1.0;
-    });
+      setState(() {
+        questions = generatedQuestions;
+        _loadingProgress = 1.0;
+        _didFinishLoading = true;
+        _loadError = generatedQuestions.isEmpty
+            ? 'Couldn\'t create questions for the selected types and verse range. Try a wider range or different question types.'
+            : null;
+      });
+    } catch (e) {
+      if (!mounted || !_isActive) return;
+      setState(() {
+        questions = [];
+        _loadingProgress = 1.0;
+        _didFinishLoading = true;
+        _loadError = 'Error creating quiz: $e';
+      });
+    }
   }
 
   // Generate quiz questions with diverse question types
@@ -249,27 +264,24 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     }
 
     if (widget.includeWhatNext) {
-      List<int> whatNextVerses = verseIndicesPerType['what_next'] ?? [];
-      int count = min(questionsPerType, whatNextVerses.length);
+      // Prefer verses that have a following verse (needed for this question type)
+      final eligibleWhatNextIndices = allVerseIndices
+          .where((idx) => idx < widget.versesList.length - 1)
+          .toList()
+        ..shuffle();
 
+      final assignedWhatNext = verseIndicesPerType['what_next'] ?? [];
+      final preferredIndices = <int>[
+        ...assignedWhatNext.where((idx) => idx < widget.versesList.length - 1),
+        ...eligibleWhatNextIndices
+            .where((idx) => !assignedWhatNext.contains(idx)),
+      ];
+
+      final count = min(questionsPerType, preferredIndices.length);
       for (int i = 0; i < count; i++) {
         if (!mounted || !_isActive) break;
-        if (i >= whatNextVerses.length) break;
-
-        int verseIndex = whatNextVerses[i];
-        // Only create question if there's a next verse
-        if (verseIndex < widget.versesList.length - 1) {
-          whatComesNextQuestions
-              .add(_generateWhatComesNextQuestion(verseIndex));
-        } else if (i < whatNextVerses.length - 1) {
-          // Try the next verse if this one doesn't work
-          i++;
-          verseIndex = whatNextVerses[i];
-          if (verseIndex < widget.versesList.length - 1) {
-            whatComesNextQuestions
-                .add(_generateWhatComesNextQuestion(verseIndex));
-          }
-        }
+        whatComesNextQuestions
+            .add(_generateWhatComesNextQuestion(preferredIndices[i]));
       }
     }
 
@@ -776,6 +788,79 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // Show error if generation finished with no questions
+    if (questions.isEmpty && _didFinishLoading) {
+      final primaryColor = const Color.fromARGB(255, 73, 121, 251);
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: primaryColor),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            "Quiz",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 56, color: Colors.red.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'Couldn\'t create this quiz',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _loadError ??
+                      'No questions were generated. Please try again with a different range or question types.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Go back',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Show loading indicator while questions are being loaded
     if (questions.isEmpty) {
       final primaryColor = const Color.fromARGB(255, 73, 121, 251);
