@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/firestore_error_view.dart';
-import 'package:jadwal/pages/screens/HomePage/Week_days_section.dart';
+import 'package:jadwal/pages/screens/HomePage/week_days_section.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/HomePage/create_wird_page.dart';
