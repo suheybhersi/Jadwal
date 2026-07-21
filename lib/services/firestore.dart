@@ -1,14 +1,17 @@
+import 'dart:io' show Platform;
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:jadwal/models/current_weekday.dart';
 import 'package:jadwal/models/hifdh.dart';
+import 'package:jadwal/models/login_activity.dart';
 import 'package:jadwal/models/plan.dart';
 import 'package:jadwal/models/review.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/achievement_service.dart';
 import 'package:jadwal/services/spaced_repetition_service.dart';
-import 'dart:math';
 
 class FirestoreService extends ChangeNotifier {
   final CollectionReference usersCollection =
@@ -68,6 +71,121 @@ class FirestoreService extends ChangeNotifier {
   // Collection reference for quiz history
   CollectionReference get quizHistoryCollection =>
       usersCollection.doc(uid).collection('quizHistory');
+
+  CollectionReference get loginActivityCollection =>
+      usersCollection.doc(uid).collection('loginActivity');
+
+  /// Records a login (or registration) event for security history.
+  Future<void> recordLoginActivity({String method = 'email'}) async {
+    try {
+      final deviceInfo = _currentDeviceInfo();
+      await _executeWithRetry(() => loginActivityCollection.add({
+            'timestamp': FieldValue.serverTimestamp(),
+            'device': deviceInfo['device'],
+            'platform': deviceInfo['platform'],
+            'osVersion': deviceInfo['osVersion'],
+            'method': method,
+          }));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to record login activity: $e');
+      }
+      // Non-critical — do not block auth flows
+    }
+  }
+
+  /// Returns recent login activity, newest first.
+  /// Seeds from Firebase Auth metadata when no history has been recorded yet.
+  Future<List<LoginActivity>> getLoginActivity({int limit = 30}) async {
+    return await _executeWithRetry(() async {
+      final snapshot = await loginActivityCollection
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .get();
+
+      final activities = snapshot.docs
+          .map((doc) => LoginActivity.fromFirestore(doc))
+          .toList();
+
+      if (activities.isNotEmpty) {
+        return activities;
+      }
+
+      // Fallback for existing accounts that predate login tracking
+      final user = auth.currentUser;
+      if (user == null) return activities;
+
+      final deviceInfo = _currentDeviceInfo();
+      final fallback = <LoginActivity>[];
+
+      if (user.metadata.lastSignInTime != null) {
+        fallback.add(LoginActivity(
+          id: 'auth-last-sign-in',
+          timestamp: user.metadata.lastSignInTime!,
+          device: deviceInfo['device']!,
+          platform: deviceInfo['platform']!,
+          osVersion: deviceInfo['osVersion'],
+          method: 'email',
+        ));
+      }
+
+      if (user.metadata.creationTime != null) {
+        fallback.add(LoginActivity(
+          id: 'auth-created',
+          timestamp: user.metadata.creationTime!,
+          device: deviceInfo['device']!,
+          platform: deviceInfo['platform']!,
+          osVersion: deviceInfo['osVersion'],
+          method: 'registration',
+        ));
+      }
+
+      return fallback;
+    });
+  }
+
+  Map<String, String> _currentDeviceInfo() {
+    String platform;
+    String device;
+
+    if (kIsWeb) {
+      platform = 'Web';
+      device = 'Web browser';
+    } else if (Platform.isIOS) {
+      platform = 'iOS';
+      device = 'iPhone';
+    } else if (Platform.isAndroid) {
+      platform = 'Android';
+      device = 'Android device';
+    } else if (Platform.isMacOS) {
+      platform = 'macOS';
+      device = 'Mac';
+    } else if (Platform.isWindows) {
+      platform = 'Windows';
+      device = 'Windows PC';
+    } else if (Platform.isLinux) {
+      platform = 'Linux';
+      device = 'Linux device';
+    } else {
+      platform = 'Unknown';
+      device = 'Unknown device';
+    }
+
+    String osVersion = 'Unknown';
+    try {
+      if (!kIsWeb) {
+        osVersion = Platform.operatingSystemVersion;
+      }
+    } catch (_) {
+      // Ignore — Platform may be unavailable on some targets
+    }
+
+    return {
+      'device': device,
+      'platform': platform,
+      'osVersion': osVersion,
+    };
+  }
 
   // Wird: daily Quran reading portion (one document per user)
   static const int quranTotalPages = 604;

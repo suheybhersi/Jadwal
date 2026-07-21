@@ -88,6 +88,7 @@ class _RegisterPageState extends State<RegisterPage> {
             'email': emailController.text.trim(),
             'createdAt': FieldValue.serverTimestamp(),
           });
+          await firestoreService.recordLoginActivity(method: 'registration');
 
           if (!mounted) return;
           Navigator.pop(context); // Close loading dialog

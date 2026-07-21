@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/SettingsPage/login_activity_page.dart';
 
 class PasswordSecurityPage extends StatefulWidget {
   const PasswordSecurityPage({super.key});
@@ -328,7 +329,12 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
             title: 'Recent Login Activity',
             description: 'Check your account access',
             onTap: () {
-              // Show recent login activity
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoginActivityPage(),
+                ),
+              );
             },
           ),
           _buildDivider(),

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/my_textfield.dart';
 import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/services/firestore.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -140,10 +141,21 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        final userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
+
+        final user = userCredential.user;
+        if (user != null) {
+          final firestoreService = FirestoreService(
+            uid: user.uid,
+            auth: FirebaseAuth.instance,
+          );
+          await firestoreService.recordLoginActivity(method: 'email');
+        }
+
         if (!mounted) return;
         Navigator.pop(context); // Close loading dialog
         Navigator.of(context).pop(); // Navigate to next screen
