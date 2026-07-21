@@ -49,6 +49,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   bool isPlaying = false;
   String text = '';
   bool isAnswerBoxExpanded = true; // Add this state variable
+  /// Whether the prompt (previous) verse is shown in full.
+  bool isPromptVerseExpanded = false;
 
   List<double> amplitudes = List.generate(30, (index) => 0.0);
   Timer? _amplitudeTimer;
@@ -62,6 +64,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   String feedbackMessage = '';
   int incorrectWordCount = 0;
   bool hasSubmittedAnswer = false;
+  /// True when the recited text is too different from the expected verse to show word diffs.
+  bool isIncorrectVerse = false;
+  /// Whether the user has revealed the start-of-verse hint for a large mismatch.
+  bool showAnswerHint = false;
   /// Number of times we've shown the "bad audio, try again" hint for this question (max 2).
   int badAudioPromptCount = 0;
   /// True when we should show the "try again, might be bad audio" hint for this result (set only for 1st and 2nd incorrect).
@@ -925,6 +931,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               isRecitationCorrect = false;
               feedbackMessage = '';
               incorrectWordCount = 0;
+              isIncorrectVerse = false;
+              showAnswerHint = false;
             });
             return;
           }
@@ -950,52 +958,26 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           String processedTranscribedWord =
               joinVerseManuallyWithSpecialChars(processedTranscribedWords);
 
-          // Count number of incorrect words
-          int totalIncorrectWords =
-              comparisonResult.where((word) => word['isError'] == true).length;
-
-          // Determine if recitation is correct based on the new criteria
-          bool isCorrect = false;
-          String message = '';
-
-          if (totalIncorrectWords == 0) {
-            isCorrect = true;
-            message = 'Excellent! Your recitation is perfect.';
-          } else if (totalIncorrectWords <= 2) {
-            // Check if differences are minor (only a few letter differences)
-            int totalDifferences = 0;
-            for (var word in comparisonResult) {
-              if (word['isError'] == true) {
-                if (word['differences'] is List) {
-                  totalDifferences += (word['differences'] as List).length;
-                }
-              }
-            }
-
-            if (totalDifferences <= 3) {
-              isCorrect = true;
-              message =
-                  'Very good! Your recitation has minor differences but is essentially correct.';
-            } else {
-              isCorrect = false;
-              message =
-                  'Your recitation has some errors. Please review the highlighted words.';
-            }
-          } else {
-            isCorrect = false;
-            message =
-                'Your recitation needs improvement. Please review the highlighted words.';
-          }
+          final evaluation = _evaluateRecitation(comparisonResult);
 
           setState(() {
-            text = processedTranscribedWord;
-            comparison = comparisonResult;
-            isRecitationCorrect = isCorrect;
-            feedbackMessage = message;
-            incorrectWordCount = totalIncorrectWords;
-            hasSubmittedAnswer = true; // Show feedback immediately so one "Continue" moves to next
+            isIncorrectVerse = evaluation.isVeryDifferent;
+            if (evaluation.isVeryDifferent) {
+              // Don't surface a misleading word-by-word transcription
+              text = 'retry_needed';
+              comparison = [];
+              showAnswerHint = false;
+            } else {
+              text = processedTranscribedWord;
+              comparison = comparisonResult;
+            }
+            isRecitationCorrect = evaluation.isCorrect;
+            feedbackMessage = evaluation.message;
+            incorrectWordCount = evaluation.incorrectWordCount;
+            hasSubmittedAnswer =
+                true; // Show feedback immediately so one "Continue" moves to next
             // When incorrect, offer "try again" hint (bad audio / mumbling) at most 2 times
-            if (!isCorrect && badAudioPromptCount < 2) {
+            if (!evaluation.isCorrect && badAudioPromptCount < 2) {
               badAudioPromptCount++;
               showBadAudioHintThisAttempt = true;
             } else {
@@ -1082,6 +1064,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   }
 
   Widget _buildRecordButton() {
+    const Color appBlue = Color(0xFF4979FB);
+
     return Column(
       children: [
         if (isRecording)
@@ -1109,7 +1093,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   width: 4,
                   height: max(2, amplitudes[index] * 35),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade300,
+                    color: appBlue.withValues(alpha: 0.55),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -1122,9 +1106,9 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
           child: Container(
             height: 64,
             width: 64,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.blue.shade500,
+              color: appBlue,
             ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -1159,8 +1143,263 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       feedbackMessage = '';
       isRecitationCorrect = false;
       incorrectWordCount = 0;
+      isIncorrectVerse = false;
+      showAnswerHint = false;
     });
     cleanupRecordingFile();
+  }
+
+  /// First few words of the expected answer, used as a gentle hint.
+  String getCorrectAnswerHint({int wordCount = 3}) {
+    final correctAnswer = widget.question['correctAnswer'] as String? ?? '';
+    if (correctAnswer.isEmpty) return '';
+
+    final words = splitVerseManuallyWithSpecialChars(correctAnswer);
+    if (words.length <= wordCount) {
+      return joinVerseManuallyWithSpecialChars(words);
+    }
+
+    return '${joinVerseManuallyWithSpecialChars(words.take(wordCount).toList())} ...';
+  }
+
+  /// True when most of the verse is wrong — not useful to show word-level diffs.
+  bool _isVeryDifferentVerse(List<Map<String, dynamic>> comparisonResult) {
+    if (comparisonResult.isEmpty) return true;
+
+    final totalWords = comparisonResult.length;
+    final incorrectWords =
+        comparisonResult.where((word) => word['isError'] == true).length;
+
+    // At least half the words wrong, and not just one or two slips
+    return incorrectWords >= 3 && incorrectWords / totalWords >= 0.5;
+  }
+
+  /// Scores a comparison result using the same thresholds as after STT.
+  ({
+    bool isCorrect,
+    String message,
+    int incorrectWordCount,
+    bool isVeryDifferent,
+  }) _evaluateRecitation(List<Map<String, dynamic>> comparisonResult) {
+    final totalIncorrectWords =
+        comparisonResult.where((word) => word['isError'] == true).length;
+
+    if (_isVeryDifferentVerse(comparisonResult)) {
+      return (
+        isCorrect: false,
+        message:
+            'Try again — this might be the wrong verse, or the right verse with many mistakes.',
+        incorrectWordCount: totalIncorrectWords,
+        isVeryDifferent: true,
+      );
+    }
+
+    if (totalIncorrectWords == 0) {
+      return (
+        isCorrect: true,
+        message: 'Excellent! Your recitation is perfect.',
+        incorrectWordCount: 0,
+        isVeryDifferent: false,
+      );
+    }
+
+    if (totalIncorrectWords <= 2) {
+      int totalDifferences = 0;
+      for (final word in comparisonResult) {
+        if (word['isError'] == true && word['differences'] is List) {
+          totalDifferences += (word['differences'] as List).length;
+        }
+      }
+
+      if (totalDifferences <= 3) {
+        return (
+          isCorrect: true,
+          message:
+              'Very good! Your recitation has minor differences but is essentially correct.',
+          incorrectWordCount: totalIncorrectWords,
+          isVeryDifferent: false,
+        );
+      }
+
+      return (
+        isCorrect: false,
+        message:
+            'Your recitation has some errors. Please review the highlighted words.',
+        incorrectWordCount: totalIncorrectWords,
+        isVeryDifferent: false,
+      );
+    }
+
+    return (
+      isCorrect: false,
+      message:
+          'Your recitation needs improvement. Please review the highlighted words.',
+      incorrectWordCount: totalIncorrectWords,
+      isVeryDifferent: false,
+    );
+  }
+
+  /// Lets the user clear a flagged word they believe they said correctly
+  /// (e.g. Whisper misheard muffled audio), then re-scores the answer.
+  void _dismissWordError(int index) {
+    if (index < 0 || index >= comparison.length) return;
+    if (comparison[index]['isError'] != true) return;
+
+    setState(() {
+      final correctWord =
+          comparison[index]['actual_word'] as String? ??
+              comparison[index]['final_transcribed_word'] as String? ??
+              '';
+
+      comparison[index] = {
+        ...comparison[index],
+        'isError': false,
+        'userDismissed': true,
+        'final_transcribed_word': correctWord,
+        'differences': <Map<String, dynamic>>[],
+      };
+
+      // Keep the joined answer text in sync with the displayed words
+      text = joinVerseManuallyWithSpecialChars(
+        comparison
+            .map((word) => word['final_transcribed_word'] as String? ?? '')
+            .toList(),
+      );
+
+      final evaluation = _evaluateRecitation(comparison);
+      isRecitationCorrect = evaluation.isCorrect;
+      feedbackMessage = evaluation.message;
+      incorrectWordCount = evaluation.incorrectWordCount;
+      isIncorrectVerse = evaluation.isVeryDifferent;
+
+      if (evaluation.isCorrect) {
+        showBadAudioHintThisAttempt = false;
+      }
+    });
+  }
+
+  void _showErrorWordDialog(Map<String, dynamic> word, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Center(
+            child: Text(
+              'Flagged Word',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade700,
+              ),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                word['actual_word'] as String? ?? '',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.scheherazadeNew(
+                  letterSpacing: 0,
+                  fontSize: 32,
+                  height: 1.6,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Expected word above. If you said this correctly, you can clear the error.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (word['differences'] is List &&
+                  (word['differences'] as List).isNotEmpty &&
+                  !((word['differences'] as List).length == 1 &&
+                      (word['differences'] as List)[0]['error'] != null)) ...[
+                Text(
+                  'Difference details:',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...(word['differences'] as List).map<Widget>((diff) {
+                  if (diff['error'] != null) {
+                    return const SizedBox.shrink();
+                  }
+
+                  String message = '';
+                  if (diff['incorrect'] == '' && diff['correct'] != '') {
+                    message = 'Missing: ${diff['correct']}';
+                  } else if (diff['incorrect'] != '' && diff['correct'] == '') {
+                    message = 'Extra: ${diff['incorrect']}';
+                  } else {
+                    message =
+                        'Replace ${diff['incorrect']} with ${diff['correct']}';
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      message,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Close',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _dismissWordError(index);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4979FB),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+              child: Text(
+                'I said this correctly',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -1170,17 +1409,17 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     bool hasError = text.startsWith('Error:');
     final Color primaryAccent = const Color(0xFF4979FB);
 
-    // Get the first 5 words of the verse
-    String truncatedVerse = '';
-    final words = splitVerseManuallyWithSpecialChars(widget.question['verse']);
-    if (words.length > 6) {
-      final firstFourWords = words.take(4).toList();
-      final lastTwoWords = words.skip(words.length - 2).take(2).toList();
-      truncatedVerse =
-          '${joinVerseManuallyWithSpecialChars(firstFourWords)} ... ${joinVerseManuallyWithSpecialChars(lastTwoWords)}';
-    } else {
-      truncatedVerse = widget.question['verse'];
-    }
+    // Collapsed prompt shows only the start of the previous verse
+    final promptVerse = widget.question['verse'] as String? ?? '';
+    final promptWords = splitVerseManuallyWithSpecialChars(promptVerse);
+    final canCollapsePrompt = promptWords.length > 5;
+    final collapsedPromptVerse = canCollapsePrompt
+        ? '${joinVerseManuallyWithSpecialChars(promptWords.take(5).toList())} ...'
+        : promptVerse;
+    final displayedPromptVerse =
+        (isPromptVerseExpanded || !canCollapsePrompt)
+            ? promptVerse
+            : collapsedPromptVerse;
 
     return Column(
       children: [
@@ -1213,11 +1452,14 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () {
+                              final answerText = isIncorrectVerse
+                                  ? 'Could not match verse'
+                                  : text;
                               resetRecording();
                               widget.onNext(isRecitationCorrect);
                               widget.answeredQuestions[
                                   widget.currentQuestionIndex] = {
-                                'user_answer': text,
+                                'user_answer': answerText,
                                 'is_correct': isRecitationCorrect
                               };
                               setState(() {
@@ -1288,8 +1530,6 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
@@ -1304,14 +1544,77 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                       ),
                     ],
                   ),
-                  child: Text(
-                    truncatedVerse,
-                    style: GoogleFonts.scheherazadeNew(
-                      letterSpacing: 0,
-                      fontSize: 24,
-                      height: 1.6,
-                    ),
-                    textAlign: TextAlign.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (canCollapsePrompt)
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              isPromptVerseExpanded = !isPromptVerseExpanded;
+                            });
+                          },
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 12, 0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    isPromptVerseExpanded
+                                        ? 'Previous verse'
+                                        : 'Previous verse (tap to expand)',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .inversePrimary
+                                          .withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  isPromptVerseExpanded
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 20,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      GestureDetector(
+                        onTap: canCollapsePrompt
+                            ? () {
+                                setState(() {
+                                  isPromptVerseExpanded =
+                                      !isPromptVerseExpanded;
+                                });
+                              }
+                            : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 24),
+                          child: Text(
+                            displayedPromptVerse,
+                            style: GoogleFonts.scheherazadeNew(
+                              letterSpacing: 0,
+                              fontSize: 24,
+                              height: 1.6,
+                            ),
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),
@@ -1418,14 +1721,97 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                         ),
                                       ],
                                     ),
-                                    if (!isRecitationCorrect &&
+                                    if (isIncorrectVerse) ...[
+                                      const SizedBox(height: 12),
+                                      if (!showAnswerHint)
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: TextButton.icon(
+                                            onPressed: () {
+                                              setState(() {
+                                                showAnswerHint = true;
+                                              });
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  Colors.red.shade700,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 4,
+                                              ),
+                                            ),
+                                            icon: Icon(
+                                              Iconsax.lamp_on,
+                                              size: 18,
+                                              color: Colors.red.shade700,
+                                            ),
+                                            label: Text(
+                                              'Show hint',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      else ...[
+                                        Text(
+                                          'Starts with:',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.red.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          getCorrectAnswerHint(),
+                                          textAlign: TextAlign.right,
+                                          textDirection: TextDirection.rtl,
+                                          style: GoogleFonts.scheherazadeNew(
+                                            letterSpacing: 0,
+                                            fontSize: 22,
+                                            height: 1.5,
+                                            color: Colors.red.shade800,
+                                          ),
+                                        ),
+                                      ],
+                                    ] else if (!isRecitationCorrect &&
                                         showBadAudioHintThisAttempt) ...[
                                       const SizedBox(height: 10),
                                       Text(
-                                        'Multiple mistakes can be caused by unclear audio or mumbling. Please try again in a quiet place and speak clearly.',
+                                        'Multiple mistakes can be caused by unclear audio or mumbling. Try again in a quiet place, or tap a highlighted word if you said it correctly.',
                                         style: GoogleFonts.poppins(
                                           fontSize: 13,
                                           color: Colors.red.shade700,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                    if (!isRecitationCorrect &&
+                                        !isIncorrectVerse &&
+                                        !showBadAudioHintThisAttempt &&
+                                        incorrectWordCount > 0) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Tap a highlighted word to clear it if you believe you pronounced it correctly.',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: Colors.red.shade700,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                    if (isRecitationCorrect &&
+                                        !isIncorrectVerse &&
+                                        incorrectWordCount > 0) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Tap a highlighted word if you believe you pronounced it correctly.',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: Colors.green.shade700,
                                           fontStyle: FontStyle.italic,
                                         ),
                                       ),
@@ -1435,10 +1821,11 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                               ),
                               const SizedBox(height: 16),
                             ],
-                            Column(
-                              children: [
-                                // Header bar with toggle button
-                                GestureDetector(
+                            if (!isIncorrectVerse)
+                              Column(
+                                children: [
+                                  // Header bar with toggle button
+                                  GestureDetector(
                                   onTap: () {
                                     setState(() {
                                       isAnswerBoxExpanded =
@@ -1535,201 +1922,56 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                         alignment: WrapAlignment.center,
                                         spacing: 8,
                                         textDirection: TextDirection.rtl,
-                                        children: comparison.map((word) {
-                                          bool isError =
+                                        children: List.generate(
+                                            comparison.length, (index) {
+                                          final word = comparison[index];
+                                          final isError =
                                               word['isError'] == true;
-                                          return isError
-                                              ? GestureDetector(
-                                                  onTap: () {
-                                                    // Show popup with correct word
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext
-                                                          context) {
-                                                        return AlertDialog(
-                                                          backgroundColor:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .surface,
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        16),
-                                                          ),
-                                                          title: Center(
-                                                            child: Text(
-                                                              'Correct Word',
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: Colors
-                                                                    .blue
-                                                                    .shade700,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          content: Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              Text(
-                                                                word[
-                                                                    'actual_word'],
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .center,
-                                                                style: GoogleFonts
-                                                                    .scheherazadeNew(
-                                                                  letterSpacing:
-                                                                      0,
-                                                                  fontSize: 32,
-                                                                  height: 1.6,
-                                                                  color: Theme.of(
-                                                                          context)
-                                                                      .colorScheme
-                                                                      .inversePrimary,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 16),
-                                                              if (word['differences']
-                                                                      is List &&
-                                                                  word['differences']
-                                                                      .isNotEmpty &&
-                                                                  !(word['differences']
-                                                                              .length ==
-                                                                          1 &&
-                                                                      word['differences'][0]
-                                                                              [
-                                                                              'error'] !=
-                                                                          null)) ...[
-                                                                Text(
-                                                                  'Difference details:',
-                                                                  style: GoogleFonts
-                                                                      .poppins(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade700,
-                                                                  ),
-                                                                ),
-                                                                const SizedBox(
-                                                                    height: 8),
-                                                                ...word['differences']
-                                                                    .map<Widget>(
-                                                                        (diff) {
-                                                                  if (diff[
-                                                                          'error'] !=
-                                                                      null) {
-                                                                    return Container();
-                                                                  }
+                                          final wasDismissed =
+                                              word['userDismissed'] == true;
+                                          final displayText = word[
+                                                  'final_transcribed_word']
+                                              as String? ??
+                                              '';
 
-                                                                  String
-                                                                      message =
-                                                                      '';
-                                                                  if (diff['incorrect'] ==
-                                                                          '' &&
-                                                                      diff['correct'] !=
-                                                                          '') {
-                                                                    message =
-                                                                        'Missing: ${diff['correct']}';
-                                                                  } else if (diff[
-                                                                              'incorrect'] !=
-                                                                          '' &&
-                                                                      diff['correct'] ==
-                                                                          '') {
-                                                                    message =
-                                                                        'Extra: ${diff['incorrect']}';
-                                                                  } else {
-                                                                    message =
-                                                                        'Replace ${diff['incorrect']} with ${diff['correct']}';
-                                                                  }
+                                          if (isError) {
+                                            return GestureDetector(
+                                              onTap: () =>
+                                                  _showErrorWordDialog(
+                                                      word, index),
+                                              child: Text(
+                                                displayText,
+                                                style: GoogleFonts
+                                                    .scheherazadeNew(
+                                                  letterSpacing: 0,
+                                                  fontSize: 24,
+                                                  height: 1.6,
+                                                  color: Colors.red,
+                                                  decoration: TextDecoration
+                                                      .underline,
+                                                  decorationColor: Colors.red
+                                                      .withValues(alpha: 0.7),
+                                                  decorationThickness: 1,
+                                                ),
+                                              ),
+                                            );
+                                          }
 
-                                                                  return Padding(
-                                                                    padding: const EdgeInsets
-                                                                        .only(
-                                                                        bottom:
-                                                                            4),
-                                                                    child: Text(
-                                                                      message,
-                                                                      style: GoogleFonts
-                                                                          .poppins(
-                                                                        fontSize:
-                                                                            12,
-                                                                        color: Colors
-                                                                            .grey
-                                                                            .shade700,
-                                                                      ),
-                                                                    ),
-                                                                  );
-                                                                }).toList(),
-                                                              ],
-                                                            ],
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: Text(
-                                                                'OK',
-                                                                style:
-                                                                    GoogleFonts
-                                                                        .poppins(
-                                                                  color: Colors
-                                                                      .blue
-                                                                      .shade700,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  child: Text(
-                                                    word[
-                                                        'final_transcribed_word'],
-                                                    style: GoogleFonts
-                                                        .scheherazadeNew(
-                                                      letterSpacing: 0,
-                                                      fontSize: 24,
-                                                      height: 1.6,
-                                                      color: Colors.red,
-                                                      decoration: TextDecoration
-                                                          .underline,
-                                                      decorationColor:
-                                                          Colors.red.withValues(
-                                                              alpha: 0.7),
-                                                      decorationThickness: 1,
-                                                    ),
-                                                  ),
-                                                )
-                                              : Text(
-                                                  word[
-                                                      'final_transcribed_word'],
-                                                  style: GoogleFonts
-                                                      .scheherazadeNew(
-                                                    letterSpacing: 0,
-                                                    fontSize: 24,
-                                                    height: 1.6,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .inversePrimary,
-                                                  ),
-                                                );
-                                        }).toList(),
+                                          return Text(
+                                            displayText,
+                                            style:
+                                                GoogleFonts.scheherazadeNew(
+                                              letterSpacing: 0,
+                                              fontSize: 24,
+                                              height: 1.6,
+                                              color: wasDismissed
+                                                  ? Colors.green.shade700
+                                                  : Theme.of(context)
+                                                      .colorScheme
+                                                      .inversePrimary,
+                                            ),
+                                          );
+                                        }),
                                       ),
                                     ),
                                   ),
@@ -1759,13 +2001,17 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                     onPressed: () {
                       widget.onNext(isRecitationCorrect);
                       widget.answeredQuestions[widget.currentQuestionIndex] = {
-                        'user_answer': text,
+                        'user_answer': isIncorrectVerse
+                            ? 'Could not match verse'
+                            : text,
                         'is_correct': isRecitationCorrect
                       };
                       setState(() {
                         text = '';
                         hasSubmittedAnswer = false;
                         feedbackMessage = '';
+                        isIncorrectVerse = false;
+                        showAnswerHint = false;
                       });
                     },
                     style: ElevatedButton.styleFrom(
