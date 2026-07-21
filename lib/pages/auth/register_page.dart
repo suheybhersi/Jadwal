@@ -5,6 +5,8 @@ import 'package:jadwal/components/my_textfield.dart';
 import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:flutter/gestures.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -209,7 +211,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    // Add privacy policy action here
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const PrivacyPolicyPage(),
+                                      ),
+                                    );
                                   },
                               ),
                               TextSpan(
@@ -231,7 +239,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    // Add terms of use action here
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const TermsServicePage(),
+                                      ),
+                                    );
                                   },
                               ),
                             ],

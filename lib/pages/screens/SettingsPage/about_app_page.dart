@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutAppPage extends StatefulWidget {
   const AboutAppPage({super.key});
@@ -82,7 +83,8 @@ class _AboutAppPageState extends State<AboutAppPage> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF4979FB).withValues(alpha: 0.2),
+                              color: const Color(0xFF4979FB)
+                                  .withValues(alpha: 0.2),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),
@@ -209,8 +211,11 @@ class _AboutAppPageState extends State<AboutAppPage> {
                       _buildDevInfoRow(
                         icon: Iconsax.global,
                         title: 'Website',
-                        value: 'www.jadwal.app',
+                        value: 'www.jadwal.co.uk',
                         isLink: true,
+                        onTap: () => _launchUrl(
+                          Uri.parse('https://www.jadwal.co.uk'),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildDevInfoRow(
@@ -218,6 +223,14 @@ class _AboutAppPageState extends State<AboutAppPage> {
                         title: 'Contact',
                         value: 'jadwal.qrn@gmail.com',
                         isLink: true,
+                        onTap: () => _launchUrl(
+                          Uri(
+                            scheme: 'mailto',
+                            path: 'jadwal.qrn@gmail.com',
+                            query:
+                                'subject=Jadwal App&body=Hello,',
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -338,13 +351,33 @@ class _AboutAppPageState extends State<AboutAppPage> {
     );
   }
 
+  Future<void> _launchUrl(Uri uri) async {
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open link')),
+      );
+    }
+  }
+
   Widget _buildDevInfoRow({
     required IconData icon,
     required String title,
     required String value,
     bool isLink = false,
+    VoidCallback? onTap,
   }) {
-    return Row(
+    final row = Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
@@ -359,29 +392,44 @@ class _AboutAppPageState extends State<AboutAppPage> {
           ),
         ),
         const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade600,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade600,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: isLink ? const Color(0xFF4979FB) : Colors.black87,
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isLink ? const Color(0xFF4979FB) : Colors.black87,
+                  decoration: isLink ? TextDecoration.underline : null,
+                  decorationColor: const Color(0xFF4979FB),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
+    );
+
+    if (onTap == null) return row;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: row,
+      ),
     );
   }
 

@@ -314,7 +314,8 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+            color:
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -322,15 +323,6 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
       ),
       child: Column(
         children: [
-          _buildSecurityTile(
-            icon: Iconsax.security_user,
-            title: 'Two-Factor Authentication',
-            description: 'Add an extra layer of security',
-            onTap: () {
-              // Implement two-factor authentication
-            },
-          ),
-          _buildDivider(),
           _buildSecurityTile(
             icon: Iconsax.security_time,
             title: 'Recent Login Activity',

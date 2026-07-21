@@ -49,6 +49,84 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Check your email',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'OK',
+              style: TextStyle(color: Color.fromARGB(255, 73, 121, 251)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> resetPassword() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return _ForgotPasswordDialog(
+          initialEmail: emailController.text.trim(),
+        );
+      },
+    );
+
+    if (email == null || email.isEmpty || !mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      showSuccessDialog(
+        'If an account exists for $email, you\'ll receive a password reset link shortly.',
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      if (e.code == 'invalid-email') {
+        showErrorDialog('Please enter a valid email address.');
+      } else if (e.code == 'user-not-found') {
+        // Avoid account enumeration; same success message as happy path
+        showSuccessDialog(
+          'If an account exists for $email, you\'ll receive a password reset link shortly.',
+        );
+      } else if (e.code == 'too-many-requests') {
+        showErrorDialog('Too many attempts. Please try again later.');
+      } else {
+        showErrorDialog('Could not send reset email. Please try again.');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      showErrorDialog('Could not send reset email. Please try again.');
+    }
+  }
+
   void signUserIn() async {
     if (_formKey.currentState?.validate() ?? false) {
       showDialog(
@@ -178,23 +256,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(height: 8),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: true,
-                                  onChanged: (value) {},
-                                  checkColor: Colors.white,
-                                  fillColor: WidgetStateProperty.all(
-                                    Color.fromARGB(255, 49, 107, 253),
-                                  ),
-                                ),
-                                Text('Remember me')
-                              ],
-                            ),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: resetPassword,
                               child: Text(
                                 'Forgot Password?',
                                 style: TextStyle(
@@ -329,5 +394,107 @@ class _LoginPageState extends State<LoginPage> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+}
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  final String initialEmail;
+
+  const _ForgotPasswordDialog({required this.initialEmail});
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  late final TextEditingController _emailController;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Forgot Password',
+        style: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter your account email and we\'ll send you a link to reset your password.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Email',
+                prefixIcon: Icon(
+                  Iconsax.direct_right,
+                  color: Colors.grey.shade600,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              validator: (value) {
+                final email = value?.trim() ?? '';
+                if (email.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
+                    .hasMatch(email)) {
+                  return 'Enter a valid email address';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() ?? false) {
+              Navigator.of(context).pop(_emailController.text.trim());
+            }
+          },
+          child: Text(
+            'Send link',
+            style: TextStyle(color: Color.fromARGB(255, 73, 121, 251)),
+          ),
+        ),
+      ],
+    );
   }
 }
