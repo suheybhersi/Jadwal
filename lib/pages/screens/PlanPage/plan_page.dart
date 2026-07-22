@@ -77,10 +77,7 @@ class _PlanPageState extends State<PlanPage> {
             if (snapshot.hasError ||
                 !snapshot.hasData ||
                 snapshot.data!.docs.isEmpty) {
-              return IconButton(
-                onPressed: () {},
-                icon: const Icon(Iconsax.edit, color: Colors.grey),
-              );
+              return const SizedBox(width: 48, height: 48);
             }
 
             Map<String, dynamic> plan =
@@ -170,7 +167,7 @@ class _PlanPageState extends State<PlanPage> {
                 });
               }
 
-              // Huffadh: Revision page only — incomplete reviews (if intensive) then custom revision plans
+              // Huffadh: Revision page — incomplete reviews when intensive mode
               if (isHuffadh) {
                 return SingleChildScrollView(
                   child: Padding(
@@ -181,20 +178,37 @@ class _PlanPageState extends State<PlanPage> {
                             prefsService.shouldScheduleReviews;
                         final List<dynamic> incompleteReviews =
                             _getIncompleteReviews(plan);
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (showReviews && incompleteReviews.isNotEmpty)
-                              IncompleteReviewsSection(
-                                plan: plan,
-                                planId: planId,
-                                incompleteReviews: incompleteReviews,
-                                firestoreService: firestoreService,
-                              ),
-                            if (showReviews && incompleteReviews.isNotEmpty)
-                              const SizedBox(height: 24),
-                            RevisionPlansSection(plan: plan),
-                          ],
+                        if (showReviews && incompleteReviews.isNotEmpty) {
+                          return IncompleteReviewsSection(
+                            plan: plan,
+                            planId: planId,
+                            incompleteReviews: incompleteReviews,
+                            firestoreService: firestoreService,
+                          );
+                        }
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 48),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Iconsax.clipboard_tick,
+                                  size: 60,
+                                  color: Colors.grey.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  showReviews
+                                      ? 'No reviews to complete'
+                                      : 'Revision schedule is off',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -471,10 +485,8 @@ class PlanPageSection extends StatelessWidget {
   }
 }
 
-/// Placeholder for custom revision plans. Replace content when implementing
-/// recurring revision by Juz, surah, or range.
 /// Displays reviews that are due or overdue (incomplete) when mode is intensive.
-/// Shown above Custom revision plans on the plan page.
+/// Shown on the plan page for Huffadh users.
 class IncompleteReviewsSection extends StatelessWidget {
   const IncompleteReviewsSection({
     super.key,
@@ -651,88 +663,6 @@ class IncompleteReviewsSection extends StatelessWidget {
               );
             },
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class RevisionPlansSection extends StatelessWidget {
-  const RevisionPlansSection({
-    super.key,
-    required this.plan,
-  });
-
-  final Map<String, dynamic> plan;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isHuffadh = plan['planCompleted'] == true;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color:
-                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.15),
-            spreadRadius: 0,
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF64A377).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Iconsax.calendar_tick,
-                  color: Color(0xFF64A377),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Custom revision plans',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isHuffadh
-                          ? 'Schedule recurring revision by Juz, surah, or range. Coming soon.'
-                          : 'After memorisation, schedule revision to keep your Hifdh strong. Coming soon.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // Reserve space for future "Add plan" or list of plans
         ],
       ),
     );

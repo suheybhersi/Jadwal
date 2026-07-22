@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -158,13 +157,6 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
               );
             },
           ),
-          _buildDivider(),
-          _buildSecurityTile(
-            icon: Iconsax.logout,
-            title: 'Sign Out From All Devices',
-            description: 'Log out from all active sessions',
-            onTap: _showSignOutAllDevicesDialog,
-          ),
         ],
       ),
     );
@@ -235,86 +227,6 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
       indent: 56,
       endIndent: 16,
       color: Colors.grey.shade100,
-    );
-  }
-
-  void _showSignOutAllDevicesDialog() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Sign Out All Devices',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Are you sure you want to sign out from all devices? You will need to sign in again on all devices.',
-          style: GoogleFonts.poppins(),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(
-                color: Theme.of(context)
-                    .colorScheme
-                    .inversePrimary
-                    .withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4979FB),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            onPressed: () async {
-              try {
-                await FirebaseAuth.instance.signOut();
-                if (!mounted) return;
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Signed out from all devices',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: const Color(0xFF4979FB),
-                  ),
-                );
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              } catch (e) {
-                if (!mounted) return;
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Failed to sign out: $e',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: Text(
-              'Sign Out All',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

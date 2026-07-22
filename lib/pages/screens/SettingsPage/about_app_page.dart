@@ -310,19 +310,6 @@ class _AboutAppPageState extends State<AboutAppPage> {
 
                 const SizedBox(height: 30),
 
-                // Social Media Links
-                Center(
-                  child: Wrap(
-                    spacing: 20,
-                    children: [
-                      _buildSocialButton(Icons.facebook, 'Facebook'),
-                      _buildSocialButton(Iconsax.instagram, 'Instagram'),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
                 // Copyright
                 Center(
                   child: Text(
@@ -501,41 +488,6 @@ class _AboutAppPageState extends State<AboutAppPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: row,
-      ),
-    );
-  }
-
-  Widget _buildSocialButton(IconData icon, String label) {
-    return InkWell(
-      onTap: () {
-        // Handle social media link
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4979FB).withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: const Color(0xFF4979FB),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

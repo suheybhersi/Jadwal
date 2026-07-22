@@ -16,14 +16,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
   final TextEditingController _feedbackController = TextEditingController();
   final FocusNode _feedbackFocusNode = FocusNode();
   String _selectedCategory = 'General';
-  final List<String> _categories = [
-    'General',
-    'Bug Report',
-    'Feature Request',
-    'Performance',
-    'Other'
-  ];
   bool _isSubmitting = false;
+
+  static const _categories = <({String label, IconData icon})>[
+    (label: 'General', icon: Iconsax.activity),
+    (label: 'Bug Report', icon: Iconsax.warning_2),
+    (label: 'Feature Request', icon: Iconsax.star),
+    (label: 'Performance', icon: Iconsax.speedometer),
+    (label: 'Other', icon: Iconsax.more),
+  ];
 
   @override
   void dispose() {
@@ -33,7 +34,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 
   void _submitFeedback() async {
-    // Dismiss keyboard
     FocusScope.of(context).unfocus();
 
     if (_feedbackController.text.trim().isEmpty) {
@@ -41,10 +41,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
         SnackBar(
           content: Row(
             children: [
-              Icon(Iconsax.warning_2, color: Colors.white),
+              const Icon(Iconsax.warning_2, color: Colors.white),
               const SizedBox(width: 10),
-              const Text('Please enter your feedback',
-                  style: TextStyle(color: Colors.white)),
+              Text(
+                'Please enter your feedback',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
             ],
           ),
           behavior: SnackBarBehavior.floating,
@@ -58,9 +60,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
       final firestoreService = FirestoreService(
@@ -74,64 +74,59 @@ class _FeedbackPageState extends State<FeedbackPage> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Iconsax.tick_circle, color: Colors.white),
-                const SizedBox(width: 10),
-                const Text('Thank you for your feedback!',
-                    style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF4979FB),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Iconsax.tick_circle, color: Colors.white),
+              const SizedBox(width: 10),
+              Text(
+                'Thank you for your feedback!',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ],
           ),
-        );
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF4979FB),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
 
-        _feedbackController.clear();
-        setState(() {
-          _selectedCategory = 'General';
-        });
-      }
+      _feedbackController.clear();
+      setState(() => _selectedCategory = 'General');
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Iconsax.warning_2, color: Colors.white),
-                const SizedBox(width: 10),
-                const Text('Failed to submit feedback.',
-                    style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.redAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Iconsax.warning_2, color: Colors.white),
+              const SizedBox(width: 10),
+              Text(
+                'Failed to submit feedback.',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ],
           ),
-        );
-      }
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
     }
   }
 
-  // Method to dismiss keyboard
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
   }
@@ -141,22 +136,22 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.white,
         appBar: AppBar(
           title: Text(
             'Feedback',
             style: GoogleFonts.poppins(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.inversePrimary,
+              color: Colors.black87,
             ),
           ),
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
           leading: IconButton(
-            icon: Icon(Iconsax.arrow_left,
-                color: Theme.of(context).colorScheme.inversePrimary),
+            icon: const Icon(Icons.arrow_back, color: Colors.black87),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -169,324 +164,273 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header with gradient background
+                        // Header — matches Help & Support
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF4979FB),
-                                Color(0xFF5C89FF),
-                              ],
+                              colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4979FB).withValues(alpha: 0.2),
+                                color: const Color(0xFF4979FB)
+                                    .withValues(alpha: 0.2),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Iconsax.message_text,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Text(
-                                    'We value your feedback',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 15),
-                              Text(
-                                'It helps us improve our app and better serve your needs.',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.white.withValues(alpha: 0.9),
+                              Container(
+                                height: 50,
+                                width: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Iconsax.message_text,
+                                  size: 28,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 25),
-
-                        // Category dropdown
-                        _buildSectionTitle('Feedback category'),
-                        const SizedBox(height: 15),
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .tertiary
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Theme(
-                            data: Theme.of(context).copyWith(
-                              // Remove dropdown underline
-                              inputDecorationTheme: InputDecorationTheme(
-                                border: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                              ),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: ButtonTheme(
-                                alignedDropdown: true,
-                                child: DropdownButton<String>(
-                                  value: _selectedCategory,
-                                  isExpanded: true,
-                                  icon: Padding(
-                                    padding: EdgeInsets.only(right: 16),
-                                    child: Icon(
-                                      Iconsax.arrow_down_1,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  elevation: 2,
-                                  dropdownColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .inversePrimary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  hint: Text(
-                                    'Select a category',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  items: _categories.map((String value) {
-                                    IconData iconData;
-                                    switch (value) {
-                                      case 'General':
-                                        iconData = Iconsax.activity;
-                                        break;
-                                      case 'Bug Report':
-                                        iconData = Iconsax.warning_2;
-                                        break;
-                                      case 'Feature Request':
-                                        iconData = Iconsax.star;
-                                        break;
-                                      case 'Performance':
-                                        iconData = Iconsax.speedometer;
-                                        break;
-                                      case 'Other':
-                                        iconData = Iconsax.more;
-                                        break;
-                                      default:
-                                        iconData = Iconsax.info_circle;
-                                    }
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            iconData,
-                                            color: Color(0xFF4979FB),
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Text(value),
-                                        ],
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'We value your feedback',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
                                       ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _selectedCategory = newValue;
-                                      });
-                                    }
-                                    // Hide keyboard when dropdown is used
-                                    FocusScope.of(context).unfocus();
-                                  },
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Help us improve Jadwal for you',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white
+                                            .withValues(alpha: 0.9),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 25),
 
-                        // Feedback text field
-                        _buildSectionTitle('Your feedback'),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 30),
+
+                        Text(
+                          'Category',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: _categories.map((category) {
+                            final selected =
+                                _selectedCategory == category.label;
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCategory = category.label;
+                                  });
+                                  _dismissKeyboard();
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? const Color(0xFF4979FB)
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: selected
+                                          ? const Color(0xFF4979FB)
+                                          : Colors.grey.shade200,
+                                    ),
+                                    boxShadow: selected
+                                        ? [
+                                            BoxShadow(
+                                              color: const Color(0xFF4979FB)
+                                                  .withValues(alpha: 0.2),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ]
+                                        : [
+                                            BoxShadow(
+                                              color: Colors.grey.shade100,
+                                              blurRadius: 8,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        category.icon,
+                                        size: 18,
+                                        color: selected
+                                            ? Colors.white
+                                            : const Color(0xFF4979FB),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        category.label,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: selected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        Text(
+                          'Your feedback',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
                         Container(
-                          padding: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .tertiary
-                                    .withValues(alpha: 0.3),
+                                color: Colors.grey.shade100,
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
                             ],
-                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: TextField(
                             controller: _feedbackController,
                             focusNode: _feedbackFocusNode,
-                            maxLines: 5,
+                            maxLines: 6,
                             maxLength: 500,
                             style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
+                              fontSize: 15,
+                              color: Colors.black87,
+                              height: 1.5,
                             ),
                             decoration: InputDecoration(
                               hintText:
-                                  'Share your thoughts, suggestions, or issues...',
+                                  'Share your thoughts, suggestions, or issues…',
                               hintStyle: GoogleFonts.poppins(
-                                fontSize: 16,
+                                fontSize: 14,
                                 color: Colors.grey.shade400,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                8,
                               ),
-                              contentPadding: const EdgeInsets.all(20),
-                              filled: true,
-                              fillColor: Theme.of(context).colorScheme.surface,
                               counterStyle: GoogleFonts.poppins(
-                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
                               ),
                             ),
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _dismissKeyboard(),
                           ),
                         ),
-                        const SizedBox(height: 30),
+
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
                 ),
               ),
-              // Submit button with gradient
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 56,
                   child: ElevatedButton(
                     onPressed: _isSubmitting ? null : _submitFeedback,
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                      backgroundColor: const Color(0xFF4979FB),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey.shade200,
                       elevation: 0,
-                    ),
-                    child: Ink(
-                      decoration: _isSubmitting
-                          ? BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(20),
-                            )
-                          : BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF4979FB),
-                                  Color(0xFF5C89FF),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                      child: Container(
-                        width: double.infinity,
-                        height: 56,
-                        alignment: Alignment.center,
-                        child: _isSubmitting
-                            ? SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.grey.shade500,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Submit Feedback',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Icon(Iconsax.send_1,
-                                      color: Colors.white, size: 20),
-                                ],
-                              ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
+                    child: _isSubmitting
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.grey.shade500,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Submit Feedback',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Iconsax.send_1, size: 18),
+                            ],
+                          ),
                   ),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.inversePrimary,
       ),
     );
   }

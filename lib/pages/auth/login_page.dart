@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/my_textfield.dart';
-import 'package:jadwal/components/square_tile.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/firestore.dart';
 
@@ -354,44 +353,6 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Divider(
-                        color: Color.fromARGB(255, 200, 200, 200),
-                        thickness: 0.5,
-                        indent: 40,
-                        endIndent: 10,
-                      ),
-                    ),
-                    Text(
-                      'Or Sign in with',
-                      style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500),
-                    ),
-                    Flexible(
-                      child: Divider(
-                        color: const Color.fromARGB(255, 200, 200, 200),
-                        thickness: 0.5,
-                        indent: 10,
-                        endIndent: 40,
-                      ),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SquareTile(imagePath: 'assets/google.png'),
-                    SquareTile(
-                      imagePath: 'assets/apple.png',
-                      color: Theme.of(context).colorScheme.inversePrimary,
-                    ),
-                  ],
                 ),
               ],
             ),

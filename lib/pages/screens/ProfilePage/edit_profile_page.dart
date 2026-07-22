@@ -39,7 +39,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           firstNameController.text = userData['firstName'] ?? '';
           lastNameController.text = userData['lastName'] ?? '';
           userNameController.text = userData['username'] ?? '';
-          emailController.text = userData['email'] ?? '';
+          emailController.text =
+              user?.email ?? userData['email'] ?? '';
         }
       }
     } catch (e) {
@@ -60,7 +61,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'firstName': firstNameController.text.trim(),
         'lastName': lastNameController.text.trim(),
         'username': userNameController.text.trim(),
-        'email': emailController.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
@@ -141,58 +141,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           children: [
                             // Profile header
                             Center(
-                              child: Column(
-                                children: [
-                                  Stack(
-                                    children: [
-                                      Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color.fromARGB(255, 73, 121, 251)
-                                                  .withValues(alpha: 0.7),
-                                              Color.fromARGB(255, 73, 121, 251),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Iconsax.user,
-                                          size: 48,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          padding: EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 4,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            Iconsax.camera,
-                                            size: 20,
-                                            color: Color.fromARGB(
-                                                255, 73, 121, 251),
-                                          ),
-                                        ),
-                                      ),
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color.fromARGB(255, 73, 121, 251)
+                                          .withValues(alpha: 0.7),
+                                      Color.fromARGB(255, 73, 121, 251),
                                     ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                ],
+                                ),
+                                child: Icon(
+                                  Iconsax.user,
+                                  size: 48,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
 
@@ -244,13 +212,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             ),
                             SizedBox(height: 30),
 
-                            // Email
+                            // Email (login identity — read-only)
                             _buildTextField(
                               controller: emailController,
                               labelText: 'Email',
-                              hintText: 'Enter your email',
+                              hintText: 'Login email',
                               prefixIcon: Iconsax.direct_right,
                               keyboardType: TextInputType.emailAddress,
+                              readOnly: true,
+                              helperText:
+                                  'Your login email can’t be changed here.',
                             ),
                           ],
                         ),
@@ -306,6 +277,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required String hintText,
     required IconData prefixIcon,
     TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    String? helperText,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -315,12 +288,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: TextStyle(fontSize: 16),
+        readOnly: readOnly,
+        enableInteractiveSelection: !readOnly,
+        style: TextStyle(
+          fontSize: 16,
+          color: readOnly
+              ? Theme.of(context).colorScheme.secondary
+              : null,
+        ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
             color: Theme.of(context).colorScheme.secondary,
             fontSize: 16,
+          ),
+          helperText: helperText,
+          helperStyle: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.secondary,
           ),
           prefixIcon: Icon(
             prefixIcon,
@@ -334,8 +319,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide:
-                BorderSide(color: Theme.of(context).colorScheme.primary),
+            borderSide: BorderSide(
+              color: readOnly
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.primary,
+            ),
           ),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,

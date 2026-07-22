@@ -19,26 +19,18 @@ class NotificationsPage extends StatefulWidget {
 
 class _NotificationsPageState extends State<NotificationsPage> {
   late bool isPushNotificationsEnabled;
-  late bool isEmailNotificationsEnabled;
   late bool isTaskReminderEnabled;
-  late bool isEventAlertEnabled;
-  late bool isWeeklySummaryEnabled;
   late int dailyNotificationHour;
   late int dailyNotificationMinute;
-  late int weeklySummaryWeekday;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     isPushNotificationsEnabled = widget.initialPushNotificationsValue;
-    isEmailNotificationsEnabled = widget.initialEmailNotificationsValue;
     isTaskReminderEnabled = true;
-    isEventAlertEnabled = true;
-    isWeeklySummaryEnabled = false;
     dailyNotificationHour = 8;
     dailyNotificationMinute = 0;
-    weeklySummaryWeekday = 1;
     _loadPreferences();
   }
 
@@ -47,13 +39,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (mounted) {
       setState(() {
         isPushNotificationsEnabled = prefs.pushNotificationsEnabled;
-        isEmailNotificationsEnabled = prefs.emailNotificationsEnabled;
         isTaskReminderEnabled = prefs.taskReminderEnabled;
-        isEventAlertEnabled = prefs.eventAlertEnabled;
-        isWeeklySummaryEnabled = prefs.weeklySummaryEnabled;
         dailyNotificationHour = prefs.dailyNotificationHour;
         dailyNotificationMinute = prefs.dailyNotificationMinute;
-        weeklySummaryWeekday = prefs.weeklySummaryWeekday;
         _loading = false;
       });
     }
@@ -178,27 +166,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
-                  ),
-                  _buildSettingTile(
-                    icon: Iconsax.sms,
-                    title: 'Email Notifications',
-                    description: 'Receive notifications via email',
-                    trailing: Switch(
-                      value: isEmailNotificationsEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          isEmailNotificationsEnabled = value;
-                        });
-                      },
-                      activeThumbColor: const Color(0xFF4979FB),
-                      inactiveThumbColor:
-                          Theme.of(context).colorScheme.tertiary,
-                      trackOutlineColor: WidgetStateProperty.all(
-                        isEmailNotificationsEnabled
-                            ? Colors.transparent
-                            : Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
                     isLast: true,
                   ),
                 ]),
@@ -231,52 +198,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
-                  ),
-                  _buildSettingTile(
-                    icon: Iconsax.calendar,
-                    title: 'Event Alerts',
-                    description: 'Notifications for calendar events',
-                    trailing: Switch(
-                      value: isEventAlertEnabled,
-                      onChanged: isPushNotificationsEnabled
-                          ? (value) {
-                              setState(() {
-                                isEventAlertEnabled = value;
-                              });
-                            }
-                          : null,
-                      activeThumbColor: const Color(0xFF4979FB),
-                      inactiveThumbColor:
-                          Theme.of(context).colorScheme.tertiary,
-                      trackOutlineColor: WidgetStateProperty.all(
-                        isEventAlertEnabled
-                            ? Colors.transparent
-                            : Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
-                  ),
-                  _buildSettingTile(
-                    icon: Iconsax.chart,
-                    title: 'Weekly Summary',
-                    description: 'Weekly activity and progress reports',
-                    trailing: Switch(
-                      value: isWeeklySummaryEnabled,
-                      onChanged: isPushNotificationsEnabled
-                          ? (value) {
-                              setState(() {
-                                isWeeklySummaryEnabled = value;
-                              });
-                            }
-                          : null,
-                      activeThumbColor: const Color(0xFF4979FB),
-                      inactiveThumbColor:
-                          Theme.of(context).colorScheme.tertiary,
-                      trackOutlineColor: WidgetStateProperty.all(
-                        isWeeklySummaryEnabled
-                            ? Colors.transparent
-                            : Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
                     isLast: true,
                   ),
                 ]),
@@ -287,11 +208,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 _buildSectionHeader('Notification Timing'),
                 const SizedBox(height: 10),
                 _buildTimingCard(),
-
-                const SizedBox(height: 24),
-
-                // Do Not Disturb
-                _buildSectionHeader('Do Not Disturb'),
 
                 const SizedBox(height: 30),
 
@@ -456,56 +372,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  Future<void> _pickWeeklyDay() async {
-    const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
-    ];
-    final chosen = await showModalBottomSheet<int>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Weekly Summary Day',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-            ),
-            ...List.generate(7, (i) {
-              return ListTile(
-                title: Text(
-                  days[i],
-                  style: GoogleFonts.poppins(),
-                ),
-                onTap: () => Navigator.pop(context, i),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-    if (chosen != null && mounted) {
-      setState(() => weeklySummaryWeekday = chosen);
-    }
-  }
-
   Future<void> _saveAndPop() async {
     final prefs = NotificationPreferences(
       pushNotificationsEnabled: isPushNotificationsEnabled,
-      emailNotificationsEnabled: isEmailNotificationsEnabled,
+      // Not implemented yet — always persist as off.
+      emailNotificationsEnabled: false,
       taskReminderEnabled: isTaskReminderEnabled,
-      eventAlertEnabled: isEventAlertEnabled,
-      weeklySummaryEnabled: isWeeklySummaryEnabled,
+      eventAlertEnabled: false,
+      weeklySummaryEnabled: false,
       dailyNotificationHour: dailyNotificationHour,
       dailyNotificationMinute: dailyNotificationMinute,
-      weeklySummaryWeekday: weeklySummaryWeekday,
+      weeklySummaryWeekday: 1,
     );
     await NotificationService.instance.savePreferences(prefs);
     if (mounted) _popWithResult();
@@ -514,7 +391,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void _popWithResult() {
     Navigator.pop(context, {
       'pushNotificationsEnabled': isPushNotificationsEnabled,
-      'emailNotificationsEnabled': isEmailNotificationsEnabled,
+      'emailNotificationsEnabled': false,
     });
   }
 
@@ -548,12 +425,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
             title: 'Daily Notification Time',
             time: _dailyTimeFormatted,
             onTap: _pickDailyTime,
-          ),
-          const SizedBox(height: 16),
-          _buildTimingRow(
-            title: 'Weekly Summary Day',
-            time: NotificationPreferences.weekdayNames[weeklySummaryWeekday.clamp(0, 6)],
-            onTap: _pickWeeklyDay,
           ),
         ],
       ),

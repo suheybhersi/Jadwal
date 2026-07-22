@@ -111,18 +111,51 @@ class HelpSupportPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
 
-                // FAQ Cards
-                _buildFaqCard('How do I create an account?',
-                    'You can create an account by tapping on the "Sign Up" button on the login screen. You\'ll need to provide your email, create a password, and fill in your profile information.'),
-
-                _buildFaqCard('How can I reset my password?',
-                    'On the login screen, tap on "Forgot Password". Enter your email address, and we\'ll send you a link to reset your password.'),
-
-                _buildFaqCard('Can I change my username?',
-                    'Yes, you can change your username from the Edit Profile section in your settings. Navigate to Settings > Edit Profile and update your username.'),
-
-                _buildFaqCard('How do I delete my account?',
-                    'You can delete your account by going to Settings > Delete Account. Please note that this action cannot be undone and all your data will be permanently deleted.'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade100,
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      _buildFaqTile(
+                        context,
+                        question: 'How do I create an account?',
+                        answer:
+                            'You can create an account by tapping on the "Sign Up" button on the login screen. You\'ll need to provide your email, create a password, and fill in your profile information.',
+                      ),
+                      _buildDivider(),
+                      _buildFaqTile(
+                        context,
+                        question: 'How can I reset my password?',
+                        answer:
+                            'On the login screen, tap on "Forgot Password". Enter your email address, and we\'ll send you a link to reset your password.',
+                      ),
+                      _buildDivider(),
+                      _buildFaqTile(
+                        context,
+                        question: 'Can I change my username?',
+                        answer:
+                            'Yes, you can change your username from the Edit Profile section in your settings. Navigate to Settings > Edit Profile and update your username.',
+                      ),
+                      _buildDivider(),
+                      _buildFaqTile(
+                        context,
+                        question: 'How do I delete my account?',
+                        answer:
+                            'You can delete your account by going to Settings > Delete Account. Please note that this action cannot be undone and all your data will be permanently deleted.',
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 30),
 
@@ -160,23 +193,10 @@ class HelpSupportPage extends StatelessWidget {
                       ),
                       _buildDivider(),
                       _buildContactTile(
-                        icon: Iconsax.call,
-                        title: 'Call Us',
-                        description: 'Speak to our support team',
-                        onTap: () {
-                          // Implement live chat functionality
-                          _showComingSoonDialog(context);
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildContactTile(
                         icon: Iconsax.message_text,
                         title: 'Live Chat',
                         description: 'Chat with our support team',
-                        onTap: () {
-                          // Implement live chat functionality
-                          _showComingSoonDialog(context);
-                        },
+                        onTap: () => _showLiveChatComingSoonDialog(context),
                         isLast: true,
                       ),
                     ],
@@ -190,54 +210,56 @@ class HelpSupportPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFaqCard(String question, String answer) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          shape: const Border(),
-          collapsedShape: const Border(),
-          title: Text(
-            question,
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
+  Widget _buildFaqTile(
+    BuildContext context, {
+    required String question,
+    required String answer,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+        splashColor: const Color(0xFF4979FB).withValues(alpha: 0.06),
+        highlightColor: Colors.transparent,
+      ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        iconColor: Colors.grey[400],
+        collapsedIconColor: Colors.grey[400],
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF4979FB).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4979FB).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Iconsax.message_question,
-              size: 20,
-              color: Color(0xFF4979FB),
-            ),
+          child: const Icon(
+            Iconsax.message_question,
+            size: 20,
+            color: Color(0xFF4979FB),
           ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+        ),
+        title: Text(
+          question,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 48),
+            child: Text(
               answer,
               style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-                height: 1.4,
+                fontSize: 13,
+                height: 1.5,
+                color: Colors.grey.shade600,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -329,40 +351,107 @@ class HelpSupportPage extends StatelessWidget {
     }
   }
 
-  void _showComingSoonDialog(BuildContext context) {
+  void _showLiveChatComingSoonDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Coming Soon',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'This feature is coming soon! Please check back later.',
-          style: GoogleFonts.poppins(),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4979FB),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4979FB), Color(0xFF5C89FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4979FB).withValues(alpha: 0.25),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Iconsax.message_text,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Live Chat Coming Soon',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'We’re building in-app chat support. For now, reach us anytime by email and we’ll get back to you.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4979FB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(
+                      'Got it',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    _launchEmail('jadwal.qrn@gmail.com');
+                  },
+                  child: Text(
+                    'Email Support',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF4979FB),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
