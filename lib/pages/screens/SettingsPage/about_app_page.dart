@@ -238,6 +238,78 @@ class _AboutAppPageState extends State<AboutAppPage> {
 
                 const SizedBox(height: 30),
 
+                // Credits / Attribution
+                _buildSectionHeader('Credits & Attribution'),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade100,
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quran text (Uthmani) is from the Tanzil Project, distributed via the Quranic Universal Library (QUL). Please visit Tanzil to keep track of updates to the text.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDevInfoRow(
+                        icon: Iconsax.link_1,
+                        title: 'Quran text source',
+                        value: 'tanzil.net',
+                        isLink: true,
+                        onTap: () => _launchUrl(
+                          Uri.parse('https://tanzil.net'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Mushaf page layout, word script, surah names, and page fonts are from QUL, including King Fahd Complex (Madani) resources. See QUL credits for the full list of contributors.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDevInfoRow(
+                        icon: Iconsax.link_1,
+                        title: 'Quranic Universal Library',
+                        value: 'qul.tarteel.ai',
+                        isLink: true,
+                        onTap: () => _launchUrl(
+                          Uri.parse('https://qul.tarteel.ai/'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDevInfoRow(
+                        icon: Iconsax.people,
+                        title: 'QUL credits',
+                        value: 'qul.tarteel.ai/credits',
+                        isLink: true,
+                        onTap: () => _launchUrl(
+                          Uri.parse('https://qul.tarteel.ai/credits'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
                 // Social Media Links
                 Center(
                   child: Wrap(
@@ -254,7 +326,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                 // Copyright
                 Center(
                   child: Text(
-                    '© 2024 Jadwal. All rights reserved.',
+                    '© 2026 Jadwal. All rights reserved.',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: Colors.grey.shade600,

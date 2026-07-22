@@ -1,1032 +1,1032 @@
 {
-    "__collections__": {
-        "surahs": {
-            "1": {
-                "surah": "Al-Fatiha",
-                "totalLines": 7,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 7,
-                "surahNumber": 1,
-                "__collections__": {}
-            },
-            "2": {
-                "surah": "Al-Baqarah",
-                "totalLines": 711,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 286,
-                "surahNumber": 2,
-                "__collections__": {}
-            },
-            "3": {
-                "surah": "Ali-Imran",
-                "totalLines": 402,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 200,
-                "surahNumber": 3,
-                "__collections__": {}
-            },
-            "4": {
-                "surah": "An-Nisa",
-                "totalLines": 439,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 176,
-                "surahNumber": 4,
-                "__collections__": {}
-            },
-            "5": {
-                "surah": "Al-Ma'idah",
-                "totalLines": 323,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 120,
-                "surahNumber": 5,
-                "__collections__": {}
-            },
-            "6": {
-                "surah": "Al-An'am",
-                "totalLines": 343,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 165,
-                "surahNumber": 6,
-                "__collections__": {}
-            },
-            "7": {
-                "surah": "Al-A'raf",
-                "totalLines": 388,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 206,
-                "surahNumber": 7,
-                "__collections__": {}
-            },
-            "8": {
-                "surah": "Al-Anfal",
-                "totalLines": 148,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 75,
-                "surahNumber": 8,
-                "__collections__": {}
-            },
-            "9": {
-                "surah": "At-Tawbah",
-                "totalLines": 313,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 129,
-                "surahNumber": 9,
-                "__collections__": {}
-            },
-            "10": {
-                "surah": "Yunus",
-                "totalLines": 200,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 109,
-                "surahNumber": 10,
-                "__collections__": {}
-            },
-            "11": {
-                "surah": "Hud",
-                "totalLines": 210,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 123,
-                "surahNumber": 11,
-                "__collections__": {}
-            },
-            "12": {
-                "surah": "Yusuf",
-                "totalLines": 200,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 111,
-                "surahNumber": 12,
-                "__collections__": {}
-            },
-            "13": {
-                "surah": "Ar-Ra'd",
-                "totalLines": 90,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 43,
-                "surahNumber": 13,
-                "__collections__": {}
-            },
-            "14": {
-                "surah": "Ibrahim",
-                "totalLines": 101,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 52,
-                "surahNumber": 14,
-                "__collections__": {}
-            },
-            "15": {
-                "surah": "Al-Hijr",
-                "totalLines": 79,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 99,
-                "surahNumber": 15,
-                "__collections__": {}
-            },
-            "16": {
-                "surah": "An-Nahl",
-                "totalLines": 217,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 128,
-                "surahNumber": 16,
-                "__collections__": {}
-            },
-            "17": {
-                "surah": "Al-Isra",
-                "totalLines": 172,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 111,
-                "surahNumber": 17,
-                "__collections__": {}
-            },
-            "18": {
-                "surah": "Al-Kahf",
-                "totalLines": 169,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 110,
-                "surahNumber": 18,
-                "__collections__": {}
-            },
-            "19": {
-                "surah": "Maryam",
-                "totalLines": 107,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 98,
-                "surahNumber": 19,
-                "__collections__": {}
-            },
-            "20": {
-                "surah": "Ta-Ha",
-                "totalLines": 144,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 135,
-                "surahNumber": 20,
-                "__collections__": {}
-            },
-            "21": {
-                "surah": "Al-Anbiya",
-                "totalLines": 147,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 112,
-                "surahNumber": 21,
-                "__collections__": {}
-            },
-            "22": {
-                "surah": "Al-Hajj",
-                "totalLines": 148,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 78,
-                "surahNumber": 22,
-                "__collections__": {}
-            },
-            "23": {
-                "surah": "Al-Mu'minun",
-                "totalLines": 118,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 118,
-                "surahNumber": 23,
-                "__collections__": {}
-            },
-            "24": {
-                "surah": "An-Nur",
-                "totalLines": 144,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 64,
-                "surahNumber": 24,
-                "__collections__": {}
-            },
-            "25": {
-                "surah": "Al-Furqan",
-                "totalLines": 107,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 77,
-                "surahNumber": 25,
-                "__collections__": {}
-            },
-            "26": {
-                "surah": "Ash-Shu'ara",
-                "totalLines": 148,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 227,
-                "surahNumber": 26,
-                "__collections__": {}
-            },
-            "27": {
-                "surah": "An-Naml",
-                "totalLines": 126,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 93,
-                "surahNumber": 27,
-                "__collections__": {}
-            },
-            "28": {
-                "surah": "Al-Qasas",
-                "totalLines": 163,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 88,
-                "surahNumber": 28,
-                "__collections__": {}
-            },
-            "29": {
-                "surah": "Al-Ankabut",
-                "totalLines": 120,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 69,
-                "surahNumber": 29,
-                "__collections__": {}
-            },
-            "30": {
-                "surah": "Ar-Rum",
-                "totalLines": 94,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 60,
-                "surahNumber": 30,
-                "__collections__": {}
-            },
-            "31": {
-                "surah": "Luqman",
-                "totalLines": 57,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 34,
-                "surahNumber": 31,
-                "__collections__": {}
-            },
-            "32": {
-                "surah": "As-Sajda",
-                "totalLines": 43,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 30,
-                "surahNumber": 32,
-                "__collections__": {}
-            },
-            "33": {
-                "surah": "Al-Ahzab",
-                "totalLines": 149,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 73,
-                "surahNumber": 33,
-                "__collections__": {}
-            },
-            "34": {
-                "surah": "Saba",
-                "totalLines": 95,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 54,
-                "surahNumber": 34,
-                "__collections__": {}
-            },
-            "35": {
-                "surah": "Fatir",
-                "totalLines": 84,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 45,
-                "surahNumber": 35,
-                "__collections__": {}
-            },
-            "36": {
-                "surah": "Ya-Sin",
-                "totalLines": 84,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 83,
-                "surahNumber": 36,
-                "__collections__": {}
-            },
-            "37": {
-                "surah": "As-Saffat",
-                "totalLines": 103,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 182,
-                "surahNumber": 37,
-                "__collections__": {}
-            },
-            "38": {
-                "surah": "Sad",
-                "totalLines": 77,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 88,
-                "surahNumber": 38,
-                "__collections__": {}
-            },
-            "39": {
-                "surah": "Az-Zumar",
-                "totalLines": 132,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 75,
-                "surahNumber": 39,
-                "__collections__": {}
-            },
-            "40": {
-                "surah": "Ghafir",
-                "totalLines": 146,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 85,
-                "surahNumber": 40,
-                "__collections__": {}
-            },
-            "41": {
-                "surah": "Fussilat",
-                "totalLines": 88,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 54,
-                "surahNumber": 41,
-                "__collections__": {}
-            },
-            "42": {
-                "surah": "Ash-Shura",
-                "totalLines": 92,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 53,
-                "surahNumber": 42,
-                "__collections__": {}
-            },
-            "43": {
-                "surah": "Az-Zukhruf",
-                "totalLines": 99,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 89,
-                "surahNumber": 43,
-                "__collections__": {}
-            },
-            "44": {
-                "surah": "Ad-Dukhan",
-                "totalLines": 42,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 59,
-                "surahNumber": 44,
-                "__collections__": {}
-            },
-            "45": {
-                "surah": "Al-Jathiya",
-                "totalLines": 50,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 37,
-                "surahNumber": 45,
-                "__collections__": {}
-            },
-            "46": {
-                "surah": "Al-Ahqaf",
-                "totalLines": 66,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 35,
-                "surahNumber": 46,
-                "__collections__": {}
-            },
-            "47": {
-                "surah": "Muhammad",
-                "totalLines": 59,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 38,
-                "surahNumber": 47,
-                "__collections__": {}
-            },
-            "48": {
-                "surah": "Al-Fath",
-                "totalLines": 64,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 29,
-                "surahNumber": 48,
-                "__collections__": {}
-            },
-            "49": {
-                "surah": "Al-Hujurat",
-                "totalLines": 37,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 18,
-                "surahNumber": 49,
-                "__collections__": {}
-            },
-            "50": {
-                "surah": "Qaf",
-                "totalLines": 39,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 45,
-                "surahNumber": 50,
-                "__collections__": {}
-            },
-            "51": {
-                "surah": "Adh-Dhariyat",
-                "totalLines": 39,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 60,
-                "surahNumber": 51,
-                "__collections__": {}
-            },
-            "52": {
-                "surah": "At-Tur",
-                "totalLines": 35,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 49,
-                "surahNumber": 52,
-                "__collections__": {}
-            },
-            "53": {
-                "surah": "An-Najm",
-                "totalLines": 37,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 62,
-                "surahNumber": 53,
-                "__collections__": {}
-            },
-            "54": {
-                "surah": "Al-Qamar",
-                "totalLines": 39,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 55,
-                "surahNumber": 54,
-                "__collections__": {}
-            },
-            "55": {
-                "surah": "Ar-Rahman",
-                "totalLines": 45,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 78,
-                "surahNumber": 55,
-                "__collections__": {}
-            },
-            "56": {
-                "surah": "Al-Waqia",
-                "totalLines": 47,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 96,
-                "surahNumber": 56,
-                "__collections__": {}
-            },
-            "57": {
-                "surah": "Al-Hadid",
-                "totalLines": 63,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 29,
-                "surahNumber": 57,
-                "__collections__": {}
-            },
-            "58": {
-                "surah": "Al-Mujadila",
-                "totalLines": 49,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 22,
-                "surahNumber": 58,
-                "__collections__": {}
-            },
-            "59": {
-                "surah": "Al-Hashr",
-                "totalLines": 51,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 24,
-                "surahNumber": 59,
-                "__collections__": {}
-            },
-            "60": {
-                "surah": "Al-Mumtahina",
-                "totalLines": 35,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 13,
-                "surahNumber": 60,
-                "__collections__": {}
-            },
-            "61": {
-                "surah": "As-Saff",
-                "totalLines": 22,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 14,
-                "surahNumber": 61,
-                "__collections__": {}
-            },
-            "62": {
-                "surah": "Al-Jumu'a",
-                "totalLines": 19,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 11,
-                "surahNumber": 62,
-                "__collections__": {}
-            },
-            "63": {
-                "surah": "Al-Munafiqoon",
-                "totalLines": 21,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 11,
-                "surahNumber": 63,
-                "__collections__": {}
-            },
-            "64": {
-                "surah": "At-Taghabun",
-                "totalLines": 28,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 18,
-                "surahNumber": 64,
-                "__collections__": {}
-            },
-            "65": {
-                "surah": "At-Talaq",
-                "totalLines": 29,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 12,
-                "surahNumber": 65,
-                "__collections__": {}
-            },
-            "66": {
-                "surah": "At-Tahrim",
-                "totalLines": 28,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 12,
-                "surahNumber": 66,
-                "__collections__": {}
-            },
-            "67": {
-                "surah": "Al-Mulk",
-                "totalLines": 33,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 30,
-                "surahNumber": 67,
-                "__collections__": {}
-            },
-            "68": {
-                "surah": "Al-Qalam",
-                "totalLines": 31,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 52,
-                "surahNumber": 68,
-                "__collections__": {}
-            },
-            "69": {
-                "surah": "Al-Haqqa",
-                "totalLines": 28,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 52,
-                "surahNumber": 69,
-                "__collections__": {}
-            },
-            "70": {
-                "surah": "Al-Maarij",
-                "totalLines": 24,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 44,
-                "surahNumber": 70,
-                "__collections__": {}
-            },
-            "71": {
-                "surah": "Nuh",
-                "totalLines": 24,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 28,
-                "surahNumber": 71,
-                "__collections__": {}
-            },
-            "72": {
-                "surah": "Al-Jinn",
-                "totalLines": 28,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 28,
-                "surahNumber": 72,
-                "__collections__": {}
-            },
-            "73": {
-                "surah": "Al-Muzzammil",
-                "totalLines": 20,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 20,
-                "surahNumber": 73,
-                "__collections__": {}
-            },
-            "74": {
-                "surah": "Al-Muddathir",
-                "totalLines": 26,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 56,
-                "surahNumber": 74,
-                "__collections__": {}
-            },
-            "75": {
-                "surah": "Al-Qiyama",
-                "totalLines": 16,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 40,
-                "surahNumber": 75,
-                "__collections__": {}
-            },
-            "76": {
-                "surah": "Al-Insan",
-                "totalLines": 26,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 31,
-                "surahNumber": 76,
-                "__collections__": {}
-            },
-            "77": {
-                "surah": "Al-Mursalat",
-                "totalLines": 22,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 50,
-                "surahNumber": 77,
-                "__collections__": {}
-            },
-            "78": {
-                "surah": "An-Naba",
-                "totalLines": 20,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 40,
-                "surahNumber": 78,
-                "__collections__": {}
-            },
-            "79": {
-                "surah": "An-Nazi'at",
-                "totalLines": 20,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 46,
-                "surahNumber": 79,
-                "__collections__": {}
-            },
-            "80": {
-                "surah": "Abasa",
-                "totalLines": 14,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 42,
-                "surahNumber": 80,
-                "__collections__": {}
-            },
-            "81": {
-                "surah": "At-Takwir",
-                "totalLines": 12,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 29,
-                "surahNumber": 81,
-                "__collections__": {}
-            },
-            "82": {
-                "surah": "Al-Infitar",
-                "totalLines": 9,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 19,
-                "surahNumber": 82,
-                "__collections__": {}
-            },
-            "83": {
-                "surah": "Al-Mutaffifin",
-                "totalLines": 19,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 36,
-                "surahNumber": 83,
-                "__collections__": {}
-            },
-            "84": {
-                "surah": "Al-Inshiqaq",
-                "totalLines": 12,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 25,
-                "surahNumber": 84,
-                "__collections__": {}
-            },
-            "85": {
-                "surah": "Al-Buruj",
-                "totalLines": 12,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 22,
-                "surahNumber": 85,
-                "__collections__": {}
-            },
-            "86": {
-                "surah": "At-Tariq",
-                "totalLines": 6,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 17,
-                "surahNumber": 86,
-                "__collections__": {}
-            },
-            "87": {
-                "surah": "Al-Ala",
-                "totalLines": 8,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 19,
-                "surahNumber": 87,
-                "__collections__": {}
-            },
-            "88": {
-                "surah": "Al-Ghashiya",
-                "totalLines": 11,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 26,
-                "surahNumber": 88,
-                "__collections__": {}
-            },
-            "89": {
-                "surah": "Al-Fajr",
-                "totalLines": 16,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 30,
-                "surahNumber": 89,
-                "__collections__": {}
-            },
-            "90": {
-                "surah": "Al-Balad",
-                "totalLines": 9,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 20,
-                "surahNumber": 90,
-                "__collections__": {}
-            },
-            "91": {
-                "surah": "Ash-Shams",
-                "totalLines": 7,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 15,
-                "surahNumber": 91,
-                "__collections__": {}
-            },
-            "92": {
-                "surah": "Al-Lail",
-                "totalLines": 8,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 21,
-                "surahNumber": 92,
-                "__collections__": {}
-            },
-            "93": {
-                "surah": "Ad-Duhaa",
-                "totalLines": 5,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 11,
-                "surahNumber": 93,
-                "__collections__": {}
-            },
-            "94": {
-                "surah": "Ash-Sharh",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 8,
-                "surahNumber": 94,
-                "__collections__": {}
-            },
-            "95": {
-                "surah": "At-Tin",
-                "totalLines": 4,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 8,
-                "surahNumber": 95,
-                "__collections__": {}
-            },
-            "96": {
-                "surah": "Al-Alaq",
-                "totalLines": 7,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 19,
-                "surahNumber": 96,
-                "__collections__": {}
-            },
-            "97": {
-                "surah": "Al-Qadr",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 5,
-                "surahNumber": 97,
-                "__collections__": {}
-            },
-            "98": {
-                "surah": "Al-Bayyina",
-                "totalLines": 10,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 8,
-                "surahNumber": 98,
-                "__collections__": {}
-            },
-            "99": {
-                "surah": "Az-Zalzala",
-                "totalLines": 5,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 8,
-                "surahNumber": 99,
-                "__collections__": {}
-            },
-            "100": {
-                "surah": "Al-Adiyat",
-                "totalLines": 5,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 11,
-                "surahNumber": 100,
-                "__collections__": {}
-            },
-            "101": {
-                "surah": "Al-Qaria",
-                "totalLines": 6,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 11,
-                "surahNumber": 101,
-                "__collections__": {}
-            },
-            "102": {
-                "surah": "At-Takathur",
-                "totalLines": 4,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 8,
-                "surahNumber": 102,
-                "__collections__": {}
-            },
-            "103": {
-                "surah": "Al-Asr",
-                "totalLines": 2,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 3,
-                "surahNumber": 103,
-                "__collections__": {}
-            },
-            "104": {
-                "surah": "Al-Humaza",
-                "totalLines": 4,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 9,
-                "surahNumber": 104,
-                "__collections__": {}
-            },
-            "105": {
-                "surah": "Al-Fil",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 5,
-                "surahNumber": 105,
-                "__collections__": {}
-            },
-            "106": {
-                "surah": "Quraish",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 4,
-                "surahNumber": 106,
-                "__collections__": {}
-            },
-            "107": {
-                "surah": "Al-Ma'un",
-                "totalLines": 4,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 7,
-                "surahNumber": 107,
-                "__collections__": {}
-            },
-            "108": {
-                "surah": "Al-Kawthar",
-                "totalLines": 2,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 3,
-                "surahNumber": 108,
-                "__collections__": {}
-            },
-            "109": {
-                "surah": "Al-Kafiroon",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 6,
-                "surahNumber": 109,
-                "__collections__": {}
-            },
-            "110": {
-                "surah": "An-Nasr",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 3,
-                "surahNumber": 110,
-                "__collections__": {}
-            },
-            "111": {
-                "surah": "Al-Masad",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 5,
-                "surahNumber": 111,
-                "__collections__": {}
-            },
-            "112": {
-                "surah": "Al-Ikhlas",
-                "totalLines": 2,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 4,
-                "surahNumber": 112,
-                "__collections__": {}
-            },
-            "113": {
-                "surah": "Al-Falaq",
-                "totalLines": 3,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 5,
-                "surahNumber": 113,
-                "__collections__": {}
-            },
-            "114": {
-                "surah": "An-Nas",
-                "totalLines": 4,
-                "tempCompletedLines": 0,
-                "completedLines": 0,
-                "verses": 6,
-                "surahNumber": 114,
-                "__collections__": {}
-            }
-        }
+  "__collections__": {
+    "surahs": {
+      "1": {
+        "surah": "Al-Fatihah",
+        "totalLines": 7.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 7,
+        "surahNumber": 1,
+        "__collections__": {}
+      },
+      "2": {
+        "surah": "Al-Baqarah",
+        "totalLines": 711.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 286,
+        "surahNumber": 2,
+        "__collections__": {}
+      },
+      "3": {
+        "surah": "Ali 'Imran",
+        "totalLines": 402.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 200,
+        "surahNumber": 3,
+        "__collections__": {}
+      },
+      "4": {
+        "surah": "An-Nisa",
+        "totalLines": 439.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 176,
+        "surahNumber": 4,
+        "__collections__": {}
+      },
+      "5": {
+        "surah": "Al-Ma'idah",
+        "totalLines": 323.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 120,
+        "surahNumber": 5,
+        "__collections__": {}
+      },
+      "6": {
+        "surah": "Al-An'am",
+        "totalLines": 343.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 165,
+        "surahNumber": 6,
+        "__collections__": {}
+      },
+      "7": {
+        "surah": "Al-A'raf",
+        "totalLines": 388.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 206,
+        "surahNumber": 7,
+        "__collections__": {}
+      },
+      "8": {
+        "surah": "Al-Anfal",
+        "totalLines": 148.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 75,
+        "surahNumber": 8,
+        "__collections__": {}
+      },
+      "9": {
+        "surah": "At-Tawbah",
+        "totalLines": 313.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 129,
+        "surahNumber": 9,
+        "__collections__": {}
+      },
+      "10": {
+        "surah": "Yunus",
+        "totalLines": 200.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 109,
+        "surahNumber": 10,
+        "__collections__": {}
+      },
+      "11": {
+        "surah": "Hud",
+        "totalLines": 210.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 123,
+        "surahNumber": 11,
+        "__collections__": {}
+      },
+      "12": {
+        "surah": "Yusuf",
+        "totalLines": 200.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 111,
+        "surahNumber": 12,
+        "__collections__": {}
+      },
+      "13": {
+        "surah": "Ar-Ra'd",
+        "totalLines": 90.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 43,
+        "surahNumber": 13,
+        "__collections__": {}
+      },
+      "14": {
+        "surah": "Ibrahim",
+        "totalLines": 101.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 52,
+        "surahNumber": 14,
+        "__collections__": {}
+      },
+      "15": {
+        "surah": "Al-Hijr",
+        "totalLines": 79.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 99,
+        "surahNumber": 15,
+        "__collections__": {}
+      },
+      "16": {
+        "surah": "An-Nahl",
+        "totalLines": 217.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 128,
+        "surahNumber": 16,
+        "__collections__": {}
+      },
+      "17": {
+        "surah": "Al-Isra",
+        "totalLines": 172.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 111,
+        "surahNumber": 17,
+        "__collections__": {}
+      },
+      "18": {
+        "surah": "Al-Kahf",
+        "totalLines": 169.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 110,
+        "surahNumber": 18,
+        "__collections__": {}
+      },
+      "19": {
+        "surah": "Maryam",
+        "totalLines": 107.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 98,
+        "surahNumber": 19,
+        "__collections__": {}
+      },
+      "20": {
+        "surah": "Taha",
+        "totalLines": 144.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 135,
+        "surahNumber": 20,
+        "__collections__": {}
+      },
+      "21": {
+        "surah": "Al-Anbya",
+        "totalLines": 147.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 112,
+        "surahNumber": 21,
+        "__collections__": {}
+      },
+      "22": {
+        "surah": "Al-Hajj",
+        "totalLines": 148.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 78,
+        "surahNumber": 22,
+        "__collections__": {}
+      },
+      "23": {
+        "surah": "Al-Mu'minun",
+        "totalLines": 118.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 118,
+        "surahNumber": 23,
+        "__collections__": {}
+      },
+      "24": {
+        "surah": "An-Nur",
+        "totalLines": 144.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 64,
+        "surahNumber": 24,
+        "__collections__": {}
+      },
+      "25": {
+        "surah": "Al-Furqan",
+        "totalLines": 107.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 77,
+        "surahNumber": 25,
+        "__collections__": {}
+      },
+      "26": {
+        "surah": "Ash-Shu'ara",
+        "totalLines": 148.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 227,
+        "surahNumber": 26,
+        "__collections__": {}
+      },
+      "27": {
+        "surah": "An-Naml",
+        "totalLines": 126.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 93,
+        "surahNumber": 27,
+        "__collections__": {}
+      },
+      "28": {
+        "surah": "Al-Qasas",
+        "totalLines": 163.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 88,
+        "surahNumber": 28,
+        "__collections__": {}
+      },
+      "29": {
+        "surah": "Al-'Ankabut",
+        "totalLines": 120.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 69,
+        "surahNumber": 29,
+        "__collections__": {}
+      },
+      "30": {
+        "surah": "Ar-Rum",
+        "totalLines": 94.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 60,
+        "surahNumber": 30,
+        "__collections__": {}
+      },
+      "31": {
+        "surah": "Luqman",
+        "totalLines": 57.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 34,
+        "surahNumber": 31,
+        "__collections__": {}
+      },
+      "32": {
+        "surah": "As-Sajdah",
+        "totalLines": 43.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 30,
+        "surahNumber": 32,
+        "__collections__": {}
+      },
+      "33": {
+        "surah": "Al-Ahzab",
+        "totalLines": 149.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 73,
+        "surahNumber": 33,
+        "__collections__": {}
+      },
+      "34": {
+        "surah": "Saba",
+        "totalLines": 95.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 54,
+        "surahNumber": 34,
+        "__collections__": {}
+      },
+      "35": {
+        "surah": "Fatir",
+        "totalLines": 84.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 45,
+        "surahNumber": 35,
+        "__collections__": {}
+      },
+      "36": {
+        "surah": "Ya-Sin",
+        "totalLines": 84.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 83,
+        "surahNumber": 36,
+        "__collections__": {}
+      },
+      "37": {
+        "surah": "As-Saffat",
+        "totalLines": 103.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 182,
+        "surahNumber": 37,
+        "__collections__": {}
+      },
+      "38": {
+        "surah": "Sad",
+        "totalLines": 77.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 88,
+        "surahNumber": 38,
+        "__collections__": {}
+      },
+      "39": {
+        "surah": "Az-Zumar",
+        "totalLines": 132.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 75,
+        "surahNumber": 39,
+        "__collections__": {}
+      },
+      "40": {
+        "surah": "Ghafir",
+        "totalLines": 146.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 85,
+        "surahNumber": 40,
+        "__collections__": {}
+      },
+      "41": {
+        "surah": "Fussilat",
+        "totalLines": 88.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 54,
+        "surahNumber": 41,
+        "__collections__": {}
+      },
+      "42": {
+        "surah": "Ash-Shuraa",
+        "totalLines": 92.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 53,
+        "surahNumber": 42,
+        "__collections__": {}
+      },
+      "43": {
+        "surah": "Az-Zukhruf",
+        "totalLines": 99.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 89,
+        "surahNumber": 43,
+        "__collections__": {}
+      },
+      "44": {
+        "surah": "Ad-Dukhan",
+        "totalLines": 42.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 59,
+        "surahNumber": 44,
+        "__collections__": {}
+      },
+      "45": {
+        "surah": "Al-Jathiyah",
+        "totalLines": 50.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 37,
+        "surahNumber": 45,
+        "__collections__": {}
+      },
+      "46": {
+        "surah": "Al-Ahqaf",
+        "totalLines": 66.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 35,
+        "surahNumber": 46,
+        "__collections__": {}
+      },
+      "47": {
+        "surah": "Muhammad",
+        "totalLines": 59.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 38,
+        "surahNumber": 47,
+        "__collections__": {}
+      },
+      "48": {
+        "surah": "Al-Fath",
+        "totalLines": 64.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 29,
+        "surahNumber": 48,
+        "__collections__": {}
+      },
+      "49": {
+        "surah": "Al-Hujurat",
+        "totalLines": 37.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 18,
+        "surahNumber": 49,
+        "__collections__": {}
+      },
+      "50": {
+        "surah": "Qaf",
+        "totalLines": 39.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 45,
+        "surahNumber": 50,
+        "__collections__": {}
+      },
+      "51": {
+        "surah": "Adh-Dhariyat",
+        "totalLines": 39.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 60,
+        "surahNumber": 51,
+        "__collections__": {}
+      },
+      "52": {
+        "surah": "At-Tur",
+        "totalLines": 35.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 49,
+        "surahNumber": 52,
+        "__collections__": {}
+      },
+      "53": {
+        "surah": "An-Najm",
+        "totalLines": 37.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 62,
+        "surahNumber": 53,
+        "__collections__": {}
+      },
+      "54": {
+        "surah": "Al-Qamar",
+        "totalLines": 39.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 55,
+        "surahNumber": 54,
+        "__collections__": {}
+      },
+      "55": {
+        "surah": "Ar-Rahman",
+        "totalLines": 45.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 78,
+        "surahNumber": 55,
+        "__collections__": {}
+      },
+      "56": {
+        "surah": "Al-Waqi'ah",
+        "totalLines": 47.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 96,
+        "surahNumber": 56,
+        "__collections__": {}
+      },
+      "57": {
+        "surah": "Al-Hadid",
+        "totalLines": 63.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 29,
+        "surahNumber": 57,
+        "__collections__": {}
+      },
+      "58": {
+        "surah": "Al-Mujadila",
+        "totalLines": 49.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 22,
+        "surahNumber": 58,
+        "__collections__": {}
+      },
+      "59": {
+        "surah": "Al-Hashr",
+        "totalLines": 51.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 24,
+        "surahNumber": 59,
+        "__collections__": {}
+      },
+      "60": {
+        "surah": "Al-Mumtahanah",
+        "totalLines": 35.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 13,
+        "surahNumber": 60,
+        "__collections__": {}
+      },
+      "61": {
+        "surah": "As-Saf",
+        "totalLines": 22.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 14,
+        "surahNumber": 61,
+        "__collections__": {}
+      },
+      "62": {
+        "surah": "Al-Jumu'ah",
+        "totalLines": 19.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 11,
+        "surahNumber": 62,
+        "__collections__": {}
+      },
+      "63": {
+        "surah": "Al-Munafiqun",
+        "totalLines": 21.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 11,
+        "surahNumber": 63,
+        "__collections__": {}
+      },
+      "64": {
+        "surah": "At-Taghabun",
+        "totalLines": 28.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 18,
+        "surahNumber": 64,
+        "__collections__": {}
+      },
+      "65": {
+        "surah": "At-Talaq",
+        "totalLines": 29.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 12,
+        "surahNumber": 65,
+        "__collections__": {}
+      },
+      "66": {
+        "surah": "At-Tahrim",
+        "totalLines": 28.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 12,
+        "surahNumber": 66,
+        "__collections__": {}
+      },
+      "67": {
+        "surah": "Al-Mulk",
+        "totalLines": 33.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 30,
+        "surahNumber": 67,
+        "__collections__": {}
+      },
+      "68": {
+        "surah": "Al-Qalam",
+        "totalLines": 31.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 52,
+        "surahNumber": 68,
+        "__collections__": {}
+      },
+      "69": {
+        "surah": "Al-Haqqah",
+        "totalLines": 28.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 52,
+        "surahNumber": 69,
+        "__collections__": {}
+      },
+      "70": {
+        "surah": "Al-Ma'arij",
+        "totalLines": 24.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 44,
+        "surahNumber": 70,
+        "__collections__": {}
+      },
+      "71": {
+        "surah": "Nuh",
+        "totalLines": 24.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 28,
+        "surahNumber": 71,
+        "__collections__": {}
+      },
+      "72": {
+        "surah": "Al-Jinn",
+        "totalLines": 28.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 28,
+        "surahNumber": 72,
+        "__collections__": {}
+      },
+      "73": {
+        "surah": "Al-Muzzammil",
+        "totalLines": 20.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 20,
+        "surahNumber": 73,
+        "__collections__": {}
+      },
+      "74": {
+        "surah": "Al-Muddaththir",
+        "totalLines": 26.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 56,
+        "surahNumber": 74,
+        "__collections__": {}
+      },
+      "75": {
+        "surah": "Al-Qiyamah",
+        "totalLines": 16.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 40,
+        "surahNumber": 75,
+        "__collections__": {}
+      },
+      "76": {
+        "surah": "Al-Insan",
+        "totalLines": 26.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 31,
+        "surahNumber": 76,
+        "__collections__": {}
+      },
+      "77": {
+        "surah": "Al-Mursalat",
+        "totalLines": 22.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 50,
+        "surahNumber": 77,
+        "__collections__": {}
+      },
+      "78": {
+        "surah": "An-Naba",
+        "totalLines": 20.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 40,
+        "surahNumber": 78,
+        "__collections__": {}
+      },
+      "79": {
+        "surah": "An-Nazi'at",
+        "totalLines": 20.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 46,
+        "surahNumber": 79,
+        "__collections__": {}
+      },
+      "80": {
+        "surah": "'Abasa",
+        "totalLines": 14.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 42,
+        "surahNumber": 80,
+        "__collections__": {}
+      },
+      "81": {
+        "surah": "At-Takwir",
+        "totalLines": 12.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 29,
+        "surahNumber": 81,
+        "__collections__": {}
+      },
+      "82": {
+        "surah": "Al-Infitar",
+        "totalLines": 9.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 19,
+        "surahNumber": 82,
+        "__collections__": {}
+      },
+      "83": {
+        "surah": "Al-Mutaffifin",
+        "totalLines": 19.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 36,
+        "surahNumber": 83,
+        "__collections__": {}
+      },
+      "84": {
+        "surah": "Al-Inshiqaq",
+        "totalLines": 12.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 25,
+        "surahNumber": 84,
+        "__collections__": {}
+      },
+      "85": {
+        "surah": "Al-Buruj",
+        "totalLines": 12.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 22,
+        "surahNumber": 85,
+        "__collections__": {}
+      },
+      "86": {
+        "surah": "At-Tariq",
+        "totalLines": 6.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 17,
+        "surahNumber": 86,
+        "__collections__": {}
+      },
+      "87": {
+        "surah": "Al-A'la",
+        "totalLines": 8.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 19,
+        "surahNumber": 87,
+        "__collections__": {}
+      },
+      "88": {
+        "surah": "Al-Ghashiyah",
+        "totalLines": 11.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 26,
+        "surahNumber": 88,
+        "__collections__": {}
+      },
+      "89": {
+        "surah": "Al-Fajr",
+        "totalLines": 16.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 30,
+        "surahNumber": 89,
+        "__collections__": {}
+      },
+      "90": {
+        "surah": "Al-Balad",
+        "totalLines": 9.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 20,
+        "surahNumber": 90,
+        "__collections__": {}
+      },
+      "91": {
+        "surah": "Ash-Shams",
+        "totalLines": 7.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 15,
+        "surahNumber": 91,
+        "__collections__": {}
+      },
+      "92": {
+        "surah": "Al-Layl",
+        "totalLines": 8.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 21,
+        "surahNumber": 92,
+        "__collections__": {}
+      },
+      "93": {
+        "surah": "Ad-Duhaa",
+        "totalLines": 5.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 11,
+        "surahNumber": 93,
+        "__collections__": {}
+      },
+      "94": {
+        "surah": "Ash-Sharh",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 8,
+        "surahNumber": 94,
+        "__collections__": {}
+      },
+      "95": {
+        "surah": "At-Tin",
+        "totalLines": 4.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 8,
+        "surahNumber": 95,
+        "__collections__": {}
+      },
+      "96": {
+        "surah": "Al-'Alaq",
+        "totalLines": 7.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 19,
+        "surahNumber": 96,
+        "__collections__": {}
+      },
+      "97": {
+        "surah": "Al-Qadr",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 5,
+        "surahNumber": 97,
+        "__collections__": {}
+      },
+      "98": {
+        "surah": "Al-Bayyinah",
+        "totalLines": 10.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 8,
+        "surahNumber": 98,
+        "__collections__": {}
+      },
+      "99": {
+        "surah": "Az-Zalzalah",
+        "totalLines": 5.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 8,
+        "surahNumber": 99,
+        "__collections__": {}
+      },
+      "100": {
+        "surah": "Al-'Adiyat",
+        "totalLines": 5.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 11,
+        "surahNumber": 100,
+        "__collections__": {}
+      },
+      "101": {
+        "surah": "Al-Qari'ah",
+        "totalLines": 6.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 11,
+        "surahNumber": 101,
+        "__collections__": {}
+      },
+      "102": {
+        "surah": "At-Takathur",
+        "totalLines": 4.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 8,
+        "surahNumber": 102,
+        "__collections__": {}
+      },
+      "103": {
+        "surah": "Al-'Asr",
+        "totalLines": 2.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 3,
+        "surahNumber": 103,
+        "__collections__": {}
+      },
+      "104": {
+        "surah": "Al-Humazah",
+        "totalLines": 4.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 9,
+        "surahNumber": 104,
+        "__collections__": {}
+      },
+      "105": {
+        "surah": "Al-Fil",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 5,
+        "surahNumber": 105,
+        "__collections__": {}
+      },
+      "106": {
+        "surah": "Quraysh",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 4,
+        "surahNumber": 106,
+        "__collections__": {}
+      },
+      "107": {
+        "surah": "Al-Ma'un",
+        "totalLines": 4.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 7,
+        "surahNumber": 107,
+        "__collections__": {}
+      },
+      "108": {
+        "surah": "Al-Kawthar",
+        "totalLines": 2.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 3,
+        "surahNumber": 108,
+        "__collections__": {}
+      },
+      "109": {
+        "surah": "Al-Kafirun",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 6,
+        "surahNumber": 109,
+        "__collections__": {}
+      },
+      "110": {
+        "surah": "An-Nasr",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 3,
+        "surahNumber": 110,
+        "__collections__": {}
+      },
+      "111": {
+        "surah": "Al-Masad",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 5,
+        "surahNumber": 111,
+        "__collections__": {}
+      },
+      "112": {
+        "surah": "Al-Ikhlas",
+        "totalLines": 2.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 4,
+        "surahNumber": 112,
+        "__collections__": {}
+      },
+      "113": {
+        "surah": "Al-Falaq",
+        "totalLines": 3.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 5,
+        "surahNumber": 113,
+        "__collections__": {}
+      },
+      "114": {
+        "surah": "An-Nas",
+        "totalLines": 4.0,
+        "tempCompletedLines": 0,
+        "completedLines": 0,
+        "verses": 6,
+        "surahNumber": 114,
+        "__collections__": {}
+      }
     }
+  }
 }
