@@ -1617,10 +1617,16 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                     ],
                   ),
                 ),
-                const Spacer(),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                if (text.isEmpty && !isProcessing && !hasError) ...[
+                  const Spacer(),
+                  _buildRecordButton(),
+                  const Spacer(),
+                ] else
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
                     if (isProcessing) ...[
                       const SizedBox(height: 20),
                       const CircularProgressIndicator(),
@@ -1982,11 +1988,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                         ),
                       ),
                     ],
-                    if (text.isEmpty) ...[
-                      _buildRecordButton(),
-                    ],
-                  ],
-                ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
