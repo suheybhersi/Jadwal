@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -35,7 +36,6 @@ class PrivacyPolicyPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -84,7 +84,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Last updated: March 11, 2025',
+                              'Last updated: 23 July 2026',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.9),
@@ -96,10 +96,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Privacy Policy Content
                 _buildPolicyContent(context),
               ],
             ),
@@ -126,54 +123,103 @@ class PrivacyPolicyPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildParagraph(
+            'Jadwal (“we”, “us”, or “our”) provides a mobile application to help users plan, track, and practise Quran memorisation (Hifdh). This Privacy Policy explains what information we collect, how we use it, and your choices.',
+          ),
+          _buildParagraph(
+            'By creating an account or using Jadwal, you agree to this Privacy Policy. If you do not agree, please do not use the app.',
+          ),
           _buildSectionTitle('1. Information We Collect'),
           _buildParagraph(
-            'We collect information you provide directly to us. For example, we collect information when you create an account, update your profile, use the interactive features in our app, participate in any interactive areas of our app, submit information, participate in a contest or promotion, request customer support, or otherwise communicate with us.',
+            'Account and profile information. When you register or update your profile, we collect information such as your name (first and last), username, and email address. Email is also used for authentication and password reset via Firebase Authentication.',
+          ),
+          _buildParagraph(
+            'Usage and progress data. We store information related to your use of the app, including memorisation plans, hifdh and review history, quiz results, preferences (for example theme, usage mode, and notification settings), achievements, feedback you submit, and login activity (such as approximate time and device/platform details).',
+          ),
+          _buildParagraph(
+            'Audio. If you use “What Comes Next” or other recitation features, we temporarily process audio you record so it can be converted to text for assessment. Audio is sent to our servers / Cloud Functions and then to our speech-processing provider for transcription. We use this to provide the quiz feature, not for advertising.',
+          ),
+          _buildParagraph(
+            'Device and technical information. We may collect device or technical details needed to run the app securely (for example platform and OS version in login activity) and crash/diagnostic data via Firebase Crashlytics to help us fix bugs and improve stability.',
+          ),
+          _buildParagraph(
+            'Local data. Some preferences and Quran layout/script assets are stored on your device (for example SharedPreferences and local databases/fonts) so the app can work efficiently, including offline for certain features.',
           ),
           _buildSectionTitle('2. How We Use Your Information'),
           _buildParagraph(
-            'We may use information about you for various purposes, including to:',
+            'We use the information above to:',
           ),
-          _buildBulletPoint('Provide, maintain, and improve our app'),
           _buildBulletPoint(
-              'Process transactions and send related information'),
+              'Create and manage your account and authenticate you'),
           _buildBulletPoint(
-              'Send technical notices, updates, security alerts and support messages'),
+              'Provide core features (plans, reviews, quizzes, mushaf reading, progress tracking)'),
           _buildBulletPoint(
-              'Respond to your comments, questions, and requests'),
+              'Process speech for recitation assessment and generate quiz content where needed'),
           _buildBulletPoint(
-              'Communicate with you about products, services, offers, and events'),
+              'Respond to support requests and in-app feedback'),
           _buildBulletPoint(
-              'Monitor and analyse trends, usage, and activities in connection with our app'),
-          _buildSectionTitle('3. Sharing of Information'),
+              'Maintain security (for example login activity) and prevent abuse'),
+          _buildBulletPoint(
+              'Diagnose crashes and improve reliability and performance'),
+          _buildBulletPoint(
+              'Send local device notifications you enable (for example task reminders)'),
           _buildParagraph(
-            'We may share information about you as follows or as otherwise described in this Privacy Policy:',
+            'We do not sell your personal information. We do not use your data for third-party advertising or cross-app tracking.',
+          ),
+          _buildSectionTitle('3. How We Share Information'),
+          _buildParagraph(
+            'We share information only as needed to operate Jadwal:',
           ),
           _buildBulletPoint(
-              'With vendors, consultants and other service providers who need access to such information to carry out work on our behalf'),
+              'Google Firebase (Authentication, Cloud Firestore, Cloud Functions, Crashlytics) to host accounts, store app data, run backend functions, and collect crash reports'),
           _buildBulletPoint(
-              'In response to a request for information if we believe disclosure is in accordance with applicable law'),
-          _buildBulletPoint(
-              'If we believe your actions are inconsistent with the spirit or language of our user agreements or policies'),
-          _buildBulletPoint(
-              'To protect the rights, property and safety of our company or others'),
+              'OpenAI (via our Cloud Functions) to transcribe quiz audio and help generate certain quiz options'),
+          _buildParagraph(
+            'These providers process data on our behalf under their terms and to provide the services we request. We may also disclose information if required by law, or to protect the rights, safety, and security of Jadwal, our users, or others.',
+          ),
+          _buildParagraph(
+            'Quran text and mushaf resources shown in the app are sourced from third-party libraries (including Tanzil and the Quranic Universal Library). That content is reference material, not your personal data.',
+          ),
           _buildSectionTitle('4. Data Retention'),
           _buildParagraph(
-            'We store the information we collect about you for as long as is necessary for the purpose(s) for which we originally collected it. We may retain certain information for legitimate business purposes or as required by law.',
+            'We keep your account and progress data while your account remains active. If you delete your account in the app, we delete associated user data we control, subject to short technical delays and any data we must retain for legal, security, or dispute-resolution reasons. Crash logs and provider logs may be retained according to those providers’ retention practices.',
           ),
-          _buildSectionTitle('5. Your Choices'),
+          _buildSectionTitle('5. Your Choices and Rights'),
+          _buildBulletPoint(
+              'Update profile details (name, username) in Edit Profile'),
+          _buildBulletPoint(
+              'Email used for login is managed through your account / authentication settings'),
+          _buildBulletPoint(
+              'Control notification preferences in Settings'),
+          _buildBulletPoint(
+              'Delete your account in Settings → Delete Account'),
+          _buildBulletPoint(
+              'Contact us at jadwal.qrn@gmail.com to ask questions about your data'),
           _buildParagraph(
-            'Account Information: You may update, correct, or delete information about you at any time by logging into your online account and modifying your information or by emailing us. If you wish to delete your account, please email us, but note that we may retain certain information as required by law or for legitimate business purposes.',
+            'Depending on where you live, you may have additional rights under applicable privacy laws (for example access or deletion). Contact us to make a request.',
           ),
-          _buildSectionTitle('6. Changes to this Policy'),
+          _buildSectionTitle('6. Children’s Privacy'),
           _buildParagraph(
-            'We may change this Privacy Policy from time to time. If we make changes, we will notify you by revising the date at the top of the policy and, in some cases, we may provide you with additional notice (such as adding a statement to our website homepage or sending you a notification).',
+            'Jadwal is not directed at children under 13 (or the minimum age required in your country). We do not knowingly collect personal information from children under that age. If you believe a child has provided us personal information, contact us and we will take appropriate steps.',
           ),
-          _buildSectionTitle('7. Contact Us'),
+          _buildSectionTitle('7. Security'),
           _buildParagraph(
-            'If you have any questions about this Privacy Policy, please contact us at:',
+            'We use industry-standard services (including Firebase Authentication) and access controls to protect your information. No method of transmission or storage is 100% secure.',
           ),
-          _buildContactInfo('jadwal.qrn@gmail.com'),
+          _buildSectionTitle('8. International Processing'),
+          _buildParagraph(
+            'Our service providers may process data in the United Kingdom, European Economic Area, United States, or other countries. Where required, we rely on appropriate safeguards offered by those providers.',
+          ),
+          _buildSectionTitle('9. Changes to This Policy'),
+          _buildParagraph(
+            'We may update this Privacy Policy from time to time. We will revise the “Last updated” date and, where appropriate, provide additional notice in the app.',
+          ),
+          _buildSectionTitle('10. Contact Us'),
+          _buildParagraph(
+            'Questions about this Privacy Policy:',
+          ),
+          _buildContactInfo(context, 'jadwal.qrn@gmail.com'),
+          _buildContactInfo(context, 'https://www.jadwal.co.uk'),
         ],
       ),
     );
@@ -238,27 +284,66 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContactInfo(String text) {
+  Widget _buildContactInfo(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(left: 0, bottom: 5, top: 5),
-      child: Row(
-        children: [
-          Icon(
-            text.contains('@') ? Iconsax.sms : Iconsax.location,
-            size: 16,
-            color: const Color(0xFF4979FB),
+      child: InkWell(
+        onTap: () => _openContactLink(context, text),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Icon(
+                text.contains('@')
+                    ? Iconsax.sms
+                    : text.startsWith('http')
+                        ? Iconsax.link_1
+                        : Iconsax.location,
+                size: 16,
+                color: const Color(0xFF4979FB),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  text,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF4979FB),
+                    height: 1.5,
+                    decoration: TextDecoration.underline,
+                    decorationColor:
+                        const Color(0xFF4979FB).withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF4979FB),
-              height: 1.5,
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Future<void> _openContactLink(BuildContext context, String text) async {
+    final uri = text.contains('@')
+        ? Uri(scheme: 'mailto', path: text)
+        : Uri.parse(text);
+
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open link')),
+      );
+    }
   }
 }

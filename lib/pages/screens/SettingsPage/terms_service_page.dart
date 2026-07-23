@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TermsServicePage extends StatelessWidget {
   const TermsServicePage({super.key});
@@ -35,7 +36,6 @@ class TermsServicePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -84,7 +84,7 @@ class TermsServicePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Last updated: March 11, 2025',
+                              'Last updated: 23 July 2026',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.9),
@@ -96,10 +96,7 @@ class TermsServicePage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Terms of Service Content
                 _buildTermsContent(context),
               ],
             ),
@@ -126,60 +123,97 @@ class TermsServicePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle('1. Acceptance of Terms'),
           _buildParagraph(
-            'By accessing or using our services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing our services.',
+            'These Terms of Service (“Terms”) govern your use of the Jadwal mobile application and related services (the “Service”) operated by Jadwal.',
           ),
-          _buildSectionTitle('2. Use Licence'),
           _buildParagraph(
-            'Permission is granted to temporarily download one copy of the materials (information or software) on our app for personal, non-commercial transitory viewing only. This is the grant of a licence, not a transfer of title, and under this licence you may not:',
+            'By creating an account or using the Service, you agree to these Terms. If you do not agree, do not use the Service.',
           ),
-          _buildBulletPoint('Modify or copy the materials'),
+          _buildSectionTitle('1. The Service'),
+          _buildParagraph(
+            'Jadwal helps users organise Quran memorisation and revision, including scheduling, progress tracking, quizzes, and related educational features. Features may change, improve, or be discontinued over time.',
+          ),
+          _buildSectionTitle('2. Eligibility and Accounts'),
+          _buildParagraph(
+            'You must be at least 13 years old (or the minimum age in your country) to use the Service. You are responsible for:',
+          ),
+          _buildBulletPoint('Providing accurate registration information'),
+          _buildBulletPoint('Keeping your password confidential'),
+          _buildBulletPoint('All activity under your account'),
+          _buildParagraph(
+            'Notify us promptly if you suspect unauthorised access. We may suspend or terminate accounts that violate these Terms or put the Service or other users at risk.',
+          ),
+          _buildSectionTitle('3. Licence to Use the App'),
+          _buildParagraph(
+            'We grant you a personal, non-exclusive, non-transferable, revocable licence to use Jadwal for your own personal, non-commercial educational use, subject to these Terms.',
+          ),
+          _buildParagraph('You may not:'),
           _buildBulletPoint(
-              'Use the materials for any commercial purpose or for any public display'),
+              'Copy, modify, distribute, sell, or lease any part of the Service except as allowed by law'),
           _buildBulletPoint(
-              'Attempt to reverse engineer any software contained on our app'),
+              'Reverse engineer or attempt to extract source code except where mandatory law permits'),
+          _buildBulletPoint('Circumvent security or access controls'),
           _buildBulletPoint(
-              'Remove any copyright or other proprietary notations from the materials'),
+              'Use the Service to harm, harass, spam, or impersonate others'),
           _buildBulletPoint(
-              'Transfer the materials to another person or "mirror" the materials on any other server'),
-          _buildSectionTitle('3. User Accounts'),
+              'Misuse APIs, automated scraping, or overload our systems'),
+          _buildSectionTitle('4. Quran Content and Third-Party Materials'),
           _buildParagraph(
-            'To access certain features of our services, you may be required to create an account. You are responsible for maintaining the confidentiality of your account information, including your password, and for all activity that occurs under your account. You agree to notify us immediately of any unauthorised use of your account or password.',
+            'Quran text, mushaf layout, fonts, and related resources may be provided under licences from third parties (including Tanzil and QUL / related contributors). You may use that content only as presented in the app for personal study. Attribution appears in the app’s About / Credits section. We do not claim ownership of the Quranic revelation itself.',
           ),
-          _buildSectionTitle('4. User Content'),
+          _buildSectionTitle('5. User Content'),
           _buildParagraph(
-            'Our services may allow you to post, link, store, share and otherwise make available certain information, text, graphics, videos, or other material. You are responsible for the content that you post, including its legality, reliability, and appropriateness.',
+            'You may submit content such as profile information, memorisation plans, quiz recordings/transcriptions for assessment, feedback, and similar data (“User Content”).',
           ),
-          _buildSectionTitle('5. Prohibited Uses'),
           _buildParagraph(
-            'You may use our services only for lawful purposes and in accordance with these Terms. You agree not to use our services:',
+            'You retain ownership of your User Content. You grant us a limited licence to host, process, and use it solely to operate and improve the Service (for example storing progress, scoring quizzes, and reviewing feedback).',
           ),
-          _buildBulletPoint(
-              'In any way that violates any applicable law or regulation'),
-          _buildBulletPoint(
-              "To engage in any conduct that restricts or inhibits anyone's use of our services"),
-          _buildBulletPoint(
-              'To impersonate or attempt to impersonate our company, a company employee, another user, or any other person'),
-          _buildBulletPoint(
-              'To engage in any activity that could harm minors in any way'),
-          _buildSectionTitle('6. Changes to Terms'),
           _buildParagraph(
-            'We reserve the right to modify these terms at any time. We will notify you of any changes by posting the new Terms of Service on this page. You are advised to review these Terms periodically for any changes.',
+            'You are responsible for your User Content and must not submit unlawful, abusive, or infringing material.',
           ),
-          _buildSectionTitle('7. Termination'),
+          _buildSectionTitle('6. AI Features'),
           _buildParagraph(
-            'We may terminate or suspend your account and bar access to our services immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever, including without limitation if you breach the Terms.',
+            'Some features use artificial intelligence (including speech-to-text and quiz option generation). AI output may be imperfect. Recitation assessment and generated options are tools to support learning and are not a guarantee of correctness, religious ruling, or scholarly certification. Always verify important matters with qualified teachers where needed.',
           ),
-          _buildSectionTitle('8. Limitation of Liability'),
+          _buildSectionTitle('7. Notifications'),
           _buildParagraph(
-            'In no event shall our company, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use our services.',
+            'If you enable notifications, the app may schedule local reminders on your device. You can change or disable these in Settings (and in your device settings).',
           ),
-          _buildSectionTitle('9. Contact Us'),
+          _buildSectionTitle('8. Disclaimers'),
           _buildParagraph(
-            'If you have any questions about these Terms, please contact us at:',
+            'THE SERVICE IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT, TO THE MAXIMUM EXTENT PERMITTED BY LAW.',
           ),
-          _buildContactInfo('jadwal.qrn@gmail.com'),
+          _buildParagraph(
+            'We do not warrant that the Service will be uninterrupted, error-free, or free of harmful components, or that content (including AI assessments) will be accurate or complete.',
+          ),
+          _buildSectionTitle('9. Limitation of Liability'),
+          _buildParagraph(
+            'TO THE MAXIMUM EXTENT PERMITTED BY LAW, JADWAL AND ITS OPERATORS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, GOODWILL, OR OTHER INTANGIBLE LOSSES, ARISING FROM YOUR USE OF OR INABILITY TO USE THE SERVICE.',
+          ),
+          _buildParagraph(
+            'OUR TOTAL LIABILITY FOR ANY CLAIM ARISING OUT OF THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US FOR THE SERVICE IN THE 12 MONTHS BEFORE THE CLAIM, OR (B) £50.',
+          ),
+          _buildParagraph(
+            'Nothing in these Terms excludes liability that cannot be excluded under applicable law (including for death or personal injury caused by negligence, or fraud).',
+          ),
+          _buildSectionTitle('10. Termination'),
+          _buildParagraph(
+            'You may stop using the Service and delete your account at any time in the app. We may suspend or terminate access if you breach these Terms or if we discontinue the Service. Upon termination, your licence ends; sections that by nature should survive (including disclaimers, liability limits, and intellectual property) will survive.',
+          ),
+          _buildSectionTitle('11. Changes'),
+          _buildParagraph(
+            'We may update these Terms from time to time. We will update the “Last updated” date and may provide notice in the app. Continued use after changes means you accept the revised Terms.',
+          ),
+          _buildSectionTitle('12. Governing Law'),
+          _buildParagraph(
+            'These Terms are governed by the laws of England and Wales, without regard to conflict-of-law rules. Courts of England and Wales shall have exclusive jurisdiction, except where mandatory consumer protections in your country give you other rights.',
+          ),
+          _buildSectionTitle('13. Contact'),
+          _buildParagraph(
+            'Questions about these Terms:',
+          ),
+          _buildContactInfo(context, 'jadwal.qrn@gmail.com'),
+          _buildContactInfo(context, 'https://www.jadwal.co.uk'),
         ],
       ),
     );
@@ -244,27 +278,66 @@ class TermsServicePage extends StatelessWidget {
     );
   }
 
-  Widget _buildContactInfo(String text) {
+  Widget _buildContactInfo(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(left: 0, bottom: 5, top: 5),
-      child: Row(
-        children: [
-          Icon(
-            Iconsax.sms,
-            size: 16,
-            color: const Color(0xFF4979FB),
+      child: InkWell(
+        onTap: () => _openContactLink(context, text),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Icon(
+                text.contains('@')
+                    ? Iconsax.sms
+                    : text.startsWith('http')
+                        ? Iconsax.link_1
+                        : Iconsax.sms,
+                size: 16,
+                color: const Color(0xFF4979FB),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  text,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF4979FB),
+                    height: 1.5,
+                    decoration: TextDecoration.underline,
+                    decorationColor:
+                        const Color(0xFF4979FB).withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF4979FB),
-              height: 1.5,
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Future<void> _openContactLink(BuildContext context, String text) async {
+    final uri = text.contains('@')
+        ? Uri(scheme: 'mailto', path: text)
+        : Uri.parse(text);
+
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open link')),
+      );
+    }
   }
 }
