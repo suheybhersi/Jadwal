@@ -197,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildSettingCard([
                   _buildSettingTile(
                     icon: Iconsax.chart,
-                    title: 'Memorization Mode',
+                    title: 'Memorisation Mode',
                     description: 'Choose how structured your experience is',
                     onTap: () {
                       Navigator.push(

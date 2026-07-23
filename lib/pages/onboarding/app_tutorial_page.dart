@@ -20,35 +20,35 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
       icon: Iconsax.home,
       title: 'Home Dashboard',
       description:
-          'Your home screen shows upcoming memorization tasks, reviews, and your weekly schedule. Tap on any day to see detailed tasks.',
+          'Your home screen shows upcoming memorisation tasks, reviews, and your weekly schedule. Tap on any day to see detailed tasks.',
       color: const Color(0xFF4979FB),
     ),
     TutorialPageData(
       icon: Iconsax.book_1,
       title: 'Digital Mushaf',
       description:
-          'Read and navigate through the complete Quran. Use this to memorize your assigned verses and review what you\'ve learned.',
+          'Read and navigate through the complete Quran. Use this to memorise your assigned verses and review what you\'ve learned.',
       color: const Color(0xFF10B981),
     ),
     TutorialPageData(
       icon: Iconsax.document_text,
       title: 'Your Plan',
       description:
-          'View your memorization plan details, progress, and completed memorizations. Edit your plan anytime from here.',
+          'View your memorisation plan details, progress, and completed memorisations. Edit your plan anytime from here.',
       color: const Color(0xFFF59E0B),
     ),
     TutorialPageData(
       icon: Iconsax.document_text,
       title: 'Quizzes & Reviews',
       description:
-          'Test your memorization with custom quizzes or scheduled reviews. Choose from multiple question types to practice.',
+          'Test your memorisation with custom quizzes or scheduled reviews. Choose from multiple question types to practise.',
       color: const Color(0xFFEF4444),
     ),
     TutorialPageData(
       icon: Iconsax.profile_circle,
       title: 'Profile & Achievements',
       description:
-          'Track your progress, view achievements, and see your memorization statistics. Celebrate your milestones!',
+          'Track your progress, view achievements, and see your memorisation statistics. Celebrate your milestones!',
       color: const Color(0xFF8B5CF6),
     ),
   ];

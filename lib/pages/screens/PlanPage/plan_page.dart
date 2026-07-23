@@ -111,7 +111,7 @@ class _PlanPageState extends State<PlanPage> {
                 tooltipId: 'edit_plan_button',
                 title: 'Edit Your Plan',
                 description:
-                    'Tap here to modify your memorization plan, change schedule, or update your progress.',
+                    'Tap here to modify your memorisation plan, change schedule, or update your progress.',
                 globalKey: _editPlanKey,
                 child: editButton,
               ),

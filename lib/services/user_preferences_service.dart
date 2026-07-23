@@ -301,9 +301,9 @@ class UserPreferencesService with ChangeNotifier {
   static String getModeDescription(UsageMode mode) {
     switch (mode) {
       case UsageMode.flexible:
-        return 'Just track your progress when you memorize';
+        return 'Just track your progress when you memorise';
       case UsageMode.intensive:
-        return 'Full memorization system with reviews and statistics';
+        return 'Full memorisation system with reviews and statistics';
     }
   }
 

@@ -34,7 +34,7 @@ class _UsageModePageState extends State<UsageModePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Text(
-          'Memorization Mode',
+          'Memorisation Mode',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             fontSize: 22,
@@ -108,7 +108,7 @@ class _UsageModePageState extends State<UsageModePage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'How structured should your memorization be?',
+                                  'How structured should your memorisation be?',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     color: Colors.white.withValues(alpha: 0.9),

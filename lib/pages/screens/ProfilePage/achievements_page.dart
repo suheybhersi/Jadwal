@@ -74,7 +74,7 @@ class AchievementsPage extends StatelessWidget {
             _createAchievementData(
               id: 'firstVerses',
               title: 'First Verses',
-              description: 'Memorize your first verses',
+              description: 'Memorise your first verses',
               requirements: 'Add at least one hifdh entry',
               progressData: {
                 'current': achievementsData['totalHifdhs'] ?? 0,
@@ -188,8 +188,8 @@ class AchievementsPage extends StatelessWidget {
             _createAchievementData(
               id: 'progress25',
               title: '25% Complete',
-              description: 'Complete 25% of your memorization plan',
-              requirements: 'Reach 25% completion of your memorization plan',
+              description: 'Complete 25% of your memorisation plan',
+              requirements: 'Reach 25% completion of your memorisation plan',
               progressData: {
                 'current': achievementsData['planProgress'] ?? 0,
                 'target': 25,
@@ -246,8 +246,8 @@ class AchievementsPage extends StatelessWidget {
             _createAchievementData(
               id: 'progress50',
               title: '50% Complete',
-              description: 'Complete 50% of your memorization plan',
-              requirements: 'Reach 50% completion of your memorization plan',
+              description: 'Complete 50% of your memorisation plan',
+              requirements: 'Reach 50% completion of your memorisation plan',
               progressData: {
                 'current': achievementsData['planProgress'] ?? 0,
                 'target': 50,
@@ -275,8 +275,8 @@ class AchievementsPage extends StatelessWidget {
             _createAchievementData(
               id: 'progress75',
               title: '75% Complete',
-              description: 'Complete 75% of your memorization plan',
-              requirements: 'Reach 75% completion of your memorization plan',
+              description: 'Complete 75% of your memorisation plan',
+              requirements: 'Reach 75% completion of your memorisation plan',
               progressData: {
                 'current': achievementsData['planProgress'] ?? 0,
                 'target': 75,

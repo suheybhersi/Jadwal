@@ -203,7 +203,7 @@ class WeekDaysSection extends StatelessWidget {
                         tooltipId: 'tap_day_this_week',
                         title: 'Tap Any Day',
                         description:
-                            'Tap on any day in "This Week" to see detailed tasks, memorization assignments, and reviews for that day.',
+                            'Tap on any day in "This Week" to see detailed tasks, memorisation assignments, and reviews for that day.',
                         globalKey: dayKey,
                         child: dayWidget,
                       );

@@ -143,7 +143,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
               // Content
               Text(
-                'This will erase ALL your memorization progress, including hifdh records, reviews, and statistics.',
+                'This will erase ALL your memorisation progress, including hifdh records, reviews, and statistics.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: Theme.of(context)

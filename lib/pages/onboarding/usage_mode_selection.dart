@@ -43,7 +43,7 @@ class _UsageModeSelectionPageState extends State<UsageModeSelectionPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Everyone memorizes differently. How would you like Jadwal to support you?',
+                'Everyone memorises differently. How would you like Jadwal to support you?',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   color: Colors.grey[600],

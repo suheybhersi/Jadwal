@@ -326,7 +326,7 @@ class _MushafContentState extends State<MushafContent> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                       content: Text(
-                          'No memorization plan found. Start a plan to continue reading.')),
+                          'No memorisation plan found. Start a plan to continue reading.')),
                 );
               }
             },

@@ -21,7 +21,7 @@ class CompletionFeedbackService {
     // Build statistics list based on preferences
     final statistics = <StatisticItem>[
       StatisticItem(
-        label: 'Lines Memorized',
+        label: 'Lines Memorised',
         value: '$lines',
         icon: Iconsax.document,
       ),
@@ -41,8 +41,8 @@ class CompletionFeedbackService {
 
     await showCelebrationDialog(
       context: context,
-      title: 'Memorization Complete! 🎉',
-      message: 'Great job! You\'ve memorized $surah $verses',
+      title: 'Memorisation Complete! 🎉',
+      message: 'Great job! You\'ve memorised $surah $verses',
       subtitle: 'Keep up the excellent work!',
       icon: Iconsax.book_1,
       color: const Color(0xFF4979FB),
@@ -68,7 +68,7 @@ class CompletionFeedbackService {
 
     if (status == 'success') {
       title = 'Review Mastered! 🌟';
-      message = 'Excellent! This verse is now fully memorized.';
+      message = 'Excellent! This verse is now fully memorised.';
       icon = Iconsax.tick_circle;
       color = const Color(0xFF10B981); // Green
       statistics = [
@@ -84,7 +84,7 @@ class CompletionFeedbackService {
         ),
       ];
     } else if (status == 'fail') {
-      title = 'Keep Practicing 💪';
+      title = 'Keep Practising 💪';
       message =
           'Don\'t worry! This verse has been rescheduled for more practice.';
       icon = Iconsax.refresh;
@@ -162,11 +162,11 @@ class CompletionFeedbackService {
       color = const Color(0xFF4979FB); // Blue
     } else if (percentage >= 50) {
       title = 'Good Effort! 💪';
-      message = 'Nice work! Keep practicing to improve!';
+      message = 'Nice work! Keep practising to improve!';
       icon = Iconsax.like;
       color = const Color(0xFFF59E0B); // Orange
     } else {
-      title = 'Keep Practicing! 📚';
+      title = 'Keep Practising! 📚';
       message = 'Don\'t give up! Review and try again!';
       icon = Iconsax.refresh;
       color = const Color(0xFFEF4444); // Red

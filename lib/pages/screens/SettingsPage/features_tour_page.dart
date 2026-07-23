@@ -91,10 +91,10 @@ class FeaturesTourPage extends StatelessWidget {
                 icon: Iconsax.home,
                 title: 'Home Dashboard',
                 description:
-                    'View your upcoming memorization tasks, scheduled reviews, and weekly schedule. Tap any day to see detailed tasks.',
+                    'View your upcoming memorisation tasks, scheduled reviews, and weekly schedule. Tap any day to see detailed tasks.',
                 color: const Color(0xFF4979FB),
                 features: [
-                  'Upcoming memorization tasks',
+                  'Upcoming memorisation tasks',
                   'Scheduled reviews (Intensive mode)',
                   'Weekly calendar view',
                   'Quick access to daily tasks',
@@ -108,7 +108,7 @@ class FeaturesTourPage extends StatelessWidget {
                 icon: Iconsax.book_1,
                 title: 'Digital Mushaf',
                 description:
-                    'Read and navigate through the complete Quran with authentic page layout. Perfect for memorization and review.',
+                    'Read and navigate through the complete Quran with authentic page layout. Perfect for memorisation and review.',
                 color: const Color(0xFF10B981),
                 features: [
                   'Complete Quran text',
@@ -125,7 +125,7 @@ class FeaturesTourPage extends StatelessWidget {
                 icon: Iconsax.document_text,
                 title: 'Interactive Quizzes',
                 description:
-                    'Test your memorization with multiple question types. Create custom quizzes or take scheduled reviews.',
+                    'Test your memorisation with multiple question types. Create custom quizzes or take scheduled reviews.',
                 color: const Color(0xFFEF4444),
                 features: [
                   'Fill in the blank',
@@ -143,7 +143,7 @@ class FeaturesTourPage extends StatelessWidget {
                 icon: Iconsax.document_text,
                 title: 'Plan Management',
                 description:
-                    'Create and manage your memorization plan. Track progress, view completed memorizations, and edit your schedule.',
+                    'Create and manage your memorisation plan. Track progress, view completed memorisations, and edit your schedule.',
                 color: const Color(0xFFF59E0B),
                 features: [
                   'Custom start/end points',
@@ -160,7 +160,7 @@ class FeaturesTourPage extends StatelessWidget {
                 icon: Iconsax.profile_circle,
                 title: 'Profile & Achievements',
                 description:
-                    'Track your progress, view achievements, and see detailed statistics about your memorization journey.',
+                    'Track your progress, view achievements, and see detailed statistics about your memorisation journey.',
                 color: const Color(0xFF8B5CF6),
                 features: [
                   'Progress statistics',
@@ -175,9 +175,9 @@ class FeaturesTourPage extends StatelessWidget {
               _buildFeatureCard(
                 context: context,
                 icon: Iconsax.setting,
-                title: 'Customization',
+                title: 'Customisation',
                 description:
-                    'Customize your experience with different memorization modes, themes, and notification preferences.',
+                    'Customise your experience with different memorisation modes, themes, and notification preferences.',
                 color: const Color(0xFF6366F1),
                 features: [
                   'Flexible or Intensive mode',

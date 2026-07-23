@@ -73,11 +73,11 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
       resultColor = Colors.blue.shade700;
       resultIcon = Icons.thumb_up;
     } else if (percentage >= 50) {
-      resultMessage = 'Good effort! Practice more!';
+      resultMessage = 'Good effort! Practise more!';
       resultColor = Colors.amber.shade700;
       resultIcon = Icons.trending_up;
     } else {
-      resultMessage = 'Keep practicing! You can do better!';
+      resultMessage = 'Keep practising! You can do better!';
       resultColor = Colors.red.shade700;
       resultIcon = Icons.refresh;
     }
