@@ -7,7 +7,19 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaywallPage extends StatefulWidget {
-  const PaywallPage({super.key});
+  const PaywallPage({
+    super.key,
+    this.softOffer = false,
+    this.onFinished,
+  });
+
+  /// When true, show trial-focused copy and a "Not now" action.
+  /// Used once during first-run onboarding.
+  final bool softOffer;
+
+  /// Called when the user dismisses (Not now / close) or finishes a purchase
+  /// while [softOffer] is true. When null, falls back to Navigator.pop.
+  final VoidCallback? onFinished;
 
   @override
   State<PaywallPage> createState() => _PaywallPageState();
@@ -39,6 +51,18 @@ class _PaywallPageState extends State<PaywallPage> {
     }
   }
 
+  void _finish([bool purchased = false]) {
+    if (widget.softOffer && widget.onFinished != null) {
+      widget.onFinished!();
+      return;
+    }
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(purchased);
+    } else if (widget.onFinished != null) {
+      widget.onFinished!();
+    }
+  }
+
   Future<void> _purchase() async {
     final sub = context.read<SubscriptionService>();
     final package =
@@ -55,7 +79,7 @@ class _PaywallPageState extends State<PaywallPage> {
     final ok = await sub.purchase(package);
     if (!mounted) return;
     if (ok) {
-      Navigator.of(context).pop(true);
+      _finish(true);
     } else if (!sub.lastPurchaseCancelled) {
       setState(() {
         _error = sub.isPro
@@ -74,7 +98,7 @@ class _PaywallPageState extends State<PaywallPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Subscription restored')),
       );
-      Navigator.of(context).pop(true);
+      _finish(true);
     } else {
       setState(() => _error = 'No active subscription found to restore.');
     }
@@ -139,13 +163,13 @@ class _PaywallPageState extends State<PaywallPage> {
                       minHeight: 40,
                     ),
                     icon: Icon(Icons.close, color: textColor),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => _finish(false),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Text(
-                'Jadwal Pro',
+                widget.softOffer ? 'Try Jadwal Pro free' : 'Jadwal Pro',
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -154,7 +178,9 @@ class _PaywallPageState extends State<PaywallPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Unlimited quizzes, AI fill-in-the-blank, and speech practice.',
+                widget.softOffer
+                    ? 'Start a 7-day free trial. Unlimited quizzes, AI fill-in-the-blank, and speech practice.'
+                    : 'Unlimited quizzes, AI fill-in-the-blank, and speech practice.',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: Colors.grey.shade600,
@@ -265,7 +291,9 @@ class _PaywallPageState extends State<PaywallPage> {
                               ? 'You\'re on Pro'
                               : sub.isPro
                                   ? 'Switch plan'
-                                  : 'Continue',
+                                  : widget.softOffer
+                                      ? 'Start free trial'
+                                      : 'Continue',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
@@ -273,6 +301,19 @@ class _PaywallPageState extends State<PaywallPage> {
                         ),
                 ),
               ),
+              if (widget.softOffer) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: sub.isLoading ? null : () => _finish(false),
+                  child: Text(
+                    'Not now',
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               TextButton(
                 onPressed: sub.isLoading ? null : _restore,

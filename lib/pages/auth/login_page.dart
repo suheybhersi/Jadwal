@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/my_textfield.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 import 'package:jadwal/services/firestore.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,60 +20,22 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // Add state variable to track password visibility
   bool _obscurePassword = true;
 
   void showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Error',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              'Close',
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
-        ],
-      ),
+    showAuthAlertDialog(
+      context,
+      title: 'Error',
+      message: message,
     );
   }
 
   void showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Check your email',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              'OK',
-              style: TextStyle(color: Color.fromARGB(255, 73, 121, 251)),
-            ),
-          ),
-        ],
-      ),
+    showAuthAlertDialog(
+      context,
+      title: 'Check your email',
+      message: message,
+      actionLabel: 'OK',
     );
   }
 
@@ -93,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
       barrierDismissible: false,
       builder: (context) {
         return const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(color: kAuthBrandBlue),
         );
       },
     );
@@ -101,17 +64,16 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
       showSuccessDialog(
         'If an account exists for $email, you\'ll receive a password reset link shortly.',
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
       if (e.code == 'invalid-email') {
         showErrorDialog('Please enter a valid email address.');
       } else if (e.code == 'user-not-found') {
-        // Avoid account enumeration; same success message as happy path
         showSuccessDialog(
           'If an account exists for $email, you\'ll receive a password reset link shortly.',
         );
@@ -134,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
         barrierDismissible: false,
         builder: (context) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(color: kAuthBrandBlue),
           );
         },
       );
@@ -156,11 +118,11 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
-        Navigator.of(context).pop(); // Navigate to next screen
+        Navigator.pop(context);
+        Navigator.of(context).pop();
       } on FirebaseAuthException catch (e) {
         if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context);
         if (e.code == 'invalid-email' ||
             e.code == 'invalid-credential' ||
             e.code == 'wrong-password') {
@@ -174,189 +136,104 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    Image(
-                        height: 150, image: AssetImage('assets/app_logo.png')),
-                    SizedBox(height: 16),
-                    Text(
-                      'Welcome back',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                        letterSpacing: 0.5,
-                      ),
+    return AuthGradientScaffold(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          children: [
+            const AuthHeader(
+              title: 'Welcome back',
+              subtitle: 'Log in to continue your memorisation journey.',
+              logoHeight: 64,
+            ),
+            const SizedBox(height: 36),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  MyTextField(
+                    controller: emailController,
+                    hintText: 'Email',
+                    prefixIcon: Icon(
+                      Iconsax.direct_right,
+                      color: Colors.grey.shade600,
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Log in to your account',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 12,
-                        letterSpacing: 0.5,
-                      ),
+                    suffixIcon: null,
+                    obscureText: false,
+                    validator: (value) {
+                      final email = value?.trim() ?? '';
+                      if (email.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(
+                              r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
+                          .hasMatch(email)) {
+                        return 'Enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  MyTextField(
+                    controller: passwordController,
+                    hintText: 'Password',
+                    prefixIcon: Icon(
+                      Iconsax.password_check,
+                      color: Colors.grey.shade600,
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        MyTextField(
-                          controller: emailController,
-                          hintText: 'Email',
-                          prefixIcon: Icon(Iconsax.direct_right,
-                              color: Colors.grey.shade600),
-                          suffixIcon: null,
-                          obscureText: false,
-                          validator: (value) {
-                            final email = value?.trim() ?? '';
-                            if (email.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!RegExp(
-                                    r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$')
-                                .hasMatch(email)) {
-                              return 'Enter a valid email address';
-                            }
-                            return null;
-                          },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Iconsax.eye_slash : Iconsax.eye,
+                        color: Colors.grey.shade600,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    obscureText: _obscurePassword,
+                    validator: (value) {
+                      final password = value ?? '';
+                      if (password.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (password.length < 6) {
+                        return 'Password must be at least 6 characters long';
+                      }
+                      return null;
+                    },
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: resetPassword,
+                      child: Text(
+                        'Forgot password?',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: kAuthBrandBlue,
                         ),
-                        SizedBox(height: 16),
-                        MyTextField(
-                          controller: passwordController,
-                          hintText: 'Password',
-                          prefixIcon: Icon(Iconsax.password_check,
-                              color: Colors.grey.shade600),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Iconsax.eye_slash
-                                  : Iconsax.eye,
-                              color: Colors.grey.shade600,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          obscureText: _obscurePassword,
-                          validator: (value) {
-                            final password = value ?? '';
-                            if (password.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            if (password.length < 6) {
-                              return 'Password must be at least 6 characters long';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: resetPassword,
-                              child: Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                        SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              elevation: WidgetStateProperty.all(0),
-                              padding: WidgetStateProperty.all(
-                                EdgeInsets.symmetric(
-                                  horizontal: 75,
-                                  vertical: 16,
-                                ),
-                              ),
-                              backgroundColor: WidgetStateProperty.all(
-                                Color.fromARGB(255, 73, 121, 251),
-                              ),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.0),
-                                ),
-                              ),
-                            ),
-                            onPressed: signUserIn,
-                            child: Text(
-                              'Login',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            style: ButtonStyle(
-                              elevation: WidgetStateProperty.all(0),
-                              side: WidgetStateProperty.all(
-                                BorderSide(
-                                  width: 1,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                              padding: WidgetStateProperty.all(
-                                EdgeInsets.symmetric(
-                                  horizontal: 75,
-                                  vertical: 16,
-                                ),
-                              ),
-                              backgroundColor:
-                                  WidgetStateProperty.all(Colors.transparent),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                              ),
-                            ),
-                            onPressed: widget.onTap,
-                            child: Text(
-                              'Create Account',
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
-                                  fontSize: 16),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  AuthPrimaryButton(
+                    label: 'Log in',
+                    onPressed: signUserIn,
+                  ),
+                  const SizedBox(height: 28),
+                  AuthSwitchPrompt(
+                    prompt: "Don't have an account?",
+                    actionLabel: 'Sign up',
+                    onTap: widget.onTap,
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -398,10 +275,11 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
-        'Forgot Password',
+        'Forgot password',
         style: GoogleFonts.poppins(
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -413,9 +291,10 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           children: [
             Text(
               'Enter your account email and we\'ll send you a link to reset your password.',
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.grey.shade600,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: 16),
@@ -425,9 +304,23 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Email',
+                hintStyle: GoogleFonts.poppins(
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
                 prefixIcon: Icon(
                   Iconsax.direct_right,
                   color: Colors.grey.shade600,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: kAuthBrandBlue),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -453,7 +346,10 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             'Cancel',
-            style: TextStyle(color: Colors.grey.shade600),
+            style: GoogleFonts.poppins(
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         TextButton(
@@ -464,7 +360,10 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           },
           child: Text(
             'Send link',
-            style: TextStyle(color: Color.fromARGB(255, 73, 121, 251)),
+            style: GoogleFonts.poppins(
+              color: kAuthBrandBlue,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

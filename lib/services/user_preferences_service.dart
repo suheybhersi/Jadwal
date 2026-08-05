@@ -17,6 +17,7 @@ class UserPreferencesService with ChangeNotifier {
   bool _showMissedItems = true;
   bool _hasCompletedModeSelection = false;
   bool _hasCompletedNotificationOnboarding = false;
+  bool _hasSeenTrialPaywall = false;
   /// When true, "What comes next" (recitation) questions appear in quizzes. Beta feature.
   bool _enableWhatComesNext = true;
 
@@ -54,6 +55,7 @@ class UserPreferencesService with ChangeNotifier {
         // Reset to defaults when logged out
         _hasCompletedModeSelection = false;
         _hasCompletedNotificationOnboarding = false;
+        _hasSeenTrialPaywall = false;
         notifyListeners();
       }
     });
@@ -67,6 +69,7 @@ class UserPreferencesService with ChangeNotifier {
   bool get hasCompletedModeSelection => _hasCompletedModeSelection;
   bool get hasCompletedNotificationOnboarding =>
       _hasCompletedNotificationOnboarding;
+  bool get hasSeenTrialPaywall => _hasSeenTrialPaywall;
   /// When true, "What comes next" (recitation) questions appear in quizzes. Beta feature.
   bool get enableWhatComesNext => _enableWhatComesNext;
   /// True after initial prefs (and Firestore for logged-in user) have been loaded; avoids flashing mode/tutorial screens.
@@ -110,6 +113,12 @@ class UserPreferencesService with ChangeNotifier {
         prefs.getBool('hasCompletedModeSelection') ?? false;
     _hasCompletedNotificationOnboarding =
         prefs.getBool('hasCompletedNotificationOnboarding') ?? false;
+    if (prefs.containsKey('hasSeenTrialPaywall')) {
+      _hasSeenTrialPaywall = prefs.getBool('hasSeenTrialPaywall') ?? false;
+    } else {
+      // Existing users who already finished setup before this feature: don't show.
+      _hasSeenTrialPaywall = _hasCompletedNotificationOnboarding;
+    }
     _enableWhatComesNext = prefs.getBool('enableWhatComesNext') ?? true;
 
     // Override some settings based on mode
@@ -138,6 +147,14 @@ class UserPreferencesService with ChangeNotifier {
           _hasCompletedNotificationOnboarding =
               userProfile['hasCompletedNotificationOnboarding'] as bool? ??
                   false;
+        }
+
+        if (userProfile.containsKey('hasSeenTrialPaywall')) {
+          _hasSeenTrialPaywall =
+              userProfile['hasSeenTrialPaywall'] as bool? ?? false;
+        } else if (_hasCompletedNotificationOnboarding) {
+          // Existing users: treat as already seen so we don't interrupt them.
+          _hasSeenTrialPaywall = true;
         }
         
         // Load usage mode from Firestore if available
@@ -182,6 +199,7 @@ class UserPreferencesService with ChangeNotifier {
     await prefs.setBool('hasCompletedModeSelection', _hasCompletedModeSelection);
      await prefs.setBool('hasCompletedNotificationOnboarding',
         _hasCompletedNotificationOnboarding);
+    await prefs.setBool('hasSeenTrialPaywall', _hasSeenTrialPaywall);
     await prefs.setBool('enableWhatComesNext', _enableWhatComesNext);
   }
 
@@ -262,6 +280,25 @@ class UserPreferencesService with ChangeNotifier {
       } catch (e) {
         debugPrint(
             'Error saving notification onboarding status to Firestore: $e');
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /// Soft trial paywall shown once after first setup. Safe to call multiple times.
+  Future<void> markTrialPaywallSeen() async {
+    if (_hasSeenTrialPaywall) return;
+    _hasSeenTrialPaywall = true;
+    await _savePreferences();
+
+    if (_firestoreService != null) {
+      try {
+        await _firestoreService!.updateUserProfile({
+          'hasSeenTrialPaywall': true,
+        });
+      } catch (e) {
+        debugPrint('Error saving trial paywall status to Firestore: $e');
       }
     }
 

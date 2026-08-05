@@ -9,6 +9,7 @@ import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
 import 'package:jadwal/pages/onboarding/notification_onboarding_page.dart';
+import 'package:jadwal/pages/screens/PaywallPage/paywall_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
@@ -189,6 +190,22 @@ class AuthPage extends StatelessWidget {
                       return NotificationOnboardingPage(
                         onComplete: () {
                           (context as Element).markNeedsBuild();
+                        },
+                      );
+                    }
+
+                    // Soft 7-day trial offer once after first setup (skippable).
+                    final subscription =
+                        context.watch<SubscriptionService>();
+                    if (!prefsService.hasSeenTrialPaywall &&
+                        !subscription.isPro) {
+                      return PaywallPage(
+                        softOffer: true,
+                        onFinished: () async {
+                          await prefsService.markTrialPaywallSeen();
+                          if (context.mounted) {
+                            (context as Element).markNeedsBuild();
+                          }
                         },
                       );
                     }

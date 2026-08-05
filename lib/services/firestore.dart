@@ -2213,7 +2213,6 @@ class FirestoreService extends ChangeNotifier {
   /*---------------------------------------D E L E T E   U S E R   A C C O U N T----------------------------------------*/
   Future<void> deleteUserAccount() async {
     try {
-      // Store user reference before logging out
       final String userId = uid;
       final DocumentReference userDocRef = usersCollection.doc(userId);
       final CollectionReference userPlansCollection =
@@ -2234,8 +2233,10 @@ class FirestoreService extends ChangeNotifier {
           userDocRef.collection('feedback');
       final CollectionReference userWirdCollection =
           userDocRef.collection('wird');
+      final CollectionReference userLoginActivityCollection =
+          userDocRef.collection('loginActivity');
 
-      // Get all documents from subcollections
+      // Fetch subcollections while still authenticated.
       final plansSnapshot = await userPlansCollection.get();
       final hifdhsSnapshot = await userHifdhsCollection.get();
       final reviewsSnapshot = await userReviewsCollection.get();
@@ -2245,56 +2246,38 @@ class FirestoreService extends ChangeNotifier {
       final achievementsSnapshot = await userAchievementsCollection.get();
       final feedbackSnapshot = await userFeedbackCollection.get();
       final wirdsSnapshot = await userWirdCollection.get();
-      // Delete the user document itself
+      final loginActivitySnapshot = await userLoginActivityCollection.get();
+
+      // Delete subcollections first, then the user doc, then Auth.
+      // Auth must be last — once the Auth user is gone, Firestore rules deny writes.
+      Future<void> deleteAll(QuerySnapshot snapshot) async {
+        for (final doc in snapshot.docs) {
+          await doc.reference.delete();
+        }
+      }
+
+      await deleteAll(plansSnapshot);
+      await deleteAll(hifdhsSnapshot);
+      await deleteAll(reviewsSnapshot);
+      await deleteAll(weeksSnapshot);
+      await deleteAll(surahsProgressSnapshot);
+      await deleteAll(quizHistorySnapshot);
+      await deleteAll(achievementsSnapshot);
+      await deleteAll(feedbackSnapshot);
+      await deleteAll(wirdsSnapshot);
+      await deleteAll(loginActivitySnapshot);
+
       await userDocRef.delete();
 
-      // Then delete the Firebase Auth user
       final User? currentUser = auth.currentUser;
       if (currentUser != null) {
         await currentUser.delete();
-      }
-
-      // Delete all documents in each subcollection
-      for (var doc in plansSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in hifdhsSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in reviewsSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in weeksSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in surahsProgressSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in quizHistorySnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in achievementsSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in feedbackSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      for (var doc in wirdsSnapshot.docs) {
-        await doc.reference.delete();
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error deleting user account: $e');
       }
-      rethrow; // Rethrow to handle in the UI
+      rethrow;
     }
   }
 
