@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Create CI env file
+        run: cp -n .env.example .env || true
+
       - name: Analyze
         run: dart analyze
 
