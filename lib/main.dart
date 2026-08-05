@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/firebase_options.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
+import 'package:jadwal/services/auth_state_service.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
@@ -51,29 +52,25 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ConnectivityService()),
-        ChangeNotifierProxyProvider<ConnectivityService, FirestoreService>(
+        ChangeNotifierProvider(create: (context) => AuthStateService()),
+        ChangeNotifierProxyProvider2<ConnectivityService, AuthStateService,
+            FirestoreService>(
           create: (context) => FirestoreService(
             auth: FirebaseAuth.instance,
             uid: FirebaseAuth.instance.currentUser?.uid ?? '',
             connectivityService:
                 Provider.of<ConnectivityService>(context, listen: false),
           ),
-          update: (context, connectivityService, previous) {
-            final currentUser = FirebaseAuth.instance.currentUser;
-            if (currentUser == null) {
-              // Return a placeholder service if no user is logged in yet
-              return previous ??
-                  FirestoreService(
-                    auth: FirebaseAuth.instance,
-                    uid: '',
-                    connectivityService: connectivityService,
-                  );
+          update: (context, connectivityService, authState, previous) {
+            final uid = authState.uid;
+            // Reuse the same instance when the signed-in user hasn't changed.
+            if (previous != null && previous.uid == uid) {
+              return previous;
             }
-
-            // Update with current user info
+            previous?.dispose();
             return FirestoreService(
               auth: FirebaseAuth.instance,
-              uid: currentUser.uid,
+              uid: uid,
               connectivityService: connectivityService,
             );
           },

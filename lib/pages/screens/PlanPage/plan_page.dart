@@ -6,7 +6,6 @@ import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/screens/PlanPage/edit_plan_page.dart';
 import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
@@ -119,22 +118,6 @@ class _PlanPageState extends State<PlanPage> {
             );
           },
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10, top: 10),
-            child: IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsPage(),
-                  ),
-                );
-              },
-              icon: const Icon(Iconsax.setting_2),
-            ),
-          ),
-        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getPlansStream(),

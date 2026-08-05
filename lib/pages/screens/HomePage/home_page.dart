@@ -2,12 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/firestore_error_view.dart';
+import 'package:jadwal/components/pro_upgrade_banner.dart';
 import 'package:jadwal/pages/screens/HomePage/week_days_section.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/HomePage/upcoming_section.dart';
 import 'package:jadwal/pages/screens/HomePage/create_wird_page.dart';
 import 'package:jadwal/pages/screens/HomePage/wird_section.dart';
-import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:jadwal/services/subscription_service.dart';
@@ -385,6 +385,8 @@ class _HomePageState extends State<HomePage> {
                                                     ),
                                                   ),
                                                 ),
+                                                const SizedBox(width: 6),
+                                                const ProUpgradeChip(),
                                               ],
                                             ),
                                             FutureBuilder<
@@ -414,30 +416,7 @@ class _HomePageState extends State<HomePage> {
                                         );
                                       },
                                     ),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        _buildDailyReadingButton(context),
-                                        IconButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const SettingsPage(),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(
-                                            Iconsax.setting_2,
-                                          ),
-                                          style: IconButton.styleFrom(
-                                            padding: const EdgeInsets.all(8),
-                                            minimumSize: const Size(40, 40),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    _buildDailyReadingButton(context),
                                   ],
                                 ),
                               ),
@@ -533,27 +512,7 @@ class _HomePageState extends State<HomePage> {
                     return const SizedBox.shrink();
                   },
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildDailyReadingButton(context),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsPage(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Iconsax.setting_2),
-                      style: IconButton.styleFrom(
-                        padding: const EdgeInsets.all(8),
-                        minimumSize: const Size(40, 40),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildDailyReadingButton(context),
               ],
             ),
           ),

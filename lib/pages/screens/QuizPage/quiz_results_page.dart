@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:jadwal/components/pro_upgrade_banner.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
+import 'package:jadwal/services/subscription_service.dart';
 
 class QuizResultsPage extends StatefulWidget {
   final int score;
@@ -341,6 +343,22 @@ class QuizResultsPageState extends State<QuizResultsPage> {
                       ),
 
                       const SizedBox(height: 24),
+
+                      Consumer<SubscriptionService>(
+                        builder: (context, sub, _) {
+                          if (sub.isPro) return const SizedBox.shrink();
+                          final remaining = sub.quizzesRemainingToday;
+                          return ProUpgradeBanner(
+                            compact: true,
+                            title: remaining <= 0
+                                ? 'Out of free quizzes — go Pro'
+                                : remaining == 1
+                                    ? '1 free quiz left today — go Pro'
+                                    : '$remaining free quizzes left — go Pro',
+                            margin: const EdgeInsets.only(bottom: 24),
+                          );
+                        },
+                      ),
 
                       // Question Review Section
                       Column(

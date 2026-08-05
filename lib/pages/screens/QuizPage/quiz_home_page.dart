@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:jadwal/components/pro_upgrade_banner.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
@@ -65,8 +66,8 @@ class _QuizHomePageState extends State<QuizHomePage>
     super.didChangeDependencies();
 
     try {
-      // Initialize the streams using FirestoreService
       final firestoreService = Provider.of<FirestoreService>(context);
+      // Rebind when auth-driven FirestoreService uid changes.
       _customQuizStream = firestoreService.getCustomQuizHistoryStream();
       _reviewQuizStream = firestoreService.getReviewQuizHistoryStream();
     } catch (e) {
@@ -86,6 +87,11 @@ class _QuizHomePageState extends State<QuizHomePage>
       child: Column(
         children: [
           _buildTitleBar(context),
+          const ProUpgradeBanner(
+            compact: true,
+            title: 'Go Pro for unlimited quizzes',
+            margin: EdgeInsets.fromLTRB(20, 0, 20, 12),
+          ),
           _buildTabBar(),
           Expanded(
             child: TabBarView(
@@ -137,11 +143,14 @@ class _QuizHomePageState extends State<QuizHomePage>
                         ),
                       );
                     }
-                    return Text(
-                      '${sub.quizzesRemainingToday} of ${SubscriptionService.freeQuizzesPerDay} free quizzes left today',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                    return GestureDetector(
+                      onTap: () => sub.openPaywall(context),
+                      child: Text(
+                        '${sub.quizzesRemainingToday} of ${SubscriptionService.freeQuizzesPerDay} free quizzes left today · Upgrade',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     );
                   },

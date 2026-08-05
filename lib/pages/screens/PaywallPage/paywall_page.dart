@@ -1,6 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
+import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -257,7 +260,56 @@ class _PaywallPageState extends State<PaywallPage> {
                   ),
                 ),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              Text.rich(
+                TextSpan(
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Terms of Use',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4979FB),
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(0xFF4979FB),
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const TermsServicePage(),
+                            ),
+                          );
+                        },
+                    ),
+                    const TextSpan(text: '  ·  '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4979FB),
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(0xFF4979FB),
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const PrivacyPolicyPage(),
+                            ),
+                          );
+                        },
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
               SizedBox(
                 height: 54,
                 child: ElevatedButton(

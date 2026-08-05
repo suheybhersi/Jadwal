@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/screens/ProfilePage/achievements_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
+import 'package:jadwal/components/pro_upgrade_banner.dart';
 import 'package:jadwal/components/smart_showcase.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/achievement_service.dart';
@@ -174,6 +175,10 @@ class ProfilePage extends StatelessWidget {
                             ),
 
                             const SizedBox(height: 24),
+
+                            const ProUpgradeBanner(
+                              margin: EdgeInsets.only(bottom: 24),
+                            ),
 
                             // Stats Overview Section
                             _buildStatsOverview(plan, context),

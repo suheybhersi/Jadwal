@@ -2554,6 +2554,9 @@ class FirestoreService extends ChangeNotifier {
 
   /// Get stream of custom quiz history with client-side sorting
   Stream<List<QueryDocumentSnapshot>> getCustomQuizHistoryStream() {
+    if (uid.isEmpty) {
+      return Stream.value(const <QueryDocumentSnapshot>[]);
+    }
     return quizHistoryCollection
         .where('isCustomQuiz', isEqualTo: true)
         .snapshots()
@@ -2572,6 +2575,9 @@ class FirestoreService extends ChangeNotifier {
 
   /// Get stream of review quiz history with client-side sorting
   Stream<List<QueryDocumentSnapshot>> getReviewQuizHistoryStream() {
+    if (uid.isEmpty) {
+      return Stream.value(const <QueryDocumentSnapshot>[]);
+    }
     return quizHistoryCollection
         .where('isCustomQuiz', isEqualTo: false)
         .snapshots()
@@ -2590,6 +2596,9 @@ class FirestoreService extends ChangeNotifier {
 
   /// Get all quiz history without filtering, with client-side sorting
   Stream<List<QueryDocumentSnapshot>> getAllQuizHistoryStream() {
+    if (uid.isEmpty) {
+      return Stream.value(const <QueryDocumentSnapshot>[]);
+    }
     return quizHistoryCollection.snapshots().map((snapshot) {
       var docs = snapshot.docs;
       docs.sort((a, b) {
