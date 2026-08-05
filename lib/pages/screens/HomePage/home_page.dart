@@ -10,6 +10,7 @@ import 'package:jadwal/pages/screens/HomePage/wird_section.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
@@ -701,7 +702,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   void markReviewAsComplete(
-      BuildContext context, List<dynamic> reviews, String id) {
+      BuildContext context, List<dynamic> reviews, String id) async {
+    final subscription =
+        Provider.of<SubscriptionService>(context, listen: false);
+    final allowed = await subscription.ensureCanStartQuiz(context);
+    if (!allowed || !context.mounted) return;
+
+    final isPro = subscription.isPro;
+    final enableWhatNext = isPro &&
+        Provider.of<UserPreferencesService>(context, listen: false)
+            .enableWhatComesNext;
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -712,8 +723,8 @@ class _HomePageState extends State<HomePage> {
           review: reviews.first['review'],
           id: id,
           updateReview: firestoreService.updateReview,
-          includeWhatNext:
-              Provider.of<UserPreferencesService>(context).enableWhatComesNext,
+          includeFillBlank: isPro,
+          includeWhatNext: enableWhatNext,
         ),
       ),
     );

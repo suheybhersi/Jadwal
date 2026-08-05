@@ -10,6 +10,7 @@ import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
 import 'package:jadwal/pages/onboarding/notification_onboarding_page.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/onboarding/app_tutorial_page.dart';
@@ -145,6 +146,11 @@ class AuthPage extends StatelessWidget {
           // Update user activity and check achievements when user logs in
           WidgetsBinding.instance.addPostFrameCallback((_) {
             firestoreService.updateUserAchievements();
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            if (uid != null) {
+              Provider.of<SubscriptionService>(context, listen: false)
+                  .logIn(uid);
+            }
           });
 
           return StreamBuilder(

@@ -1547,6 +1547,55 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 12, 0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Iconsax.microphone,
+                              size: 14,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary
+                                  .withValues(alpha: 0.6),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'What Comes Next',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Colors.amber.shade700,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                'Beta',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.amber.shade900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       if (canCollapsePrompt)
                         InkWell(
                           onTap: () {
@@ -1554,11 +1603,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                               isPromptVerseExpanded = !isPromptVerseExpanded;
                             });
                           },
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 12, 0),
+                            padding: const EdgeInsets.fromLTRB(16, 10, 12, 0),
                             child: Row(
                               children: [
                                 Expanded(

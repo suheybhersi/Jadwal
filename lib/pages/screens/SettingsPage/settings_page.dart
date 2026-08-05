@@ -13,7 +13,9 @@ import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/usage_mode_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/features_tour_page.dart';
+import 'package:jadwal/pages/screens/PaywallPage/paywall_page.dart';
 import 'package:jadwal/services/notification_service.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 
@@ -188,6 +190,50 @@ class _SettingsPageState extends State<SettingsPage> {
                     isLast: true,
                   ),
                 ]),
+
+                const SizedBox(height: 24),
+
+                // Subscription Section
+                _buildSectionHeader('Subscription', Iconsax.crown_1),
+                const SizedBox(height: 10),
+                Consumer<SubscriptionService>(
+                  builder: (context, sub, _) => _buildSettingCard([
+                    _buildSettingTile(
+                      icon: Iconsax.crown_1,
+                      title: sub.isPro ? 'Jadwal Pro' : 'Upgrade to Pro',
+                      description: sub.isPro
+                          ? 'Unlimited quizzes and AI features'
+                          : 'Unlock Fill in the Blank, speech quizzes & more',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PaywallPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildSettingTile(
+                      icon: Iconsax.refresh,
+                      title: 'Restore purchases',
+                      description: 'Recover a previous Pro subscription',
+                      onTap: () async {
+                        final ok = await sub.restorePurchases();
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              ok
+                                  ? 'Subscription restored'
+                                  : 'No active subscription found',
+                            ),
+                          ),
+                        );
+                      },
+                      isLast: true,
+                    ),
+                  ]),
+                ),
 
                 const SizedBox(height: 24),
 
@@ -655,8 +701,11 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
+            onPressed: () async {
+              await Provider.of<SubscriptionService>(context, listen: false)
+                  .logOut();
+              await FirebaseAuth.instance.signOut();
+              if (!context.mounted) return;
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Go back to previous screen
             },

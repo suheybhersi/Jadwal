@@ -22,10 +22,9 @@ class QuranVersePicker extends StatefulWidget {
 class QuranVersePickerState extends State<QuranVersePicker> {
   late int selectedSurahIndex;
   int? selectedVerseNumber;
-  late FixedExtentScrollController? surahScrollController;
-  late FixedExtentScrollController? verseScrollController;
+  late FixedExtentScrollController surahScrollController;
+  late FixedExtentScrollController verseScrollController;
 
-  // Constants for the wheel picker
   static const double itemHeight = 50.0;
   static const double pickerHeight = 200.0;
 
@@ -34,60 +33,89 @@ class QuranVersePickerState extends State<QuranVersePicker> {
     super.initState();
     selectedSurahIndex =
         widget.initialSurahIndex.clamp(0, widget.surahData.length - 1);
-    selectedVerseNumber = widget.initialVerseNumber;
+    selectedVerseNumber = widget.initialVerseNumber ?? 1;
 
     surahScrollController = FixedExtentScrollController(
       initialItem: selectedSurahIndex,
     );
 
     verseScrollController = FixedExtentScrollController(
-      initialItem: selectedVerseNumber != null ? selectedVerseNumber! - 1 : 0,
+      initialItem: (selectedVerseNumber! - 1).clamp(
+        0,
+        _verseCountFor(selectedSurahIndex) - 1,
+      ),
     );
   }
 
-  void _onSurahSelected(int index) {
-    setState(() {
-      selectedSurahIndex = index;
-      selectedVerseNumber = null;
-      verseScrollController?.jumpToItem(0);
-    });
+  int _verseCountFor(int surahIndex) {
+    if (surahIndex < 0 || surahIndex >= widget.surahData.length) return 1;
+    return (widget.surahData[surahIndex]['verses'] as int?) ?? 1;
   }
 
-  void _onVerseSelected(int index) {
+  void _commitSelection() {
+    final verse = selectedVerseNumber ?? 1;
+    widget.onVerseSelected(
+      widget.surahData[selectedSurahIndex]['surah'] as String,
+      verse,
+    );
+  }
+
+  void _onSurahIndexChanged(int index) {
+    if (index == selectedSurahIndex) return;
+    setState(() {
+      selectedSurahIndex = index;
+      selectedVerseNumber = 1;
+    });
+    // Reset verse wheel without notifying parent mid-fling.
+    if (verseScrollController.hasClients) {
+      verseScrollController.jumpToItem(0);
+    }
+  }
+
+  void _onVerseIndexChanged(int index) {
     final verseNumber = index + 1;
+    if (verseNumber == selectedVerseNumber) return;
     setState(() {
       selectedVerseNumber = verseNumber;
     });
+  }
 
-    // Auto-confirm selection
-    widget.onVerseSelected(
-      widget.surahData[selectedSurahIndex]['surah'],
-      verseNumber,
-    );
+  bool _onScrollNotification(ScrollNotification notification) {
+    // Commit only when the user finishes scrolling (free fling + snap).
+    if (notification is ScrollEndNotification) {
+      _commitSelection();
+    }
+    return false;
   }
 
   @override
   void dispose() {
-    surahScrollController?.dispose();
-    verseScrollController?.dispose();
+    surahScrollController.dispose();
+    verseScrollController.dispose();
     super.dispose();
   }
 
   Widget _buildWheelPicker({
-    required List<Widget> children,
+    required int itemCount,
+    required NullableIndexedWidgetBuilder itemBuilder,
     required FixedExtentScrollController controller,
     required ValueChanged<int> onSelectedItemChanged,
     double diameterRatio = 1.5,
   }) {
-    return ListWheelScrollView.useDelegate(
-      controller: controller,
-      itemExtent: itemHeight,
-      diameterRatio: diameterRatio,
-      perspective: 0.001,
-      physics: const FixedExtentScrollPhysics(),
-      onSelectedItemChanged: onSelectedItemChanged,
-      childDelegate: ListWheelChildListDelegate(
-        children: children,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: ListWheelScrollView.useDelegate(
+        controller: controller,
+        itemExtent: itemHeight,
+        diameterRatio: diameterRatio,
+        perspective: 0.003,
+        // FixedExtent still snaps after a free ballistic fling.
+        physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: onSelectedItemChanged,
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: itemCount,
+          builder: itemBuilder,
+        ),
       ),
     );
   }
@@ -95,68 +123,15 @@ class QuranVersePickerState extends State<QuranVersePicker> {
   @override
   Widget build(BuildContext context) {
     final surahs = widget.surahData;
-    final selectedSurahVerses =
-        surahs[selectedSurahIndex]['verses'] as int? ?? 0;
+    final selectedSurahVerses = _verseCountFor(selectedSurahIndex);
 
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     final Color unselectedTextColor = Theme.of(context).colorScheme.onSurface;
     final Color highlightColor = primaryColor.withValues(alpha: 0.1);
 
-    // Build surah items
-    final surahItems = List<Widget>.generate(surahs.length, (index) {
-      final surahName = surahs[index]['surah'] as String;
-      final surahNumber = surahs[index]['surahNumber'];
-      final isSelected = index == selectedSurahIndex;
-
-      return Container(
-        height: itemHeight,
-        alignment: Alignment.center,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          style: GoogleFonts.lato(
-            fontSize: isSelected ? 18 : 16,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? primaryColor
-                : unselectedTextColor.withValues(alpha: 0.8),
-          ),
-          child: Text(
-            '$surahNumber. $surahName',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      );
-    });
-
-    // Build verse items
-    final verseItems = List<Widget>.generate(selectedSurahVerses, (index) {
-      final verseNumber = index + 1;
-      final isSelected = verseNumber == selectedVerseNumber;
-
-      return Container(
-        height: itemHeight,
-        alignment: Alignment.center,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          style: GoogleFonts.lato(
-            fontSize: isSelected ? 20 : 18,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? primaryColor
-                : unselectedTextColor.withValues(alpha: 0.8),
-          ),
-          child: Text(
-            verseNumber.toString(),
-          ),
-        ),
-      );
-    });
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Wheel picker UI
         Container(
           height: pickerHeight,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -174,7 +149,6 @@ class QuranVersePickerState extends State<QuranVersePicker> {
           ),
           child: Row(
             children: [
-              // Surah wheel picker
               Expanded(
                 flex: 3,
                 child: Column(
@@ -194,7 +168,6 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                     Expanded(
                       child: Stack(
                         children: [
-                          // Center highlight
                           Positioned.fill(
                             child: Center(
                               child: Container(
@@ -213,9 +186,37 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                             ),
                           ),
                           _buildWheelPicker(
-                            children: surahItems,
-                            controller: surahScrollController!,
-                            onSelectedItemChanged: _onSurahSelected,
+                            itemCount: surahs.length,
+                            controller: surahScrollController,
+                            onSelectedItemChanged: _onSurahIndexChanged,
+                            itemBuilder: (context, index) {
+                              if (index < 0 || index >= surahs.length) {
+                                return null;
+                              }
+                              final surahName = surahs[index]['surah'] as String;
+                              final surahNumber = surahs[index]['surahNumber'];
+                              final isSelected = index == selectedSurahIndex;
+                              return SizedBox(
+                                height: itemHeight,
+                                child: Center(
+                                  child: Text(
+                                    '$surahNumber. $surahName',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.lato(
+                                      fontSize: isSelected ? 18 : 16,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? primaryColor
+                                          : unselectedTextColor.withValues(
+                                              alpha: 0.8),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -223,15 +224,11 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                   ],
                 ),
               ),
-
-              // Vertical divider
               Container(
                 width: 1,
                 margin: const EdgeInsets.symmetric(vertical: 20),
                 color: Theme.of(context).dividerColor,
               ),
-
-              // Verse wheel picker
               Expanded(
                 flex: 2,
                 child: Column(
@@ -251,7 +248,6 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                     Expanded(
                       child: Stack(
                         children: [
-                          // Center highlight
                           Positioned.fill(
                             child: Center(
                               child: Container(
@@ -270,10 +266,36 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                             ),
                           ),
                           _buildWheelPicker(
-                            children: verseItems,
-                            controller: verseScrollController!,
-                            onSelectedItemChanged: _onVerseSelected,
+                            itemCount: selectedSurahVerses,
+                            controller: verseScrollController,
+                            onSelectedItemChanged: _onVerseIndexChanged,
                             diameterRatio: 2.0,
+                            itemBuilder: (context, index) {
+                              if (index < 0 || index >= selectedSurahVerses) {
+                                return null;
+                              }
+                              final verseNumber = index + 1;
+                              final isSelected =
+                                  verseNumber == selectedVerseNumber;
+                              return SizedBox(
+                                height: itemHeight,
+                                child: Center(
+                                  child: Text(
+                                    verseNumber.toString(),
+                                    style: GoogleFonts.lato(
+                                      fontSize: isSelected ? 20 : 18,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? primaryColor
+                                          : unselectedTextColor.withValues(
+                                              alpha: 0.8),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -284,8 +306,6 @@ class QuranVersePickerState extends State<QuranVersePicker> {
             ],
           ),
         ),
-
-        // Selection indicator
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

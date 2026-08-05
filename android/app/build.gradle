@@ -35,9 +35,10 @@ if (flutterVersionName == null) {
 android {
     namespace "com.suheyb.jadwal"
     compileSdk flutter.compileSdkVersion
-    ndkVersion "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -52,10 +53,10 @@ android {
 
     signingConfigs {
         release {
-            if (hasReleaseKeystore) {
+            if (keystorePropertiesFile.exists()) {
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
-                storeFile releaseStoreFile
+                storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
             }
         }
@@ -74,7 +75,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig hasReleaseKeystore
+            signingConfig keystorePropertiesFile.exists()
                 ? signingConfigs.release
                 : signingConfigs.debug
         }
@@ -87,4 +88,5 @@ flutter {
 
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

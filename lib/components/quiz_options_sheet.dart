@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 
 /// Shows a modal bottom sheet with options for automatically generated quizzes
@@ -47,15 +48,13 @@ void showQuizOptionsSheet(BuildContext context) {
               ),
             ),
             const SizedBox(height: 20),
-            Consumer<UserPreferencesService>(
-              builder: (context, prefs, _) => Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            Consumer2<UserPreferencesService, SubscriptionService>(
+              builder: (context, prefs, sub, _) => Material(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
                 child: SwitchListTile(
                   secondary: Icon(
                     Iconsax.arrow_right,
@@ -64,12 +63,16 @@ void showQuizOptionsSheet(BuildContext context) {
                   ),
                   title: Row(
                     children: [
-                      Text(
-                        'What comes next',
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+                      Flexible(
+                        child: Text(
+                          'What comes next',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -91,12 +94,36 @@ void showQuizOptionsSheet(BuildContext context) {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color:
+                              const Color(0xFF4979FB).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0xFF4979FB),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'Pro',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF4979FB),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      'Recitation-style questions. In testing — may be buggy.',
+                      sub.isPro
+                          ? 'Recitation-style questions. In testing — may be buggy.'
+                          : 'Pro feature — upgrade to unlock speech quizzes.',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -104,8 +131,15 @@ void showQuizOptionsSheet(BuildContext context) {
                       ),
                     ),
                   ),
-                  value: prefs.enableWhatComesNext,
-                  onChanged: (value) => prefs.setEnableWhatComesNext(value),
+                  value: sub.isPro && prefs.enableWhatComesNext,
+                  onChanged: (value) async {
+                    if (!sub.isPro) {
+                      Navigator.pop(context);
+                      await sub.openPaywall(context);
+                      return;
+                    }
+                    await prefs.setEnableWhatComesNext(value);
+                  },
                   activeThumbColor: const Color(0xFF4979FB),
                 ),
               ),

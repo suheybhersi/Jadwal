@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/firebase_options.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
@@ -13,6 +14,7 @@ import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/notification_service.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/themes/theme_provider.dart';
@@ -21,6 +23,11 @@ import 'package:showcaseview/showcaseview.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('dotenv load skipped: $e');
+  }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await FirebaseCrashlytics.instance
@@ -33,6 +40,9 @@ void main() async {
 
   // Initialize notification service (schedules daily reading/hifdh/review reminders)
   await NotificationService.instance.init();
+
+  final subscriptionService = SubscriptionService();
+  await subscriptionService.init();
 
   // Initialize and preload Quran database in background
   _preloadQuranData();
@@ -71,6 +81,7 @@ void main() async {
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
         ChangeNotifierProvider(create: ((context) => UserPreferencesService())),
         ChangeNotifierProvider(create: ((context) => TutorialService())),
+        ChangeNotifierProvider.value(value: subscriptionService),
       ],
       child: const MyApp(),
     ),

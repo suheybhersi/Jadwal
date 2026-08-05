@@ -86,6 +86,7 @@ class _NotificationOnboardingPageState
 
     await NotificationService.instance.savePreferences(prefs);
 
+    if (!mounted) return;
     final prefsService =
         Provider.of<UserPreferencesService>(context, listen: false);
     await prefsService.completeNotificationOnboarding();

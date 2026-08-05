@@ -7,25 +7,49 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/subscription_service.dart';
+import 'package:provider/provider.dart';
 
-class QuizCreationPage extends StatelessWidget {
+class QuizCreationPage extends StatefulWidget {
   const QuizCreationPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Initialize FirestoreService
+  State<QuizCreationPage> createState() => _QuizCreationPageState();
+}
+
+class _QuizCreationPageState extends State<QuizCreationPage> {
+  late final QuizCreationController controller;
+
+  @override
+  void initState() {
+    super.initState();
     final firestoreService = FirestoreService(
       auth: FirebaseAuth.instance,
       uid: FirebaseAuth.instance.currentUser!.uid,
     );
 
-    // Initialize and register the controller
-    final controller =
-        Get.put(QuizCreationController(firestoreService: firestoreService));
+    // Always start with a fresh controller so previous session data is gone.
+    if (Get.isRegistered<QuizCreationController>()) {
+      Get.delete<QuizCreationController>(force: true);
+    }
+    controller = Get.put(QuizCreationController(firestoreService: firestoreService));
+  }
 
+  @override
+  void dispose() {
+    if (Get.isRegistered<QuizCreationController>()) {
+      Get.delete<QuizCreationController>(force: true);
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final textColor = Theme.of(context).colorScheme.inversePrimary;
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         centerTitle: true,
@@ -44,7 +68,7 @@ class QuizCreationPage extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getSurahsStream(),
+        stream: controller.firestoreService.getSurahsStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildLoading(Theme.of(context).colorScheme.primary);
@@ -58,7 +82,16 @@ class QuizCreationPage extends StatelessWidget {
           final surahsList = snapshot.data!.docs;
           surahsList.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
           final allData = surahsList
-              .map((doc) => doc.data() as Map<String, dynamic>)
+              .map((doc) {
+                final data = Map<String, dynamic>.from(
+                    doc.data() as Map<String, dynamic>);
+                // Prefer document id as canonical surah number when present.
+                data['surahNumber'] =
+                    QuizCreationController.parseSurahNumber(data['surahNumber']) ??
+                        int.tryParse(doc.id) ??
+                        data['surahNumber'];
+                return data;
+              })
               .toList();
 
           return Stack(
@@ -78,8 +111,8 @@ class QuizCreationPage extends StatelessWidget {
                       },
                       children: [
                         // Step 1: Question Types
-                        _buildQuestionTypesPage(
-                            controller, Theme.of(context).colorScheme.primary),
+                        _buildQuestionTypesPage(context, controller,
+                            Theme.of(context).colorScheme.primary),
 
                         // Step 2: Start Verse Selection
                         _buildStartVerseSelectionPage(controller, allData,
@@ -107,6 +140,7 @@ class QuizCreationPage extends StatelessWidget {
           );
         },
       ),
+    ),
     );
   }
 
@@ -191,7 +225,7 @@ class QuizCreationPage extends StatelessWidget {
   }
 
   Widget _buildQuestionTypesPage(
-      QuizCreationController controller, Color primaryColor) {
+      BuildContext context, QuizCreationController controller, Color primaryColor) {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -257,15 +291,23 @@ class QuizCreationPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Fill in the Blank
-            Obx(() => _buildQuestionTypeCard(
-                  icon: Iconsax.document_text,
-                  title: 'Fill in the Blank',
-                  isSelected: controller.includeFillBlank.value,
-                  onToggle: (value) {
-                    controller.includeFillBlank.value = value;
-                  },
-                )),
+            // Fill in the Blank (Pro)
+            Obx(() {
+              final isPro = context.watch<SubscriptionService>().isPro;
+              return _buildQuestionTypeCard(
+                icon: Iconsax.document_text,
+                title: 'Fill in the Blank',
+                isSelected: controller.includeFillBlank.value,
+                showProBadge: true,
+                onToggle: (value) {
+                  if (!isPro) {
+                    context.read<SubscriptionService>().openPaywall(context);
+                    return;
+                  }
+                  controller.includeFillBlank.value = value;
+                },
+              );
+            }),
 
             // Drag and Drop
             Obx(() => _buildQuestionTypeCard(
@@ -277,17 +319,25 @@ class QuizCreationPage extends StatelessWidget {
                   },
                 )),
 
-            // What Comes Next (beta)
-            Obx(() => _buildQuestionTypeCard(
-                  icon: Iconsax.arrow_right,
-                  title: 'What Comes Next',
-                  isSelected: controller.includeWhatNext.value,
-                  onToggle: (value) {
-                    controller.includeWhatNext.value = value;
-                  },
-                  showBetaBadge: true,
-                  subtitle: 'In testing — it may not work as expected',
-                )),
+            // What Comes Next (Pro + beta)
+            Obx(() {
+              final isPro = context.watch<SubscriptionService>().isPro;
+              return _buildQuestionTypeCard(
+                icon: Iconsax.arrow_right,
+                title: 'What Comes Next',
+                isSelected: controller.includeWhatNext.value,
+                showBetaBadge: true,
+                showProBadge: true,
+                subtitle: 'In testing — it may not work as expected',
+                onToggle: (value) {
+                  if (!isPro) {
+                    context.read<SubscriptionService>().openPaywall(context);
+                    return;
+                  }
+                  controller.includeWhatNext.value = value;
+                },
+              );
+            }),
 
             // Verse Pairing
             Obx(() => _buildQuestionTypeCard(
@@ -418,6 +468,7 @@ class QuizCreationPage extends StatelessWidget {
                 (surahName, verseNumber) =>
                     controller.handleStartVerseSelection(
                         allData, surahName, verseNumber),
+                pickerId: 'start-verse-picker',
               ),
             ),
 
@@ -506,6 +557,7 @@ class QuizCreationPage extends StatelessWidget {
               controller.selectedEndVerse.value,
               (surahName, verseNumber) => controller.handleEndVerseSelection(
                   allData, surahName, verseNumber),
+              pickerId: 'end-verse-picker',
             ),
 
             // Error Message
@@ -688,6 +740,7 @@ class QuizCreationPage extends StatelessWidget {
     required Function(bool) onToggle,
     String? subtitle,
     bool showBetaBadge = false,
+    bool showProBadge = false,
   }) {
     return Builder(
       builder: (context) => Container(
@@ -767,6 +820,30 @@ class QuizCreationPage extends StatelessWidget {
                               ),
                             ),
                           ],
+                          if (showProBadge) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4979FB)
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: const Color(0xFF4979FB),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                'Pro',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF4979FB),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       if (subtitle != null && subtitle.isNotEmpty) ...[
@@ -819,14 +896,16 @@ class QuizCreationPage extends StatelessWidget {
     List<Map<String, dynamic>> allData,
     Map<String, dynamic>? selectedSurahData,
     int? selectedVerse,
-    Function(String, int) onVerseSelected,
-  ) {
+    Function(String, int) onVerseSelected, {
+    required String pickerId,
+  }) {
+    final surahIndex =
+        QuizCreationController.indexOfSurah(allData, selectedSurahData);
     return QuranVersePicker(
-      key:
-          ValueKey('${selectedSurahData?.hashCode ?? 0}-${selectedVerse ?? 0}'),
+      // Stable key so free-scrolling isn't killed by parent rebuilds.
+      key: ValueKey(pickerId),
       surahData: allData,
-      initialSurahIndex:
-          selectedSurahData != null ? allData.indexOf(selectedSurahData) : 0,
+      initialSurahIndex: surahIndex,
       initialVerseNumber: selectedVerse,
       onVerseSelected: onVerseSelected,
     );

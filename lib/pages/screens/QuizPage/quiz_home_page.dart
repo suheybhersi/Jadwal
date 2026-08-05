@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -45,6 +46,18 @@ class _QuizHomePageState extends State<QuizHomePage>
         }
       });
     }
+  }
+
+  Future<void> _openCreateQuiz() async {
+    final sub = Provider.of<SubscriptionService>(context, listen: false);
+    final allowed = await sub.ensureHasQuizQuota(context);
+    if (!allowed || !mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QuizCreationPage(),
+      ),
+    );
   }
 
   @override
@@ -100,12 +113,40 @@ class _QuizHomePageState extends State<QuizHomePage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Quizzes',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 22,
-              color: Theme.of(context).colorScheme.inversePrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quizzes',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+                Consumer<SubscriptionService>(
+                  builder: (context, sub, _) {
+                    if (sub.isPro) {
+                      return Text(
+                        'Pro · unlimited',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: const Color(0xFF4979FB),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }
+                    return Text(
+                      '${sub.quizzesRemainingToday} of ${SubscriptionService.freeQuizzesPerDay} free quizzes left today',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
           SmartShowcase(
@@ -114,14 +155,7 @@ class _QuizHomePageState extends State<QuizHomePage>
             description: 'Tap here to create a custom quiz with your selected verses and question types.',
             globalKey: _createQuizKey,
             child: IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const QuizCreationPage(),
-                  ),
-                );
-              },
+              onPressed: _openCreateQuiz,
               icon: Container(
                 padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -269,14 +303,7 @@ class _QuizHomePageState extends State<QuizHomePage>
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const QuizCreationPage(),
-                      ),
-                    );
-                  },
+                  onPressed: _openCreateQuiz,
                   icon: const Icon(Iconsax.add, color: Colors.white),
                   label: Text(
                     'Create Quiz',

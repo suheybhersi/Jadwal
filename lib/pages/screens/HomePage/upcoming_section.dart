@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/components/verse_picker.dart';
@@ -307,14 +308,16 @@ class UpcomingSection extends StatelessWidget {
                 ),
               ),
 
-              // Review Card (only show if reviews are enabled)
-              // Use Selector to specifically listen to usageMode changes
               Builder(
                 builder: (context) {
                   final prefsService = Provider.of<UserPreferencesService>(
                       context,
                       listen: true);
+                  final subscription =
+                      Provider.of<SubscriptionService>(context, listen: true);
                   final currentMode = prefsService.usageMode;
+                  final includesWhatComesNext =
+                      subscription.isPro && prefsService.enableWhatComesNext;
 
                   // Hide reviews in Flexible mode - check mode directly
                   final isFlexibleMode = currentMode == UsageMode.flexible;
@@ -386,6 +389,30 @@ class UpcomingSection extends StatelessWidget {
                                           color: Colors.white,
                                         ),
                                       ),
+                                      if (includesWhatComesNext) ...[
+                                        SizedBox(width: 8),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.shade100,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: Colors.amber.shade700,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Beta',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.amber.shade900,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                   IconButton(
@@ -403,6 +430,19 @@ class UpcomingSection extends StatelessWidget {
                                   ),
                                 ],
                               ),
+                              if (includesWhatComesNext) ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 20),
+                                  child: Text(
+                                    'Includes What Comes Next',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.white.withValues(alpha: 0.85),
+                                    ),
+                                  ),
+                                ),
+                              ],
                               SizedBox(height: 8),
                               Container(
                                 margin: EdgeInsets.only(

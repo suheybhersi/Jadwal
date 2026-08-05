@@ -8,6 +8,7 @@ import 'package:jadwal/components/quiz_options_sheet.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/settings_page.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/components/smart_showcase.dart';
@@ -502,7 +503,17 @@ class IncompleteReviewsSection extends StatelessWidget {
   final FirestoreService firestoreService;
 
   void _openReviewQuiz(
-      BuildContext context, Map<String, dynamic> review, String id) {
+      BuildContext context, Map<String, dynamic> review, String id) async {
+    final subscription =
+        Provider.of<SubscriptionService>(context, listen: false);
+    final allowed = await subscription.ensureCanStartQuiz(context);
+    if (!allowed || !context.mounted) return;
+
+    final isPro = subscription.isPro;
+    final enableWhatNext = isPro &&
+        Provider.of<UserPreferencesService>(context, listen: false)
+            .enableWhatComesNext;
+
     final surahParts = (review['surah'] as String).split(' ');
     final endSurah = surahParts.length > 1 ? surahParts[1] : surahParts[0];
     final reviewTitle =
@@ -516,8 +527,8 @@ class IncompleteReviewsSection extends StatelessWidget {
           review: review['review'],
           id: id,
           updateReview: firestoreService.updateReview,
-          includeWhatNext:
-              Provider.of<UserPreferencesService>(context).enableWhatComesNext,
+          includeFillBlank: isPro,
+          includeWhatNext: enableWhatNext,
         ),
       ),
     );
@@ -599,6 +610,10 @@ class IncompleteReviewsSection extends StatelessWidget {
               final parts = dateStr.split('-');
               final day = parts[0];
               final month = parts[1];
+              final sub = context.watch<SubscriptionService>();
+              final prefs = context.watch<UserPreferencesService>();
+              final includesWhatComesNext =
+                  sub.isPro && prefs.enableWhatComesNext;
               return Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -619,19 +634,51 @@ class IncompleteReviewsSection extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ').length > 1 ? review['surah'].split(' ')[1] : review['surah'].split(' ')[0]} ${review['review'].split('-')[1].split(':')[1]}',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
-                                ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ').length > 1 ? review['surah'].split(' ')[1] : review['surah'].split(' ')[0]} ${review['review'].split('-')[1].split(':')[1]}',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (includesWhatComesNext) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.shade100,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: Colors.amber.shade700,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Beta',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.amber.shade900,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Due today · $day/$month',
+                                includesWhatComesNext
+                                    ? 'Due today · $day/$month · What Comes Next'
+                                    : 'Due today · $day/$month',
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
