@@ -8,7 +8,9 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/verse_pairing_question.dart';
-import 'package:jadwal/services/openai_service.dart';
+import 'package:jadwal/services/distractor_service.dart';
+import 'package:jadwal/services/quran_distractors_index.dart';
+import 'package:jadwal/utils/quran_text_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -157,341 +159,227 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   // Generate quiz questions with diverse question types
   Future<List<Map<String, dynamic>>> _generateQuestions() async {
-    // Initialize question lists
-    List<Map<String, dynamic>> generatedQuestions = [];
-    List<Map<String, dynamic>> fillInTheBlankQuestions = [];
-    List<Map<String, dynamic>> dragAndDropQuestions = [];
-    List<Map<String, dynamic>> whatComesNextQuestions = [];
-    List<Map<String, dynamic>> versePairingQuestions = [];
-
-    // Get list of enabled question types
-    List<String> enabledTypes = [];
+    final enabledTypes = <String>[];
     if (widget.includeFillBlank) enabledTypes.add('fill_blank');
     if (widget.includeDragDrop) enabledTypes.add('drag_drop');
     if (widget.includeWhatNext) enabledTypes.add('what_next');
     if (widget.includeVersePairing) enabledTypes.add('verse_pairing');
+    if (enabledTypes.isEmpty) return [];
 
-    // If no types were selected, return empty list
-    if (enabledTypes.isEmpty) {
-      return [];
-    }
-
-    // Determine target question count dynamically based on verse count
-    int targetQuestionCount;
     final verseCount = widget.versesList.length;
-
-    // Scale question count with number of verses (approximately 1.3-1.5 questions per verse)
-    // but ensure it's a multiple of 5 and within bounds
-    double scaleFactor = 1.2; // Questions per verse
+    double scaleFactor = 1.2;
     int rawCount = (verseCount * scaleFactor).round();
-
-    // Round to nearest multiple of 5
-    targetQuestionCount = ((rawCount + 2) ~/ 5) * 5;
-
-    // Set minimum and maximum bounds
+    int targetQuestionCount = ((rawCount + 2) ~/ 5) * 5;
     targetQuestionCount = max(5, min(targetQuestionCount, 50));
-
-    // Ensure we have at least the number of enabled types
     targetQuestionCount = max(targetQuestionCount, enabledTypes.length);
+    final questionsPerType =
+        (targetQuestionCount / enabledTypes.length).ceil();
 
-    // Calculate questions per type
-    int questionsPerType = (targetQuestionCount / enabledTypes.length).ceil();
+    // Same ayah may appear in different types; not twice within the same type.
+    final usedPrimaryByType = <String, Set<int>>{
+      for (final t in enabledTypes) t: {},
+    };
+    final byType = <String, List<Map<String, dynamic>>>{
+      for (final t in enabledTypes) t: [],
+    };
 
-    // Create a randomized list of all verse indices
-    final allVerseIndices = List.generate(verseCount, (i) => i)..shuffle();
-
-    // Split the verses evenly among enabled types
-    Map<String, List<int>> verseIndicesPerType = {};
-
-    // First, calculate how many verses each type needs
-    int versesPerType = (allVerseIndices.length / enabledTypes.length).ceil();
-
-    // Distribute verses to each enabled type
-    for (int i = 0; i < enabledTypes.length; i++) {
-      int start = i * versesPerType;
-      int end = min((i + 1) * versesPerType, allVerseIndices.length);
-
-      // Handle edge case where we might run out of indices
-      if (start >= allVerseIndices.length) {
-        // Reuse some indices from the beginning
-        start = 0;
-        end = min(versesPerType, allVerseIndices.length);
+    List<int> spoilersFor(String type, int verseIndex) {
+      switch (type) {
+        case 'fill_blank':
+          return [
+            if (verseIndex > 0) verseIndex - 1,
+            verseIndex,
+          ];
+        case 'what_next':
+          return [verseIndex, verseIndex + 1];
+        case 'verse_pairing':
+          return [verseIndex - 1, verseIndex, verseIndex + 1];
+        case 'drag_drop':
+        default:
+          return [verseIndex];
       }
-
-      verseIndicesPerType[enabledTypes[i]] =
-          allVerseIndices.sublist(start, end);
     }
 
-    // Generate questions for each enabled type
-    if (widget.includeFillBlank) {
-      List<int> fillBlankVerses = verseIndicesPerType['fill_blank'] ?? [];
-      // For fill-blank, limit the max number of questions
-      int count = min(questionsPerType, fillBlankVerses.length);
+    bool isEligible(String type, int verseIndex) {
+      final words = splitVerseManuallyWithSpecialChars(
+        widget.versesList[verseIndex].toString(),
+      );
+      switch (type) {
+        case 'fill_blank':
+          return _isUsableFillBlankVerse(words, verseIndex);
+        case 'drag_drop':
+          return _isUsableDragDropVerse(words);
+        case 'what_next':
+          return verseIndex < verseCount - 1;
+        case 'verse_pairing':
+          return verseIndex > 0 && verseIndex < verseCount - 1;
+        default:
+          return false;
+      }
+    }
 
-      // Use the first 'count' verses for fill-blank questions
-      for (int i = 0; i < count; i++) {
+    Future<Map<String, dynamic>?> buildQuestion(
+        String type, int verseIndex) async {
+      final verse = widget.versesList[verseIndex].toString();
+      switch (type) {
+        case 'fill_blank':
+          return _generateFillInTheBlankQuestion(verse, verseIndex);
+        case 'drag_drop':
+          return _generateDragAndDropQuestion(verse, verseIndex);
+        case 'what_next':
+          return _generateWhatComesNextQuestion(verseIndex);
+        case 'verse_pairing':
+          return await _generateVersePairingQuestion(verseIndex);
+        default:
+          return null;
+      }
+    }
+
+    // Round-robin across types for balance. Reuse ayahs across types is OK.
+    final typeOrder = List<String>.from(enabledTypes)..shuffle();
+    var madeProgress = true;
+    while (madeProgress) {
+      madeProgress = false;
+      for (final type in typeOrder) {
         if (!mounted || !_isActive) break;
-        if (i >= fillBlankVerses.length) break;
+        if (byType[type]!.length >= questionsPerType) continue;
 
-        int verseIndex = fillBlankVerses[i];
-        String verse = widget.versesList[verseIndex];
-        List<String> words = splitVerseManuallyWithSpecialChars(verse);
+        final candidates = List.generate(verseCount, (i) => i)..shuffle();
+        for (final verseIndex in candidates) {
+          if (usedPrimaryByType[type]!.contains(verseIndex)) continue;
+          if (!isEligible(type, verseIndex)) continue;
 
-        if (words.length > 1 && !words.contains('')) {
-          var question =
-              await _generateFillInTheBlankQuestion(verse, verseIndex);
-          fillInTheBlankQuestions.add(question);
+          final question = await buildQuestion(type, verseIndex);
+          if (question == null) continue;
+
+          usedPrimaryByType[type]!.add(verseIndex);
+          question['verseIndex'] = verseIndex;
+          question['spoilerIndices'] = spoilersFor(type, verseIndex);
+          byType[type]!.add(question);
+          madeProgress = true;
+          break;
         }
       }
     }
 
-    if (widget.includeDragDrop) {
-      List<int> dragDropVerses = verseIndicesPerType['drag_drop'] ?? [];
-      int count = min(questionsPerType, dragDropVerses.length);
+    final generatedQuestions = <Map<String, dynamic>>[
+      for (final type in enabledTypes) ...byType[type]!,
+    ];
 
-      for (int i = 0; i < count; i++) {
-        if (!mounted || !_isActive) break;
-        if (i >= dragDropVerses.length) break;
+    final ordered = _orderQuestionsAntiSpoiler(generatedQuestions);
 
-        int verseIndex = dragDropVerses[i];
-        String verse = widget.versesList[verseIndex];
-        List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-        if (!words.contains('')) {
-          dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
+    // Trim to multiple of 5 while keeping type balance when possible
+    if (ordered.length >= 5) {
+      final desiredCount = (ordered.length ~/ 5) * 5;
+      if (ordered.length > desiredCount) {
+        final typeCounts = <String, int>{};
+        for (final q in ordered) {
+          typeCounts[q['type']] = (typeCounts[q['type']] ?? 0) + 1;
         }
-      }
-    }
-
-    if (widget.includeWhatNext) {
-      // Prefer verses that have a following verse (needed for this question type)
-      final eligibleWhatNextIndices = allVerseIndices
-          .where((idx) => idx < widget.versesList.length - 1)
-          .toList()
-        ..shuffle();
-
-      final assignedWhatNext = verseIndicesPerType['what_next'] ?? [];
-      final preferredIndices = <int>[
-        ...assignedWhatNext.where((idx) => idx < widget.versesList.length - 1),
-        ...eligibleWhatNextIndices
-            .where((idx) => !assignedWhatNext.contains(idx)),
-      ];
-
-      final count = min(questionsPerType, preferredIndices.length);
-      for (int i = 0; i < count; i++) {
-        if (!mounted || !_isActive) break;
-        whatComesNextQuestions
-            .add(_generateWhatComesNextQuestion(preferredIndices[i]));
-      }
-    }
-
-    if (widget.includeVersePairing) {
-      List<int> pairingVerses = verseIndicesPerType['verse_pairing'] ?? [];
-      int count = min(questionsPerType, pairingVerses.length);
-
-      for (int i = 0; i < count; i++) {
-        if (!mounted || !_isActive) break;
-        if (i >= pairingVerses.length) break;
-
-        int verseIndex = pairingVerses[i];
-        // Only create question if there's a verse before and after
-        if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
-          versePairingQuestions.add(_generateVersePairingQuestion(verseIndex));
-        } else if (i < pairingVerses.length - 1) {
-          // Try the next verse if this one doesn't work
-          i++;
-          verseIndex = pairingVerses[i];
-          if (verseIndex > 0 && verseIndex < widget.versesList.length - 1) {
-            versePairingQuestions
-                .add(_generateVersePairingQuestion(verseIndex));
-          }
-        }
-      }
-    }
-
-    // If we have fewer questions than expected for some type, try to use more verses
-    if (widget.includeFillBlank &&
-        fillInTheBlankQuestions.length < questionsPerType) {
-      // Find unused verses
-      List<int> usedVerses = fillInTheBlankQuestions.map((q) {
-        return widget.versesList.indexOf(q['verseWords']?.first ?? '');
-      }).toList();
-
-      List<int> unusedVerses =
-          allVerseIndices.where((idx) => !usedVerses.contains(idx)).toList();
-      unusedVerses.shuffle();
-
-      for (int i = 0;
-          i < unusedVerses.length &&
-              fillInTheBlankQuestions.length < questionsPerType;
-          i++) {
-        int verseIndex = unusedVerses[i];
-        String verse = widget.versesList[verseIndex];
-        List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-        if (words.length > 1 && !words.contains('')) {
-          var question =
-              await _generateFillInTheBlankQuestion(verse, verseIndex);
-          fillInTheBlankQuestions.add(question);
-        }
-      }
-    }
-
-    if (widget.includeDragDrop &&
-        dragAndDropQuestions.length < questionsPerType) {
-      // Find unused verses for drag and drop
-      List<int> usedVerses = [];
-      for (var q in dragAndDropQuestions) {
-        String firstWord = q['firstWord'];
-        for (int i = 0; i < widget.versesList.length; i++) {
-          if (widget.versesList[i].startsWith(firstWord)) {
-            usedVerses.add(i);
-            break;
-          }
-        }
-      }
-
-      List<int> unusedVerses =
-          allVerseIndices.where((idx) => !usedVerses.contains(idx)).toList();
-      unusedVerses.shuffle();
-
-      for (int i = 0;
-          i < unusedVerses.length &&
-              dragAndDropQuestions.length < questionsPerType;
-          i++) {
-        int verseIndex = unusedVerses[i];
-        String verse = widget.versesList[verseIndex];
-        List<String> words = splitVerseManuallyWithSpecialChars(verse);
-
-        if (!words.contains('')) {
-          dragAndDropQuestions.add(_generateDragAndDropQuestion(verse));
-        }
-      }
-    }
-
-    if (widget.includeWhatNext &&
-        whatComesNextQuestions.length < questionsPerType) {
-      // Find unused verses for what comes next
-      List<int> usedVerses = whatComesNextQuestions.map((q) {
-        return widget.versesList.indexOf(q['verse']);
-      }).toList();
-
-      List<int> unusedVerses = allVerseIndices
-          .where((idx) =>
-              !usedVerses.contains(idx) && idx < widget.versesList.length - 1)
-          .toList();
-      unusedVerses.shuffle();
-
-      for (int i = 0;
-          i < unusedVerses.length &&
-              whatComesNextQuestions.length < questionsPerType;
-          i++) {
-        int verseIndex = unusedVerses[i];
-        whatComesNextQuestions.add(_generateWhatComesNextQuestion(verseIndex));
-      }
-    }
-
-    if (widget.includeVersePairing &&
-        versePairingQuestions.length < questionsPerType) {
-      // Find unused verses for verse pairing
-      List<int> usedVerses = versePairingQuestions.map((q) {
-        return widget.versesList.indexOf(q['currentVerse']);
-      }).toList();
-
-      List<int> unusedVerses = allVerseIndices
-          .where((idx) =>
-              !usedVerses.contains(idx) &&
-              idx > 0 &&
-              idx < widget.versesList.length - 1)
-          .toList();
-      unusedVerses.shuffle();
-
-      for (int i = 0;
-          i < unusedVerses.length &&
-              versePairingQuestions.length < questionsPerType;
-          i++) {
-        int verseIndex = unusedVerses[i];
-        versePairingQuestions.add(_generateVersePairingQuestion(verseIndex));
-      }
-    }
-
-    // Shuffle all question collections for variety
-    fillInTheBlankQuestions.shuffle();
-    dragAndDropQuestions.shuffle();
-    whatComesNextQuestions.shuffle();
-    versePairingQuestions.shuffle();
-
-    // Make sure we have the correct number per type
-    if (widget.includeFillBlank &&
-        fillInTheBlankQuestions.length > questionsPerType) {
-      fillInTheBlankQuestions =
-          fillInTheBlankQuestions.sublist(0, questionsPerType);
-    }
-    if (widget.includeDragDrop &&
-        dragAndDropQuestions.length > questionsPerType) {
-      dragAndDropQuestions = dragAndDropQuestions.sublist(0, questionsPerType);
-    }
-    if (widget.includeWhatNext &&
-        whatComesNextQuestions.length > questionsPerType) {
-      whatComesNextQuestions =
-          whatComesNextQuestions.sublist(0, questionsPerType);
-    }
-    if (widget.includeVersePairing &&
-        versePairingQuestions.length > questionsPerType) {
-      versePairingQuestions =
-          versePairingQuestions.sublist(0, questionsPerType);
-    }
-
-    // Combine questions from all enabled types
-    if (widget.includeFillBlank) {
-      generatedQuestions.addAll(fillInTheBlankQuestions);
-    }
-    if (widget.includeDragDrop) {
-      generatedQuestions.addAll(dragAndDropQuestions);
-    }
-    if (widget.includeWhatNext) {
-      generatedQuestions.addAll(whatComesNextQuestions);
-    }
-    if (widget.includeVersePairing) {
-      generatedQuestions.addAll(versePairingQuestions);
-    }
-
-    // Shuffle for variety but maintain equal distribution
-    generatedQuestions.shuffle();
-
-    // Ensure we have multiples of 5 for question count if we have enough questions
-    if (generatedQuestions.length >= 5) {
-      int desiredCount = (generatedQuestions.length ~/ 5) * 5;
-      if (generatedQuestions.length > desiredCount) {
-        // When trimming, make sure we maintain equal distribution
-        Map<String, int> typeCounts = {};
-        for (var question in generatedQuestions) {
-          typeCounts[question['type']] =
-              (typeCounts[question['type']] ?? 0) + 1;
-        }
-
-        // Find types with more questions to remove from
-        while (generatedQuestions.length > desiredCount) {
-          String typeToRemove = typeCounts.entries
+        while (ordered.length > desiredCount) {
+          final typeToRemove = typeCounts.entries
               .reduce((a, b) => a.value > b.value ? a : b)
               .key;
-
-          // Find the index of a question of this type
-          int indexToRemove =
-              generatedQuestions.indexWhere((q) => q['type'] == typeToRemove);
+          final indexToRemove =
+              ordered.lastIndexWhere((q) => q['type'] == typeToRemove);
           if (indexToRemove >= 0) {
-            generatedQuestions.removeAt(indexToRemove);
+            ordered.removeAt(indexToRemove);
             typeCounts[typeToRemove] = typeCounts[typeToRemove]! - 1;
           } else {
-            // Shouldn't happen, but just in case
-            generatedQuestions.removeLast();
+            ordered.removeLast();
           }
         }
       }
     }
 
-    return generatedQuestions;
+    return ordered;
   }
+
+  /// Orders questions so spoilers (same/adjacent ayahs) are not back-to-back
+  /// when possible. Same ayah in different types later in the quiz is fine.
+  List<Map<String, dynamic>> _orderQuestionsAntiSpoiler(
+      List<Map<String, dynamic>> questions) {
+    if (questions.length <= 1) return List.from(questions);
+
+    final remaining = List<Map<String, dynamic>>.from(questions)..shuffle();
+    final ordered = <Map<String, dynamic>>[];
+
+    Set<int> spoilersOf(Map<String, dynamic> q) {
+      final raw = q['spoilerIndices'];
+      if (raw is List) {
+        return raw.map((e) => e is int ? e : int.tryParse('$e') ?? -1).toSet();
+      }
+      final idx = q['verseIndex'];
+      if (idx is int) return {idx};
+      return {};
+    }
+
+    int conflictScore(
+        Map<String, dynamic> candidate, List<Map<String, dynamic>> recent) {
+      final cand = spoilersOf(candidate);
+      if (cand.isEmpty) return 0;
+      var score = 0;
+      for (var r = 0; r < recent.length; r++) {
+        final prev = spoilersOf(recent[recent.length - 1 - r]);
+        final weight = recent.length - r; // closer = heavier
+        for (final i in cand) {
+          for (final j in prev) {
+            final dist = (i - j).abs();
+            if (dist == 0) {
+              score += 100 * weight; // same ayah too soon
+            } else if (dist == 1) {
+              score += 50 * weight; // adjacent (what-next spoiler)
+            } else if (dist == 2) {
+              score += 10 * weight;
+            }
+          }
+        }
+      }
+      return score;
+    }
+
+    while (remaining.isNotEmpty) {
+      final recent = ordered.length >= 2
+          ? ordered.sublist(ordered.length - 2)
+          : List<Map<String, dynamic>>.from(ordered);
+
+      remaining.sort((a, b) =>
+          conflictScore(a, recent).compareTo(conflictScore(b, recent)));
+
+      final bestScore = conflictScore(remaining.first, recent);
+      final tied = remaining
+          .where((q) => conflictScore(q, recent) == bestScore)
+          .toList();
+      Map<String, dynamic> pick = tied.first;
+      if (ordered.isNotEmpty && tied.length > 1) {
+        final lastType = ordered.last['type'];
+        pick = tied.firstWhere(
+          (q) => q['type'] != lastType,
+          orElse: () => tied.first,
+        );
+      }
+
+      ordered.add(pick);
+      remaining.remove(pick);
+    }
+
+    return ordered;
+  }
+
+  /// Fill-blank needs enough words for start/end blanks (length~/3 and ~/4).
+  /// Two-word ayahs produce 0 blanks with the current formula.
+  static const int _minFillBlankWords = 3;
+
+  /// Drag-drop keeps the first word fixed; need at least one more to arrange.
+  static const int _minDragDropWords = 2;
+
+  bool _isUsableFillBlankVerse(List<String> words, int verseIndex) =>
+      verseIndex > 0 &&
+      words.length >= _minFillBlankWords &&
+      !words.contains('');
+
+  bool _isUsableDragDropVerse(List<String> words) =>
+      words.length >= _minDragDropWords && !words.contains('');
 
   List<String> splitVerseManuallyWithSpecialChars(String verse) {
     const specialChars = ['ۜ', 'ۘ', 'ۙ', 'ۚ', 'ۛ', 'ۖ', 'ۗ'];
@@ -507,7 +395,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       }
     }
 
-    return processedWords;
+    // Drop Rub el Hizb, sajda, standalone pause marks — not spoken words
+    return QuranTextUtils.speakableWords(processedWords);
   }
 
   Map<String, dynamic> _generateWhatComesNextQuestion(int index) {
@@ -516,10 +405,12 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       'question': "What verse comes after this?",
       'verse': widget.versesList[index],
       'correctAnswer': widget.versesList[index + 1],
+      'verseIndex': index,
+      'spoilerIndices': [index, index + 1],
     };
   }
 
-  Map<String, dynamic> _generateDragAndDropQuestion(String verse) {
+  Map<String, dynamic> _generateDragAndDropQuestion(String verse, int verseIndex) {
     List<String> words = splitVerseManuallyWithSpecialChars(verse);
     String firstWord = words.first;
     List<String> shuffledWords = List.from(words.skip(1))..shuffle();
@@ -531,30 +422,41 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       'shuffledWords': shuffledWords,
       'correctOrder': words.skip(1).toList(),
       'questionId': UniqueKey().toString(),
+      'verseIndex': verseIndex,
+      'spoilerIndices': [verseIndex],
     };
   }
 
-  Future<Map<String, dynamic>> _generateFillInTheBlankQuestion(
+  /// Returns null when the verse is too short to create any blanks.
+  Future<Map<String, dynamic>?> _generateFillInTheBlankQuestion(
       String verse, int verseIndex) async {
     try {
       List<String> words = splitVerseManuallyWithSpecialChars(verse);
+      if (!_isUsableFillBlankVerse(words, verseIndex)) return null;
+
       int prevIndex = verseIndex - 1;
 
-      // Get previous verse if available
+      // Get previous verse if available (await so the ayah marker is set)
       String? previousVerse;
       String? verseNumber;
       if (verseIndex > 0) {
-        previousVerse = widget.versesList[prevIndex];
-        FirebaseFirestore.instance
-            .collection('verses')
-            .where('text', isEqualTo: previousVerse)
-            .get()
-            .then((snapshot) {
+        previousVerse = widget.versesList[prevIndex]?.toString();
+        try {
+          final snapshot = await FirebaseFirestore.instance
+              .collection('verses')
+              .where('text', isEqualTo: previousVerse)
+              .limit(1)
+              .get();
           if (snapshot.docs.isNotEmpty) {
-            verseNumber =
-                snapshot.docs.first.data()['key'].split(':')[1].toString();
+            final key = snapshot.docs.first.data()['key']?.toString() ?? '';
+            if (key.contains(':')) {
+              // Number of the previous ayah (shown between context and the blank verse)
+              verseNumber = key.split(':')[1];
+            }
           }
-        });
+        } catch (_) {
+          // Continue without verse marker if lookup fails
+        }
       }
 
       // Get the last 3 words of the previous verse (if available)
@@ -595,56 +497,53 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         missingWords.add(words[index]);
       }
 
+      if (missingIndices.isEmpty) return null;
+
       // Create verse with blanks
       List<String> verseWithBlanks = List.from(words);
       for (int index in missingIndices) {
         verseWithBlanks[index] = '____';
       }
 
-      // Create a map to store options for each correct word
-      Map<String, List<String>> wordOptions = {};
+      final twinIndex = await QuranDistractorsIndex.load();
+      final distractors = DistractorService(
+        splitVerse: splitVerseManuallyWithSpecialChars,
+        twinIndex: twinIndex,
+      );
 
-      // Number of options to generate per word
-      final int optionsPerWord = 5;
+      // Options keyed by blank index (stable) and by correct word (legacy UI)
+      final Map<String, List<String>> blankOptions = {};
+      final Map<String, List<String>> wordOptions = {};
 
-      try {
-        // Generate options for each missing word
-        for (String missingWord in missingWords) {
-          // Initialize options list with the correct answer
-          List<String> wordOptionsList = [missingWord];
+      for (int blankIdx = 0; blankIdx < missingWords.length; blankIdx++) {
+        final missingWord = missingWords[blankIdx];
+        final missingAt = missingIndices[blankIdx];
 
-          // Get AI-generated wrong options
-          List<String> aiOptions = await OpenAIService.generateWrongOptions(
-            correctWord: missingWord,
-            context: verse,
-            numberOfOptions: optionsPerWord,
-          );
-
-          // Add AI options if available
-          if (aiOptions.isNotEmpty) {
-            wordOptionsList.addAll(aiOptions);
-          } else {
-            // Fallback to random words
-            List<String> randomOptions =
-                getRandomWords([missingWord], verse, optionsPerWord);
-            wordOptionsList.addAll(randomOptions);
-          }
-
-          // Shuffle the options for this word
-          wordOptionsList.shuffle();
-
-          // Store options for this word
-          wordOptions[missingWord] = wordOptionsList;
+        // Word immediately before this blank (for bigram twin lookup)
+        String? previousWord;
+        if (missingAt > 0) {
+          previousWord = words[missingAt - 1];
+        } else if (previousVerseLastWords.isNotEmpty) {
+          previousWord = previousVerseLastWords.last;
         }
-      } catch (e) {
-        // Fallback to random word selection
-        for (String missingWord in missingWords) {
-          List<String> randomOptions =
-              getRandomWords([missingWord], verse, optionsPerWord);
-          List<String> wordOptionsList = [missingWord, ...randomOptions];
-          wordOptionsList.shuffle();
-          wordOptions[missingWord] = wordOptionsList;
-        }
+
+        final candidates = distractors.ensureEnoughCandidates(
+          correctWord: missingWord,
+          currentVerse: verse,
+          verseIndex: verseIndex,
+          versesList: widget.versesList,
+          previousWord: previousWord,
+        );
+
+        final chosenDistractors = distractors.pickWithoutAI(candidates);
+
+        final options = distractors.buildOptions(
+          correctWord: missingWord,
+          distractors: chosenDistractors,
+        );
+
+        blankOptions['$blankIdx'] = options;
+        wordOptions[missingWord] = options;
       }
 
       return {
@@ -652,26 +551,21 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         'question':
             "Fill in the missing words at the beginning and end of the verse:",
         'verseWords': verseWithBlanks,
+        'blankOptions': blankOptions,
         'wordOptions': wordOptions,
         'correctAnswers': missingWords,
         'missingIndices': missingIndices,
         'previousVerseWords': previousVerseLastWords,
         'verseNumber': verseNumber,
+        'verseIndex': verseIndex,
+        'spoilerIndices': [
+          if (verseIndex > 0) verseIndex - 1,
+          verseIndex,
+        ],
       };
     } catch (e) {
-      // Provide a fallback question
-      return {
-        'type': 'fill_blank',
-        'question': "Fill in the missing words:",
-        'verseWords': [verse],
-        'wordOptions': {
-          'Option 1': ['Option 1', 'Option 2', 'Option 3', 'Option 4']
-        },
-        'correctAnswers': ['Option 1'],
-        'missingIndices': [0],
-        'previousVerseWords': [],
-        'verseNumber': "Verse",
-      };
+      // Skip broken fill-blank rather than showing an unusable question
+      return null;
     }
   }
 
@@ -694,7 +588,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     return verses.take(3).toList();
   }
 
-  Map<String, dynamic> _generateVersePairingQuestion(int verseIndex) {
+  Future<Map<String, dynamic>> _generateVersePairingQuestion(
+      int verseIndex) async {
     // Skip first and last verses since they don't have verses before/after them respectively
     // First, make sure we're not trying to generate a question for the first or last verse
     if (verseIndex == 0 || verseIndex == widget.versesList.length - 1) {
@@ -711,6 +606,23 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         .versesList[verseIndex - 1]; // Safe now that we've excluded first verse
     String verseAfter = widget
         .versesList[verseIndex + 1]; // Safe now that we've excluded last verse
+
+    String? verseNumber;
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('verses')
+          .where('text', isEqualTo: currentVerse)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        final key = snapshot.docs.first.data()['key']?.toString() ?? '';
+        if (key.contains(':')) {
+          verseNumber = key.split(':')[1];
+        }
+      }
+    } catch (_) {
+      // Continue without verse number if lookup fails
+    }
 
     // Generate options for the "verse before" section
     List<String> beforeOptions = [verseBefore]; // Add correct answer
@@ -783,6 +695,9 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       'verseAfter': verseAfter,
       'beforeOptions': beforeOptions,
       'afterOptions': afterOptions,
+      'verseIndex': verseIndex,
+      'verseNumber': verseNumber,
+      'spoilerIndices': [verseIndex - 1, verseIndex, verseIndex + 1],
     };
   }
 

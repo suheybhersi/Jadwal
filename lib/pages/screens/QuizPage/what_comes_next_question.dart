@@ -18,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 // Network & API packages
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:jadwal/utils/quran_text_utils.dart';
 
 class WhatComesNextQuestion extends StatefulWidget {
   final Map<String, dynamic> question;
@@ -519,7 +520,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       }
     }
 
-    return processedWords;
+    // Ignore Rub el Hizb / sajda / standalone marks in speech matching
+    return QuranTextUtils.speakableWords(processedWords);
   }
 
   // Helper function to check if a word should be split (starts with يا variants)

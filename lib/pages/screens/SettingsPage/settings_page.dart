@@ -18,6 +18,7 @@ import 'package:jadwal/services/notification_service.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:provider/provider.dart';
 import 'package:jadwal/themes/theme_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -29,11 +30,23 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool isPushNotificationsEnabled = true;
   bool isEmailNotificationsEnabled = false;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadNotificationPrefs();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() => _appVersion = info.version);
+    } catch (_) {
+      // Keep empty — tile falls back to generic copy.
+    }
   }
 
   Future<void> _loadNotificationPrefs() async {
@@ -202,7 +215,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: Iconsax.crown_1,
                       title: sub.isPro ? 'Jadwal Pro' : 'Upgrade to Pro',
                       description: sub.isPro
-                          ? 'Unlimited quizzes and AI features'
+                          ? (sub.renewalLabel ??
+                              'Unlimited quizzes and Pro quiz types')
                           : 'Unlock Fill in the Blank, speech quizzes & more',
                       onTap: () {
                         Navigator.push(
@@ -419,7 +433,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   _buildSettingTile(
                     icon: Iconsax.information,
                     title: 'About App',
-                    description: 'Version 1.0.0',
+                    description: _appVersion.isEmpty
+                        ? 'App information'
+                        : 'Version $_appVersion',
                     onTap: () {
                       Navigator.push(
                         context,

@@ -60,6 +60,16 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
     super.dispose();
   }
 
+  String _toArabicDigits(String input) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    var out = input;
+    for (int i = 0; i < english.length; i++) {
+      out = out.replaceAll(english[i], arabic[i]);
+    }
+    return out.replaceAll(' ', '');
+  }
+
   // Add scroll to widget method with offset parameter
   void _scrollToWidget(GlobalKey key, {double offset = 0.0}) {
     if (key.currentContext != null) {
@@ -648,17 +658,37 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              // Current verse text
-                              Text(
-                                widget.question['currentVerse'],
-                                style: GoogleFonts.scheherazadeNew(
-                                  letterSpacing: 0,
-                                  fontSize: 22,
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
+                              // Current verse text + ayah number
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: widget.question['currentVerse'],
+                                      style: GoogleFonts.scheherazadeNew(
+                                        letterSpacing: 0,
+                                        fontSize: 22,
+                                        height: 1.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary,
+                                      ),
+                                    ),
+                                    if (widget.question['verseNumber'] !=
+                                        null) ...[
+                                      const TextSpan(text: ' '),
+                                      TextSpan(
+                                        text:
+                                            '﴿${_toArabicDigits(widget.question['verseNumber'].toString())}﴾',
+                                        style: GoogleFonts.scheherazadeNew(
+                                          fontSize: 20,
+                                          height: 1.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 textDirection: TextDirection.rtl,
                                 textAlign: TextAlign.justify,

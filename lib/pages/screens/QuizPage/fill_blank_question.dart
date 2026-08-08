@@ -332,26 +332,32 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
 
     if (correctAnswerIndex != -1 &&
         correctAnswerIndex < widget.question['correctAnswers'].length) {
-      // Get the correct word for this blank
-      String correctWord =
+      // Prefer blank-index keyed options (stable; avoids Arabic key collisions)
+      final blankOptions = widget.question['blankOptions'];
+      if (blankOptions is Map) {
+        final byIndex = blankOptions['$correctAnswerIndex'] ??
+            blankOptions[correctAnswerIndex];
+        if (byIndex is List && byIndex.isNotEmpty) {
+          currentBlankOptions = List<String>.from(byIndex);
+          return;
+        }
+      }
+
+      final String correctWord =
           widget.question['correctAnswers'][correctAnswerIndex];
 
-      // Get options for this specific word from the wordOptions map
+      // Legacy: options keyed by correct Arabic word
       if (widget.question.containsKey('wordOptions') &&
           widget.question['wordOptions'] is Map &&
           widget.question['wordOptions'].containsKey(correctWord)) {
-        // Use the options specific to this word
         currentBlankOptions =
             List<String>.from(widget.question['wordOptions'][correctWord]);
       } else if (widget.question.containsKey('options')) {
-        // Fallback to the old format if needed
         currentBlankOptions = List<String>.from(widget.question['options']);
       } else {
-        // Empty list as a last resort
         currentBlankOptions = [];
       }
     } else {
-      // Fallback to empty list if we can't find the correct answer
       currentBlankOptions = [];
     }
   }
@@ -843,7 +849,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              "﴾${_convertToArabicNumbers(verseNumber).replaceAll(' ', '')}﴿",
+              "﴿${_convertToArabicNumbers(verseNumber).replaceAll(' ', '')}﴾",
               style: GoogleFonts.scheherazadeNew(
                 fontSize: 20,
                 color: primaryAccent,

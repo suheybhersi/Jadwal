@@ -173,7 +173,7 @@ class TermsServicePage extends StatelessWidget {
           ),
           _buildSectionTitle('6. AI Features'),
           _buildParagraph(
-            'Some features use artificial intelligence (including speech-to-text and quiz option generation). AI output may be imperfect. Recitation assessment and generated options are tools to support learning and are not a guarantee of correctness, religious ruling, or scholarly certification. Always verify important matters with qualified teachers where needed.',
+            'Some features use artificial intelligence (speech-to-text for What Comes Next). AI output may be imperfect. Recitation assessment is a tool to support learning and is not a guarantee of correctness, religious ruling, or scholarly certification. Always verify important matters with qualified teachers where needed.',
           ),
           _buildSectionTitle('7. Notifications'),
           _buildParagraph(
@@ -184,7 +184,7 @@ class TermsServicePage extends StatelessWidget {
             'THE SERVICE IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT, TO THE MAXIMUM EXTENT PERMITTED BY LAW.',
           ),
           _buildParagraph(
-            'We do not warrant that the Service will be uninterrupted, error-free, or free of harmful components, or that content (including AI assessments) will be accurate or complete.',
+            'We do not warrant that the Service will be uninterrupted, error-free, or free of harmful components, or that content (including speech assessments) will be accurate or complete.',
           ),
           _buildSectionTitle('9. Limitation of Liability'),
           _buildParagraph(

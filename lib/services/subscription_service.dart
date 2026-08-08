@@ -24,6 +24,7 @@ class SubscriptionService extends ChangeNotifier {
   int _quizzesUsedToday = 0;
   String _usageDate = '';
   bool _lastPurchaseCancelled = false;
+  bool _lastPurchaseChangedProduct = false;
   String? _activeProductId;
   DateTime? _proExpirationDate;
   bool _willRenew = false;
@@ -34,11 +35,37 @@ class SubscriptionService extends ChangeNotifier {
   Offering? get currentOffering => _currentOffering;
   int get quizzesUsedToday => _quizzesUsedToday;
   bool get lastPurchaseCancelled => _lastPurchaseCancelled;
+  bool get lastPurchaseChangedProduct => _lastPurchaseChangedProduct;
   String? get activeProductId => _activeProductId;
   DateTime? get proExpirationDate => _proExpirationDate;
   bool get willRenew => _willRenew;
   int get quizzesRemainingToday =>
       _isPro ? freeQuizzesPerDay : (freeQuizzesPerDay - _quizzesUsedToday).clamp(0, freeQuizzesPerDay);
+
+  /// Short label for Settings / paywall: Free, Monthly, Yearly, or Pro.
+  String get activePlanLabel {
+    if (!_isPro) return 'Free';
+    if (isOnYearlyPlan) return 'Yearly';
+    if (isOnMonthlyPlan) return 'Monthly';
+    return 'Pro';
+  }
+
+  /// Human-readable Pro status including renewal when known.
+  String get proStatusDescription {
+    if (!_isPro) {
+      return 'Unlock Fill in the Blank, speech quizzes & more';
+    }
+    final renewal = renewalLabel;
+    if (renewal != null) {
+      if (isOnYearlyPlan || isOnMonthlyPlan) {
+        return renewal;
+      }
+      return 'Pro · $renewal';
+    }
+    if (isOnYearlyPlan) return 'Yearly plan · Unlimited quizzes and Pro quiz types';
+    if (isOnMonthlyPlan) return 'Monthly plan · Unlimited quizzes and Pro quiz types';
+    return 'Unlimited quizzes and Pro quiz types';
+  }
 
   bool get isOnYearlyPlan {
     if (!_isPro || _activeProductId == null) return false;
@@ -258,11 +285,17 @@ class SubscriptionService extends ChangeNotifier {
     if (!_configured) return false;
     _loading = true;
     _lastPurchaseCancelled = false;
+    _lastPurchaseChangedProduct = false;
+    final previousProductId = _activeProductId;
     notifyListeners();
     try {
       final result =
           await Purchases.purchase(PurchaseParams.package(package));
       await _applyCustomerInfo(result.customerInfo);
+      // Force a fresh read — plan switches can lag in the purchase response.
+      await refreshCustomerInfo();
+      _lastPurchaseChangedProduct = _activeProductId != null &&
+          _activeProductId != previousProductId;
       if (_isPro) {
         await _syncProToServer();
       }
@@ -274,10 +307,16 @@ class SubscriptionService extends ChangeNotifier {
         return false;
       }
       debugPrint('SubscriptionService.purchase error: $e');
-      return false;
+      await refreshCustomerInfo();
+      _lastPurchaseChangedProduct = _activeProductId != null &&
+          _activeProductId != previousProductId;
+      return _lastPurchaseChangedProduct;
     } catch (e) {
       debugPrint('SubscriptionService.purchase error: $e');
-      return false;
+      await refreshCustomerInfo();
+      _lastPurchaseChangedProduct = _activeProductId != null &&
+          _activeProductId != previousProductId;
+      return _lastPurchaseChangedProduct;
     } finally {
       _loading = false;
       notifyListeners();

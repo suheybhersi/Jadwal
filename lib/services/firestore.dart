@@ -24,16 +24,22 @@ class FirestoreService extends ChangeNotifier {
       FirebaseFirestore.instance.collection('pages');
 
   final FirebaseAuth auth;
-  final String uid;
-  final ConnectivityService? connectivityService;
+  String _uid;
+  ConnectivityService? _connectivityService;
   bool _isOfflineMode = false;
 
+  String get uid => _uid;
+  ConnectivityService? get connectivityService => _connectivityService;
   bool get isOfflineMode => _isOfflineMode;
 
-  FirestoreService(
-      {required this.auth, required this.uid, this.connectivityService}) {
+  FirestoreService({
+    required this.auth,
+    required String uid,
+    ConnectivityService? connectivityService,
+  })  : _uid = uid,
+        _connectivityService = connectivityService {
     final User? user = auth.currentUser;
-    if (user == null && uid.isNotEmpty) {
+    if (user == null && _uid.isNotEmpty) {
       throw Exception('User not authenticated');
     }
 
@@ -42,15 +48,47 @@ class FirestoreService extends ChangeNotifier {
         persistenceEnabled: true,
         cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED);
 
-    // Listen to connectivity changes if service is provided
-    connectivityService?.addListener(_onConnectivityChanged);
+    _connectivityService?.addListener(_onConnectivityChanged);
+    _syncOfflineFlag(notify: false);
+  }
+
+  /// Keep a single Provider-owned instance across sign-in / sign-out.
+  void rebind({
+    required String uid,
+    ConnectivityService? connectivityService,
+  }) {
+    var changed = false;
+
+    if (_connectivityService != connectivityService) {
+      _connectivityService?.removeListener(_onConnectivityChanged);
+      _connectivityService = connectivityService;
+      _connectivityService?.addListener(_onConnectivityChanged);
+      _syncOfflineFlag(notify: false);
+      changed = true;
+    }
+
+    if (_uid != uid) {
+      _uid = uid;
+      changed = true;
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  void _syncOfflineFlag({bool notify = true}) {
+    if (_connectivityService == null) return;
+    final next = !_connectivityService!.isConnected;
+    if (_isOfflineMode == next) return;
+    _isOfflineMode = next;
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   void _onConnectivityChanged() {
-    if (connectivityService != null) {
-      _isOfflineMode = !connectivityService!.isConnected;
-      notifyListeners();
-    }
+    _syncOfflineFlag();
   }
 
   DocumentReference get userDocument => usersCollection.doc(uid);
@@ -272,7 +310,7 @@ class FirestoreService extends ChangeNotifier {
 
   @override
   void dispose() {
-    connectivityService?.removeListener(_onConnectivityChanged);
+    _connectivityService?.removeListener(_onConnectivityChanged);
     super.dispose();
   }
 

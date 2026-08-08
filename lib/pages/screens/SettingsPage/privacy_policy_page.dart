@@ -154,7 +154,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildBulletPoint(
               'Provide core features (plans, reviews, quizzes, mushaf reading, progress tracking)'),
           _buildBulletPoint(
-              'Process speech for recitation assessment and generate quiz content where needed'),
+              'Process speech for recitation assessment (What Comes Next)'),
           _buildBulletPoint(
               'Respond to support requests and in-app feedback'),
           _buildBulletPoint(
@@ -173,7 +173,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildBulletPoint(
               'Google Firebase (Authentication, Cloud Firestore, Cloud Functions, Crashlytics) to host accounts, store app data, run backend functions, and collect crash reports'),
           _buildBulletPoint(
-              'OpenAI (via our Cloud Functions) to transcribe quiz audio and help generate certain quiz options'),
+              'OpenAI (via our Cloud Functions) to transcribe quiz audio for What Comes Next'),
           _buildParagraph(
             'These providers process data on our behalf under their terms and to provide the services we request. We may also disclose information if required by law, or to protect the rights, safety, and security of Jadwal, our users, or others.',
           ),

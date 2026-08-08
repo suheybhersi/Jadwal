@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jadwal/firebase_options.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
+import 'package:jadwal/services/app_update_service.dart';
 import 'package:jadwal/services/auth_state_service.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/database_service.dart';
@@ -21,6 +22,8 @@ import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/themes/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+
+final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,17 +65,18 @@ void main() async {
                 Provider.of<ConnectivityService>(context, listen: false),
           ),
           update: (context, connectivityService, authState, previous) {
-            final uid = authState.uid;
-            // Reuse the same instance when the signed-in user hasn't changed.
-            if (previous != null && previous.uid == uid) {
-              return previous;
-            }
-            previous?.dispose();
-            return FirestoreService(
-              auth: FirebaseAuth.instance,
-              uid: uid,
+            // Reuse one instance — never dispose/recreate here (Provider owns dispose).
+            final service = previous ??
+                FirestoreService(
+                  auth: FirebaseAuth.instance,
+                  uid: authState.uid,
+                  connectivityService: connectivityService,
+                );
+            service.rebind(
+              uid: authState.uid,
               connectivityService: connectivityService,
             );
+            return service;
           },
         ),
         ChangeNotifierProvider(create: ((context) => ThemeProvider())),
@@ -125,6 +129,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
       // Start polling for theme changes when in foreground
       _startThemePolling();
+
+      // Soft App Store update prompt (dismissible once per store version).
+      AppUpdateService.maybePrompt(_navigatorKey.currentContext);
     });
   }
 
@@ -187,6 +194,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return GetMaterialApp(
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       home: AuthPage(),
       theme: themeProvider.themeData,
