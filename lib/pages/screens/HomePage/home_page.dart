@@ -630,19 +630,55 @@ class _HomePageState extends State<HomePage> {
 
     if (confirmed != true || !context.mounted) return;
 
-    // Capture before reset — Home unmounts when hifdhs clear, so we must
-    // dismiss the loader via this navigator even if `context` is gone.
+    // Opaque full-screen loader so the next screen (finished-memorising
+    // question) never shows under a dimmed spinner while reset runs.
     final navigator = Navigator.of(context, rootNavigator: true);
     final messenger = ScaffoldMessenger.maybeOf(context);
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      useRootNavigator: true,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF4979FB),
-        ),
+    navigator.push(
+      PageRouteBuilder<void>(
+        opaque: true,
+        barrierDismissible: false,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return PopScope(
+            canPop: false,
+            child: Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(
+                        color: Color(0xFF4979FB),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Resetting your plan…',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'This might take a moment',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
 

@@ -60,47 +60,69 @@ class _FinishedMemorisingQuestionPageState
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const OnboardingStepHeader(
-                icon: Iconsax.book_1,
-                title: 'Have you finished memorising the Quran?',
-                subtitle:
-                    'If you’ve completed your Hifdh, we’ll set you up for quizzes and revision. If you’re still memorising, we’ll help you create a plan.',
+        child: _isLoading
+            ? const _SetupLoadingView()
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const OnboardingStepHeader(
+                      icon: Iconsax.book_1,
+                      title: 'Have you finished memorising the Quran?',
+                      subtitle:
+                          'If you’ve completed your Hifdh, we’ll set you up for quizzes and revision. If you’re still memorising, we’ll help you create a plan.',
+                    ),
+                    const Spacer(),
+                    OnboardingPrimaryButton(
+                      label: 'Yes, I’ve completed the Quran',
+                      onPressed: _onYes,
+                    ),
+                    const SizedBox(height: 10),
+                    OnboardingSecondaryButton(
+                      label: 'No, I’m still memorising',
+                      onPressed: widget.onNo,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
-              if (_isLoading)
-                Center(
-                  child: Column(
-                    children: [
-                      const CircularProgressIndicator(color: kOnboardingAccent),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Setting up your account…',
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else ...[
-                OnboardingPrimaryButton(
-                  label: 'Yes, I’ve completed the Quran',
-                  onPressed: _onYes,
-                ),
-                const SizedBox(height: 10),
-                OnboardingSecondaryButton(
-                  label: 'No, I’m still memorising',
-                  onPressed: widget.onNo,
-                ),
-              ],
-            ],
-          ),
+      ),
+    );
+  }
+}
+
+class _SetupLoadingView extends StatelessWidget {
+  const _SetupLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: kOnboardingAccent),
+            const SizedBox(height: 24),
+            Text(
+              'Setting things up…',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This might take a moment',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
         ),
       ),
     );
