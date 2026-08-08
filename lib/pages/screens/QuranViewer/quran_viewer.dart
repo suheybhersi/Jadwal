@@ -68,6 +68,7 @@ class _QuranViewerState extends State<QuranViewer> {
   }
 
   Future<void> _initializeServices() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -76,9 +77,11 @@ class _QuranViewerState extends State<QuranViewer> {
       // Initialize database if needed
       if (_databaseService != null) {
         await _databaseService!.initialize();
+        if (!mounted) return;
 
         // Preload font for the initial page
         await FontService.loadPageFont(widget.initialPage);
+        if (!mounted) return;
 
         // Preload a few adjacent pages for smooth scrolling
         _preloadAdjacentPageFonts(widget.initialPage);
@@ -106,6 +109,7 @@ class _QuranViewerState extends State<QuranViewer> {
 
         // Run debug to help diagnose script data structure
         await _databaseService!.debugScriptData();
+        if (!mounted) return;
       }
 
       if (mounted) {

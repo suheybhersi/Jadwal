@@ -630,9 +630,15 @@ class _HomePageState extends State<HomePage> {
 
     if (confirmed != true || !context.mounted) return;
 
+    // Capture before reset — Home unmounts when hifdhs clear, so we must
+    // dismiss the loader via this navigator even if `context` is gone.
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: true,
       builder: (_) => const Center(
         child: CircularProgressIndicator(
           color: Color(0xFF4979FB),
@@ -642,12 +648,9 @@ class _HomePageState extends State<HomePage> {
 
     try {
       await firestoreService.resetPlan();
-      if (!context.mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
     } catch (error) {
-      if (!context.mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (navigator.canPop()) navigator.pop();
+      messenger?.showSnackBar(
         SnackBar(
           content: Text(
             'Couldn’t reset. Please try again.',
@@ -656,7 +659,10 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    if (navigator.canPop()) navigator.pop();
   }
 
   void markHifdhAsComplete(

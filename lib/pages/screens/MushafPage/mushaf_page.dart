@@ -259,34 +259,48 @@ class _MushafContentState extends State<MushafContent> {
                     },
                   );
 
-                  // Extract the verse keys from latest hifdh data
-                  final verseToHighlight =
-                      _planData!['hifdhs'].last['hifdh'].split('-')[0].trim();
-                  final endVerseToHighlight =
-                      _planData!['hifdhs'].last['hifdh'].split('-')[1].trim();
+                  // Completed Hifdh has a full-Quran range (1:1–114:6) — don't highlight it.
+                  final bool planCompleted =
+                      _planData!['planCompleted'] == true;
 
-                  // Get previous verse key for context
+                  String verseToHighlight = '';
+                  String endVerseToHighlight = '';
                   String prevVerseKey = '';
-                  try {
-                    final parts = verseToHighlight.split(':');
-                    if (parts.length == 2) {
-                      int chapter = int.parse(parts[0]);
-                      int verse = int.parse(parts[1]);
-                      if (verse > 1) {
-                        prevVerseKey = '$chapter:${verse - 1}';
-                      }
-                    }
-                  } catch (e) {
-                    debugPrint('Error determining previous verse: $e');
-                  }
+                  int pageNumber = 1;
+                  String pageToHighlight = '';
+                  String endPageToHighlight = '';
 
-                  // Get the page numbers
-                  final pageNumber = await _firestoreService
-                      .getPageForVerseKey(verseToHighlight);
-                  final startPageNumber = await _firestoreService
-                      .getPageForVerseKey(verseToHighlight);
-                  final endPageNumber = await _firestoreService
-                      .getPageForVerseKey(endVerseToHighlight);
+                  if (!planCompleted) {
+                    verseToHighlight = _planData!['hifdhs']
+                        .last['hifdh']
+                        .split('-')[0]
+                        .trim();
+                    endVerseToHighlight = _planData!['hifdhs']
+                        .last['hifdh']
+                        .split('-')[1]
+                        .trim();
+
+                    try {
+                      final parts = verseToHighlight.split(':');
+                      if (parts.length == 2) {
+                        int chapter = int.parse(parts[0]);
+                        int verse = int.parse(parts[1]);
+                        if (verse > 1) {
+                          prevVerseKey = '$chapter:${verse - 1}';
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint('Error determining previous verse: $e');
+                    }
+
+                    pageNumber = await _firestoreService
+                        .getPageForVerseKey(verseToHighlight);
+                    final startPageNumber = pageNumber;
+                    final endPageNumber = await _firestoreService
+                        .getPageForVerseKey(endVerseToHighlight);
+                    pageToHighlight = startPageNumber.toString();
+                    endPageToHighlight = endPageNumber.toString();
+                  }
 
                   // Close the loading dialog
                   if (!context.mounted) return;
@@ -299,10 +313,10 @@ class _MushafContentState extends State<MushafContent> {
                       builder: (context) => QuranViewer(
                         initialPage: pageNumber,
                         verseToHighlight: verseToHighlight,
-                        pageToHighlight: startPageNumber.toString(),
+                        pageToHighlight: pageToHighlight,
                         endVerseToHighlight: endVerseToHighlight,
                         prevVerseKey: prevVerseKey,
-                        endPageToHighlight: endPageNumber.toString(),
+                        endPageToHighlight: endPageToHighlight,
                       ),
                     ),
                   );
@@ -515,43 +529,44 @@ class _SurahProgressCard extends StatelessWidget {
           final pageNumber =
               await firestoreService.getPageForVerseKey(verseKey);
 
-          // Find the latest hifdh for this surah in plan data
+          // Completed Hifdh stores the full Quran as the last range — skip highlight.
+          final bool planCompleted = planData?['planCompleted'] == true;
+
           String verseToHighlight = '';
           String endVerseToHighlight = '';
-
-          // Extract the verse keys from hifdh data
-          verseToHighlight =
-              planData!['hifdhs'].last['hifdh'].split('-')[0].trim();
-          endVerseToHighlight =
-              planData!['hifdhs'].last['hifdh'].split('-')[1].trim();
-
           String prevVerseKey = '';
-          try {
-            final parts = verseToHighlight.split(':');
-            if (parts.length == 2) {
-              int chapter = int.parse(parts[0]);
-              int verse = int.parse(parts[1]);
-              // If this isn't the first verse of the surah, then previous is same surah, verse-1
-              if (verse > 1) {
-                prevVerseKey = '$chapter:${verse - 1}';
-              } else {
-                // If it's the first verse, we need special handling
-                // For now we'll leave prevVerseKey empty which works for our case
-                // In a complete implementation, you'd need to handle surah boundaries
+          String pageToHighlight = '';
+          String endPageToHighlight = '';
+
+          if (!planCompleted &&
+              planData != null &&
+              planData!['hifdhs'] != null &&
+              planData!['hifdhs'].isNotEmpty) {
+            verseToHighlight =
+                planData!['hifdhs'].last['hifdh'].split('-')[0].trim();
+            endVerseToHighlight =
+                planData!['hifdhs'].last['hifdh'].split('-')[1].trim();
+
+            try {
+              final parts = verseToHighlight.split(':');
+              if (parts.length == 2) {
+                int chapter = int.parse(parts[0]);
+                int verse = int.parse(parts[1]);
+                if (verse > 1) {
+                  prevVerseKey = '$chapter:${verse - 1}';
+                }
               }
+            } catch (e) {
+              debugPrint('Error determining previous verse: $e');
             }
-          } catch (e) {
-            // If we can't parse, we'll just proceed without a previous verse key
-            debugPrint('Error determining previous verse: $e');
+
+            final startPageNumber =
+                await firestoreService.getPageForVerseKey(verseToHighlight);
+            final endPageNumber =
+                await firestoreService.getPageForVerseKey(endVerseToHighlight);
+            pageToHighlight = startPageNumber.toString();
+            endPageToHighlight = endPageNumber.toString();
           }
-
-          // Get the page number for the start verse
-          final startPageNumber =
-              await firestoreService.getPageForVerseKey(verseToHighlight);
-
-          // Get the page number for the end verse
-          final endPageNumber =
-              await firestoreService.getPageForVerseKey(endVerseToHighlight);
 
           // Close the loading dialog
           if (!context.mounted) return;
@@ -564,10 +579,10 @@ class _SurahProgressCard extends StatelessWidget {
               builder: (context) => QuranViewer(
                 initialPage: pageNumber,
                 verseToHighlight: verseToHighlight,
-                pageToHighlight: startPageNumber.toString(),
+                pageToHighlight: pageToHighlight,
                 endVerseToHighlight: endVerseToHighlight,
                 prevVerseKey: prevVerseKey,
-                endPageToHighlight: endPageNumber.toString(),
+                endPageToHighlight: endPageToHighlight,
               ),
             ),
           );

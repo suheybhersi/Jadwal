@@ -50,6 +50,7 @@ class _QuranPageState extends State<QuranPage> {
 
   Future<void> _initializePage() async {
     try {
+      if (!mounted) return;
       setState(() {
         _isLoading = true;
         _error = '';
@@ -57,15 +58,19 @@ class _QuranPageState extends State<QuranPage> {
 
       // 1. Load the page-specific font first
       await FontService.loadPageFont(widget.pageNumber);
+      if (!mounted) return;
 
       // 2. Initialize database service to access layout.db, script.json, and surahnames.json
       await _dbService.initialize();
+      if (!mounted) return;
 
       // 3. Get page lines from layout.db
       _pageLines = await _dbService.getPageLines(widget.pageNumber);
+      if (!mounted) return;
 
       // 4. Process each line based on its type
       for (var line in _pageLines) {
+        if (!mounted) return;
         try {
           switch (line.lineType) {
             case 'surah_name':
@@ -73,6 +78,7 @@ class _QuranPageState extends State<QuranPage> {
                 // Get surah name from surahnames.json
                 final surahName =
                     await _dbService.getSurahName(int.parse(line.surahNumber!));
+                if (!mounted) return;
                 _lineWords[line.lineNumber] = [
                   Word.special(
                     text:
@@ -117,6 +123,7 @@ class _QuranPageState extends State<QuranPage> {
                 // Get words from script.json using word IDs
                 final lineWords =
                     await _dbService.getWordsInRange(firstWordId, lastWordId);
+                if (!mounted) return;
 
                 // Apply line properties to all words
                 _lineWords[line.lineNumber] = lineWords
@@ -145,12 +152,14 @@ class _QuranPageState extends State<QuranPage> {
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _fontLoaded = true;
       });
     } catch (e) {
       developer.log('Error loading page: $e', error: e);
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _error = 'Error loading page: $e';
