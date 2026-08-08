@@ -79,7 +79,8 @@ class ProfilePage extends StatelessWidget {
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: Theme.of(context).colorScheme.surface,
-          body: StreamBuilder<QuerySnapshot>(
+          body: SafeArea(
+            child: StreamBuilder<QuerySnapshot>(
               stream: firestoreService.getPlansStream(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -206,7 +207,9 @@ class ProfilePage extends StatelessWidget {
                     ],
                   ),
                 );
-              }),
+              },
+            ),
+          ),
         );
       },
     );
@@ -214,20 +217,28 @@ class ProfilePage extends StatelessWidget {
 
   Widget _buildTopBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 10, top: 16, bottom: 20),
+      padding: const EdgeInsets.only(left: 20, right: 10, top: 16, bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'My Profile',
+            'Profile',
             style: GoogleFonts.poppins(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           IconButton(
-            icon: const Icon(Iconsax.setting_2),
+            icon: Icon(
+              Iconsax.setting_2,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            tooltip: 'Settings',
+            style: IconButton.styleFrom(
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(40, 40),
+            ),
             onPressed: () {
               Navigator.push(
                 context,

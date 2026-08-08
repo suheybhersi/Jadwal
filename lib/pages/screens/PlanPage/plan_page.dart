@@ -60,218 +60,246 @@ class _PlanPageState extends State<PlanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        title: Text(
-          'Plan',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-          ),
-        ),
-        leading: StreamBuilder<QuerySnapshot>(
-          stream: firestoreService.getPlansStream(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError ||
-                !snapshot.hasData ||
-                snapshot.data!.docs.isEmpty) {
-              return const SizedBox(width: 48, height: 48);
-            }
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildPageHeader(context),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: firestoreService.getPlansStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const FirestoreErrorView();
+                  }
 
-            Map<String, dynamic> plan =
-                snapshot.data!.docs[0].data() as Map<String, dynamic>;
-            String id = snapshot.data!.docs[0].id;
-            final bool isHuffadh = plan['planCompleted'] == true;
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Color.fromARGB(255, 73, 121, 251),
+                      ),
+                    );
+                  }
 
-            // Huffadh: no edit-plan button (revision page only)
-            if (isHuffadh) {
-              return const SizedBox(width: 48, height: 48);
-            }
+                  if (snapshot.hasData) {
+                    List plansList = snapshot.data!.docs;
 
-            final editButton = IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditPlanPage(
-                      plan: plan,
-                      id: id,
+                    if (plansList.isNotEmpty) {
+                      Map<String, dynamic> plan =
+                          plansList[0].data() as Map<String, dynamic>;
+                      final String planId = plansList[0].id;
+                      final bool isHuffadh = plan['planCompleted'] == true;
+
+                      // Reschedule missed reviews to today (same as non-Huffadh flow)
+                      if (_reviewMissedPlanId != planId) {
+                        _reviewMissedPlanId = planId;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          firestoreService.reviewMissed(planId);
+                        });
+                      }
+
+                      // Huffadh: Revision page — incomplete reviews when intensive mode
+                      if (isHuffadh) {
+                        return SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                            child: Consumer<UserPreferencesService>(
+                              builder: (context, prefsService, child) {
+                                final bool showReviews =
+                                    prefsService.shouldScheduleReviews;
+                                final List<dynamic> incompleteReviews =
+                                    _getIncompleteReviews(plan);
+                                if (showReviews &&
+                                    incompleteReviews.isNotEmpty) {
+                                  return IncompleteReviewsSection(
+                                    plan: plan,
+                                    planId: planId,
+                                    incompleteReviews: incompleteReviews,
+                                    firestoreService: firestoreService,
+                                  );
+                                }
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 48),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Iconsax.clipboard_tick,
+                                          size: 60,
+                                          color: Colors.grey
+                                              .withValues(alpha: 0.5),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          showReviews
+                                              ? 'No reviews to complete'
+                                              : 'Revision schedule is off',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Still memorising: no "Reviews to complete" — only shown when whole Quran memorisation is completed (Huffadh)
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PlanProgress(plan: plan),
+                            plan['hifdhs']
+                                    .where(
+                                        (hifdh) => hifdh['completed'] == true)
+                                    .isNotEmpty
+                                ? Column(
+                                    children: [
+                                      PreviousMemorisation(plan: plan),
+                                      Consumer<UserPreferencesService>(
+                                        builder:
+                                            (context, prefsService, child) {
+                                          if (!prefsService
+                                              .shouldScheduleReviews) {
+                                            return SizedBox();
+                                          }
+                                          return PreviousReviews(plan: plan);
+                                        },
+                                      ),
+                                    ],
+                                  )
+                                : Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 30),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Iconsax.clipboard_close,
+                                            size: 60,
+                                            color: Colors.grey
+                                                .withValues(alpha: 0.5),
+                                          ),
+                                          SizedBox(height: 16),
+                                          Text(
+                                            'No history found.',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                            SizedBox(height: 30),
+                          ],
+                        ),
+                      );
+                    }
+                  }
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Iconsax.document_text,
+                          size: 60,
+                          color: Colors.grey.withValues(alpha: 0.5),
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'No plans found',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
-              icon: const Icon(Iconsax.edit),
-            );
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            return Padding(
-              padding: const EdgeInsets.only(left: 10, top: 10),
-              child: SmartShowcase(
+  Widget _buildPageHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 10, top: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Plan',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+          ),
+          StreamBuilder<QuerySnapshot>(
+            stream: firestoreService.getPlansStream(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError ||
+                  !snapshot.hasData ||
+                  snapshot.data!.docs.isEmpty) {
+                return const SizedBox(width: 40, height: 40);
+              }
+
+              Map<String, dynamic> plan =
+                  snapshot.data!.docs[0].data() as Map<String, dynamic>;
+              String id = snapshot.data!.docs[0].id;
+              final bool isHuffadh = plan['planCompleted'] == true;
+
+              // Huffadh: no edit-plan button (revision page only)
+              if (isHuffadh) {
+                return const SizedBox(width: 40, height: 40);
+              }
+
+              final editButton = IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditPlanPage(
+                        plan: plan,
+                        id: id,
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Iconsax.edit,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+                tooltip: 'Edit plan',
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(8),
+                  minimumSize: const Size(40, 40),
+                ),
+              );
+
+              return SmartShowcase(
                 tooltipId: 'edit_plan_button',
                 title: 'Edit Your Plan',
                 description:
                     'Tap here to modify your memorisation plan, change schedule, or update your progress.',
                 globalKey: _editPlanKey,
                 child: editButton,
-              ),
-            );
-          },
-        ),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getPlansStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const FirestoreErrorView();
-          }
-
-          if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 73, 121, 251),
-              ),
-            );
-          }
-
-          if (snapshot.hasData) {
-            List plansList = snapshot.data!.docs;
-
-            if (plansList.isNotEmpty) {
-              Map<String, dynamic> plan =
-                  plansList[0].data() as Map<String, dynamic>;
-              final String planId = plansList[0].id;
-              final bool isHuffadh = plan['planCompleted'] == true;
-
-              // Reschedule missed reviews to today (same as non-Huffadh flow)
-              if (_reviewMissedPlanId != planId) {
-                _reviewMissedPlanId = planId;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  firestoreService.reviewMissed(planId);
-                });
-              }
-
-              // Huffadh: Revision page — incomplete reviews when intensive mode
-              if (isHuffadh) {
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                    child: Consumer<UserPreferencesService>(
-                      builder: (context, prefsService, child) {
-                        final bool showReviews =
-                            prefsService.shouldScheduleReviews;
-                        final List<dynamic> incompleteReviews =
-                            _getIncompleteReviews(plan);
-                        if (showReviews && incompleteReviews.isNotEmpty) {
-                          return IncompleteReviewsSection(
-                            plan: plan,
-                            planId: planId,
-                            incompleteReviews: incompleteReviews,
-                            firestoreService: firestoreService,
-                          );
-                        }
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 48),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Iconsax.clipboard_tick,
-                                  size: 60,
-                                  color: Colors.grey.withValues(alpha: 0.5),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  showReviews
-                                      ? 'No reviews to complete'
-                                      : 'Revision schedule is off',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                );
-              }
-
-              // Still memorising: no "Reviews to complete" — only shown when whole Quran memorisation is completed (Huffadh)
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    PlanProgress(plan: plan),
-                    plan['hifdhs']
-                            .where((hifdh) => hifdh['completed'] == true)
-                            .isNotEmpty
-                        ? Column(
-                            children: [
-                              PreviousMemorisation(plan: plan),
-                              Consumer<UserPreferencesService>(
-                                builder: (context, prefsService, child) {
-                                  if (!prefsService.shouldScheduleReviews) {
-                                    return SizedBox();
-                                  }
-                                  return PreviousReviews(plan: plan);
-                                },
-                              ),
-                            ],
-                          )
-                        : Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 30),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Iconsax.clipboard_close,
-                                    size: 60,
-                                    color: Colors.grey.withValues(alpha: 0.5),
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'No history found.',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                    SizedBox(height: 30),
-                  ],
-                ),
               );
-            }
-          }
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Iconsax.document_text,
-                  size: 60,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'No plans found',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+            },
+          ),
+        ],
       ),
     );
   }
