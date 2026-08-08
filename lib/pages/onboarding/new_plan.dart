@@ -37,6 +37,7 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
     );
 
     Future<void> storeNewPlan() async {
+      if (controller.isCreatingPlan.value) return;
       controller.isCreatingPlan.value = true;
       String fromKey = '${controller.isBackToFront.value ? '114' : '1'}:1';
       String toKey =
@@ -46,13 +47,18 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
           : (int.tryParse(controller.inputController.text) ?? 1) * 15;
       if (lines < 1) lines = 1;
 
-      await firestoreService.addPlan(controller.isBackToFront.value, fromKey,
-          toKey, lines, controller.selectedDays.toList());
+      try {
+        await firestoreService.addPlan(controller.isBackToFront.value, fromKey,
+            toKey, lines, controller.selectedDays.toList());
 
-      // Check if hifdhs list has values before setting planCreated to true
-      final hifdhs = await firestoreService.getHifdhsStream().first;
-      if (hifdhs.docs.isNotEmpty) {
-        controller.planCreated.value = true;
+        // Check if hifdhs list has values before setting planCreated to true
+        final hifdhs = await firestoreService.getHifdhsStream().first;
+        if (hifdhs.docs.isNotEmpty) {
+          controller.planCreated.value = true;
+        }
+      } catch (_) {
+        controller.isCreatingPlan.value = false;
+        rethrow;
       }
     }
 
@@ -106,9 +112,8 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
                         children: [
                           if (canGoBack)
                             OnboardingBackButton(
-                              onPressed: () => controller.pageController
-                                  .jumpToPage(
-                                      controller.currentPageIndex.value - 1),
+                              onPressed: () => controller.jumpToPageSafe(
+                                  controller.currentPageIndex.value - 1),
                             )
                           else
                             const SizedBox(width: 44, height: 44),
@@ -234,31 +239,43 @@ class BottomNavigation extends StatelessWidget {
       child: Obx(() {
         final isReview = controller.currentPageIndex.value ==
             controller.reviewPageIndex;
+        final busy = controller.isAdvancing.value ||
+            controller.isCreatingPlan.value;
         return OnboardingPrimaryButton(
           label: isReview ? 'Confirm & create' : 'Continue',
-          onPressed: () async {
-            final reviewIndex = controller.reviewPageIndex;
-            final modeIndex = controller.modePageIndex;
-            if (controller.currentPageIndex.value == reviewIndex) {
-              onNextPressed();
-            } else if (controller.currentPageIndex.value == modeIndex) {
-              if (controller.selectedMode.value == null) {
-                controller.modePageError.value =
-                    'Please select a mode to continue.';
-              } else {
-                controller.modePageError.value = '';
-                final prefsService = Provider.of<UserPreferencesService>(
-                    context,
-                    listen: false);
-                await prefsService
-                    .setUsageMode(controller.selectedMode.value!);
-                await prefsService.completeModeSelection();
-                controller.pageController.jumpToPage(reviewIndex);
-              }
-            } else {
-              controller.nextPage();
-            }
-          },
+          onPressed: busy
+              ? null
+              : () async {
+                  final reviewIndex = controller.reviewPageIndex;
+                  final modeIndex = controller.modePageIndex;
+                  if (controller.currentPageIndex.value == reviewIndex) {
+                    onNextPressed();
+                  } else if (controller.currentPageIndex.value == modeIndex) {
+                    if (controller.selectedMode.value == null) {
+                      controller.modePageError.value =
+                          'Please select a mode to continue.';
+                    } else {
+                      controller.modePageError.value = '';
+                      controller.isAdvancing.value = true;
+                      try {
+                        final prefsService =
+                            Provider.of<UserPreferencesService>(
+                          context,
+                          listen: false,
+                        );
+                        await prefsService
+                            .setUsageMode(controller.selectedMode.value!);
+                        await prefsService.completeModeSelection();
+                        if (!context.mounted) return;
+                        controller.jumpToPageSafe(reviewIndex);
+                      } finally {
+                        controller.isAdvancing.value = false;
+                      }
+                    }
+                  } else {
+                    controller.nextPage();
+                  }
+                },
         );
       }),
     );
@@ -1016,7 +1033,7 @@ class ReviewPage extends StatelessWidget {
                 ? 'Back to front'
                 : 'Front to back',
             icon: Iconsax.arrow_swap_horizontal,
-            onEdit: () => controller.pageController.jumpToPage(0),
+            onEdit: () => controller.jumpToPageSafe(0),
           ),
           const SizedBox(height: 10),
           OnboardingReviewTile(
@@ -1025,8 +1042,8 @@ class ReviewPage extends StatelessWidget {
                 ? '${controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha'} 1 – ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
                 : 'Starting fresh',
             icon: Iconsax.bookmark,
-            onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
+            onEdit: () => controller.jumpToPageSafe(
+                controller.hasMemorisedBefore.value ? 1 : 0),
           ),
           const SizedBox(height: 10),
           OnboardingReviewTile(
@@ -1046,8 +1063,8 @@ class ReviewPage extends StatelessWidget {
                     ][entry.key])
                 .join(', '),
             icon: Iconsax.calendar_1,
-            onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
+            onEdit: () => controller.jumpToPageSafe(
+                controller.hasMemorisedBefore.value ? 2 : 1),
           ),
           const SizedBox(height: 10),
           OnboardingReviewTile(
@@ -1055,8 +1072,8 @@ class ReviewPage extends StatelessWidget {
             content:
                 '${controller.inputController.text} ${controller.selectedUnit.value.toLowerCase()}',
             icon: Iconsax.chart_2,
-            onEdit: () => controller.pageController
-                .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
+            onEdit: () => controller.jumpToPageSafe(
+                controller.hasMemorisedBefore.value ? 2 : 1),
           ),
           const SizedBox(height: 10),
           OnboardingReviewTile(
@@ -1067,7 +1084,7 @@ class ReviewPage extends StatelessWidget {
                 : 'Not selected',
             icon: Iconsax.setting_2,
             onEdit: () =>
-                controller.pageController.jumpToPage(controller.modePageIndex),
+                controller.jumpToPageSafe(controller.modePageIndex),
           ),
         ],
       ),
@@ -1079,6 +1096,7 @@ class NewPlanController extends GetxController {
   static NewPlanController get instance => Get.find();
 
   final pageController = PageController();
+  final RxBool isAdvancing = false.obs;
   Rx<int> currentPageIndex = 0.obs;
   final inputController = TextEditingController();
   final RxString selectedUnit = 'Lines'.obs;
@@ -1141,13 +1159,27 @@ class NewPlanController extends GetxController {
   int get reviewPageIndex => hasMemorisedBefore.value ? 4 : 3;
   int get totalSteps => hasMemorisedBefore.value ? 5 : 4;
 
+  void jumpToPageSafe(int page) {
+    currentPageIndex.value = page;
+    if (pageController.hasClients) {
+      pageController.jumpToPage(page);
+      return;
+    }
+    // Provider rebuilds after prefs save can detach the PageView mid-await.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (pageController.hasClients) {
+        pageController.jumpToPage(page);
+      }
+    });
+  }
+
   void nextPage() {
     if (currentPageIndex.value == 0) {
-      pageController.jumpToPage(1);
+      jumpToPageSafe(1);
     } else if (currentPageIndex.value == 1 && hasMemorisedBefore.value) {
       if (selectedToSurah.value != null && selectedToVerse.value != null) {
         toPageError.value = '';
-        pageController.jumpToPage(2);
+        jumpToPageSafe(2);
       } else {
         toPageError.value = 'Please select a Surah and Verse to proceed.';
       }
@@ -1156,7 +1188,7 @@ class NewPlanController extends GetxController {
       final lines = selectedUnit.value == 'Lines' ? amount : amount * 15;
       if (lines >= 1 && selectedDays.contains(true)) {
         planDetailsError.value = '';
-        pageController.jumpToPage(modePageIndex);
+        jumpToPageSafe(modePageIndex);
       } else if (lines < 1) {
         planDetailsError.value = 'Daily amount must be at least 1 line.';
       } else {

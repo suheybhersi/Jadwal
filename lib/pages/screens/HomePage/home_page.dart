@@ -12,6 +12,7 @@ import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/completion_feedback_service.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
+import 'package:jadwal/utils/review_miss_utils.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 
@@ -704,6 +705,10 @@ class _HomePageState extends State<HomePage> {
   void markHifdhAsComplete(
       String key, BuildContext context, int lines, String id) {
     Navigator.of(context).pop();
+
+    final prefsService =
+        Provider.of<UserPreferencesService>(context, listen: false);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -736,6 +741,26 @@ class _HomePageState extends State<HomePage> {
                             .get();
                         final planData =
                             planSnapshot.data() as Map<String, dynamic>;
+
+                        if (prefsService.shouldScheduleReviews &&
+                            firestoreService
+                                .isNewHifdhBlockedByReviews(planData)) {
+                          if (!context.mounted) return;
+                          setState(() => isLoading = false);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                ReviewMissUtils.hifdhBlockMessage(planData),
+                                style: GoogleFonts.poppins(),
+                              ),
+                              backgroundColor: const Color(0xFF4979FB),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
                         final currentStreak = planData['streak'] ?? 0;
                         final double totalLines =
                             (planData['totalLines'] as num?)?.toDouble() ?? 1;

@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/components/smart_showcase.dart';
+import 'package:jadwal/utils/review_miss_utils.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:provider/provider.dart';
 
@@ -874,14 +875,18 @@ class WeekDaysSection extends StatelessWidget {
     // Determine status based on date and ratings
     bool isCompleted =
         review['ratings'] != null && review['ratings'].isNotEmpty;
-    String statusText =
-        isPast ? (isCompleted ? 'Completed' : 'Missed') : 'Upcoming';
+    final wasMissed = ReviewMissUtils.wasMissed(review);
+    String statusText = isCompleted
+        ? 'Completed'
+        : (isPast || wasMissed)
+            ? 'Missed'
+            : 'Upcoming';
 
-    Color statusColor = isPast
-        ? (isCompleted
-            ? Color.fromARGB(255, 90, 180, 140) // Less bright green
-            : Colors.red.shade300)
-        : Color.fromARGB(255, 254, 189, 89);
+    Color statusColor = isCompleted
+        ? Color.fromARGB(255, 90, 180, 140)
+        : (isPast || wasMissed)
+            ? Colors.red.shade300
+            : Color.fromARGB(255, 254, 189, 89);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),

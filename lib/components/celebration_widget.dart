@@ -35,6 +35,7 @@ class _CelebrationWidgetState extends State<CelebrationWidget>
   late AnimationController _fadeController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  bool _continuing = false;
 
   @override
   void initState() {
@@ -63,6 +64,12 @@ class _CelebrationWidgetState extends State<CelebrationWidget>
     // Start animations
     _scaleController.forward();
     _fadeController.forward();
+  }
+
+  void _handleContinue() {
+    if (_continuing) return;
+    setState(() => _continuing = true);
+    (widget.onContinue ?? () => Navigator.pop(context))();
   }
 
   @override
@@ -241,10 +248,13 @@ class _CelebrationWidgetState extends State<CelebrationWidget>
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: widget.onContinue ?? () => Navigator.pop(context),
+                  onPressed: _continuing ? null : _handleContinue,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.color,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        widget.color.withValues(alpha: 0.6),
+                    disabledForegroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

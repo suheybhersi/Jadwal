@@ -12,6 +12,7 @@ import 'package:jadwal/models/review.dart';
 import 'package:jadwal/services/connectivity_service.dart';
 import 'package:jadwal/services/achievement_service.dart';
 import 'package:jadwal/services/spaced_repetition_service.dart';
+import 'package:jadwal/utils/review_miss_utils.dart';
 
 class FirestoreService extends ChangeNotifier {
   final CollectionReference usersCollection =
@@ -2052,12 +2053,14 @@ class FirestoreService extends ChangeNotifier {
         'date': '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}',
         'ratings': ratings,
         'sm2': updatedSm2,
+        'missCount': 0,
       });
 
       rev['date'] =
           '${newReviewDT.day}-${newReviewDT.month}-${newReviewDT.year}';
       rev['ratings'] = ratings;
       rev['sm2'] = updatedSm2;
+      rev['missCount'] = 0;
 
       await plansCollection.doc(id).update({
         'reviews': planData['reviews'],
@@ -2511,48 +2514,102 @@ class FirestoreService extends ChangeNotifier {
     if (!planSnapshot.exists) return;
 
     final planData = planSnapshot.data() as Map<String, dynamic>;
-    final List<dynamic> reviews = planData['reviews'] ?? [];
+    final List<dynamic> reviews =
+        List<dynamic>.from(planData['reviews'] ?? []);
+    if (reviews.isEmpty) return;
 
-    var today = DateTime.now();
-    today = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    );
-    bool updated = false;
+    final today = ReviewMissUtils.dateOnly(DateTime.now());
+    var planMissedReviews = (planData['missedReviews'] as num?)?.toInt() ?? 0;
+    var changed = false;
 
-    // Reschedule any missed reviews (date < today) to the next day
-    for (var review in reviews) {
-      final parts = (review['date'] as String).split('-');
-      final reviewDate = DateTime(
-        int.parse(parts[2]),
-        int.parse(parts[1]),
-        int.parse(parts[0]),
-      );
+    // Separate incomplete reviews by date bucket.
+    final alreadyDueToday = <int>[];
+    final overdueIndexes = <int>[];
 
-      // Check if the review date is before today and not completed
-      if (reviewDate.isBefore(today) &&
-          reviewDate != today &&
-          (review['completed'] != true)) {
-        review['date'] = '${today.day}-${today.month}-${today.year}';
-        updated = true;
-        // Update the review date in the database
-        final reviewQ = await reviewsCollection
-            .where('review', isEqualTo: review['review'])
-            .get();
-        final reviewId = reviewQ.docs[0].id;
-        if (reviewId.isNotEmpty) {
-          await reviewsCollection.doc(reviewId).update({
-            'date': '${today.day}-${today.month}-${today.year}',
-          });
-        }
+    for (var i = 0; i < reviews.length; i++) {
+      final raw = reviews[i];
+      if (raw is! Map) continue;
+      final review = Map<String, dynamic>.from(raw);
+      if (!ReviewMissUtils.isIncomplete(review)) continue;
+
+      final date = ReviewMissUtils.parsePlanDate(review['date']?.toString());
+      if (date == null) continue;
+
+      if (date.isBefore(today)) {
+        overdueIndexes.add(i);
+      } else if (date == today) {
+        alreadyDueToday.add(i);
       }
     }
 
-    if (updated) {
-      await plansCollection.doc(planId).update({'reviews': reviews});
+    if (overdueIndexes.isEmpty) return;
+
+    // Oldest missed first.
+    overdueIndexes.sort((a, b) {
+      final da = ReviewMissUtils.parsePlanDate(
+            (reviews[a] as Map)['date']?.toString(),
+          ) ??
+          today;
+      final db = ReviewMissUtils.parsePlanDate(
+            (reviews[b] as Map)['date']?.toString(),
+          ) ??
+          today;
+      return da.compareTo(db);
+    });
+
+    final dueSlotsLeft =
+        max(0, ReviewMissUtils.dueTodayCap - alreadyDueToday.length);
+    var futureSlot = 0;
+
+    for (var order = 0; order < overdueIndexes.length; order++) {
+      final index = overdueIndexes[order];
+      final review = Map<String, dynamic>.from(reviews[index] as Map);
+
+      // Penalty + miss count (once per day they were overdue).
+      final missCount = (review['missCount'] as num?)?.toInt() ?? 0;
+      review['missCount'] = missCount + 1;
+      review['sm2'] = ReviewMissUtils.applyMissPenaltyToSm2(
+        (review['sm2'] as List?)?.cast<dynamic>(),
+      );
+      planMissedReviews += 1;
+
+      DateTime newDate;
+      if (order < dueSlotsLeft) {
+        newDate = today;
+      } else {
+        // Spread remaining backlog across upcoming days (1 per day).
+        futureSlot += 1;
+        newDate = today.add(Duration(days: futureSlot));
+      }
+
+      final dateStr = ReviewMissUtils.formatPlanDate(newDate);
+      review['date'] = dateStr;
+      reviews[index] = review;
+      changed = true;
+
+      final reviewQ = await reviewsCollection
+          .where('review', isEqualTo: review['review'])
+          .get();
+      if (reviewQ.docs.isNotEmpty) {
+        await reviewsCollection.doc(reviewQ.docs[0].id).update({
+          'date': dateStr,
+          'missCount': review['missCount'],
+          'sm2': review['sm2'],
+        });
+      }
+    }
+
+    if (changed) {
+      await plansCollection.doc(planId).update({
+        'reviews': reviews,
+        'missedReviews': planMissedReviews,
+      });
     }
   }
+
+  /// Intensive soft-gate: too many due/overdue reviews blocks new memorisation.
+  bool isNewHifdhBlockedByReviews(Map<String, dynamic> plan) =>
+      ReviewMissUtils.isNewHifdhBlocked(plan);
 
   /*----------------------------------------Q U I Z   H I S T O R Y---------------------------------------*/
 

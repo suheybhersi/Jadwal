@@ -40,10 +40,6 @@ class QuizResultsPageState extends State<QuizResultsPage> {
 
   // Function to save quiz results to Firestore
   Future<void> _saveQuizResultsToFirestore() async {
-    setState(() {
-      _isSaving = true;
-    });
-
     try {
       // Get FirestoreService instance
       final firestoreService =
@@ -70,10 +66,59 @@ class QuizResultsPageState extends State<QuizResultsPage> {
       // Handle errors
       debugPrint('Error saving quiz results: $e');
       // Could show a snackbar here if needed
-    } finally {
-      setState(() {
-        _isSaving = false;
-      });
+    }
+  }
+
+  Future<void> _finishQuiz() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    try {
+      final rating = ((widget.score / widget.questions.length) * 5)
+          .round()
+          .toString();
+
+      final reviewResult =
+          await widget.updateReview(widget.id, widget.review, rating);
+      await _saveQuizResultsToFirestore();
+      if (!mounted) return;
+
+      final percentage =
+          (widget.score / widget.questions.length) * 100;
+
+      await CompletionFeedbackService.showQuizCelebration(
+        context: context,
+        score: widget.score,
+        totalQuestions: widget.questions.length,
+        percentage: percentage,
+        reviewTitle: widget.review,
+      );
+
+      if (!mounted) return;
+
+      if (reviewResult != null) {
+        await CompletionFeedbackService.showReviewCelebration(
+          context: context,
+          status: reviewResult['status'] as String,
+          nextInterval: reviewResult['nextInterval'] as int,
+          successRate: (reviewResult['successRate'] as num).toDouble(),
+          consecutiveCorrect: reviewResult['consecutiveCorrect'] as int,
+          surah: reviewResult['surah'] as String?,
+        );
+      }
+
+      if (!mounted) return;
+
+      if (widget.isCustomQuiz) {
+        final controller = Get.find<QuizCreationController>();
+        controller.resetAllState();
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } else {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      debugPrint('Error finishing quiz: $e');
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -440,66 +485,13 @@ class QuizResultsPageState extends State<QuizResultsPage> {
               child: SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isSaving
-                      ? null
-                      : () async {
-                          String rating =
-                              ((widget.score / widget.questions.length) * 5)
-                                  .round()
-                                  .toString();
-                          
-                          // Update review and get result
-                          final reviewResult = await widget.updateReview(widget.id, widget.review, rating);
-                          await _saveQuizResultsToFirestore();
-                          if (!mounted) return;
-                          if (!context.mounted) return;
-                          
-                          // Calculate percentage
-                          final percentage = (widget.score / widget.questions.length) * 100;
-                          
-                          // Show quiz celebration first
-                          await CompletionFeedbackService.showQuizCelebration(
-                            context: context,
-                            score: widget.score,
-                            totalQuestions: widget.questions.length,
-                            percentage: percentage,
-                            reviewTitle: widget.review,
-                          );
-                          
-                          if (!mounted) return;
-                          if (!context.mounted) return;
-                          
-                          // Show review celebration if review was updated
-                          if (reviewResult != null) {
-                            await CompletionFeedbackService.showReviewCelebration(
-                              context: context,
-                              status: reviewResult['status'] as String,
-                              nextInterval: reviewResult['nextInterval'] as int,
-                              successRate: (reviewResult['successRate'] as num).toDouble(),
-                              consecutiveCorrect: reviewResult['consecutiveCorrect'] as int,
-                              surah: reviewResult['surah'] as String?,
-                            );
-                          }
-                          
-                          if (!mounted) return;
-                          if (!context.mounted) return;
-                          
-                          if (widget.isCustomQuiz) {
-                            // Reset quiz creation state
-                            final controller =
-                                Get.find<QuizCreationController>();
-                            controller.resetAllState();
-                            // Pop until we reach the quiz history page
-                            Navigator.of(context)
-                                .popUntil((route) => route.isFirst);
-                          } else {
-                            // For regular quizzes, just pop once
-                            Navigator.pop(context);
-                          }
-                        },
+                  onPressed: _isSaving ? null : _finishQuiz,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        Colors.blue.shade700.withValues(alpha: 0.6),
+                    disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),

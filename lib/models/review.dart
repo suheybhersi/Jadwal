@@ -8,6 +8,7 @@ class Review {
   final double length;
   final List<dynamic> sm2;
   final List<dynamic> versesList;
+  final int missCount;
 
   Review({
     required this.review,
@@ -19,6 +20,7 @@ class Review {
     required this.length,
     required this.sm2,
     required this.versesList,
+    this.missCount = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class Review {
       'length': length,
       'sm2': sm2,
       'versesList': versesList,
+      'missCount': missCount,
     };
   }
 }

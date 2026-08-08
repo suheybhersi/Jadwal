@@ -9,6 +9,7 @@ import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/components/verse_picker.dart';
+import 'package:jadwal/utils/review_miss_utils.dart';
 import 'package:provider/provider.dart';
 
 class UpcomingSection extends StatelessWidget {
@@ -31,6 +32,14 @@ class UpcomingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final prefsService =
+        Provider.of<UserPreferencesService>(context, listen: true);
+    final allReviews = (plan['reviews'] as List<dynamic>?) ?? [];
+    final backlogCount = ReviewMissUtils.countBacklog(allReviews);
+    final hifdhBlocked = prefsService.shouldScheduleReviews &&
+        ReviewMissUtils.isNewHifdhBlocked(plan);
+    final blockMessage = ReviewMissUtils.hifdhBlockMessage(plan);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -98,8 +107,75 @@ class UpcomingSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             children: [
-              // New Memorisation Card
-              GestureDetector(
+              // New Memorisation — hidden while reviews block new hifdh
+              if (hifdhBlocked)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color(0xFF4979FB).withValues(alpha: 0.35),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withValues(alpha: 0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4979FB).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Iconsax.lock_1,
+                          color: Color(0xFF4979FB),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Memorisation paused',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              blockMessage,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                height: 1.45,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                GestureDetector(
                 onTap: () {
                   final hifdhs = plan['hifdhs'] as List<dynamic>?;
                   if (hifdhs != null &&
@@ -382,13 +458,20 @@ class UpcomingSection extends StatelessWidget {
                                       ),
                                       SizedBox(width: 12),
                                       Text(
-                                        'Review',
+                                        reviews.length > 1
+                                            ? 'Review · ${reviews.length} due'
+                                            : 'Review',
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: Colors.white,
                                         ),
                                       ),
+                                      if (ReviewMissUtils.anyWasMissed(
+                                          reviews)) ...[
+                                        SizedBox(width: 8),
+                                        MissedReviewTag(onDark: true),
+                                      ],
                                       if (includesWhatComesNext) ...[
                                         SizedBox(width: 8),
                                         Container(
@@ -443,6 +526,20 @@ class UpcomingSection extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                              if (backlogCount > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 20, top: 4),
+                                  child: Text(
+                                    '$backlogCount more scheduled ahead',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
+                                    ),
+                                  ),
+                                ),
                               SizedBox(height: 8),
                               Container(
                                 margin: EdgeInsets.only(
@@ -547,6 +644,11 @@ class UpcomingSection extends StatelessWidget {
 
   void newDraggableBottomSheet(
       BuildContext context, Map<String, dynamic> hifdh) {
+    final prefsService =
+        Provider.of<UserPreferencesService>(context, listen: false);
+    final hifdhBlocked = prefsService.shouldScheduleReviews &&
+        ReviewMissUtils.isNewHifdhBlocked(plan);
+
     Widget makeDissmissable({required Widget child}) => GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).pop(),
@@ -1015,6 +1117,22 @@ class UpcomingSection extends StatelessWidget {
                                 height: 56,
                                 child: ElevatedButton(
                                   onPressed: () {
+                                    if (hifdhBlocked) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            ReviewMissUtils.hifdhBlockMessage(
+                                                plan),
+                                            style: GoogleFonts.poppins(),
+                                          ),
+                                          backgroundColor:
+                                              const Color(0xFF4979FB),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                      return;
+                                    }
                                     if (!hifdh['completed']) {
                                       markHifdhAsComplete(
                                         hifdh['nextKey'],
@@ -1029,13 +1147,18 @@ class UpcomingSection extends StatelessWidget {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    backgroundColor: Color(0xFF4979FB),
+                                    backgroundColor: hifdhBlocked
+                                        ? const Color(0xFF4979FB)
+                                            .withValues(alpha: 0.45)
+                                        : const Color(0xFF4979FB),
                                     elevation: 0,
                                   ),
                                   child: Container(
                                     alignment: Alignment.center,
                                     child: Text(
-                                      'Mark as Complete',
+                                      hifdhBlocked
+                                          ? 'Clear reviews first'
+                                          : 'Mark as Complete',
                                       style: GoogleFonts.poppins(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,

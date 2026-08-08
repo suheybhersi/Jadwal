@@ -10,6 +10,7 @@ import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
+import 'package:jadwal/utils/review_miss_utils.dart';
 import 'package:jadwal/components/smart_showcase.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:iconsax/iconsax.dart';
@@ -547,6 +548,11 @@ class IncompleteReviewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backlogCount = ReviewMissUtils.countBacklog(
+      (plan['reviews'] as List<dynamic>?) ?? [],
+    );
+    final missedAllTime = (plan['missedReviews'] as num?)?.toInt() ?? 0;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -597,13 +603,35 @@ class IncompleteReviewsSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${incompleteReviews.length} review${incompleteReviews.length == 1 ? '' : 's'} due',
+                      incompleteReviews.length == 1
+                          ? '1 review due'
+                          : '${incompleteReviews.length} reviews due',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: Colors.grey.shade600,
                         height: 1.4,
                       ),
                     ),
+                    if (backlogCount > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$backlogCount scheduled ahead',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                    if (missedAllTime > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$missedAllTime missed all time',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -660,6 +688,10 @@ class IncompleteReviewsSection extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
+                                  if (ReviewMissUtils.wasMissed(review)) ...[
+                                    const SizedBox(width: 8),
+                                    const MissedReviewTag(),
+                                  ],
                                   if (includesWhatComesNext) ...[
                                     const SizedBox(width: 8),
                                     Container(
@@ -1636,7 +1668,8 @@ class PreviousReviews extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: reviews.length > 3 ? 3 : reviews.length,
                   itemBuilder: (context, index) {
-                    final review = reviews[index];
+                    final review =
+                        Map<String, dynamic>.from(reviews[index] as Map);
                     return InkWell(
                       onTap: () => _showReviewDetails(context, review),
                       borderRadius: BorderRadius.circular(16),
@@ -1663,12 +1696,24 @@ class PreviousReviews extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
-                                    style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          '${review['surah'].split(' ')[0]} ${review['review'].split('-')[0].split(':')[1]} - ${review['surah'].split(' ')[1]} ${review['review'].split('-')[1].split(':')[1]}',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (ReviewMissUtils.wasMissed(
+                                          review)) ...[
+                                        const SizedBox(width: 8),
+                                        const MissedReviewTag(),
+                                      ],
+                                    ],
                                   ),
                                   SizedBox(height: 4),
                                   Text(
