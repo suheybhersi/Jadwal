@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/components/password_strength_meter.dart';
+import 'package:jadwal/utils/password_validation.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -20,6 +22,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   bool _isLoading = false;
   String? _errorMessage;
+  String _newPassword = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _newPasswordController.addListener(() {
+      final next = _newPasswordController.text;
+      if (next == _newPassword) return;
+      setState(() => _newPassword = next);
+    });
+  }
 
   @override
   void dispose() {
@@ -178,27 +191,20 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           controller: _newPasswordController,
                           label: 'New Password',
                           hint: 'Enter your new password',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a new password';
-                            }
-                            if (value.length < 8) {
-                              return 'Password must be at least 8 characters';
-                            }
-                            return null;
-                          },
+                          validator: PasswordValidation.validate,
                         ),
+                        const SizedBox(height: 12),
+                        PasswordStrengthMeter(password: _newPassword),
                         const SizedBox(height: 20),
                         _buildPasswordField(
                           controller: _confirmPasswordController,
                           label: 'Confirm Password',
                           hint: 'Confirm your new password',
-                          validator: (value) {
-                            if (value != _newPasswordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
+                          validator: (value) =>
+                              PasswordValidation.validateConfirm(
+                            value,
+                            _newPasswordController.text,
+                          ),
                         ),
                         const SizedBox(height: 30),
                         SizedBox(
@@ -304,6 +310,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Future<void> _updatePassword() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -314,30 +321,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
-      if (user != null && user.email != null) {
-        final credential = EmailAuthProvider.credential(
-          email: user.email!,
-          password: _currentPasswordController.text,
-        );
+      if (user == null || user.email == null) {
+        setState(() {
+          _errorMessage = 'No signed-in user found. Please sign in again.';
+        });
+        return;
+      }
 
-        await user.reauthenticateWithCredential(credential);
-        await user.updatePassword(_newPasswordController.text);
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: _currentPasswordController.text,
+      );
 
-        if (mounted) {
-          _showSuccessDialog();
-        }
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(_newPasswordController.text);
+
+      if (mounted) {
+        _showSuccessDialog();
       }
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
-        if (e.code == 'wrong-password') {
+        if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
           _errorMessage = 'Your current password is incorrect';
         } else if (e.code == 'weak-password') {
           _errorMessage = 'The new password is too weak';
+        } else if (e.code == 'requires-recent-login') {
+          _errorMessage = 'Please sign out and sign in again, then retry.';
         } else {
           _errorMessage = 'Error: ${e.message}';
         }
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'An error occurred. Please try again.';
       });

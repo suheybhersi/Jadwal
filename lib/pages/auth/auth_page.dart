@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jadwal/components/bottom_nav_bar.dart';
 import 'package:jadwal/components/firestore_error_view.dart';
+import 'package:jadwal/pages/auth/email_verification_page.dart';
 import 'package:jadwal/pages/onboarding/finished_memorising_question_page.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
@@ -15,6 +16,7 @@ import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:jadwal/pages/onboarding/app_tutorial_page.dart';
+import 'package:jadwal/utils/auth_verification.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -128,7 +130,7 @@ class AuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Scaffold(
@@ -138,14 +140,26 @@ class AuthPage extends StatelessWidget {
           );
         }
 
+        // Avoid flashing onboarding while the first auth emission is pending.
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return _AuthLoadingScreen();
+        }
+
         if (snapshot.hasData) {
+          final user = snapshot.data!;
+          if (AuthVerification.requiresVerification(user)) {
+            return EmailVerificationPage(user: user);
+          }
+
           final FirestoreService firestoreService = FirestoreService(
             auth: FirebaseAuth.instance,
-            uid: FirebaseAuth.instance.currentUser!.uid,
+            uid: user.uid,
           );
 
           // Update user activity and check achievements when user logs in
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
             firestoreService.updateUserAchievements();
             final uid = FirebaseAuth.instance.currentUser?.uid;
             if (uid != null) {

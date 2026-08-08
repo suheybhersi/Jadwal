@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/components/my_textfield.dart';
+import 'package:jadwal/components/password_strength_meter.dart';
 import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/services/firestore.dart';
+import 'package:jadwal/utils/password_validation.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -29,6 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   bool _agreedToTerms = false;
+  bool _isSigningUp = false;
 
   void showErrorDialog(String message) {
     showAuthAlertDialog(
@@ -38,74 +41,98 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  void signUserUp() async {
-    if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return const Center(
-            child: CircularProgressIndicator(color: kAuthBrandBlue),
-          );
-        },
+  void _showErrorSnack(String errorMessage) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          errorMessage,
+          style: GoogleFonts.poppins(),
+        ),
+        backgroundColor: Colors.red.shade400,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  Future<void> signUserUp() async {
+    if (_isSigningUp) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSigningUp = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(color: kAuthBrandBlue),
+        );
+      },
+    );
+
+    try {
+      if (passwordController.text != confirmPasswordController.text) {
+        if (mounted) Navigator.pop(context);
+        showErrorDialog("Passwords don't match. Please try again.");
+        return;
+      }
+
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
-      try {
-        if (passwordController.text == confirmPasswordController.text) {
-          UserCredential userCredential =
-              await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-          );
-
-          final user = userCredential.user;
-          final firestoreService = FirestoreService(
-            uid: user!.uid,
-            auth: FirebaseAuth.instance,
-          );
-          await firestoreService.updateUserProfile({
-            'firstName': firstNameController.text.trim(),
-            'lastName': lastNameController.text.trim(),
-            'username': userNameController.text.trim(),
-            'email': emailController.text.trim(),
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-          await firestoreService.recordLoginActivity(method: 'registration');
-
-          if (!mounted) return;
-          Navigator.pop(context);
-          Navigator.of(context).pop();
-        } else {
-          Navigator.pop(context);
-          showErrorDialog("Passwords don't match. Please try again.");
-        }
-      } on FirebaseAuthException catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context);
-        String errorMessage = 'An unexpected error occurred';
-
-        if (e.code == 'email-already-in-use') {
-          errorMessage = 'This email is already in use';
-        } else if (e.code == 'invalid-email') {
-          errorMessage = 'Invalid email address';
-        } else if (e.code == 'weak-password') {
-          errorMessage = 'Password is too weak';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              errorMessage,
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+      final user = userCredential.user;
+      if (user == null) {
+        throw StateError('Account was created but no user was returned.');
       }
+
+      final firestoreService = FirestoreService(
+        uid: user.uid,
+        auth: FirebaseAuth.instance,
+      );
+      await firestoreService.updateUserProfile({
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'username': userNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      await firestoreService.recordLoginActivity(method: 'registration');
+
+      try {
+        await user.sendEmailVerification();
+      } catch (_) {
+        // Gate will still let them resend from the verification screen.
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context); // loading
+      Navigator.of(context).pop(); // login/register route
+    } on FirebaseAuthException catch (e) {
+      if (mounted) Navigator.pop(context);
+      String errorMessage = 'An unexpected error occurred';
+
+      if (e.code == 'email-already-in-use') {
+        errorMessage = 'This email is already in use';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email address';
+      } else if (e.code == 'weak-password') {
+        errorMessage = 'Password is too weak';
+      } else if (e.code == 'network-request-failed') {
+        errorMessage = 'Network error. Check your connection and try again.';
+      }
+
+      _showErrorSnack(errorMessage);
+    } catch (_) {
+      if (mounted) Navigator.pop(context);
+      _showErrorSnack('Could not create your account. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isSigningUp = false);
     }
   }
 
@@ -251,11 +278,10 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 24),
             AuthPrimaryButton(
-              label: 'Create account',
-              enabled: _agreedToTerms,
-              onPressed: _agreedToTerms
-                  ? signUserUp
-                  : () {
+              label: _isSigningUp ? 'Creating…' : 'Create account',
+              enabled: _agreedToTerms && !_isSigningUp,
+              onPressed: !_agreedToTerms
+                  ? () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -273,7 +299,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           margin: const EdgeInsets.all(10),
                         ),
                       );
-                    },
+                    }
+                  : (_isSigningUp ? null : signUserUp),
             ),
             const SizedBox(height: 28),
             AuthSwitchPrompt(
@@ -313,6 +340,26 @@ class RegisterForm extends StatefulWidget {
 class _RegisterFormState extends State<RegisterForm> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String _password = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _password = widget.passwordController.text;
+    widget.passwordController.addListener(_onPasswordChanged);
+  }
+
+  void _onPasswordChanged() {
+    final next = widget.passwordController.text;
+    if (next == _password) return;
+    setState(() => _password = next);
+  }
+
+  @override
+  void dispose() {
+    widget.passwordController.removeListener(_onPasswordChanged);
+    super.dispose();
+  }
 
   InputDecoration _nameDecoration(BuildContext context, String hint) {
     return InputDecoration(
@@ -429,16 +476,10 @@ class _RegisterFormState extends State<RegisterForm> {
               });
             },
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Password is required';
-            }
-            if (value.length < 6) {
-              return 'Password must be at least 6 characters long';
-            }
-            return null;
-          },
+          validator: (value) => PasswordValidation.validate(value as String?),
         ),
+        const SizedBox(height: 10),
+        PasswordStrengthMeter(password: _password),
         const SizedBox(height: 16),
         MyTextField(
           controller: widget.confirmPasswordController,
@@ -456,15 +497,10 @@ class _RegisterFormState extends State<RegisterForm> {
               });
             },
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Confirmation password is required';
-            }
-            if (value != widget.passwordController.text) {
-              return 'Passwords do not match';
-            }
-            return null;
-          },
+          validator: (value) => PasswordValidation.validateConfirm(
+            value as String?,
+            widget.passwordController.text,
+          ),
         ),
         const SizedBox(height: 20),
       ],
