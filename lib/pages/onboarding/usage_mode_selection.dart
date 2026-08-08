@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/components/onboarding_ui.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:provider/provider.dart';
 
@@ -25,275 +26,210 @@ class _UsageModeSelectionPageState extends State<UsageModeSelectionPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-
-              // Header
-              Text(
-                'Choose Your Path',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Everyone memorises differently. How would you like Jadwal to support you?',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Mode Cards
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildModeCard(
-                        mode: UsageMode.flexible,
-                        icon: Iconsax.timer_pause,
-                        color: const Color(0xFF10B981),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildModeCard(
-                        mode: UsageMode.intensive,
-                        icon: Iconsax.flash_1,
-                        color: const Color(0xFF4979FB),
-                        isRecommended: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Continue Button
-              if (_selectedMode != null) ...[
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final prefsService =
-                          Provider.of<UserPreferencesService>(context,
-                              listen: false);
-                      await prefsService.setUsageMode(_selectedMode!);
-                      await prefsService.completeModeSelection();
-                      widget.onComplete();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4979FB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const OnboardingStepHeader(
+                      icon: Iconsax.setting_2,
+                      title: 'Choose your path',
+                      subtitle:
+                          'Everyone memorises differently. How would you like Jadwal to support you?',
                     ),
-                    child: Text(
-                      'Continue',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                    const SizedBox(height: 24),
+                    _ModeOption(
+                      mode: UsageMode.flexible,
+                      icon: Iconsax.timer_pause,
+                      color: const Color(0xFF10B981),
+                      selected: _selectedMode == UsageMode.flexible,
+                      onTap: () =>
+                          setState(() => _selectedMode = UsageMode.flexible),
                     ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 12),
-
-              // Reassurance message
-              Center(
-                child: Text(
-                  'You can change this anytime in Settings',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                  textAlign: TextAlign.center,
+                    const SizedBox(height: 10),
+                    _ModeOption(
+                      mode: UsageMode.intensive,
+                      icon: Iconsax.flash_1,
+                      color: kOnboardingAccent,
+                      selected: _selectedMode == UsageMode.intensive,
+                      isRecommended: true,
+                      onTap: () =>
+                          setState(() => _selectedMode = UsageMode.intensive),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            OnboardingBottomBar(
+              helperText: 'You can change this anytime in Settings',
+              child: OnboardingPrimaryButton(
+                label: 'Continue',
+                onPressed: _selectedMode == null
+                    ? null
+                    : () async {
+                        final prefsService =
+                            Provider.of<UserPreferencesService>(context,
+                                listen: false);
+                        await prefsService.setUsageMode(_selectedMode!);
+                        await prefsService.completeModeSelection();
+                        widget.onComplete();
+                      },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildModeCard({
-    required UsageMode mode,
-    required IconData icon,
-    required Color color,
-    bool isRecommended = false,
-  }) {
-    final isSelected = _selectedMode == mode;
+class _ModeOption extends StatelessWidget {
+  const _ModeOption({
+    required this.mode,
+    required this.icon,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+    this.isRecommended = false,
+  });
+
+  final UsageMode mode;
+  final IconData icon;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool isRecommended;
+
+  @override
+  Widget build(BuildContext context) {
     final modeName = UserPreferencesService.getModeName(mode);
     final modeDescription = UserPreferencesService.getModeDescription(mode);
     final modeFeatures = UserPreferencesService.getModeFeatures(mode);
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedMode = mode;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.withValues(alpha: 0.08)
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? color
+                  : Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.4),
+              width: selected ? 1.5 : 1,
+            ),
           ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: color.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 5),
-              )
-            else
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Icon
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Name and recommended badge
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
                             modeName,
                             style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary,
                             ),
-                          ),
-                          if (isRecommended) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF10B981),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Recommended',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Selection indicator
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? color : Colors.grey[400]!,
-                      width: 2,
-                    ),
-                    color: isSelected ? color : Colors.transparent,
-                  ),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Colors.white,
-                        )
-                      : null,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Description
-            Text(
-              modeDescription,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.4,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Features
-            ...modeFeatures.map((feature) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Iconsax.tick_circle,
-                        size: 16,
-                        color: color,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
-                      ),
-                    ],
+                        if (isRecommended) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Recommended',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                )),
-          ],
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    size: 20,
+                    color: selected ? color : Colors.grey.shade400,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                modeDescription,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...modeFeatures.take(3).map(
+                    (feature) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(Iconsax.tick_circle, size: 14, color: color),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          ),
         ),
       ),
     );

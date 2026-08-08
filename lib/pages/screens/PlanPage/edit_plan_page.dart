@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jadwal/components/daily_amount_picker.dart';
+import 'package:jadwal/components/schedule_day_picker.dart';
 import 'package:jadwal/services/firestore.dart';
-import 'dart:async';
-import 'package:jadwal/components/drop_down.dart';
+import 'dart:math';
 
 // ignore: must_be_immutable
 class EditPlanPage extends StatefulWidget {
@@ -22,10 +23,9 @@ class _EditPlanPageState extends State<EditPlanPage> {
   );
   final TextEditingController linesController = TextEditingController();
   String selectedUnit = 'Lines';
-  Timer? activeTimer;
 
   final _formKey = GlobalKey<FormState>();
-  bool _showValidationError = false;
+  String? _validationError;
   List<dynamic> selectedDays = [];
 
   @override
@@ -42,7 +42,6 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
   @override
   void dispose() {
-    activeTimer?.cancel();
     linesController.dispose();
     super.dispose();
   }
@@ -50,15 +49,21 @@ class _EditPlanPageState extends State<EditPlanPage> {
   void updatePlan(BuildContext context) {
     if (!selectedDays.contains(true)) {
       setState(() {
-        _showValidationError = true;
+        _validationError = 'Please select at least one day';
       });
       return;
     }
 
-    // Convert pages to lines if needed
+    // Convert pages to lines if needed (minimum 1 line)
     int lines = selectedUnit == 'Lines'
-        ? int.parse(linesController.text)
-        : int.parse(linesController.text) * 15;
+        ? int.tryParse(linesController.text) ?? 0
+        : (int.tryParse(linesController.text) ?? 0) * 15;
+    if (lines < 1) {
+      setState(() {
+        _validationError = 'Daily amount must be at least 1 line';
+      });
+      return;
+    }
 
     firestoreService.updatePlan(
       widget.id,
@@ -69,22 +74,6 @@ class _EditPlanPageState extends State<EditPlanPage> {
     // Clear text fields and close dialog
     linesController.clear();
     Navigator.of(context).pop();
-  }
-
-  void _incrementLines() {
-    final currentValue = int.tryParse(linesController.text) ?? 0;
-    setState(() {
-      linesController.text = (currentValue + 1).toString();
-    });
-  }
-
-  void _decrementLines() {
-    final currentValue = int.tryParse(linesController.text) ?? 0;
-    if (currentValue > 0) {
-      setState(() {
-        linesController.text = (currentValue - 1).toString();
-      });
-    }
   }
 
   void _showResetConfirmation(BuildContext context) {
@@ -280,8 +269,6 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
   @override
   Widget build(BuildContext context) {
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -308,319 +295,105 @@ class _EditPlanPageState extends State<EditPlanPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              // Daily Amount Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .tertiary
-                          .withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Amount',
-                          style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary),
-                        ),
-                        Text(
-                          'How much would you like to memorise?',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .inversePrimary
-                                .withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .tertiary
-                                    .withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTapDown: (TapDownDetails details) {
-                                    Timer? timer;
-                                    timer = Timer.periodic(
-                                        const Duration(milliseconds: 100),
-                                        (timer) {
-                                      final currentValue =
-                                          int.tryParse(linesController.text) ??
-                                              0;
-                                      if (currentValue > 0) {
-                                        setState(() {
-                                          linesController.text =
-                                              (currentValue - 1).toString();
-                                        });
-                                      }
-                                    });
-                                    activeTimer = timer;
-                                  },
-                                  onTapUp: (_) {
-                                    activeTimer?.cancel();
-                                  },
-                                  onTapCancel: () {
-                                    activeTimer?.cancel();
-                                  },
-                                  child: IconButton(
-                                    onPressed: _decrementLines,
-                                    icon: Icon(
-                                      Icons.remove,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    linesController.text,
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .inversePrimary,
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTapDown: (TapDownDetails details) {
-                                    Timer? timer;
-                                    timer = Timer.periodic(
-                                        const Duration(milliseconds: 100),
-                                        (timer) {
-                                      final currentValue =
-                                          int.tryParse(linesController.text) ??
-                                              0;
-                                      setState(() {
-                                        linesController.text =
-                                            (currentValue + 1).toString();
-                                      });
-                                    });
-                                    activeTimer = timer;
-                                  },
-                                  onTapUp: (_) {
-                                    activeTimer?.cancel();
-                                  },
-                                  onTapCancel: () {
-                                    activeTimer?.cancel();
-                                  },
-                                  child: IconButton(
-                                    onPressed: _incrementLines,
-                                    icon: Icon(
-                                      Icons.add,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: MyDropDown(
-                            items: ['Lines', 'Pages'],
-                            value: selectedUnit,
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  selectedUnit = value;
-                                });
-                              }
-                            },
-                            text: 'Unit',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Days Selection Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .tertiary
-                          .withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Schedule',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
-                        ),
-                        Text(
-                          'Select your memorisation days',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .inversePrimary
-                                .withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(7, (index) {
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedDays[index] = !selectedDays[index];
-                                _showValidationError =
-                                    !selectedDays.contains(true);
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: selectedDays[index]
-                                    ? const Color.fromARGB(255, 73, 121, 251)
-                                    : Theme.of(context).colorScheme.tertiary,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: selectedDays[index]
-                                      ? Colors.transparent
-                                      : Theme.of(context).colorScheme.tertiary,
-                                ),
-                                boxShadow: selectedDays[index]
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color.fromARGB(
-                                                  255, 73, 121, 251)
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          spreadRadius: 0,
-                                        )
-                                      ]
-                                    : [],
-                              ),
-                              child: Text(
-                                days[index],
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: selectedDays[index]
-                                      ? Colors.white
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .inversePrimary
-                                          .withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
+      body: Form(
+        key: _formKey,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 0,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Error message
-              if (_showValidationError)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    'Please select at least one day',
-                    style: GoogleFonts.poppins(
-                      color: Colors.red,
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
+                    ],
+                  ),
+                  child: DailyAmountPicker(
+                    compact: true,
+                    unit: selectedUnit,
+                    amount: max(1, int.tryParse(linesController.text) ?? 1),
+                    onUnitChanged: (unit) {
+                      setState(() {
+                        selectedUnit = unit;
+                      });
+                    },
+                    onAmountChanged: (amount) {
+                      setState(() {
+                        linesController.text = max(1, amount).toString();
+                      });
+                    },
                   ),
                 ),
-
-              const Spacer(),
-
-              // Submit Button
-              Padding(
-                padding: const EdgeInsets.only(bottom: 40, left: 16, right: 16),
-                child: SizedBox(
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ScheduleDayPicker(
+                    compact: true,
+                    selectedDays:
+                        selectedDays.map((d) => d == true).toList(),
+                    onChanged: (days) {
+                      setState(() {
+                        selectedDays = List<dynamic>.from(days);
+                        _validationError = selectedDays.contains(true)
+                            ? null
+                            : 'Please select at least one day';
+                      });
+                    },
+                  ),
+                ),
+                if (_validationError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      _validationError!,
+                      style: GoogleFonts.poppins(
+                        color: Colors.red,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                const Spacer(),
+                SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ButtonStyle(
                       elevation: WidgetStateProperty.all(0),
                       padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(
-                          vertical: 16,
-                        ),
+                        const EdgeInsets.symmetric(vertical: 14),
                       ),
                       backgroundColor: WidgetStateProperty.all(
                         const Color.fromARGB(255, 73, 121, 251),
                       ),
                       shape: WidgetStateProperty.all(
                         RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                          borderRadius: BorderRadius.circular(14.0),
                         ),
                       ),
                     ),
@@ -635,8 +408,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

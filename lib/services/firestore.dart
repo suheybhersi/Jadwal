@@ -2388,6 +2388,8 @@ class FirestoreService extends ChangeNotifier {
       for (var doc in wirdsSnapshot.docs) {
         await doc.reference.delete();
       }
+
+      await updateUserProfile({'finishedMemorisingQuran': false});
     } catch (e) {
       if (kDebugMode) {
         print('Error resetting plan: $e');

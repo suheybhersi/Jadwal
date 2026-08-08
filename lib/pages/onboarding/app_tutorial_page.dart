@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/components/onboarding_ui.dart';
 import 'package:jadwal/services/tutorial_service.dart';
 import 'package:provider/provider.dart';
 
@@ -15,41 +16,41 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<TutorialPageData> _pages = [
+  final List<TutorialPageData> _pages = const [
     TutorialPageData(
       icon: Iconsax.home,
-      title: 'Home Dashboard',
+      title: 'Home',
       description:
-          'Your home screen shows upcoming memorisation tasks, reviews, and your weekly schedule. Tap on any day to see detailed tasks.',
-      color: const Color(0xFF4979FB),
+          'See today’s memorisation, reviews, and your weekly schedule at a glance.',
+      color: kOnboardingAccent,
     ),
     TutorialPageData(
       icon: Iconsax.book_1,
-      title: 'Digital Mushaf',
+      title: 'Quran',
       description:
-          'Read and navigate through the complete Quran. Use this to memorise your assigned verses and review what you\'ve learned.',
-      color: const Color(0xFF10B981),
+          'Open the digital mushaf to read and memorise your assigned verses.',
+      color: Color(0xFF10B981),
     ),
     TutorialPageData(
       icon: Iconsax.document_text,
-      title: 'Your Plan',
+      title: 'Quizzes',
       description:
-          'View your memorisation plan details, progress, and completed memorisations. Edit your plan anytime from here.',
-      color: const Color(0xFFF59E0B),
+          'Practise with interactive quizzes — custom or from your review schedule.',
+      color: Color(0xFFEF4444),
     ),
     TutorialPageData(
-      icon: Iconsax.document_text,
-      title: 'Quizzes & Reviews',
+      icon: Iconsax.calendar_1,
+      title: 'Plan',
       description:
-          'Test your memorisation with custom quizzes or scheduled reviews. Choose from multiple question types to practise.',
-      color: const Color(0xFFEF4444),
+          'Track progress, edit your daily amount, and manage your schedule.',
+      color: Color(0xFFF59E0B),
     ),
     TutorialPageData(
       icon: Iconsax.profile_circle,
-      title: 'Profile & Achievements',
+      title: 'Profile',
       description:
-          'Track your progress, view achievements, and see your memorisation statistics. Celebrate your milestones!',
-      color: const Color(0xFF8B5CF6),
+          'View achievements, activity, and your memorisation stats.',
+      color: Color(0xFF8B5CF6),
     ),
   ];
 
@@ -63,15 +64,11 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        curve: Curves.easeOutCubic,
       );
     } else {
       _completeTutorial();
     }
-  }
-
-  void _skipTutorial() {
-    _completeTutorial();
   }
 
   Future<void> _completeTutorial() async {
@@ -85,30 +82,27 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
 
   @override
   Widget build(BuildContext context) {
+    final page = _pages[_currentPage];
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
             Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextButton(
-                  onPressed: _skipTutorial,
-                  child: Text(
-                    'Skip',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _completeTutorial,
+                child: Text(
+                  'Skip',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ),
             ),
-
-            // Page content
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -117,36 +111,18 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
                 },
                 itemCount: _pages.length,
                 itemBuilder: (context, index) {
-                  return _buildTutorialPage(_pages[index]);
+                  return _TutorialSlide(data: _pages[index]);
                 },
               ),
             ),
-
-            // Page indicator
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _pages.length,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _currentPage == index ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? _pages[index].color
-                          : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: OnboardingProgressBar(
+                current: _currentPage,
+                total: _pages.length,
               ),
             ),
-
-            // Navigation buttons
-            Padding(
-              padding: const EdgeInsets.all(24.0),
+            OnboardingBottomBar(
               child: Row(
                 children: [
                   if (_currentPage > 0)
@@ -154,38 +130,42 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
                       onPressed: () {
                         _pageController.previousPage(
                           duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
+                          curve: Curves.easeOutCubic,
                         );
                       },
                       child: Text(
-                        'Previous',
+                        'Back',
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey[600],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
                         ),
                       ),
-                    ),
+                    )
+                  else
+                    const SizedBox(width: 64),
                   const Spacer(),
-                  ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _pages[_currentPage].color,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  SizedBox(
+                    width: 160,
+                    child: ElevatedButton(
+                      onPressed: _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: page.color,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                    ),
-                    child: Text(
-                      _currentPage == _pages.length - 1
-                          ? 'Get Started'
-                          : 'Next',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                      child: Text(
+                        _currentPage == _pages.length - 1
+                            ? 'Get started'
+                            : 'Continue',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -197,48 +177,46 @@ class _AppTutorialPageState extends State<AppTutorialPage> {
       ),
     );
   }
+}
 
-  Widget _buildTutorialPage(TutorialPageData data) {
+class _TutorialSlide extends StatelessWidget {
+  const _TutorialSlide({required this.data});
+
+  final TutorialPageData data;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(40.0),
+      padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon
           Container(
-            width: 120,
-            height: 120,
+            width: 88,
+            height: 88,
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(22),
             ),
-            child: Icon(
-              data.icon,
-              size: 60,
-              color: data.color,
-            ),
+            child: Icon(data.icon, size: 40, color: data.color),
           ),
-          const SizedBox(height: 40),
-
-          // Title
+          const SizedBox(height: 28),
           Text(
             data.title,
             style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               color: Theme.of(context).colorScheme.inversePrimary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
-
-          // Description
+          const SizedBox(height: 12),
           Text(
             data.description,
             style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey[700],
-              height: 1.6,
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),

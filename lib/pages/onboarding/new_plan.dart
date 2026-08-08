@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:jadwal/components/drop_down.dart';
+import 'package:jadwal/components/daily_amount_picker.dart';
+import 'package:jadwal/components/onboarding_ui.dart';
+import 'package:jadwal/components/schedule_day_picker.dart';
 import 'package:jadwal/components/verse_picker.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
+import 'dart:math';
 
 class NewPlanScreen extends StatefulWidget {
   const NewPlanScreen({super.key});
@@ -40,8 +42,9 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
       String toKey =
           '${controller.selectedToSurahData.value?['surahNumber']}:${controller.selectedToVerse.value}';
       int lines = controller.selectedUnit.value == 'Lines'
-          ? int.parse(controller.inputController.text)
-          : int.parse(controller.inputController.text) * 15;
+          ? int.tryParse(controller.inputController.text) ?? 1
+          : (int.tryParse(controller.inputController.text) ?? 1) * 15;
+      if (lines < 1) lines = 1;
 
       await firestoreService.addPlan(controller.isBackToFront.value, fromKey,
           toKey, lines, controller.selectedDays.toList());
@@ -54,16 +57,7 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Obx(() => controller.currentPageIndex.value != 0 &&
-                !controller.isCreatingPlan.value
-            ? IconButton(
-                onPressed: () => controller.pageController
-                    .jumpToPage(controller.currentPageIndex.value - 1),
-                icon: Icon(Icons.arrow_back),
-              )
-            : Container()),
-      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Obx(() {
           if (controller.isCreatingPlan.value) {
@@ -76,7 +70,9 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
             stream: firestoreService.getSurahsStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: CircularProgressIndicator(color: kOnboardingAccent),
+                );
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -93,41 +89,64 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
               surahsList
                   .sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
 
-              // Map Firestore data to a usable list
               final allData = surahsList
                   .map((doc) => doc.data() as Map<String, dynamic>)
                   .toList();
 
-              List<String> surahNames =
+              final surahNames =
                   allData.map((data) => data['surah'] as String).toList();
 
-              return Stack(
+              return Column(
                 children: [
-                  Obx(() => PageView(
-                        controller: controller.pageController,
-                        onPageChanged: controller.updatePageIndicator,
-                        physics: const NeverScrollableScrollPhysics(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 4, 20, 0),
+                    child: Obx(() {
+                      final canGoBack = controller.currentPageIndex.value != 0;
+                      return Row(
                         children: [
-                          const IntroPage(),
-                          if (controller.hasMemorisedBefore.value) ...[
-                            MemorisedPage(
-                              surahNames: surahNames,
-                              controller: controller,
-                              allData: allData,
-                              text: 'To what verse have you memorised?',
+                          if (canGoBack)
+                            OnboardingBackButton(
+                              onPressed: () => controller.pageController
+                                  .jumpToPage(
+                                      controller.currentPageIndex.value - 1),
+                            )
+                          else
+                            const SizedBox(width: 44, height: 44),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OnboardingProgressBar(
+                              current: controller.currentPageIndex.value,
+                              total: controller.totalSteps,
                             ),
-                          ],
-                          const PlanDetailsPage(),
-                          const PlanModePage(),
-                          const ReviewPage(
-                            title: 'Review and Confirm',
-                            description:
-                                'Review your Hifdh plan and make sure everything is set before starting.',
                           ),
                         ],
-                      )),
-
-                  // Bottom Navigation Section
+                      );
+                    }),
+                  ),
+                  Expanded(
+                    child: Obx(() => PageView(
+                          controller: controller.pageController,
+                          onPageChanged: controller.updatePageIndicator,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            const IntroPage(),
+                            if (controller.hasMemorisedBefore.value) ...[
+                              MemorisedPage(
+                                surahNames: surahNames,
+                                controller: controller,
+                                allData: allData,
+                              ),
+                            ],
+                            const PlanDetailsPage(),
+                            const PlanModePage(),
+                            const ReviewPage(
+                              title: 'Review your plan',
+                              description:
+                                  'Confirm everything looks right before we create your schedule.',
+                            ),
+                          ],
+                        )),
+                  ),
                   BottomNavigation(
                     controller: controller,
                     onNextPressed: storeNewPlan,
@@ -154,20 +173,41 @@ class CreatingPlanPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30.0),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: Color.fromARGB(255, 73, 121, 251),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: kOnboardingAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(18),
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: kOnboardingAccent,
+                ),
+              ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 24),
             Text(
-              'Creating your plan...',
+              'Creating your plan…',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Setting up your daily schedule and reviews.',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: Colors.grey.shade600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -187,78 +227,40 @@ class BottomNavigation extends StatelessWidget {
 
   final NewPlanController controller;
   final VoidCallback onNextPressed;
+
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 0.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Next Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                    elevation: WidgetStateProperty.all(0),
-                    padding: WidgetStateProperty.all(
-                      const EdgeInsets.symmetric(
-                        vertical: 16,
-                      ),
-                    ),
-                    backgroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 73, 121, 251),
-                    ),
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final reviewIndex =
-                        controller.hasMemorisedBefore.value ? 4 : 3;
-                    final modeIndex =
-                        controller.hasMemorisedBefore.value ? 3 : 2;
-                    if (controller.currentPageIndex.value == reviewIndex) {
-                      onNextPressed();
-                    } else if (controller.currentPageIndex.value == modeIndex) {
-                      if (controller.selectedMode.value == null) {
-                        controller.modePageError.value =
-                            'Please select a mode to proceed.';
-                      } else {
-                        controller.modePageError.value = '';
-                        final prefsService =
-                            Provider.of<UserPreferencesService>(context,
-                                listen: false);
-                        await prefsService
-                            .setUsageMode(controller.selectedMode.value!);
-                        await prefsService.completeModeSelection();
-                        controller.pageController.jumpToPage(reviewIndex);
-                      }
-                    } else {
-                      controller.nextPage();
-                    }
-                  },
-                  child: Obx(() => Text(
-                        (controller.currentPageIndex.value ==
-                                (controller.hasMemorisedBefore.value ? 4 : 3))
-                            ? 'Confirm'
-                            : 'Next',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      )),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return OnboardingBottomBar(
+      child: Obx(() {
+        final isReview = controller.currentPageIndex.value ==
+            controller.reviewPageIndex;
+        return OnboardingPrimaryButton(
+          label: isReview ? 'Confirm & create' : 'Continue',
+          onPressed: () async {
+            final reviewIndex = controller.reviewPageIndex;
+            final modeIndex = controller.modePageIndex;
+            if (controller.currentPageIndex.value == reviewIndex) {
+              onNextPressed();
+            } else if (controller.currentPageIndex.value == modeIndex) {
+              if (controller.selectedMode.value == null) {
+                controller.modePageError.value =
+                    'Please select a mode to continue.';
+              } else {
+                controller.modePageError.value = '';
+                final prefsService = Provider.of<UserPreferencesService>(
+                    context,
+                    listen: false);
+                await prefsService
+                    .setUsageMode(controller.selectedMode.value!);
+                await prefsService.completeModeSelection();
+                controller.pageController.jumpToPage(reviewIndex);
+              }
+            } else {
+              controller.nextPage();
+            }
+          },
+        );
+      }),
     );
   }
 }
@@ -272,214 +274,81 @@ class IntroPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<NewPlanController>();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Column(
-              children: [
-                Icon(
-                  Icons.book,
-                  size: 50,
-                  color: Colors.blue.shade700,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(
-                  'Lets get some details about your memorisation',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(
-                  "We will ask you about how much you've already memorised, what your availability is like and how much you wish to do each day.",
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const OnboardingStepHeader(
+            icon: Iconsax.book_1,
+            title: 'Build your plan',
+            subtitle:
+                'Tell us a bit about your memorisation so we can set a realistic daily schedule.',
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Have you memorised before?',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context)
+                  .colorScheme
+                  .inversePrimary
+                  .withValues(alpha: 0.75),
             ),
-            SizedBox(height: 40),
-
-            // Switch for "Memorised Quran Before"
-            Container(
-              padding:
-                  EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .tertiary
-                        .withValues(alpha: 0.3),
-                    spreadRadius: 5,
-                    blurRadius: 12,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .inversePrimary
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.history_edu,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 22,
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Previous Experience',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
-                            ),
-                          ),
-                          Text(
-                            'Have you memorised before?',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Obx(() => Switch.adaptive(
-                        value: controller.hasMemorisedBefore.value,
-                        onChanged: (value) {
-                          controller.hasMemorisedBefore.value = value;
-                          controller.selectedToSurah.value = null;
-                          controller.selectedToVerse.value = null;
-                          controller.selectedToSurahData.value = null;
-                        },
-                        activeThumbColor: Color.fromARGB(255, 73, 121, 251),
-                        inactiveThumbColor:
-                            Theme.of(context).colorScheme.secondary,
-                        activeTrackColor: Colors.blue.shade200,
-                        inactiveTrackColor:
-                            Theme.of(context).colorScheme.tertiary,
-                        trackOutlineColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                      )),
-                ],
-              ),
+          ),
+          const SizedBox(height: 8),
+          Obx(() => OnboardingChoiceCard(
+                icon: Iconsax.tick_circle,
+                title: 'Yes, I have',
+                subtitle: 'We’ll ask how far you’ve reached',
+                selected: controller.hasMemorisedBefore.value,
+                onTap: () {
+                  controller.hasMemorisedBefore.value = true;
+                },
+              )),
+          const SizedBox(height: 8),
+          Obx(() => OnboardingChoiceCard(
+                icon: Iconsax.add_circle,
+                title: 'No, starting fresh',
+                subtitle: 'We’ll begin from the start of your path',
+                selected: !controller.hasMemorisedBefore.value,
+                onTap: () {
+                  controller.hasMemorisedBefore.value = false;
+                  controller.selectedToSurah.value = null;
+                  controller.selectedToVerse.value = null;
+                  controller.selectedToSurahData.value = null;
+                },
+              )),
+          const SizedBox(height: 20),
+          Text(
+            'Direction',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context)
+                  .colorScheme
+                  .inversePrimary
+                  .withValues(alpha: 0.75),
             ),
-
-            SizedBox(height: 24),
-
-            // Switch for "Back to Front"
-            Container(
-              padding:
-                  EdgeInsets.only(top: 20, bottom: 20, left: 15, right: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .tertiary
-                        .withValues(alpha: 0.3),
-                    spreadRadius: 5,
-                    blurRadius: 12,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .inversePrimary
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.swap_horiz,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 22,
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Back to Front',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary,
-                            ),
-                          ),
-                          Text(
-                            'Memorise from surah An-Nas',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Obx(() => Switch.adaptive(
-                        value: controller.isBackToFront.value,
-                        onChanged: (value) {
-                          controller.isBackToFront.value = value;
-                        },
-                        activeThumbColor: Color.fromARGB(255, 73, 121, 251),
-                        inactiveThumbColor:
-                            Theme.of(context).colorScheme.secondary,
-                        activeTrackColor: Colors.blue.shade200,
-                        inactiveTrackColor:
-                            Theme.of(context).colorScheme.tertiary,
-                        trackOutlineColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                      )),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Obx(() => OnboardingChoiceCard(
+                icon: Iconsax.arrow_right_1,
+                title: 'Front to back',
+                subtitle: 'Start from Al-Fatiha',
+                selected: !controller.isBackToFront.value,
+                onTap: () => controller.isBackToFront.value = false,
+              )),
+          const SizedBox(height: 8),
+          Obx(() => OnboardingChoiceCard(
+                icon: Iconsax.arrow_left_1,
+                title: 'Back to front',
+                subtitle: 'Start from An-Nas',
+                selected: controller.isBackToFront.value,
+                onTap: () => controller.isBackToFront.value = true,
+              )),
+        ],
       ),
     );
   }
@@ -491,73 +360,329 @@ class MemorisedPage extends StatelessWidget {
     required this.surahNames,
     required this.controller,
     required this.allData,
-    required this.text,
   });
 
   final List<String> surahNames;
   final NewPlanController controller;
   final List<Map<String, dynamic>> allData;
-  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Page Title
-            Text(
-              text,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                color: Theme.of(context).colorScheme.inversePrimary,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const OnboardingStepHeader(
+            icon: Iconsax.bookmark,
+            title: 'Where did you stop?',
+            subtitle:
+                'We start from the beginning of your path. Tell us the last surah and verse you’ve memorised so far.',
+          ),
+          const SizedBox(height: 20),
+
+          // Fixed start of the memorised range
+          Text(
+            '1. Started from',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context)
+                  .colorScheme
+                  .inversePrimary
+                  .withValues(alpha: 0.75),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Obx(() {
+            final startSurah =
+                controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha';
+            return OnboardingSurfaceCard(
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: kOnboardingAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Iconsax.flag,
+                      size: 20,
+                      color: kOnboardingAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          startSurah,
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                        ),
+                        Text(
+                          'Verse 1 · based on your direction',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Fixed',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
+            );
+          }),
+
+          const SizedBox(height: 16),
+
+          // End of the memorised range (user picks)
+          Text(
+            '2. Stopped at',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context)
+                  .colorScheme
+                  .inversePrimary
+                  .withValues(alpha: 0.75),
             ),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 8),
+          Obx(() {
+            final endSurah = controller.selectedToSurah.value;
+            final endVerse = controller.selectedToVerse.value;
+            final hasSelection = endSurah != null && endVerse != null;
 
-            // QuranVersePicker wrapped with Obx for reactive updates
-            Obx(
-              () {
-                // Determine which data to use based on pageKey
-                final selectedSurahData = controller.selectedToSurahData.value;
-                final selectedVerse = controller.selectedToVerse.value;
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openStoppedAtPicker(context),
+                borderRadius: BorderRadius.circular(14),
+                child: OnboardingSurfaceCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: kOnboardingAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Iconsax.location,
+                          size: 20,
+                          color: kOnboardingAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hasSelection ? endSurah : 'Choose surah & verse',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                              ),
+                            ),
+                            Text(
+                              hasSelection
+                                  ? 'Verse $endVerse'
+                                  : 'Tap to select where you stopped',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Iconsax.arrow_right_3,
+                        size: 16,
+                        color: Colors.grey.shade500,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
 
-                // Get the initial index for the Surah
-                final initialSurahIndex = selectedSurahData != null
-                    ? allData.indexOf(selectedSurahData)
-                    : 0;
+          // Live range summary
+          Obx(() {
+            final startSurah =
+                controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha';
+            final endSurah = controller.selectedToSurah.value;
+            final endVerse = controller.selectedToVerse.value;
+            if (endSurah == null || endVerse == null) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: kOnboardingAccent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Memorised so far: $startSurah 1 → $endSurah $endVerse',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: kOnboardingAccent,
+                  ),
+                ),
+              ),
+            );
+          }),
 
-                return QuranVersePicker(
-                  surahData: allData,
-                  initialSurahIndex: initialSurahIndex,
-                  initialVerseNumber: selectedVerse,
-                  onVerseSelected: (surahName, verseNumber) {
-                    // Update controller state based on the pageKey
-                    final selectedSurah = allData
-                        .firstWhere((surah) => surah['surah'] == surahName);
-
-                    controller.updateSelectedToSurah(surahName, selectedSurah);
-                    controller.updateSelectedToVerse(verseNumber);
-                  },
-                );
-              },
-            ),
-            Obx(() {
-              final errorMessage = controller.toPageError.value;
-              return errorMessage.isNotEmpty
-                  ? Text(
-                      errorMessage,
-                      style: TextStyle(color: Colors.red),
-                    )
-                  : Container();
-            }),
-          ],
-        ),
+          Obx(() {
+            final errorMessage = controller.toPageError.value;
+            if (errorMessage.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                errorMessage,
+                style: GoogleFonts.poppins(
+                  color: Colors.red.shade700,
+                  fontSize: 12,
+                ),
+              ),
+            );
+          }),
+        ],
       ),
+    );
+  }
+
+  void _openStoppedAtPicker(BuildContext context) {
+    final backToFront = controller.isBackToFront.value;
+    final ordered = List<Map<String, dynamic>>.from(allData);
+    int parseNum(Map<String, dynamic> s) =>
+        int.tryParse(s['surahNumber']?.toString() ?? '') ?? 0;
+    ordered.sort((a, b) {
+      final aNum = parseNum(a);
+      final bNum = parseNum(b);
+      return backToFront ? bNum.compareTo(aNum) : aNum.compareTo(bNum);
+    });
+
+    if (ordered.isEmpty) return;
+
+    final selectedSurahData = controller.selectedToSurahData.value;
+    final selectedVerse = controller.selectedToVerse.value;
+    var initialSurahIndex = 0;
+    if (selectedSurahData != null) {
+      final idx = ordered.indexWhere(
+        (s) => s['surah'] == selectedSurahData['surah'],
+      );
+      if (idx >= 0) initialSurahIndex = idx;
+    }
+
+    String pendingSurah = ordered[initialSurahIndex]['surah'] as String;
+    int pendingVerse = selectedVerse ?? 1;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          height: MediaQuery.of(sheetContext).size.height * 0.55,
+          decoration: BoxDecoration(
+            color: Theme.of(sheetContext).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Text(
+                    'Where did you stop?',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(sheetContext)
+                          .colorScheme
+                          .inversePrimary,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: QuranVersePicker(
+                    key: ValueKey('memorised-sheet-$backToFront'),
+                    surahData: ordered,
+                    initialSurahIndex: initialSurahIndex,
+                    initialVerseNumber: selectedVerse,
+                    onVerseSelected: (surahName, verseNumber) {
+                      pendingSurah = surahName;
+                      pendingVerse = verseNumber;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: OnboardingPrimaryButton(
+                    label: 'Done',
+                    onPressed: () {
+                      final selectedSurah = ordered.firstWhere(
+                        (surah) => surah['surah'] == pendingSurah,
+                      );
+                      controller.updateSelectedToSurah(
+                          pendingSurah, selectedSurah);
+                      controller.updateSelectedToVerse(pendingVerse);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -568,7 +693,6 @@ class PlanDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<NewPlanController>();
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -576,343 +700,67 @@ class PlanDetailsPage extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Section with Icon
-              Icon(
-                Icons.calendar_month,
-                size: 50,
-                color: Color.fromARGB(255, 73, 121, 251),
+              const OnboardingStepHeader(
+                icon: Iconsax.calendar_1,
+                title: 'Daily amount & schedule',
+                subtitle:
+                    'Choose how much you memorise each day and on which days.',
               ),
               const SizedBox(height: 20),
 
-              // Title Section
-              Text(
-                'Plan Details',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 26,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Choose how many days you want to memorise and customise your schedule.',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  height: 1.5,
-                  color: Colors.grey.shade600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 40),
-
               // Daily Amount Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .tertiary
-                          .withValues(alpha: 0.3),
-                      spreadRadius: 5,
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Amount',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
-                        ),
-                        Text(
-                          'How much would you like to memorise?',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .tertiary
-                                    .withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTapDown: (TapDownDetails details) {
-                                    Timer? timer;
-                                    timer = Timer.periodic(
-                                        const Duration(milliseconds: 100),
-                                        (timer) {
-                                      final currentValue = int.tryParse(
-                                              controller
-                                                  .inputController.text) ??
-                                          0;
-                                      if (currentValue > 0) {
-                                        controller.inputController.text =
-                                            (currentValue - 1).toString();
-                                        controller.update(); // Trigger update
-                                      }
-                                    });
-                                    controller.activeTimer = timer;
-                                  },
-                                  onTapUp: (_) {
-                                    controller.activeTimer?.cancel();
-                                    controller.update();
-                                  },
-                                  onTapCancel: () {
-                                    controller.activeTimer?.cancel();
-                                    controller.update();
-                                  },
-                                  child: IconButton(
-                                    onPressed: () {
-                                      final currentValue = int.tryParse(
-                                              controller
-                                                  .inputController.text) ??
-                                          0;
-                                      if (currentValue > 0) {
-                                        controller.inputController.text =
-                                            (currentValue - 1).toString();
-                                        controller.update(); // Trigger update
-                                      }
-                                    },
-                                    icon: Icon(
-                                      Icons.remove,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Obx(() => Text(
-                                        controller.inputValue.value,
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 16,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .inversePrimary,
-                                        ),
-                                      )),
-                                ),
-                                GestureDetector(
-                                  onTapDown: (TapDownDetails details) {
-                                    Timer? timer;
-                                    timer = Timer.periodic(
-                                        const Duration(milliseconds: 100),
-                                        (timer) {
-                                      final currentValue = int.tryParse(
-                                              controller
-                                                  .inputController.text) ??
-                                          0;
-                                      controller.inputController.text =
-                                          (currentValue + 1).toString();
-                                      controller.update(); // Trigger update
-                                    });
-                                    controller.activeTimer = timer;
-                                  },
-                                  onTapUp: (_) {
-                                    controller.activeTimer?.cancel();
-                                    controller.update();
-                                  },
-                                  onTapCancel: () {
-                                    controller.activeTimer?.cancel();
-                                    controller.update();
-                                  },
-                                  child: IconButton(
-                                    onPressed: () {
-                                      final currentValue = int.tryParse(
-                                              controller
-                                                  .inputController.text) ??
-                                          0;
-                                      controller.inputController.text =
-                                          (currentValue + 1).toString();
-                                      controller.update(); // Trigger update
-                                    },
-                                    icon: Icon(
-                                      Icons.add,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: Obx(() {
-                            return MyDropDown(
-                              items: ['Lines', 'Pages'],
-                              value: controller.selectedUnit.value,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  controller.selectedUnit.value = value;
-                                }
-                              },
-                              text: 'Unit',
-                            );
-                          }),
-                        ),
-                      ],
-                    ),
-                  ],
+              OnboardingSurfaceCard(
+                child: Obx(
+                  () => DailyAmountPicker(
+                    unit: controller.selectedUnit.value,
+                    amount: max(
+                        1, int.tryParse(controller.inputValue.value) ?? 1),
+                    onUnitChanged: (unit) {
+                      controller.selectedUnit.value = unit;
+                    },
+                    onAmountChanged: (amount) {
+                      controller.inputController.text =
+                          max(1, amount).toString();
+                      controller.update();
+                    },
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
               // Days Selection Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .tertiary
-                          .withValues(alpha: 0.3),
-                      spreadRadius: 5,
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Schedule',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
-                        ),
-                        Text(
-                          'Select your memorisation days',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(7, (index) {
-                          return GestureDetector(
-                            onTap: () {
-                              controller.selectedDays[index] =
-                                  !controller.selectedDays[index];
-                            },
-                            child: Obx(
-                              () => Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: controller.selectedDays[index]
-                                      ? const Color.fromARGB(255, 73, 121, 251)
-                                      : Theme.of(context).colorScheme.tertiary,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: controller.selectedDays[index]
-                                        ? Colors.transparent
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .tertiary,
-                                  ),
-                                  boxShadow: controller.selectedDays[index]
-                                      ? [
-                                          BoxShadow(
-                                            color: const Color.fromARGB(
-                                                    255, 73, 121, 251)
-                                                .withValues(alpha: 0.3),
-                                            blurRadius: 8,
-                                            spreadRadius: 0,
-                                          )
-                                        ]
-                                      : [],
-                                ),
-                                child: Text(
-                                  days[index],
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: controller.selectedDays[index]
-                                        ? Colors.white
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .inversePrimary
-                                            .withValues(alpha: 0.7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
+              OnboardingSurfaceCard(
+                child: Obx(
+                  () => ScheduleDayPicker(
+                    selectedDays: controller.selectedDays.toList(),
+                    onChanged: (days) {
+                      controller.selectedDays.assignAll(days);
+                    },
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Error Message
               Obx(() {
                 return controller.planDetailsError.value.isNotEmpty
                     ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
                           controller.planDetailsError.value,
                           style: GoogleFonts.poppins(
-                            color: Colors.red,
-                            fontSize: 13,
+                            color: Colors.red.shade700,
+                            fontSize: 12,
                           ),
                         ),
                       )
-                    : Container();
+                    : const SizedBox.shrink();
               }),
             ],
           ),
@@ -929,71 +777,59 @@ class PlanModePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<NewPlanController>();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                'Choose Your Path',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const OnboardingStepHeader(
+            icon: Iconsax.setting_2,
+            title: 'Choose your path',
+            subtitle:
+                'How should Jadwal support your reviews and consistency?',
+          ),
+          const SizedBox(height: 20),
+          Obx(() => _ModeCard(
+                mode: UsageMode.flexible,
+                icon: Iconsax.timer_pause,
+                color: const Color(0xFF10B981),
+                isSelected:
+                    controller.selectedMode.value == UsageMode.flexible,
+                onTap: () =>
+                    controller.selectedMode.value = UsageMode.flexible,
+              )),
+          const SizedBox(height: 10),
+          Obx(() => _ModeCard(
+                mode: UsageMode.intensive,
+                icon: Iconsax.flash_1,
+                color: kOnboardingAccent,
+                isSelected:
+                    controller.selectedMode.value == UsageMode.intensive,
+                isRecommended: true,
+                onTap: () =>
+                    controller.selectedMode.value = UsageMode.intensive,
+              )),
+          const SizedBox(height: 8),
+          Text(
+            'You can change this anytime in Settings.',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.grey.shade500,
             ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                'How would you like Jadwal to support your memorisation?',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Obx(() => _ModeCard(
-                  mode: UsageMode.flexible,
-                  icon: Iconsax.timer_pause,
-                  color: const Color(0xFF10B981),
-                  isSelected:
-                      controller.selectedMode.value == UsageMode.flexible,
-                  onTap: () =>
-                      controller.selectedMode.value = UsageMode.flexible,
-                )),
-            const SizedBox(height: 16),
-            Obx(() => _ModeCard(
-                  mode: UsageMode.intensive,
-                  icon: Iconsax.flash_1,
-                  color: const Color(0xFF4979FB),
-                  isSelected:
-                      controller.selectedMode.value == UsageMode.intensive,
-                  isRecommended: true,
-                  onTap: () =>
-                      controller.selectedMode.value = UsageMode.intensive,
-                )),
-            const SizedBox(height: 16),
-            Obx(() => controller.modePageError.value.isNotEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      controller.modePageError.value,
-                      style: GoogleFonts.poppins(
-                        color: Colors.red,
-                        fontSize: 13,
-                      ),
+          ),
+          Obx(() => controller.modePageError.value.isNotEmpty
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    controller.modePageError.value,
+                    style: GoogleFonts.poppins(
+                      color: Colors.red.shade700,
+                      fontSize: 12,
                     ),
-                  )
-                : const SizedBox.shrink()),
-          ],
-        ),
+                  ),
+                )
+              : const SizedBox.shrink()),
+        ],
       ),
     );
   }
@@ -1022,128 +858,127 @@ class _ModeCard extends StatelessWidget {
     final modeDescription = UserPreferencesService.getModeDescription(mode);
     final modeFeatures = UserPreferencesService.getModeFeatures(mode);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: 0.08)
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? color
+                  : Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.4),
+              width: isSelected ? 1.5 : 1,
+            ),
           ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: color.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 5),
-              )
-            else
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
                   ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        modeName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
-                      ),
-                      if (isRecommended) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
                           child: Text(
-                            'Recommended',
+                            modeName,
                             style: GoogleFonts.poppins(
-                              fontSize: 10,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary,
                             ),
                           ),
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? color : Colors.grey[400]!,
-                      width: 2,
-                    ),
-                    color: isSelected ? color : Colors.transparent,
-                  ),
-                  child: isSelected
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
-                      : null,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              modeDescription,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...modeFeatures.map((feature) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Icon(Iconsax.tick_circle, size: 16, color: color),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.inversePrimary,
+                        if (isRecommended) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981)
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Recommended',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      ],
+                    ),
                   ),
-                )),
-          ],
+                  Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    size: 20,
+                    color: isSelected ? color : Colors.grey.shade400,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                modeDescription,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...modeFeatures.take(3).map(
+                    (feature) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(Iconsax.tick_circle, size: 14, color: color),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          ),
         ),
       ),
     );
@@ -1164,217 +999,75 @@ class ReviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<NewPlanController>();
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Title
-            Center(
-              child: Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Description
-            Center(
-              child: Text(
-                description,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey.shade600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            //section car for back to front
-            SectionCard(
-              title: 'Memorisation Direction',
-              content: controller.isBackToFront.value
-                  ? 'Back to Front'
-                  : 'Front to Back',
-              icon: Icons.swap_horiz,
-              onEdit: () => controller.pageController.jumpToPage(0),
-            ),
-
-            const SizedBox(height: 20),
-            // Full-Width Section: Selected Range
-            SectionCard(
-              title: 'Previously Memorised',
-              content: controller.hasMemorisedBefore.value
-                  ? '${controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha'} 1 - ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
-                  : 'No previous memorisation',
-              icon: Icons.history,
-              onEdit: () => controller.pageController
-                  .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Full-Width Section: Selected Days
-            SectionCard(
-              title: 'Selected Days',
-              content: controller.selectedDays
-                  .asMap()
-                  .entries
-                  .where((entry) => entry.value)
-                  .map((entry) => [
-                        'Mon',
-                        'Tue',
-                        'Wed',
-                        'Thu',
-                        'Fri',
-                        'Sat',
-                        'Sun'
-                      ][entry.key])
-                  .join(', '),
-              icon: Icons.calendar_today,
-              onEdit: () => controller.pageController
-                  .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Full-Width Section: Unit Details
-            SectionCard(
-              title: 'Amount per day',
-              content:
-                  '${controller.inputController.text} ${controller.selectedUnit.value}',
-              icon: Icons.calculate,
-              onEdit: () {
-                controller.pageController
-                    .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1);
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            // Full-Width Section: Memorisation Mode
-            SectionCard(
-              title: 'Memorisation Mode',
-              content: controller.selectedMode.value != null
-                  ? UserPreferencesService.getModeName(
-                      controller.selectedMode.value!)
-                  : 'Not selected',
-              icon: Icons.settings,
-              onEdit: () => controller.pageController
-                  .jumpToPage(controller.modePageIndex),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SectionCard extends StatelessWidget {
-  const SectionCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.icon, // Added an icon parameter
-    required this.onEdit,
-  });
-
-  final String title;
-  final String content;
-  final IconData icon; // Icon for the card
-  final VoidCallback? onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity, // Full width of parent
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16), // Rounded corners
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Color.fromARGB(255, 73, 121, 251),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 15),
-              // Title and Content
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.inversePrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          OnboardingStepHeader(
+            icon: Iconsax.clipboard_tick,
+            title: title,
+            subtitle: description,
           ),
-          // Edit Button
-          GestureDetector(
-            onTap: onEdit,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100, // Light background for the button
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Edit',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue.shade700, // Text color for the button
-                ),
-              ),
-            ),
+          const SizedBox(height: 20),
+          OnboardingReviewTile(
+            title: 'Direction',
+            content: controller.isBackToFront.value
+                ? 'Back to front'
+                : 'Front to back',
+            icon: Iconsax.arrow_swap_horizontal,
+            onEdit: () => controller.pageController.jumpToPage(0),
+          ),
+          const SizedBox(height: 10),
+          OnboardingReviewTile(
+            title: 'Previously memorised',
+            content: controller.hasMemorisedBefore.value
+                ? '${controller.isBackToFront.value ? 'An-Nas' : 'Al-Fatiha'} 1 – ${controller.selectedToSurah.value} ${controller.selectedToVerse.value}'
+                : 'Starting fresh',
+            icon: Iconsax.bookmark,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 1 : 0),
+          ),
+          const SizedBox(height: 10),
+          OnboardingReviewTile(
+            title: 'Schedule',
+            content: controller.selectedDays
+                .asMap()
+                .entries
+                .where((entry) => entry.value)
+                .map((entry) => [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun'
+                    ][entry.key])
+                .join(', '),
+            icon: Iconsax.calendar_1,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
+          ),
+          const SizedBox(height: 10),
+          OnboardingReviewTile(
+            title: 'Daily amount',
+            content:
+                '${controller.inputController.text} ${controller.selectedUnit.value.toLowerCase()}',
+            icon: Iconsax.chart_2,
+            onEdit: () => controller.pageController
+                .jumpToPage(controller.hasMemorisedBefore.value ? 2 : 1),
+          ),
+          const SizedBox(height: 10),
+          OnboardingReviewTile(
+            title: 'Mode',
+            content: controller.selectedMode.value != null
+                ? UserPreferencesService.getModeName(
+                    controller.selectedMode.value!)
+                : 'Not selected',
+            icon: Iconsax.setting_2,
+            onEdit: () =>
+                controller.pageController.jumpToPage(controller.modePageIndex),
           ),
         ],
       ),
@@ -1409,13 +1102,12 @@ class NewPlanController extends GetxController {
   final RxBool planCreated = false.obs;
 
   // Add this new reactive variable
-  final RxString inputValue = '0'.obs;
-
-  Timer? activeTimer;
+  final RxString inputValue = '1'.obs;
 
   @override
   void onInit() {
     super.onInit();
+    inputController.text = '1';
     // Listen to changes in the text controller
     inputController.addListener(() {
       inputValue.value = inputController.text;
@@ -1424,7 +1116,6 @@ class NewPlanController extends GetxController {
 
   @override
   void onClose() {
-    activeTimer?.cancel();
     inputController.dispose();
     super.onClose();
   }
@@ -1448,6 +1139,7 @@ class NewPlanController extends GetxController {
 
   int get modePageIndex => hasMemorisedBefore.value ? 3 : 2;
   int get reviewPageIndex => hasMemorisedBefore.value ? 4 : 3;
+  int get totalSteps => hasMemorisedBefore.value ? 5 : 4;
 
   void nextPage() {
     if (currentPageIndex.value == 0) {
@@ -1460,9 +1152,13 @@ class NewPlanController extends GetxController {
         toPageError.value = 'Please select a Surah and Verse to proceed.';
       }
     } else if (currentPageIndex.value == (hasMemorisedBefore.value ? 2 : 1)) {
-      if (inputController.text.isNotEmpty && selectedDays.contains(true)) {
+      final amount = int.tryParse(inputController.text) ?? 0;
+      final lines = selectedUnit.value == 'Lines' ? amount : amount * 15;
+      if (lines >= 1 && selectedDays.contains(true)) {
         planDetailsError.value = '';
         pageController.jumpToPage(modePageIndex);
+      } else if (lines < 1) {
+        planDetailsError.value = 'Daily amount must be at least 1 line.';
       } else {
         planDetailsError.value =
             'Please fill out all fields and select at least one day.';

@@ -558,6 +558,24 @@ class _HomePageState extends State<HomePage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 28),
+                      TextButton(
+                        onPressed: () => _confirmResetCompletedPlan(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF4979FB),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          'Still memorising? Start a new plan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -567,6 +585,78 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmResetCompletedPlan(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Start a new plan?',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+          content: Text(
+            'This clears your completed Quran setup so you can create a memorisation plan. This cannot be undone.',
+            style: GoogleFonts.poppins(fontSize: 14, height: 1.45),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(
+                'Continue',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF4979FB),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF4979FB),
+        ),
+      ),
+    );
+
+    try {
+      await firestoreService.resetPlan();
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+    } catch (error) {
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Couldn’t reset. Please try again.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void markHifdhAsComplete(

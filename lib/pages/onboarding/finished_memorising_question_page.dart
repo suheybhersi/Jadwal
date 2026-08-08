@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/components/onboarding_ui.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:provider/provider.dart';
@@ -38,13 +39,15 @@ class _FinishedMemorisingQuestionPageState
       await prefsService.completeModeSelection();
       if (!mounted) return;
       await widget.firestoreService.addCompletedMemorisationPlan();
-      // Stream will update and auth_page will show home
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Something went wrong. Please try again.'),
+          content: Text(
+            'Something went wrong. Please try again.',
+            style: GoogleFonts.poppins(),
+          ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -58,114 +61,44 @@ class _FinishedMemorisingQuestionPageState
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4979FB).withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Iconsax.book_1,
-                    size: 64,
-                    color: Color(0xFF4979FB),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Have you finished memorising the Quran?',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'If you have already completed your Hifdh, we\'ll set up your account so you can use quizzes and more. If you\'re still memorising, we\'ll help you create a plan.',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
+              const OnboardingStepHeader(
+                icon: Iconsax.book_1,
+                title: 'Have you finished memorising the Quran?',
+                subtitle:
+                    'If you’ve completed your Hifdh, we’ll set you up for quizzes and revision. If you’re still memorising, we’ll help you create a plan.',
               ),
               const Spacer(),
               if (_isLoading)
-                const Center(
+                Center(
                   child: Column(
                     children: [
-                      CircularProgressIndicator(
-                        color: Color(0xFF4979FB),
+                      const CircularProgressIndicator(color: kOnboardingAccent),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Setting up your account…',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                      SizedBox(height: 16),
-                      Text('Setting up your account...'),
                     ],
                   ),
                 )
               else ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _onYes,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4979FB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Yes, I\'ve completed the Quran',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                OnboardingPrimaryButton(
+                  label: 'Yes, I’ve completed the Quran',
+                  onPressed: _onYes,
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: OutlinedButton(
-                    onPressed: widget.onNo,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 227, 234, 255),
-                        width: 2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      foregroundColor: const Color(0xFF4979FB),
-                    ),
-                    child: Text(
-                      'No, I\'m still memorising',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 10),
+                OnboardingSecondaryButton(
+                  label: 'No, I’m still memorising',
+                  onPressed: widget.onNo,
                 ),
               ],
-              const SizedBox(height: 24),
             ],
           ),
         ),
