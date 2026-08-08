@@ -37,9 +37,6 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
   int? focusedOptionIndex;
   bool isSmallScreen = false;
   int activeTab = 0;
-  bool _isFeedbackExpanded = false;
-  final double _collapsedHeight = 80.0;
-  final double _expandedHeight = 200.0;
 
   @override
   void initState() {
@@ -51,29 +48,32 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     Map<String, dynamic> question =
         widget.questions[widget.currentQuestionIndex];
 
+    correctOrder = [question['firstWord'], ...question['correctOrder']];
+    shuffledWords = List.from(question['shuffledWords']);
+
     // Initialise with previous answer or default state
     if (widget.answeredQuestions.containsKey(widget.currentQuestionIndex)) {
       selectedWords = List.from(widget
           .answeredQuestions[widget.currentQuestionIndex]!['user_answer']);
-      usedWordIndices = _getUsedWordIndices(selectedWords);
     } else {
       selectedWords = [question['firstWord']];
-      usedWordIndices = {
-        question['firstWord']: [shuffledWords.indexOf(question['firstWord'])]
-      };
     }
-
-    correctOrder = [question['firstWord'], ...question['correctOrder']];
-    shuffledWords = List.from(question['shuffledWords']);
+    usedWordIndices = _getUsedWordIndices(selectedWords);
   }
 
-  Map<String, List<int>> _getUsedWordIndices(List<String> selectedWords) {
-    Map<String, List<int>> usedIndices = {};
-    for (var word in selectedWords) {
-      if (!usedIndices.containsKey(word)) {
-        usedIndices[word] = [];
+  /// Maps each selected word to a distinct chip index in [shuffledWords]
+  /// (handles repeated words correctly).
+  Map<String, List<int>> _getUsedWordIndices(List<String> words) {
+    final usedIndices = <String, List<int>>{};
+    final nextSearchFrom = <String, int>{};
+    for (final word in words) {
+      usedIndices.putIfAbsent(word, () => []);
+      final start = nextSearchFrom[word] ?? 0;
+      final idx = shuffledWords.indexOf(word, start);
+      if (idx >= 0) {
+        usedIndices[word]!.add(idx);
+        nextSearchFrom[word] = idx + 1;
       }
-      usedIndices[word]!.add(shuffledWords.indexOf(word));
     }
     return usedIndices;
   }
@@ -92,16 +92,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
 
   void _removeWord(String word, int selectedIndex) {
     setState(() {
-      // Remove the word from selectedWords
       selectedWords.removeAt(selectedIndex);
-
-      // Remove the corresponding index from usedWordIndices
-      if (usedWordIndices.containsKey(word)) {
-        usedWordIndices[word]!.removeAt(0); // Remove the first occurrence
-        if (usedWordIndices[word]!.isEmpty) {
-          usedWordIndices.remove(word);
-        }
-      }
+      usedWordIndices = _getUsedWordIndices(selectedWords);
     });
   }
 
@@ -137,13 +129,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
         widget.questions[widget.currentQuestionIndex]['firstWord'];
 
     setState(() {
-      // Reset to only the first word
       selectedWords = [firstWord];
-
-      // Reset the usedWordIndices
-      usedWordIndices = {
-        firstWord: [shuffledWords.indexOf(firstWord)]
-      };
+      usedWordIndices = _getUsedWordIndices(selectedWords);
     });
 
     // Show a confirmation to the user
@@ -227,12 +214,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                   isChecking = false;
                                   // Reset the words if incorrect
                                   selectedWords = [question['firstWord']];
-                                  usedWordIndices = {
-                                    question['firstWord']: [
-                                      shuffledWords
-                                          .indexOf(question['firstWord'])
-                                    ]
-                                  };
+                                  usedWordIndices =
+                                      _getUsedWordIndices(selectedWords);
                                 });
                               }
                               widget.onNext(isCorrect);
@@ -359,28 +342,63 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                           final word = entry.value;
                           return Container(
                             child: isChecking
-                                ? Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: word == question['firstWord']
-                                          ? Colors.green.shade100
-                                          : _isWordCorrect(word, index)
-                                              ? Colors.green.shade100
-                                              : Colors.red.shade100,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      word,
-                                      style: GoogleFonts.scheherazadeNew(
-                                        letterSpacing: 0,
-                                        fontSize: 20,
-                                        color: Colors.black87,
+                                ? Builder(builder: (_) {
+                                    // Position-based check only (repeated firstWord
+                                    // elsewhere must not count as correct).
+                                    final bool isCorrectHere =
+                                        index < correctOrder.length &&
+                                            _isWordCorrect(word, index);
+                                    final String? expected =
+                                        index < correctOrder.length
+                                            ? correctOrder[index]
+                                            : null;
+                                    final String displayWord =
+                                        (!isCorrectHere && expected != null)
+                                            ? expected
+                                            : word;
+
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
                                       ),
-                                    ),
-                                  )
+                                      decoration: BoxDecoration(
+                                        color: isCorrectHere
+                                            ? Colors.green.shade100
+                                            : Colors.amber.shade100,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (!isCorrectHere) ...[
+                                            Text(
+                                              word,
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 14,
+                                                color: Colors.red.shade400,
+                                                decoration:
+                                                    TextDecoration.lineThrough,
+                                                decorationColor:
+                                                    Colors.red.shade400,
+                                              ),
+                                            ),
+                                          ],
+                                          Text(
+                                            displayWord,
+                                            style: GoogleFonts.scheherazadeNew(
+                                              letterSpacing: 0,
+                                              fontSize: 20,
+                                              color: Colors.green.shade800,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  })
                                 : DragTarget<Map<String, dynamic>>(
                                     onWillAcceptWithDetails: (details) =>
                                         details.data['source'] == 'answers' &&
@@ -390,24 +408,35 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                         final draggedWord =
                                             details.data['word'] as String;
                                         final oldIndex =
-                                            selectedWords.indexOf(draggedWord);
-                                        if (oldIndex != 0 && index != 0) {
+                                            details.data['selectedIndex']
+                                                as int;
+                                        if (oldIndex != 0 &&
+                                            index != 0 &&
+                                            oldIndex != index) {
                                           setState(() {
                                             selectedWords.removeAt(oldIndex);
+                                            final insertAt = oldIndex < index
+                                                ? index - 1
+                                                : index;
                                             selectedWords.insert(
-                                                index, draggedWord);
+                                                insertAt, draggedWord);
+                                            usedWordIndices =
+                                                _getUsedWordIndices(
+                                                    selectedWords);
                                           });
                                         }
                                       }
                                     },
                                     builder:
                                         (context, candidateData, rejectedData) {
+                                      final isLockedFirst = index == 0;
                                       return Draggable<Map<String, dynamic>>(
-                                        data: word == question['firstWord']
+                                        data: isLockedFirst
                                             ? null
                                             : {
                                                 'word': word,
                                                 'source': 'answers',
+                                                'selectedIndex': index,
                                               },
                                         feedback: Material(
                                           color: Colors.transparent,
@@ -436,7 +465,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                             const SizedBox.shrink(),
                                         child: GestureDetector(
                                           onTap: () {
-                                            if (word != question['firstWord']) {
+                                            if (!isLockedFirst) {
                                               _removeWord(word, index);
                                             }
                                           },
@@ -525,8 +554,7 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: selectedWords.join(' ') == correctOrder.join(' ')
-                      ? // When correct, just show simple feedback without expandable section
-                      Container(
+                      ? Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -535,125 +563,66 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                             border: Border.all(color: Colors.green.shade200),
                           ),
                           child: Text(
-                            'Excellent! That\'s correct! 🎉',
+                            'Excellent! That\'s correct!',
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: Colors.green.shade700,
                             ),
                           ),
                         )
-                      : // When incorrect, show expandable feedback
-                      GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _isFeedbackExpanded = !_isFeedbackExpanded;
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            width: double.infinity,
-                            height: _isFeedbackExpanded
-                                ? _expandedHeight
-                                : _collapsedHeight,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color:
-                                      Theme.of(context).colorScheme.tertiary),
-                            ),
-                            child: Column(
-                              children: [
-                                // Header and toggle
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(15),
+                      : Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Iconsax.close_circle5,
+                                    color: Colors.red.shade600,
+                                    size: 22,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Almost there! Here\'s the correct order:',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .inversePrimary,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          _isFeedbackExpanded
-                                              ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
-                                          size: 20,
-                                          color: Colors.blue.shade700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Content
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    physics: const BouncingScrollPhysics(),
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          correctOrder.join(' '),
-                                          style: GoogleFonts.scheherazadeNew(
-                                            letterSpacing: 0,
-                                            fontSize: 24,
-                                            height: 1.6,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        if (!_isFeedbackExpanded) ...[
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                'Tap to expand',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 12,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Icon(
-                                                Icons.keyboard_arrow_down,
-                                                size: 14,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ],
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Not quite right',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red.shade600,
                                     ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Correct:',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.red.shade700,
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                correctOrder.join(' '),
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                                style: GoogleFonts.scheherazadeNew(
+                                  letterSpacing: 0,
+                                  fontSize: 22,
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.red.shade800,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                 ),
@@ -723,11 +692,8 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                             isChecking = false;
                             // Reset the words if incorrect
                             selectedWords = [question['firstWord']];
-                            usedWordIndices = {
-                              question['firstWord']: [
-                                shuffledWords.indexOf(question['firstWord'])
-                              ]
-                            };
+                            usedWordIndices =
+                                _getUsedWordIndices(selectedWords);
                           });
                         }
                         widget.onNext(isCorrect);

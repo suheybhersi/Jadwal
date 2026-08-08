@@ -444,10 +444,20 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () {
+                              // Grade before leaving (same idea as verse pairing Skip).
+                              if (!isChecking) {
+                                final stillBlank = List<String>.from(
+                                        widget.question['verseWords'])
+                                    .contains('____');
+                                if (!stillBlank) {
+                                  checkAnswers();
+                                }
+                              }
+
                               widget.answeredQuestions[
                                   widget.currentQuestionIndex] = {
-                                'user_answer': chosenWords,
-                                'is_correct': allCorrect
+                                'user_answer': List<String>.from(chosenWords),
+                                'is_correct': allCorrect,
                               };
 
                               // Safely handle animation
@@ -461,6 +471,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                               try {
                                 if (_animationController != null) {
                                   _animationController!.reverse().then((_) {
+                                    if (!mounted) return;
                                     setState(() {
                                       chosenWords = [];
                                       isChecking = false;
@@ -671,12 +682,32 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
                               Padding(
                                 padding:
                                     const EdgeInsets.only(top: 8, left: 36),
-                                child: Text(
-                                  'Check the highlighted words and try again next time',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.red.shade700,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Correct:',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.red.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      List<String>.from(
+                                              widget.question['correctAnswers'])
+                                          .join(' · '),
+                                      textAlign: TextAlign.right,
+                                      textDirection: TextDirection.rtl,
+                                      style: GoogleFonts.scheherazadeNew(
+                                        fontSize: 18,
+                                        height: 1.4,
+                                        color: Colors.red.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                           ],
@@ -849,7 +880,7 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              "﴿${_convertToArabicNumbers(verseNumber).replaceAll(' ', '')}﴾",
+              "﴾${_convertToArabicNumbers(verseNumber).replaceAll(' ', '')}﴿",
               style: GoogleFonts.scheherazadeNew(
                 fontSize: 20,
                 color: primaryAccent,
@@ -913,46 +944,73 @@ class _FillBlankQuestionState extends State<FillBlankQuestion>
 
         // Determine if this word is correct in this position
         bool isCorrectHere = false;
+        String? correctWord;
         if (missingIndexPosition != -1 &&
             missingIndexPosition < widget.question['correctAnswers'].length) {
-          isCorrectHere =
-              widget.question['correctAnswers'][missingIndexPosition] == word;
+          correctWord =
+              widget.question['correctAnswers'][missingIndexPosition] as String;
+          isCorrectHere = correctWord == word;
         }
 
+        // After checking a wrong answer, show the correct word in the blank.
+        final displayWord =
+            (isChecking && !isCorrectHere && correctWord != null)
+                ? correctWord
+                : word;
+
         // Define word colors based on state
-        Color wordColor = isChecking
-            ? (isCorrectHere ? Colors.green.shade600 : Colors.red.shade600)
-            : primaryAccent;
+        final Color wordColor = !isChecking
+            ? primaryAccent
+            : (isCorrectHere ? Colors.green.shade600 : Colors.green.shade800);
+        final Color boxColor = !isChecking
+            ? primaryAccent.withValues(alpha: 0.1)
+            : (isCorrectHere ? Colors.green.shade50 : Colors.amber.shade50);
+        final Color borderColor = !isChecking
+            ? primaryAccent.withValues(alpha: 0.5)
+            : (isCorrectHere ? Colors.green.shade300 : Colors.amber.shade400);
 
         wordWidgets.add(
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: isChecking
-                  ? (isCorrectHere ? Colors.green.shade50 : Colors.red.shade50)
-                  : primaryAccent.withValues(alpha: 0.1),
+              color: boxColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isChecking
-                    ? (isCorrectHere
-                        ? Colors.green.shade300
-                        : Colors.red.shade300)
-                    : primaryAccent.withValues(alpha: 0.5),
+                color: borderColor,
                 width: 1,
               ),
             ),
             child: GestureDetector(
               onTap:
                   isChecking ? null : () => _removeWordAndSelectBlank(i, word),
-              child: Text(
-                word,
-                style: GoogleFonts.scheherazadeNew(
-                  letterSpacing: 0,
-                  fontSize: 20,
-                  height: 1.2,
-                  color: wordColor,
-                  fontWeight: isChecking ? FontWeight.bold : FontWeight.normal,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isChecking && !isCorrectHere) ...[
+                    Text(
+                      word,
+                      style: GoogleFonts.scheherazadeNew(
+                        letterSpacing: 0,
+                        fontSize: 14,
+                        height: 1.1,
+                        color: Colors.red.shade400,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: Colors.red.shade400,
+                      ),
+                    ),
+                  ],
+                  Text(
+                    displayWord,
+                    style: GoogleFonts.scheherazadeNew(
+                      letterSpacing: 0,
+                      fontSize: 20,
+                      height: 1.2,
+                      color: wordColor,
+                      fontWeight:
+                          isChecking ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

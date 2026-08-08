@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -70,23 +69,22 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
     return out.replaceAll(' ', '');
   }
 
-  // Add scroll to widget method with offset parameter
-  void _scrollToWidget(GlobalKey key, {double offset = 0.0}) {
-    if (key.currentContext != null) {
-      final RenderObject? renderObject = key.currentContext!.findRenderObject();
-      if (renderObject != null) {
-        final RenderAbstractViewport viewport =
-            RenderAbstractViewport.of(renderObject);
-        final double position =
-            viewport.getOffsetToReveal(renderObject, 0.0).offset;
+  // Scroll so [key]'s widget is visible without overshooting the bottom.
+  void _scrollToWidget(GlobalKey key, {double alignment = 0.1}) {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return;
 
-        _scrollController.animateTo(
-          position + offset, // Apply additional offset to fine-tune position
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null || !mounted) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: alignment.clamp(0.0, 1.0),
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      );
+    });
   }
 
   void _handleSectionTap(String section) {
@@ -94,15 +92,15 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
       activeSection = section;
     });
 
-    // Scroll to the appropriate section's options
-    Future.delayed(const Duration(milliseconds: 100), () {
+    // Wait for options to lay out, then bring them into view gently.
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
       if (section == 'before' && _beforeOptionsKey.currentContext != null) {
-        // For before section, use a small offset for subtle positioning
-        _scrollToWidget(_beforeOptionsKey, offset: -20.0);
+        _scrollToWidget(_beforeOptionsKey, alignment: 0.05);
       } else if (section == 'after' &&
           _afterOptionsKey.currentContext != null) {
-        // For after section, use a larger negative offset to prevent aggressive scrolling
-        _scrollToWidget(_afterOptionsKey, offset: -100.0);
+        // Keep the after options lower in the viewport so we don't scroll past them.
+        _scrollToWidget(_afterOptionsKey, alignment: 0.35);
       }
     });
   }
@@ -120,26 +118,26 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
       // Auto-switch to the other section if it's empty
       if (section == 'before' && hasAfterPart && selectedAfterVerse == null) {
         activeSection = 'after';
-        // Schedule scrolling after state is updated
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted) return;
           if (_afterSectionKey.currentContext != null) {
-            _scrollToWidget(_afterSectionKey);
+            _scrollToWidget(_afterSectionKey, alignment: 0.15);
           }
         });
       } else if (section == 'after' &&
           hasBeforePart &&
           selectedBeforeVerse == null) {
         activeSection = 'before';
-        // Schedule scrolling after state is updated
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted) return;
           if (_beforeSectionKey.currentContext != null) {
-            _scrollToWidget(_beforeSectionKey);
+            _scrollToWidget(_beforeSectionKey, alignment: 0.05);
           }
         });
       } else {
         activeSection = null; // Close options after selection
-        // Scroll back to show the current verse
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted || !_scrollController.hasClients) return;
           _scrollController.animateTo(
             0,
             duration: const Duration(milliseconds: 300),
@@ -465,44 +463,77 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
                                                     selectedBeforeVerse ==
                                                         correctBeforeVerse
                                                 ? Colors.green.shade50
-                                                : Colors.red.shade50)
+                                                : Colors.green.shade50)
                                             : primaryAccent.withValues(
                                                 alpha: 0.05),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: isChecking
-                                              ? (allCorrect ||
-                                                      selectedBeforeVerse ==
-                                                          correctBeforeVerse
-                                                  ? Colors.green.shade200
-                                                  : Colors.red.shade200)
+                                              ? Colors.green.shade200
                                               : primaryAccent.withValues(
                                                   alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
-                                      child: Text(
-                                        // Display full verse when checking answers, truncated version otherwise
-                                        isChecking
-                                            ? selectedBeforeVerse!
-                                            : _truncateVerse(
-                                                selectedBeforeVerse!),
-                                        style: GoogleFonts.scheherazadeNew(
-                                          letterSpacing: 0,
-                                          fontSize: 20,
-                                          height: 1.5,
-                                          color: isChecking
-                                              ? (allCorrect ||
-                                                      selectedBeforeVerse ==
-                                                          correctBeforeVerse
-                                                  ? Colors.green.shade700
-                                                  : Colors.red.shade700)
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .inversePrimary,
-                                        ),
-                                        textDirection: TextDirection.rtl,
-                                        textAlign: TextAlign.justify,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          if (isChecking &&
+                                              selectedBeforeVerse !=
+                                                  correctBeforeVerse &&
+                                              correctBeforeVerse != null) ...[
+                                            Text(
+                                              selectedBeforeVerse!,
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 16,
+                                                height: 1.4,
+                                                color: Colors.red.shade400,
+                                                decoration:
+                                                    TextDecoration.lineThrough,
+                                                decorationColor:
+                                                    Colors.red.shade400,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              correctBeforeVerse!,
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 20,
+                                                height: 1.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.green.shade700,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                          ] else
+                                            Text(
+                                              isChecking
+                                                  ? selectedBeforeVerse!
+                                                  : _truncateVerse(
+                                                      selectedBeforeVerse!),
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 20,
+                                                height: 1.5,
+                                                color: isChecking
+                                                    ? Colors.green.shade700
+                                                    : Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                        ],
                                       ),
                                     )
                                   else
@@ -793,48 +824,77 @@ class VersePairingQuestionState extends State<VersePairingQuestion>
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
                                         color: isChecking
-                                            ? (allCorrect ||
-                                                    selectedAfterVerse ==
-                                                        correctAfterVerse
-                                                ? Colors.green.shade50
-                                                : Colors.red.shade50)
+                                            ? Colors.green.shade50
                                             : primaryAccent.withValues(
                                                 alpha: 0.05),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color: isChecking
-                                              ? (allCorrect ||
-                                                      selectedAfterVerse ==
-                                                          correctAfterVerse
-                                                  ? Colors.green.shade200
-                                                  : Colors.red.shade200)
+                                              ? Colors.green.shade200
                                               : primaryAccent.withValues(
                                                   alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
-                                      child: Text(
-                                        // Display full verse when checking answers, truncated version otherwise
-                                        isChecking
-                                            ? selectedAfterVerse!
-                                            : _truncateVerse(
-                                                selectedAfterVerse!),
-                                        style: GoogleFonts.scheherazadeNew(
-                                          letterSpacing: 0,
-                                          fontSize: 20,
-                                          height: 1.5,
-                                          color: isChecking
-                                              ? (allCorrect ||
-                                                      selectedAfterVerse ==
-                                                          correctAfterVerse
-                                                  ? Colors.green.shade700
-                                                  : Colors.red.shade700)
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .inversePrimary,
-                                        ),
-                                        textDirection: TextDirection.rtl,
-                                        textAlign: TextAlign.justify,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          if (isChecking &&
+                                              selectedAfterVerse !=
+                                                  correctAfterVerse &&
+                                              correctAfterVerse != null) ...[
+                                            Text(
+                                              selectedAfterVerse!,
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 16,
+                                                height: 1.4,
+                                                color: Colors.red.shade400,
+                                                decoration:
+                                                    TextDecoration.lineThrough,
+                                                decorationColor:
+                                                    Colors.red.shade400,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              correctAfterVerse!,
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 20,
+                                                height: 1.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.green.shade700,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                          ] else
+                                            Text(
+                                              isChecking
+                                                  ? selectedAfterVerse!
+                                                  : _truncateVerse(
+                                                      selectedAfterVerse!),
+                                              style:
+                                                  GoogleFonts.scheherazadeNew(
+                                                letterSpacing: 0,
+                                                fontSize: 20,
+                                                height: 1.5,
+                                                color: isChecking
+                                                    ? Colors.green.shade700
+                                                    : Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary,
+                                              ),
+                                              textDirection: TextDirection.rtl,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                        ],
                                       ),
                                     )
                                   else

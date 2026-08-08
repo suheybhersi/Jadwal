@@ -95,10 +95,12 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // Simplified progress animation
+  static const _minLoadingDuration = Duration(seconds: 5);
+
+  // Progress fills to 99% over 5s, then holds until questions are ready.
   void _startProgressAnimation() {
-    const duration = 20000; // 20 seconds to reach ~100%
-    const interval = 100; // Update every 100ms
+    const durationMs = 5000;
+    const interval = 100;
     int elapsed = 0;
 
     Future.microtask(() async {
@@ -106,7 +108,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         if (!mounted || !_isActive) return;
 
         elapsed += interval;
-        final progress = min(elapsed / duration, 0.99);
+        final progress = min(elapsed / durationMs, 0.99);
 
         setState(() => _loadingProgress = progress);
         await Future.delayed(const Duration(milliseconds: interval));
@@ -120,7 +122,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted || !_isActive) return;
-      if (questions.isEmpty) {
+      if (questions.isEmpty && !_didFinishLoading) {
         setState(() {
           _currentMessageIndex =
               (_currentMessageIndex + 1) % _loadingMessages.length;
@@ -130,12 +132,23 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     });
   }
 
-  // Load questions with progress animation
+  Future<void> _waitForMinimumLoading(DateTime startedAt) async {
+    final remaining = _minLoadingDuration - DateTime.now().difference(startedAt);
+    if (remaining > Duration.zero) {
+      await Future.delayed(remaining);
+    }
+  }
+
+  // Load questions; keep loading UI for at least 5s, then show quiz (or wait at 99%).
   Future<void> _loadQuestions() async {
     if (!mounted || !_isActive) return;
+    final startedAt = DateTime.now();
 
     try {
       final generatedQuestions = await _generateQuestions();
+      if (!mounted || !_isActive) return;
+
+      await _waitForMinimumLoading(startedAt);
       if (!mounted || !_isActive) return;
 
       setState(() {
@@ -148,6 +161,10 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       });
     } catch (e) {
       if (!mounted || !_isActive) return;
+
+      await _waitForMinimumLoading(startedAt);
+      if (!mounted || !_isActive) return;
+
       setState(() {
         questions = [];
         _loadingProgress = 1.0;
@@ -580,32 +597,72 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     return allWords.take(numberOfBlanks == 3 ? 5 : 3 * numberOfBlanks).toList();
   }
 
-  List<String> getRandomVerses(int index) {
-    List<String> verses = List.from(widget.versesList);
-    verses.removeAt(index);
-    verses.removeAt(index);
-    verses.shuffle();
-    return verses.take(3).toList();
-  }
+  /// Pull random ayahs from the full Quran (Firestore) to pad option lists.
+  Future<List<String>> _fetchQuranFillerVerses({
+    required int count,
+    required Set<String> exclude,
+  }) async {
+    if (count <= 0) return const [];
 
-  Future<Map<String, dynamic>> _generateVersePairingQuestion(
-      int verseIndex) async {
-    // Skip first and last verses since they don't have verses before/after them respectively
-    // First, make sure we're not trying to generate a question for the first or last verse
-    if (verseIndex == 0 || verseIndex == widget.versesList.length - 1) {
-      // If we somehow got the first or last verse, pick a verse from the middle
-      int middleIndex = widget.versesList.length ~/ 2;
-      verseIndex =
-          (middleIndex > 0 && middleIndex < widget.versesList.length - 1)
-              ? middleIndex
-              : 1; // Fallback to second verse if we have a very small list
+    const totalVerses = 6236;
+    final random = Random();
+    final fillers = <String>[];
+    final triedIds = <int>{};
+    var attempts = 0;
+    final maxAttempts = count * 20;
+
+    while (fillers.length < count && attempts < maxAttempts) {
+      attempts++;
+      final id = random.nextInt(totalVerses) + 1;
+      if (!triedIds.add(id)) continue;
+
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('verses')
+            .doc(id.toString())
+            .get();
+        final text = doc.data()?['text']?.toString().trim() ?? '';
+        if (text.isEmpty) continue;
+        if (exclude.contains(text) || fillers.contains(text)) continue;
+        fillers.add(text);
+      } catch (_) {
+        // Skip failed lookups and keep trying.
+      }
     }
 
-    String currentVerse = widget.versesList[verseIndex];
-    String verseBefore = widget
-        .versesList[verseIndex - 1]; // Safe now that we've excluded first verse
-    String verseAfter = widget
-        .versesList[verseIndex + 1]; // Safe now that we've excluded last verse
+    return fillers;
+  }
+
+  Future<void> _padVerseOptions(
+    List<String> options, {
+    required int target,
+    required Set<String> exclude,
+  }) async {
+    if (options.length >= target) return;
+    final fillers = await _fetchQuranFillerVerses(
+      count: target - options.length,
+      exclude: {...exclude, ...options},
+    );
+    options.addAll(fillers);
+  }
+
+  Future<Map<String, dynamic>?> _generateVersePairingQuestion(
+      int verseIndex) async {
+    // Need a true middle ayah (before + current + after).
+    if (widget.versesList.length < 3) return null;
+
+    // Skip first and last verses since they don't have verses before/after them respectively
+    if (verseIndex <= 0 || verseIndex >= widget.versesList.length - 1) {
+      final middleIndex = widget.versesList.length ~/ 2;
+      if (middleIndex <= 0 || middleIndex >= widget.versesList.length - 1) {
+        return null;
+      }
+      verseIndex = middleIndex;
+    }
+
+    String currentVerse = widget.versesList[verseIndex].toString();
+    String verseBefore = widget.versesList[verseIndex - 1].toString();
+    String verseAfter = widget.versesList[verseIndex + 1].toString();
 
     String? verseNumber;
     try {
@@ -666,7 +723,6 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         beforeOptions.add(allVerses[i]);
       }
     }
-    beforeOptions.shuffle(); // Randomize order
 
     // Fill options for "after" section
     // Add nearby verses first (more challenging)
@@ -684,7 +740,22 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         afterOptions.add(allVerses[i]);
       }
     }
-    afterOptions.shuffle(); // Randomize order
+
+    // Pad from the rest of the Quran when this review range is too short.
+    final sharedExclude = <String>{currentVerse, verseBefore, verseAfter};
+    await _padVerseOptions(
+      beforeOptions,
+      target: 4,
+      exclude: sharedExclude,
+    );
+    await _padVerseOptions(
+      afterOptions,
+      target: 4,
+      exclude: {...sharedExclude, ...beforeOptions},
+    );
+
+    beforeOptions.shuffle();
+    afterOptions.shuffle();
 
     return {
       'type': 'verse_pairing',

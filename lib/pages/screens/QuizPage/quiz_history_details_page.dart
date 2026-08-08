@@ -567,7 +567,10 @@ class _QuizHistoryDetailsPageState extends State<QuizHistoryDetailsPage> {
     } else if (question['type'] == 'drag_drop') {
       questionTitle = 'Arrange the verse';
       questionContent = '${question['firstWord']} ...';
-      correctAnswer = question['correctOrder'].join(' ');
+      final rest = List<String>.from(question['correctOrder'] ?? const []);
+      correctAnswer = [question['firstWord'], ...rest]
+          .where((w) => w != null && w.toString().isNotEmpty)
+          .join(' ');
 
       // For drag and drop, user answers might be in a different format
       List<dynamic> userAnswerList =

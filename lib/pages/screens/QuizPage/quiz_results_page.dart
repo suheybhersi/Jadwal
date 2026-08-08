@@ -109,7 +109,9 @@ class QuizResultsPageState extends State<QuizResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final percentage = (widget.score / widget.questions.length) * 100;
+    final questionCount = widget.questions.length;
+    final percentage =
+        questionCount == 0 ? 0.0 : (widget.score / questionCount) * 100;
     String resultMessage;
     Color resultColor;
     IconData resultIcon;
@@ -379,17 +381,20 @@ class QuizResultsPageState extends State<QuizResultsPage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    showAllQuestions =
-                                        !showAllQuestions; // Toggle the state
-                                  });
-                                },
+                                onPressed: widget.questions.length <= 3
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          showAllQuestions = !showAllQuestions;
+                                        });
+                                      },
                                 child: Text(
                                   showAllQuestions ? 'Hide All' : 'Show All',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color: Colors.blue.shade700,
+                                    color: widget.questions.length <= 3
+                                        ? Colors.grey
+                                        : Colors.blue.shade700,
                                   ),
                                 ),
                               ),
@@ -400,11 +405,17 @@ class QuizResultsPageState extends State<QuizResultsPage> {
                           // List of questions with status
                           Column(
                             children: List.generate(
-                              showAllQuestions ? widget.questions.length : 3,
+                              showAllQuestions
+                                  ? widget.questions.length
+                                  : widget.questions.length.clamp(0, 3),
                               (index) {
                                 final question = widget.questions[index];
-                                final isCorrect = widget
-                                    .answeredQuestions[index]!['is_correct'];
+                                final isCorrect = widget.answeredQuestions
+                                        .containsKey(index)
+                                    ? widget.answeredQuestions[index]![
+                                            'is_correct'] ==
+                                        true
+                                    : false;
 
                                 return _buildQuestionItem(
                                   context: context,
@@ -624,7 +635,8 @@ class QuizResultsPageState extends State<QuizResultsPage> {
 
   void _showQuestionDetailsDialog(
       BuildContext context, Map<String, dynamic> question, int index) {
-    final isCorrect = widget.answeredQuestions[index]!['is_correct'];
+    final answer = widget.answeredQuestions[index];
+    final isCorrect = answer?['is_correct'] == true;
 
     // Determine question type and extract relevant information
     String questionTitle = '';
@@ -645,8 +657,10 @@ class QuizResultsPageState extends State<QuizResultsPage> {
       questionContent = joinVerseManuallyWithSpecialChars(verseWithBlanks);
 
       // User's answers if available
-      List<String> userAnswers =
-          List<String>.from(widget.answeredQuestions[index]!['user_answer']);
+      final rawUser = answer?['user_answer'];
+      final List<String> userAnswers = rawUser is List
+          ? List<String>.from(rawUser)
+          : <String>[];
 
       // Format for display
       userAnswer =
@@ -656,23 +670,27 @@ class QuizResultsPageState extends State<QuizResultsPage> {
       questionTitle = 'What comes next';
       questionContent = question['verse'];
       correctAnswer = question['correctAnswer'];
-      userAnswer =
-          widget.answeredQuestions[index]!['user_answer'] ?? 'Not answered';
+      userAnswer = answer?['user_answer']?.toString() ?? 'Not answered';
     } else if (question['type'] == 'drag_drop') {
       questionTitle = 'Arrange the verse';
       questionContent = '${question['firstWord']} ...';
-      correctAnswer = question['correctOrder'].join(' ');
+      final rest = List<String>.from(question['correctOrder'] ?? const []);
+      correctAnswer = [question['firstWord'], ...rest]
+          .where((w) => w != null && w.toString().isNotEmpty)
+          .join(' ');
 
-      // For drag and drop, user answers might be in a different format
-      userAnswer = widget.answeredQuestions[index]!['user_answer'].join(' ') ??
-          'Not attempted';
+      final rawUser = answer?['user_answer'];
+      userAnswer = rawUser is List
+          ? rawUser.join(' ')
+          : (rawUser?.toString() ?? 'Not attempted');
     } else if (question['type'] == 'verse_pairing') {
       questionTitle = 'What comes before and after';
       questionContent = question['currentVerse'];
       correctAnswer =
           '${question['verseBefore']} ... ${question['verseAfter']}';
-      userAnswer =
-          '${widget.answeredQuestions[index]!['userAnswerBefore']} ... ${widget.answeredQuestions[index]!['userAnswerAfter']}';
+      final before = answer?['userAnswerBefore']?.toString() ?? '—';
+      final after = answer?['userAnswerAfter']?.toString() ?? '—';
+      userAnswer = '$before ... $after';
     }
 
     showDialog(

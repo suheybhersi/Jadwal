@@ -69,6 +69,11 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
   bool isIncorrectVerse = false;
   /// Whether the user has revealed the start-of-verse hint for a large mismatch.
   bool showAnswerHint = false;
+  /// Whether the user chose to reveal the full correct verse.
+  bool showFullAnswer = false;
+  /// Retries used for this question (separate from the first attempt).
+  int retryCount = 0;
+  static const int maxRetries = 2;
   /// Number of times we've shown the "bad audio, try again" hint for this question (max 2).
   int badAudioPromptCount = 0;
   /// True when we should show the "try again, might be bad audio" hint for this result (set only for 1st and 2nd incorrect).
@@ -233,6 +238,13 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     int lengthDifference = (lenCorrect - lenTranscribed).abs();
     List<Map<String, dynamic>> differences = [];
 
+    // Empty after normalisation — cannot safely index characters.
+    if (lenCorrect == 0 || lenTranscribed == 0) {
+      return [
+        {"error": "Word is too different to be corrected"}
+      ];
+    }
+
     // Special case: length difference of 1 — treat as match when it's only an extra/missing alif or ya
     if (lengthDifference == 1) {
       // Missing character in correct (transcribed is longer): e.g. small alif in correct → full alif in transcription, or API inserts extra ی
@@ -285,7 +297,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     }
 
     // If difference is exactly 1 or 2, find the missing/extra character
-    if (lengthDifference <= 2) {
+    if (lengthDifference <= 2 && lenCorrect > 0 && lenTranscribed > 0) {
       if (processedCorrect[lenCorrect - 1] !=
               processedTranscribed[lenTranscribed - 1] &&
           lenCorrect > lenTranscribed &&
@@ -935,6 +947,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               incorrectWordCount = 0;
               isIncorrectVerse = false;
               showAnswerHint = false;
+              showFullAnswer = false;
             });
             return;
           }
@@ -969,6 +982,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               text = 'retry_needed';
               comparison = [];
               showAnswerHint = false;
+              showFullAnswer = false;
             } else {
               text = processedTranscribedWord;
               comparison = comparisonResult;
@@ -984,6 +998,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
               showBadAudioHintThisAttempt = true;
             } else {
               showBadAudioHintThisAttempt = false;
+            }
+            // No retries left — reveal the answer so they can continue learning.
+            if (!evaluation.isCorrect && !canRetry) {
+              showFullAnswer = true;
             }
           });
         }
@@ -1136,8 +1154,10 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
     return '... ${joinVerseManuallyWithSpecialChars(words.take(n).toList())}';
   }
 
-  // Add this function to reset the recording state
-  void resetRecording() {
+  // Clears the current attempt. [countAsRetry] is false for Skip / leave.
+  void resetRecording({bool countAsRetry = true}) {
+    if (countAsRetry && retryCount >= maxRetries) return;
+
     setState(() {
       text = '';
       comparison = [];
@@ -1147,9 +1167,15 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
       incorrectWordCount = 0;
       isIncorrectVerse = false;
       showAnswerHint = false;
+      showFullAnswer = false;
+      if (countAsRetry) {
+        retryCount++;
+      }
     });
     cleanupRecordingFile();
   }
+
+  bool get canRetry => retryCount < maxRetries;
 
   /// First few words of the expected answer, used as a gentle hint.
   String getCorrectAnswerHint({int wordCount = 3}) {
@@ -1457,7 +1483,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                               final answerText = isIncorrectVerse
                                   ? 'Could not match verse'
                                   : text;
-                              resetRecording();
+                              resetRecording(countAsRetry: false);
                               widget.onNext(isRecitationCorrect);
                               widget.answeredQuestions[
                                   widget.currentQuestionIndex] = {
@@ -1777,7 +1803,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                     ),
                                     if (isIncorrectVerse) ...[
                                       const SizedBox(height: 12),
-                                      if (!showAnswerHint)
+                                      if (!showAnswerHint && !showFullAnswer)
                                         Align(
                                           alignment: Alignment.centerLeft,
                                           child: TextButton.icon(
@@ -1809,7 +1835,8 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                             ),
                                           ),
                                         )
-                                      else ...[
+                                      else if (showAnswerHint &&
+                                          !showFullAnswer) ...[
                                         Text(
                                           'Starts with:',
                                           style: GoogleFonts.poppins(
@@ -1869,6 +1896,77 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                                           fontStyle: FontStyle.italic,
                                         ),
                                       ),
+                                    ],
+                                    if (!isRecitationCorrect) ...[
+                                      const SizedBox(height: 12),
+                                      if (!canRetry && !showFullAnswer)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 8),
+                                          child: Text(
+                                            'No retries left. Show the answer or continue.',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: Colors.red.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      if (showFullAnswer) ...[
+                                        Text(
+                                          'Correct:',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.red.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          widget.question['correctAnswer']
+                                                  as String? ??
+                                              '',
+                                          textAlign: TextAlign.right,
+                                          textDirection: TextDirection.rtl,
+                                          style: GoogleFonts.scheherazadeNew(
+                                            letterSpacing: 0,
+                                            fontSize: 22,
+                                            height: 1.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green.shade800,
+                                          ),
+                                        ),
+                                      ] else
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: TextButton.icon(
+                                            onPressed: () {
+                                              setState(() {
+                                                showFullAnswer = true;
+                                              });
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  const Color(0xFF4979FB),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 4,
+                                              ),
+                                            ),
+                                            icon: const Icon(
+                                              Iconsax.document_text,
+                                              size: 18,
+                                              color: Color(0xFF4979FB),
+                                            ),
+                                            label: Text(
+                                              'Show answer',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ],
                                 ),
@@ -2065,6 +2163,7 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                         feedbackMessage = '';
                         isIncorrectVerse = false;
                         showAnswerHint = false;
+                        showFullAnswer = false;
                       });
                     },
                     style: ElevatedButton.styleFrom(
@@ -2078,43 +2177,46 @@ class _WhatComesNextQuestionState extends State<WhatComesNextQuestion> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
+                    child: Text(
+                      'Continue',
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                if (!isRecitationCorrect && canRetry) ...[
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: resetRecording,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 16),
+                      backgroundColor:
+                          const Color(0xFF4979FB).withValues(alpha: 0.15),
+                      foregroundColor: const Color(0xFF4979FB),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Icon(Iconsax.refresh, size: 20),
+                        const SizedBox(width: 6),
                         Text(
-                          'Continue',
+                          'Retry (${maxRetries - retryCount})',
                           style: GoogleFonts.poppins(
-                            fontSize: 17,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: resetRecording,
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    backgroundColor:
-                        const Color(0xFF4979FB).withValues(alpha: 0.2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Iconsax.refresh,
-                        size: 22,
-                        color: const Color(0xFF4979FB),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ],
             ),
           ),
