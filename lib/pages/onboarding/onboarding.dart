@@ -9,7 +9,14 @@ import 'package:jadwal/utils/review_miss_utils.dart';
 
 /// Pre-signup product demo: brand → path → interactive scenes → account.
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({
+    super.key,
+    this.isReplay = false,
+  });
+
+  /// When true (e.g. from Settings), finishing or skipping returns instead of
+  /// opening account creation.
+  final bool isReplay;
 
   /// Drop any leftover controller so the next mount starts on page 0.
   static void resetController() {
@@ -29,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     OnboardingScreen.resetController();
-    _controller = Get.put(OnBoardingController());
+    _controller = Get.put(OnBoardingController(isReplay: widget.isReplay));
   }
 
   @override
@@ -76,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: TextButton(
               onPressed: () => OnBoardingController.instance.skipPage(),
               child: Text(
-                'Skip',
+                widget.isReplay ? 'Close' : 'Skip',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w500,
                   color: Colors.grey.shade600,
@@ -95,6 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               final onPathPage = index == 1;
               final canContinue = !onPathPage ||
                   _controller.selectedPath.value != DemoPath.unset;
+              final isReplay = _controller.isReplay;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -105,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const SizedBox(height: 24),
                   AuthPrimaryButton(
                     label: isLast
-                        ? 'Create account'
+                        ? (isReplay ? 'Done' : 'Create account')
                         : (onPathPage && !canContinue
                             ? 'Choose a path'
                             : 'Continue'),
@@ -114,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ? () => OnBoardingController.instance.nextPage()
                         : null,
                   ),
-                  if (isLast) ...[
+                  if (isLast && !isReplay) ...[
                     const SizedBox(height: 12),
                     TextButton(
                       onPressed: () => Get.to(
@@ -155,8 +163,11 @@ class _DemoScene {
 }
 
 class OnBoardingController extends GetxController {
+  OnBoardingController({this.isReplay = false});
+
   static OnBoardingController get instance => Get.find();
 
+  final bool isReplay;
   final pageController = PageController();
   final RxInt currentPageIndex = 0.obs;
   final Rx<DemoPath> selectedPath = DemoPath.unset.obs;
@@ -244,7 +255,11 @@ class OnBoardingController extends GetxController {
   void nextPage() {
     final last = pageCount - 1;
     if (currentPageIndex.value >= last) {
-      Get.to(() => const LoginOrRegisterPage(startWithLogin: false));
+      if (isReplay) {
+        Get.back();
+      } else {
+        Get.to(() => const LoginOrRegisterPage(startWithLogin: false));
+      }
       return;
     }
     if (currentPageIndex.value == 1 &&
@@ -258,7 +273,11 @@ class OnBoardingController extends GetxController {
   }
 
   void skipPage() {
-    Get.to(() => const LoginOrRegisterPage());
+    if (isReplay) {
+      Get.back();
+    } else {
+      Get.to(() => const LoginOrRegisterPage());
+    }
   }
 
   @override
@@ -280,13 +299,8 @@ class _WelcomeBrandPage extends StatelessWidget {
       child: Column(
         children: [
           const Spacer(flex: 2),
-          const Image(
-            height: 88,
-            image: AssetImage('assets/app_logo.png'),
-          ),
-          const SizedBox(height: 20),
           Text(
-            'Jadwal',
+            'Welcome',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 36,
@@ -297,7 +311,7 @@ class _WelcomeBrandPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Plan your hifdh. Review on time. Test yourself.',
+            'A short tour to show how you’ll plan, review, and stay consistent.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 16,
@@ -1507,6 +1521,7 @@ class _ReadyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = Theme.of(context).colorScheme.inversePrimary;
+    final isReplay = OnBoardingController.instance.isReplay;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 56, 32, 180),
@@ -1528,7 +1543,7 @@ class _ReadyPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Ready when you are',
+            isReplay ? 'You’re all set' : 'Ready when you are',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 26,
@@ -1538,7 +1553,9 @@ class _ReadyPage extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Create a free account to save your plan, reviews, and progress across devices.',
+            isReplay
+                ? 'That’s the tour — head back whenever you want a refresher from Settings.'
+                : 'Create a free account to save your plan, reviews, and progress across devices.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 15,

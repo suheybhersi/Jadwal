@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:jadwal/pages/auth/auth_page.dart';
+import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/screens/SettingsPage/about_app_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/delete_account_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
@@ -12,7 +14,6 @@ import 'package:jadwal/pages/screens/SettingsPage/notifications_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/privacy_policy_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/terms_service_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/usage_mode_page.dart';
-import 'package:jadwal/pages/screens/SettingsPage/features_tour_page.dart';
 import 'package:jadwal/pages/screens/PaywallPage/paywall_page.dart';
 import 'package:jadwal/services/notification_service.dart';
 import 'package:jadwal/services/subscription_service.dart';
@@ -379,16 +380,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 10),
                 _buildSettingCard([
                   _buildSettingTile(
-                    icon: Iconsax.discover,
-                    title: 'Features Tour',
-                    description: 'Learn about all app features',
+                    icon: Iconsax.teacher,
+                    title: 'Onboarding Tour',
+                    description: 'Replay the intro walkthrough',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FeaturesTourPage(),
-                        ),
-                      );
+                      OnboardingScreen.resetController();
+                      Get.to(() => const OnboardingScreen(isReplay: true));
                     },
                   ),
                   _buildSettingTile(

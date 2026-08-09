@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
@@ -71,7 +72,7 @@ class _FinishedMemorisingQuestionPageState
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           content: Text(
-            'We’ll set you up for quizzes and reading as a Huffadh.\n\n'
+            'We’ll set you up for quizzes and reading as a Hafidh.\n\n'
             'If you change your mind, you can reset your plan from Home and create a memorisation schedule anytime.',
             style: GoogleFonts.poppins(fontSize: 14, height: 1.45),
           ),
@@ -88,7 +89,7 @@ class _FinishedMemorisingQuestionPageState
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
               child: Text(
-                'Yes, I’m a Huffadh',
+                'Yes, I’m a Hafidh',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   color: kAuthBrandBlue,
@@ -119,6 +120,20 @@ class _FinishedMemorisingQuestionPageState
           ? const _SetupLoadingView()
           : Stack(
               children: [
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: TextButton(
+                    onPressed: () => AuthPage.signOutToOnboarding(context),
+                    child: Text(
+                      'Sign out',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 48, 24, 120),
                   child: Column(
