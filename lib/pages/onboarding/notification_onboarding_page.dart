@@ -129,7 +129,6 @@ class _NotificationOnboardingPageState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const OnboardingStepHeader(
-                            icon: Iconsax.notification,
                             title: 'Stay on track',
                             subtitle:
                                 'A daily nudge helps keep your memorisation consistent. You can turn this off anytime.',

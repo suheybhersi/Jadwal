@@ -221,12 +221,12 @@ class _AboutAppPageState extends State<AboutAppPage> {
                       _buildDevInfoRow(
                         icon: Iconsax.sms,
                         title: 'Contact',
-                        value: 'jadwal.qrn@gmail.com',
+                        value: 'support@jadwal.co.uk',
                         isLink: true,
                         onTap: () => _launchUrl(
                           Uri(
                             scheme: 'mailto',
-                            path: 'jadwal.qrn@gmail.com',
+                            path: 'support@jadwal.co.uk',
                             query:
                                 'subject=Jadwal App&body=Hello,',
                           ),

@@ -123,6 +123,55 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
     });
   }
 
+  /// Fixed first word — visually distinct from tappable/draggable chips.
+  Widget _buildStartingWordChip(BuildContext context, String word) {
+    final textColor = Theme.of(context).colorScheme.inversePrimary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Iconsax.lock_1,
+            size: 14,
+            color: Colors.grey.shade500,
+          ),
+          const SizedBox(width: 6),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Given',
+                style: GoogleFonts.poppins(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500,
+                  height: 1.1,
+                ),
+              ),
+              Text(
+                word,
+                style: GoogleFonts.scheherazadeNew(
+                  letterSpacing: 0,
+                  fontSize: 20,
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _clearAllWords() {
     // Get the first word from the current question
     final firstWord =
@@ -469,28 +518,35 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                               _removeWord(word, index);
                                             }
                                           },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              word,
-                                              style:
-                                                  GoogleFonts.scheherazadeNew(
-                                                letterSpacing: 0,
-                                                fontSize: 20,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
+                                          child: isLockedFirst
+                                              ? _buildStartingWordChip(
+                                                  context,
+                                                  word,
+                                                )
+                                              : Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  child: Text(
+                                                    word,
+                                                    style: GoogleFonts
+                                                        .scheherazadeNew(
+                                                      letterSpacing: 0,
+                                                      fontSize: 20,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
                                         ),
                                       );
                                     },
@@ -886,19 +942,25 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                     ),
                                     decoration: BoxDecoration(
                                         color: isUsed
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary
-                                                .withValues(alpha: 0.1)
+                                            ? (highContrastMode
+                                                ? Colors.grey.shade800
+                                                : Colors.grey.shade200)
                                             : isFocused
                                                 ? primaryAccent
                                                 : Theme.of(context)
                                                     .colorScheme
                                                     .primary,
                                         borderRadius: BorderRadius.circular(20),
+                                        border: isUsed
+                                            ? Border.all(
+                                                color: highContrastMode
+                                                    ? Colors.grey.shade700
+                                                    : Colors.grey.shade300,
+                                              )
+                                            : null,
                                         boxShadow: [
                                           isUsed
-                                              ? BoxShadow()
+                                              ? const BoxShadow()
                                               : BoxShadow(
                                                   color: Theme.of(context)
                                                       .colorScheme
@@ -911,13 +973,19 @@ class _BuildVerseQuestionState extends State<BuildVerseQuestion> {
                                     child: Text(
                                       word,
                                       style: GoogleFonts.scheherazadeNew(
-                                          letterSpacing: 0,
-                                          fontSize: 20,
-                                          color: isUsed
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .tertiary
-                                              : Colors.white),
+                                        letterSpacing: 0,
+                                        fontSize: 20,
+                                        color: isUsed
+                                            ? Colors.grey.shade500
+                                            : Colors.white,
+                                        decoration: isUsed
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                        decorationColor: isUsed
+                                            ? Colors.grey.shade500
+                                            : null,
+                                        decorationThickness: isUsed ? 2 : null,
+                                      ),
                                     ),
                                   ),
                                 ),

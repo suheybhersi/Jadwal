@@ -9,10 +9,7 @@ import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
-import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/utils/review_miss_utils.dart';
-import 'package:jadwal/components/smart_showcase.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -30,32 +27,8 @@ class _PlanPageState extends State<PlanPage> {
     uid: FirebaseAuth.instance.currentUser!.uid,
   );
 
-  final GlobalKey _editPlanKey = GlobalKey();
-
   /// Plan id we last called reviewMissed for (reschedule missed → today).
   String? _reviewMissedPlanId;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start showcase after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startShowcaseIfNeeded();
-    });
-  }
-
-  void _startShowcaseIfNeeded() {
-    final tutorialService =
-        Provider.of<TutorialService>(context, listen: false);
-    if (!tutorialService.hasSeenTooltip('edit_plan_button')) {
-      // Add a delay to ensure widget is fully built
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          ShowcaseView.get().startShowCase([_editPlanKey]);
-        }
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,14 +263,7 @@ class _PlanPageState extends State<PlanPage> {
                 ),
               );
 
-              return SmartShowcase(
-                tooltipId: 'edit_plan_button',
-                title: 'Edit Your Plan',
-                description:
-                    'Tap here to modify your memorisation plan, change schedule, or update your progress.',
-                globalKey: _editPlanKey,
-                child: editButton,
-              );
+              return editButton;
             },
           ),
         ],

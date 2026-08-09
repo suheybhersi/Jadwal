@@ -4,19 +4,84 @@ import 'package:iconsax/iconsax.dart';
 
 const Color kOnboardingAccent = Color(0xFF4979FB);
 
+/// Soft tip callout — matches the pre-signup demo tip banner.
+class OnboardingTipBanner extends StatelessWidget {
+  const OnboardingTipBanner({
+    super.key,
+    required this.title,
+    required this.body,
+  });
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kOnboardingAccent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kOnboardingAccent.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: kOnboardingAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Iconsax.info_circle,
+              size: 16,
+              color: kOnboardingAccent,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Step title used across plan + setup onboarding.
 class OnboardingStepHeader extends StatelessWidget {
   const OnboardingStepHeader({
     super.key,
     required this.title,
     required this.subtitle,
-    this.icon,
     this.centered = false,
   });
 
   final String title;
   final String subtitle;
-  final IconData? icon;
   final bool centered;
 
   @override
@@ -29,18 +94,6 @@ class OnboardingStepHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: cross,
       children: [
-        if (icon != null) ...[
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: kOnboardingAccent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: kOnboardingAccent, size: 28),
-          ),
-          const SizedBox(height: 16),
-        ],
         Text(
           title,
           textAlign: align,

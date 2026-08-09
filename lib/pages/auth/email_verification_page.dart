@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 
 /// Shown after sign-up / sign-in until the user's email is verified.
@@ -123,7 +124,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await AuthPage.signOutToOnboarding(context);
   }
 
   @override

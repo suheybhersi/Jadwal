@@ -5,12 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/screens/QuranViewer/quran_viewer.dart';
 import 'package:jadwal/services/firestore.dart';
-import 'package:jadwal/services/tutorial_service.dart';
-import 'package:jadwal/components/smart_showcase.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:provider/provider.dart';
 
 class MushafPage extends StatelessWidget {
   const MushafPage({super.key});
@@ -40,27 +36,6 @@ class _MushafContentState extends State<MushafContent> {
 
   List<Map<String, dynamic>>? _cachedSurahData;
   Map<String, dynamic>? _planData;
-  final GlobalKey _mushafCardKey = GlobalKey();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startShowcaseIfNeeded();
-    });
-  }
-
-  void _startShowcaseIfNeeded() {
-    final tutorialService = Provider.of<TutorialService>(context, listen: false);
-    if (!tutorialService.hasSeenTooltip('open_mushaf_card')) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          ShowcaseView.get().startShowCase([_mushafCardKey]);
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -103,12 +78,7 @@ class _MushafContentState extends State<MushafContent> {
 
   // Mushaf Card
   Widget _buildMushafCard(BuildContext context) {
-    return SmartShowcase(
-      tooltipId: 'open_mushaf_card',
-      title: 'Open Digital Mushaf',
-      description: 'Tap here to open the complete Quran viewer. You can navigate to any page, search for verses, and read the full text.',
-      globalKey: _mushafCardKey,
-      child: Container(
+    return Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -371,7 +341,6 @@ class _MushafContentState extends State<MushafContent> {
             ),
           ),
         ],
-      ),
       ),
     );
   }

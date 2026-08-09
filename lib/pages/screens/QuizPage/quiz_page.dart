@@ -5,6 +5,7 @@ import 'package:jadwal/pages/screens/QuizPage/build_verse_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_controller.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_intro_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_results_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_verse_pool.dart';
 import 'package:jadwal/pages/screens/QuizPage/what_comes_next_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/fill_blank_question.dart';
 import 'package:jadwal/pages/screens/QuizPage/verse_pairing_question.dart';
@@ -16,6 +17,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizPage extends StatefulWidget {
   final List<dynamic> versesList;
+  /// When set, verses are loaded during the quiz loading screen (avoids freezing Create Quiz).
+  final Future<QuizVersePool>? versesFuture;
   final String reviewTitle;
   final String review;
   final String id;
@@ -30,6 +33,7 @@ class QuizPage extends StatefulWidget {
   const QuizPage({
     super.key,
     required this.versesList,
+    this.versesFuture,
     required this.reviewTitle,
     required this.review,
     required this.id,
@@ -50,6 +54,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   int score = 0;
   late List<Map<String, dynamic>> questions = [];
   Map<int, Map<String, dynamic>> answeredQuestions = {};
+  List<dynamic> _verses = [];
+  /// When set (large custom-quiz samples), only these indices are question anchors.
+  Set<int>? _anchorIndices;
+  Set<int> _anchorsWithPrev = {};
+  Set<int> _anchorsWithNext = {};
 
   // Simplified progress tracking
   double _loadingProgress = 0.0;
@@ -145,6 +154,20 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     final startedAt = DateTime.now();
 
     try {
+      if (widget.versesFuture != null) {
+        final pool = await widget.versesFuture!;
+        _verses = pool.verses;
+        _anchorIndices = pool.anchorIndices;
+        _anchorsWithPrev = pool.anchorsWithPrev;
+        _anchorsWithNext = pool.anchorsWithNext;
+      } else {
+        _verses = List<dynamic>.from(widget.versesList);
+        _anchorIndices = null;
+        _anchorsWithPrev = {};
+        _anchorsWithNext = {};
+      }
+      if (!mounted || !_isActive) return;
+
       final generatedQuestions = await _generateQuestions();
       if (!mounted || !_isActive) return;
 
@@ -183,9 +206,10 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     if (widget.includeVersePairing) enabledTypes.add('verse_pairing');
     if (enabledTypes.isEmpty) return [];
 
-    final verseCount = widget.versesList.length;
+    final verseCount = _verses.length;
+    final effectiveCount = _anchorIndices?.length ?? verseCount;
     double scaleFactor = 1.2;
-    int rawCount = (verseCount * scaleFactor).round();
+    int rawCount = (effectiveCount * scaleFactor).round();
     int targetQuestionCount = ((rawCount + 2) ~/ 5) * 5;
     targetQuestionCount = max(5, min(targetQuestionCount, 50));
     targetQuestionCount = max(targetQuestionCount, enabledTypes.length);
@@ -203,8 +227,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     List<int> spoilersFor(String type, int verseIndex) {
       switch (type) {
         case 'fill_blank':
+          final includePrev = _anchorIndices == null
+              ? verseIndex > 0
+              : _anchorsWithPrev.contains(verseIndex);
           return [
-            if (verseIndex > 0) verseIndex - 1,
+            if (includePrev) verseIndex - 1,
             verseIndex,
           ];
         case 'what_next':
@@ -218,8 +245,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     }
 
     bool isEligible(String type, int verseIndex) {
+      if (_anchorIndices != null && !_anchorIndices!.contains(verseIndex)) {
+        return false;
+      }
       final words = splitVerseManuallyWithSpecialChars(
-        widget.versesList[verseIndex].toString(),
+        _verses[verseIndex].toString(),
       );
       switch (type) {
         case 'fill_blank':
@@ -227,8 +257,15 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         case 'drag_drop':
           return _isUsableDragDropVerse(words);
         case 'what_next':
+          if (_anchorIndices != null) {
+            return _anchorsWithNext.contains(verseIndex);
+          }
           return verseIndex < verseCount - 1;
         case 'verse_pairing':
+          if (_anchorIndices != null) {
+            return _anchorsWithPrev.contains(verseIndex) &&
+                _anchorsWithNext.contains(verseIndex);
+          }
           return verseIndex > 0 && verseIndex < verseCount - 1;
         default:
           return false;
@@ -237,7 +274,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
     Future<Map<String, dynamic>?> buildQuestion(
         String type, int verseIndex) async {
-      final verse = widget.versesList[verseIndex].toString();
+      final verse = _verses[verseIndex].toString();
       switch (type) {
         case 'fill_blank':
           return _generateFillInTheBlankQuestion(verse, verseIndex);
@@ -254,6 +291,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
     // Round-robin across types for balance. Reuse ayahs across types is OK.
     final typeOrder = List<String>.from(enabledTypes)..shuffle();
+    final candidatePool = _anchorIndices?.toList() ??
+        List<int>.generate(verseCount, (i) => i);
     var madeProgress = true;
     while (madeProgress) {
       madeProgress = false;
@@ -261,7 +300,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
         if (!mounted || !_isActive) break;
         if (byType[type]!.length >= questionsPerType) continue;
 
-        final candidates = List.generate(verseCount, (i) => i)..shuffle();
+        final candidates = List<int>.from(candidatePool)..shuffle();
         for (final verseIndex in candidates) {
           if (usedPrimaryByType[type]!.contains(verseIndex)) continue;
           if (!isEligible(type, verseIndex)) continue;
@@ -420,8 +459,8 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     return {
       'type': 'what_next',
       'question': "What verse comes after this?",
-      'verse': widget.versesList[index],
-      'correctAnswer': widget.versesList[index + 1],
+      'verse': _verses[index],
+      'correctAnswer': _verses[index + 1],
       'verseIndex': index,
       'spoilerIndices': [index, index + 1],
     };
@@ -456,8 +495,11 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
       // Get previous verse if available (await so the ayah marker is set)
       String? previousVerse;
       String? verseNumber;
-      if (verseIndex > 0) {
-        previousVerse = widget.versesList[prevIndex]?.toString();
+      final canUsePrev = _anchorIndices == null
+          ? verseIndex > 0
+          : _anchorsWithPrev.contains(verseIndex);
+      if (canUsePrev && prevIndex >= 0) {
+        previousVerse = _verses[prevIndex]?.toString();
         try {
           final snapshot = await FirebaseFirestore.instance
               .collection('verses')
@@ -548,7 +590,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
           correctWord: missingWord,
           currentVerse: verse,
           verseIndex: verseIndex,
-          versesList: widget.versesList,
+          versesList: _verses,
           previousWord: previousWord,
         );
 
@@ -588,7 +630,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
 
   List<String> getRandomWords(
       List<String> missingWords, String currentVerse, int numberOfBlanks) {
-    List<String> allWords = widget.versesList
+    List<String> allWords = _verses
         .where((verse) => verse != currentVerse)
         .expand((verse) => splitVerseManuallyWithSpecialChars(verse))
         .toList();
@@ -649,20 +691,26 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
   Future<Map<String, dynamic>?> _generateVersePairingQuestion(
       int verseIndex) async {
     // Need a true middle ayah (before + current + after).
-    if (widget.versesList.length < 3) return null;
+    if (_verses.length < 3) return null;
+
+    final hasTrueNeighbors = _anchorIndices == null
+        ? (verseIndex > 0 && verseIndex < _verses.length - 1)
+        : (_anchorsWithPrev.contains(verseIndex) &&
+            _anchorsWithNext.contains(verseIndex));
 
     // Skip first and last verses since they don't have verses before/after them respectively
-    if (verseIndex <= 0 || verseIndex >= widget.versesList.length - 1) {
-      final middleIndex = widget.versesList.length ~/ 2;
-      if (middleIndex <= 0 || middleIndex >= widget.versesList.length - 1) {
+    if (!hasTrueNeighbors) {
+      if (_anchorIndices != null) return null;
+      final middleIndex = _verses.length ~/ 2;
+      if (middleIndex <= 0 || middleIndex >= _verses.length - 1) {
         return null;
       }
       verseIndex = middleIndex;
     }
 
-    String currentVerse = widget.versesList[verseIndex].toString();
-    String verseBefore = widget.versesList[verseIndex - 1].toString();
-    String verseAfter = widget.versesList[verseIndex + 1].toString();
+    String currentVerse = _verses[verseIndex].toString();
+    String verseBefore = _verses[verseIndex - 1].toString();
+    String verseAfter = _verses[verseIndex + 1].toString();
 
     String? verseNumber;
     try {
@@ -688,7 +736,7 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     List<String> afterOptions = [verseAfter]; // Add correct answer
 
     // Add incorrect options from other verses
-    List<String> allVerses = List.from(widget.versesList);
+    List<String> allVerses = List.from(_verses);
     allVerses.remove(currentVerse);
     allVerses.remove(verseBefore);
     allVerses.remove(verseAfter);
@@ -701,10 +749,10 @@ class _QuizPageState extends State<QuizPage> with TickerProviderStateMixin {
     for (int i = 1; i <= 5; i++) {
       // Add verses that are nearby but not adjacent
       if (verseIndex - i - 1 >= 0) {
-        nearbyVerses.add(widget.versesList[verseIndex - i - 1]);
+        nearbyVerses.add(_verses[verseIndex - i - 1]);
       }
-      if (verseIndex + i + 1 < widget.versesList.length) {
-        nearbyVerses.add(widget.versesList[verseIndex + i + 1]);
+      if (verseIndex + i + 1 < _verses.length) {
+        nearbyVerses.add(_verses[verseIndex + i + 1]);
       }
     }
     nearbyVerses.shuffle();

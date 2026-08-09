@@ -35,7 +35,6 @@ class _UsageModeSelectionPageState extends State<UsageModeSelectionPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const OnboardingStepHeader(
-                      icon: Iconsax.setting_2,
                       title: 'Choose your path',
                       subtitle:
                           'Everyone memorises differently. How would you like Jadwal to support you?',

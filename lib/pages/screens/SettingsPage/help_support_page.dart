@@ -189,7 +189,7 @@ class HelpSupportPage extends StatelessWidget {
                         icon: Iconsax.sms,
                         title: 'Email Support',
                         description: 'Get help via email',
-                        onTap: () => _launchEmail('jadwal.qrn@gmail.com'),
+                        onTap: () => _launchEmail('support@jadwal.co.uk'),
                       ),
                       _buildDivider(),
                       _buildContactTile(
@@ -436,7 +436,7 @@ class HelpSupportPage extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    _launchEmail('jadwal.qrn@gmail.com');
+                    _launchEmail('support@jadwal.co.uk');
                   },
                   child: Text(
                     'Email Support',

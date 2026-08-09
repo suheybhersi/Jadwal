@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:jadwal/pages/auth/auth_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/about_app_page.dart';
 import 'package:jadwal/pages/screens/SettingsPage/delete_account_page.dart';
 import 'package:jadwal/pages/screens/ProfilePage/edit_profile_page.dart';
@@ -718,12 +718,8 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             onPressed: () async {
-              await Provider.of<SubscriptionService>(context, listen: false)
-                  .logOut();
-              await FirebaseAuth.instance.signOut();
-              if (!context.mounted) return;
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
+              Navigator.pop(context); // Close dialog first
+              await AuthPage.signOutToOnboarding(context);
             },
             child: Text(
               'Sign Out',

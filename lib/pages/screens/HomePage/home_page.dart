@@ -551,7 +551,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Focus on revision and retention. Create quizzes, read the Quran, and keep your Hifdh strong.',
+                        'Jadwal is still strongest for people memorising. For now, create quizzes and read the mushaf — fuller Huffadh tools are coming.',
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           color: Colors.grey[600],
@@ -570,12 +570,21 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         child: Text(
-                          'Still memorising? Start a new plan',
+                          'Reset plan',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Only if you want daily memorisation again',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -597,7 +606,7 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Start a new plan?',
+            'Reset plan?',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           content: Text(
@@ -617,7 +626,7 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
               child: Text(
-                'Continue',
+                'Reset plan',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF4979FB),

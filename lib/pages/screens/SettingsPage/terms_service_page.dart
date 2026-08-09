@@ -212,7 +212,7 @@ class TermsServicePage extends StatelessWidget {
           _buildParagraph(
             'Questions about these Terms:',
           ),
-          _buildContactInfo(context, 'jadwal.qrn@gmail.com'),
+          _buildContactInfo(context, 'support@jadwal.co.uk'),
           _buildContactInfo(context, 'https://www.jadwal.co.uk'),
         ],
       ),

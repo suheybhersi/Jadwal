@@ -3,14 +3,26 @@ import 'package:jadwal/pages/auth/login_page.dart';
 import 'package:jadwal/pages/auth/register_page.dart';
 
 class LoginOrRegisterPage extends StatefulWidget {
-  const LoginOrRegisterPage({super.key});
+  const LoginOrRegisterPage({
+    super.key,
+    this.startWithLogin = true,
+  });
+
+  /// When false, opens on Create account first.
+  final bool startWithLogin;
 
   @override
   State<LoginOrRegisterPage> createState() => _LoginOrRegisterPageState();
 }
 
 class _LoginOrRegisterPageState extends State<LoginOrRegisterPage> {
-  bool showLoginPage = true;
+  late bool showLoginPage;
+
+  @override
+  void initState() {
+    super.initState();
+    showLoginPage = widget.startWithLogin;
+  }
 
   void togglePages() {
     setState(() {

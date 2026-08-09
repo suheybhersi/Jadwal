@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_creation_page.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_history_details_page.dart';
-import 'package:jadwal/components/smart_showcase.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,8 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:jadwal/components/pro_upgrade_banner.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
-import 'package:jadwal/services/tutorial_service.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class QuizHomePage extends StatefulWidget {
   const QuizHomePage({super.key});
@@ -22,9 +20,6 @@ class QuizHomePage extends StatefulWidget {
 class _QuizHomePageState extends State<QuizHomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final GlobalKey _createQuizKey = GlobalKey();
-
-  // Streams for quiz history data
   late Stream<List<QueryDocumentSnapshot>> _customQuizStream;
   late Stream<List<QueryDocumentSnapshot>> _reviewQuizStream;
 
@@ -32,21 +27,6 @@ class _QuizHomePageState extends State<QuizHomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startShowcaseIfNeeded();
-    });
-  }
-
-  void _startShowcaseIfNeeded() {
-    final tutorialService = Provider.of<TutorialService>(context, listen: false);
-    if (!tutorialService.hasSeenTooltip('create_quiz_button')) {
-      // Add a delay to ensure widget is fully built
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          ShowcaseView.get().startShowCase([_createQuizKey]);
-        }
-      });
-    }
   }
 
   Future<void> _openCreateQuiz() async {
@@ -67,7 +47,6 @@ class _QuizHomePageState extends State<QuizHomePage>
 
     try {
       final firestoreService = Provider.of<FirestoreService>(context);
-      // Rebind when auth-driven FirestoreService uid changes.
       _customQuizStream = firestoreService.getCustomQuizHistoryStream();
       _reviewQuizStream = firestoreService.getReviewQuizHistoryStream();
     } catch (e) {
@@ -93,6 +72,7 @@ class _QuizHomePageState extends State<QuizHomePage>
             margin: EdgeInsets.fromLTRB(20, 0, 20, 12),
           ),
           _buildTabBar(),
+          const SizedBox(height: 8),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -107,17 +87,12 @@ class _QuizHomePageState extends State<QuizHomePage>
     );
   }
 
-  // Title bar with create quiz button
   Widget _buildTitleBar(BuildContext context) {
+    final textColor = Theme.of(context).colorScheme.inversePrimary;
+
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 20,
-        right: 10,
-        top: 10,
-        bottom: 15,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Column(
@@ -126,19 +101,20 @@ class _QuizHomePageState extends State<QuizHomePage>
                 Text(
                   'Quizzes',
                   style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 22,
-                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                    color: textColor,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Consumer<SubscriptionService>(
                   builder: (context, sub, _) {
                     if (sub.isPro) {
                       return Text(
                         'Pro · unlimited',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color(0xFF4979FB),
+                          fontSize: 13,
+                          color: kAuthBrandBlue,
                           fontWeight: FontWeight.w500,
                         ),
                       );
@@ -146,9 +122,9 @@ class _QuizHomePageState extends State<QuizHomePage>
                     return GestureDetector(
                       onTap: () => sub.openPaywall(context),
                       child: Text(
-                        '${sub.quizzesRemainingToday} of ${SubscriptionService.freeQuizzesPerDay} free quizzes left today · Upgrade',
+                        '${sub.quizzesRemainingToday} of ${SubscriptionService.freeQuizzesPerDay} free left today · Upgrade',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: Colors.grey.shade600,
                         ),
                       ),
@@ -158,32 +134,15 @@ class _QuizHomePageState extends State<QuizHomePage>
               ],
             ),
           ),
-          SmartShowcase(
-            tooltipId: 'create_quiz_button',
-            title: 'Create Custom Quiz',
-            description: 'Tap here to create a custom quiz with your selected verses and question types.',
-            globalKey: _createQuizKey,
-            child: IconButton(
-              onPressed: _openCreateQuiz,
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-                child: const Icon(
-                  Iconsax.add,
-                  color: Colors.white,
-                  size: 20,
-                ),
+          Material(
+            color: kAuthBrandBlue,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: _openCreateQuiz,
+              borderRadius: BorderRadius.circular(14),
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Icon(Iconsax.add, color: Colors.white, size: 20),
               ),
             ),
           ),
@@ -192,84 +151,115 @@ class _QuizHomePageState extends State<QuizHomePage>
     );
   }
 
-  // Tab Bar
   Widget _buildTabBar() {
+    final textColor = Theme.of(context).colorScheme.inversePrimary;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          color: Theme.of(context).colorScheme.primary,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(10),
+          color: kAuthBrandBlue,
         ),
+        indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
-        unselectedLabelColor: Theme.of(context).colorScheme.inversePrimary,
+        unselectedLabelColor: textColor,
         labelStyle: GoogleFonts.poppins(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         unselectedLabelStyle: GoogleFonts.poppins(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        padding: EdgeInsets.zero,
-        indicatorSize: TabBarIndicatorSize.tab,
         labelPadding: EdgeInsets.zero,
         splashFactory: NoSplash.splashFactory,
-        overlayColor: WidgetStateProperty.resolveWith<Color?>(
-          (Set<WidgetState> states) {
-            return states.contains(WidgetState.focused)
-                ? null
-                : Colors.transparent;
-          },
-        ),
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: const [
           Tab(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Text('Review Quizzes'),
-            ),
+            height: 40,
+            child: Text('Review'),
           ),
           Tab(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Text('Custom Quizzes'),
-            ),
+            height: 40,
+            child: Text('Custom'),
           ),
         ],
       ),
     );
   }
 
-  // Custom Quiz History
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? action,
+    String? actionLabel,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: kAuthBrandBlue.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 32, color: kAuthBrandBlue),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                height: 1.45,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            if (action != null && actionLabel != null) ...[
+              const SizedBox(height: 22),
+              SizedBox(
+                width: 200,
+                child: AuthPrimaryButton(
+                  label: actionLabel,
+                  onPressed: action,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCustomQuizHistory() {
     return StreamBuilder<List<QueryDocumentSnapshot>>(
       stream: _customQuizStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(color: kAuthBrandBlue),
           );
         }
 
@@ -284,62 +274,21 @@ class _QuizHomePageState extends State<QuizHomePage>
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Iconsax.clipboard_text,
-                  size: 60,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No custom quizzes yet',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap the + button to create your first quiz',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _openCreateQuiz,
-                  icon: const Icon(Iconsax.add, color: Colors.white),
-                  label: Text(
-                    'Create Quiz',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          return _buildEmptyState(
+            icon: Iconsax.clipboard_text,
+            title: 'No custom quizzes yet',
+            subtitle: 'Build a quiz on any verses whenever you want extra practice.',
+            action: _openCreateQuiz,
+            actionLabel: 'Create Quiz',
           );
         }
 
-        // Build list of quiz history items
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
-            var doc = snapshot.data![index];
-            var quizData = doc.data() as Map<String, dynamic>;
+            final quizData =
+                snapshot.data![index].data() as Map<String, dynamic>;
             return _buildQuizHistoryCard(quizData);
           },
         );
@@ -347,14 +296,13 @@ class _QuizHomePageState extends State<QuizHomePage>
     );
   }
 
-  // Review Quiz History
   Widget _buildReviewQuizHistory() {
     return StreamBuilder<List<QueryDocumentSnapshot>>(
       stream: _reviewQuizStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(color: kAuthBrandBlue),
           );
         }
 
@@ -369,48 +317,20 @@ class _QuizHomePageState extends State<QuizHomePage>
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Iconsax.refresh,
-                  size: 60,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No review quizzes yet',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Text(
-                    'Complete a review session to see your quizzes here',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+          return _buildEmptyState(
+            icon: Iconsax.refresh,
+            title: 'No review quizzes yet',
+            subtitle:
+                'Complete a scheduled review and your quiz history will show up here.',
           );
         }
 
-        // Build list of quiz history items
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
-            var doc = snapshot.data![index];
-            var quizData = doc.data() as Map<String, dynamic>;
+            final quizData =
+                snapshot.data![index].data() as Map<String, dynamic>;
             return _buildQuizHistoryCard(quizData);
           },
         );
@@ -418,7 +338,6 @@ class _QuizHomePageState extends State<QuizHomePage>
     );
   }
 
-  // Quiz history card widget
   Widget _buildQuizHistoryCard(Map<String, dynamic> quizData) {
     final score = quizData['score'] ?? 0;
     final totalQuestions = quizData['totalQuestions'] ?? 1;
@@ -430,127 +349,113 @@ class _QuizHomePageState extends State<QuizHomePage>
     final isCustomQuiz = quizData['isCustomQuiz'] ?? false;
     final quizContent = quizData['quizContent'] ?? '';
 
-    // Determine color based on score percentage
-    Color resultColor;
-
+    final Color resultColor;
     if (percentage >= 90) {
-      resultColor = Colors.green.shade600;
+      resultColor = const Color(0xFF10B981);
     } else if (percentage >= 70) {
-      resultColor = Colors.blue.shade600;
+      resultColor = kAuthBrandBlue;
     } else if (percentage >= 50) {
-      resultColor = Colors.amber.shade600;
+      resultColor = const Color(0xFFD97706);
     } else {
-      resultColor = Colors.red.shade600;
+      resultColor = const Color(0xFFDC2626);
     }
 
-    // Get display title
-    String displayTitle = quizContent.isNotEmpty
+    final displayTitle = quizContent.isNotEmpty
         ? quizContent
         : isCustomQuiz
             ? 'Custom Quiz'
             : 'Review Quiz';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
-            spreadRadius: 1,
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.only(bottom: 20),
-      child: InkWell(
-        onTap: () {
-          // Navigate to detailed quiz results
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => QuizHistoryDetailsPage(
-                score: score,
-                questions: List<Map<String, dynamic>>.from(questions),
-                quizId: quizId,
-                answeredQuestions: Map<int, Map<String, dynamic>>.from(
-                    answeredQuestions.map((key, value) => MapEntry(
-                        int.parse(key), Map<String, dynamic>.from(value)))),
-                isCustomQuiz: isCustomQuiz,
-                date: date,
-                quizContent: quizContent,
-              ),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Score indicator with color
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: resultColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+    final textColor = Theme.of(context).colorScheme.inversePrimary;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => QuizHistoryDetailsPage(
+                  score: score,
+                  questions: List<Map<String, dynamic>>.from(questions),
+                  quizId: quizId,
+                  answeredQuestions: Map<int, Map<String, dynamic>>.from(
+                    answeredQuestions.map(
+                      (key, value) => MapEntry(
+                        int.parse(key),
+                        Map<String, dynamic>.from(value),
+                      ),
+                    ),
+                  ),
+                  isCustomQuiz: isCustomQuiz,
+                  date: date,
+                  quizContent: quizContent,
                 ),
-                child: Center(
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: resultColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
                     '$score/$totalQuestions',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                       color: resultColor,
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Quiz info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Quiz title
-                    Text(
-                      displayTitle,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.inversePrimary,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayTitle,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Date
-                    Text(
-                      date,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .inversePrimary
-                            .withValues(alpha: 0.7),
+                      const SizedBox(height: 2),
+                      Text(
+                        date,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-
-              // Arrow icon
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-              ),
-            ],
+                Icon(
+                  Iconsax.arrow_right_3,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
           ),
         ),
       ),

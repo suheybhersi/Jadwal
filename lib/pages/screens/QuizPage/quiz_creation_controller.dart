@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
 import 'package:jadwal/pages/screens/QuizPage/quiz_page.dart';
+import 'package:jadwal/pages/screens/QuizPage/quiz_verse_pool.dart';
 import 'package:provider/provider.dart';
 
 class QuizCreationController extends GetxController {
@@ -127,23 +130,11 @@ class QuizCreationController extends GetxController {
   }
 
   void goBack() {
-    if (currentPage.value > 0) {
-      currentPage.value--;
-      if (pageController.hasClients) {
-        pageController.jumpToPage(currentPage.value);
-      }
-    } else {
-      Get.back();
-    }
+    Get.back();
   }
 
   void goToNextPage() {
-    if (currentPage.value < 2) {
-      currentPage.value++;
-      if (pageController.hasClients) {
-        pageController.jumpToPage(currentPage.value);
-      }
-    }
+    // Kept for compatibility; creation UI is a single screen.
   }
 
   /// Default start to Al-Fatiha 1; always refresh map from current [allData].
@@ -210,6 +201,84 @@ class QuizCreationController extends GetxController {
 
     validateSelection();
     update();
+  }
+
+  /// After start is chosen, seed a valid end (at least one verse after start)
+  /// and clear invalid end selections that fall before start.
+  void prepareEndDefaultAfterStart(List<Map<String, dynamic>> allData) {
+    final startSurah = selectedStartSurahData.value;
+    final startVerse = selectedStartVerse.value;
+    if (startSurah == null || startVerse == null) return;
+
+    final startNum = parseSurahNumber(startSurah['surahNumber']);
+    if (startNum == null) return;
+
+    final startVerseCount = (startSurah['verses'] as int?) ?? 1;
+    Map<String, dynamic>? endSurah = startSurah;
+    int endVerse = startVerse + 1;
+
+    if (startVerse >= startVerseCount) {
+      final startIndex = indexOfSurah(allData, startSurah);
+      if (startIndex + 1 < allData.length) {
+        endSurah = allData[startIndex + 1];
+        endVerse = 1;
+      } else {
+        // No valid end after this start — keep current and let validation show.
+        validateSelection();
+        update();
+        return;
+      }
+    }
+
+    selectedEndSurahName.value = endSurah['surah'] as String?;
+    selectedEndSurahData.value = endSurah;
+    selectedEndVerse.value = endVerse;
+    validateSelection();
+    update();
+  }
+
+  /// Surahs available for the end picker (nothing before start).
+  List<Map<String, dynamic>> endSurahOptions(
+    List<Map<String, dynamic>> allData,
+  ) {
+    final startSurah = selectedStartSurahData.value;
+    final startVerse = selectedStartVerse.value;
+    if (startSurah == null || startVerse == null) return allData;
+
+    final startNum = parseSurahNumber(startSurah['surahNumber']);
+    if (startNum == null) return allData;
+
+    final result = <Map<String, dynamic>>[];
+    for (final surah in allData) {
+      final n = parseSurahNumber(surah['surahNumber']);
+      if (n == null) continue;
+      if (n < startNum) continue;
+      if (n == startNum) {
+        final verses = (surah['verses'] as int?) ?? 1;
+        if (startVerse >= verses) continue;
+      }
+      result.add(surah);
+    }
+    return result;
+  }
+
+  /// Min verse on the first surah of [endOptions] (start+1 when same surah).
+  int endMinVerseForFilteredList(List<Map<String, dynamic>> endOptions) {
+    final startSurah = selectedStartSurahData.value;
+    final startVerse = selectedStartVerse.value;
+    if (startSurah == null || startVerse == null || endOptions.isEmpty) {
+      return 1;
+    }
+
+    final startNum = parseSurahNumber(startSurah['surahNumber']);
+    final firstNum = parseSurahNumber(endOptions.first['surahNumber']);
+    if (startNum == null || firstNum == null || firstNum != startNum) {
+      return 1;
+    }
+
+    final startVerseCount = (startSurah['verses'] as int?) ?? 1;
+    if (startVerse >= startVerseCount) return 1;
+    return startVerse + 1;
   }
 
   void handleEndVerseSelection(
@@ -291,10 +360,18 @@ class QuizCreationController extends GetxController {
     return !isLoading.value && isRangeSelected() && isAnyTypeSelected();
   }
 
-  Future<List<dynamic>> fetchVerses(int startSurahNumber, int startVerse,
-      int endSurahNumber, int endVerse) async {
-    final List<dynamic> versesList = [];
+  /// Full contiguous fetch when the range is at most this many ayahs.
+  static const int _fullFetchThreshold = 80;
 
+  /// How many random anchors to sample for large ranges (buffer above the
+  /// 50-question quiz cap).
+  static const int _sampleAnchorCount = 60;
+
+  static const int _quranVerseCount = 6236;
+  static const int _fetchConcurrency = 25;
+
+  Future<QuizVersePool> fetchVerses(int startSurahNumber, int startVerse,
+      int endSurahNumber, int endVerse) async {
     final String startKey = '$startSurahNumber:$startVerse';
     final String endKey = '$endSurahNumber:$endVerse';
 
@@ -308,8 +385,6 @@ class QuizCreationController extends GetxController {
       throw Exception('Start verse not found with key: $startKey');
     }
 
-    final String startVerseId = startVerseSnapshot.docs.first.id;
-
     final QuerySnapshot endVerseSnapshot = await FirebaseFirestore.instance
         .collection('verses')
         .where('key', isEqualTo: endKey)
@@ -320,33 +395,118 @@ class QuizCreationController extends GetxController {
       throw Exception('End verse not found with key: $endKey');
     }
 
-    final String endVerseId = endVerseSnapshot.docs.first.id;
-
-    int currentId = int.parse(startVerseId);
-    final int endId = int.parse(endVerseId);
-
-    while (currentId <= endId) {
-      try {
-        final DocumentSnapshot verseDoc = await FirebaseFirestore.instance
-            .collection('verses')
-            .doc(currentId.toString())
-            .get();
-
-        if (verseDoc.exists) {
-          final data = verseDoc.data() as Map<String, dynamic>;
-          versesList.add(data['text']);
-        }
-      } catch (_) {
-        // Skip failed docs and continue.
-      }
-      currentId++;
+    final int startId = int.parse(startVerseSnapshot.docs.first.id);
+    final int endId = int.parse(endVerseSnapshot.docs.first.id);
+    if (endId < startId) {
+      throw Exception('End verse is before start verse');
     }
 
-    if (versesList.isEmpty) {
+    final int rangeSize = endId - startId + 1;
+
+    if (rangeSize <= _fullFetchThreshold) {
+      final byId = await _fetchVerseTextsByIds(
+        List<int>.generate(rangeSize, (i) => startId + i),
+      );
+      final verses = <dynamic>[
+        for (var id = startId; id <= endId; id++)
+          if (byId.containsKey(id)) byId[id],
+      ];
+      if (verses.isEmpty) {
+        throw Exception('No verses found in the selected range');
+      }
+      return QuizVersePool(verses: verses);
+    }
+
+    // Large range: sample anchors, fetch each with ±1 neighbours so adjacency
+    // questions stay correct without downloading the whole range.
+    final random = Random();
+    final want = min(_sampleAnchorCount, rangeSize);
+    final anchors = <int>{};
+    var guard = 0;
+    while (anchors.length < want && guard < want * 20) {
+      anchors.add(startId + random.nextInt(rangeSize));
+      guard++;
+    }
+
+    final sortedAnchors = anchors.toList()..sort();
+    final idsToFetch = <int>{};
+    for (final anchor in sortedAnchors) {
+      for (var delta = -1; delta <= 1; delta++) {
+        final id = anchor + delta;
+        if (id >= 1 && id <= _quranVerseCount) {
+          idsToFetch.add(id);
+        }
+      }
+    }
+
+    final byId = await _fetchVerseTextsByIds(idsToFetch.toList());
+    final verses = <dynamic>[];
+    final anchorIndices = <int>{};
+    final anchorsWithPrev = <int>{};
+    final anchorsWithNext = <int>{};
+
+    for (final anchor in sortedAnchors) {
+      if (!byId.containsKey(anchor)) continue;
+
+      final windowIds = <int>[
+        for (var delta = -1; delta <= 1; delta++)
+          if (byId.containsKey(anchor + delta)) anchor + delta,
+      ];
+      if (windowIds.isEmpty) continue;
+
+      final startIndex = verses.length;
+      for (final id in windowIds) {
+        verses.add(byId[id]);
+      }
+      final offset = windowIds.indexOf(anchor);
+      if (offset < 0) continue;
+
+      final anchorIndex = startIndex + offset;
+      anchorIndices.add(anchorIndex);
+      if (windowIds.contains(anchor - 1)) {
+        anchorsWithPrev.add(anchorIndex);
+      }
+      if (windowIds.contains(anchor + 1)) {
+        anchorsWithNext.add(anchorIndex);
+      }
+    }
+
+    if (verses.isEmpty || anchorIndices.isEmpty) {
       throw Exception('No verses found in the selected range');
     }
 
-    return versesList;
+    return QuizVersePool(
+      verses: verses,
+      anchorIndices: anchorIndices,
+      anchorsWithPrev: anchorsWithPrev,
+      anchorsWithNext: anchorsWithNext,
+    );
+  }
+
+  Future<Map<int, String>> _fetchVerseTextsByIds(List<int> ids) async {
+    final result = <int, String>{};
+    if (ids.isEmpty) return result;
+
+    for (var i = 0; i < ids.length; i += _fetchConcurrency) {
+      final end = min(i + _fetchConcurrency, ids.length);
+      final chunk = ids.sublist(i, end);
+      final docs = await Future.wait(
+        chunk.map(
+          (id) => FirebaseFirestore.instance
+              .collection('verses')
+              .doc(id.toString())
+              .get(),
+        ),
+      );
+      for (var j = 0; j < chunk.length; j++) {
+        final data = docs[j].data();
+        final text = data?['text']?.toString();
+        if (text != null && text.isNotEmpty) {
+          result[chunk[j]] = text;
+        }
+      }
+    }
+    return result;
   }
 
   Future<void> createQuiz(
@@ -395,8 +555,9 @@ class QuizCreationController extends GetxController {
       final String quizId =
           'custom_quiz_${DateTime.now().millisecondsSinceEpoch}';
 
-      final List<dynamic> versesList = await fetchVerses(
-          startSurahNumber, startVerse, endSurahNumber, endVerse);
+      // Fetch verses while the quiz loading screen is already showing.
+      final versesFuture =
+          fetchVerses(startSurahNumber, startVerse, endSurahNumber, endVerse);
 
       final String reviewTitle = startSurahNumber == endSurahNumber
           ? 'Quiz: ${selectedStartSurahName.value} $startVerse-$endVerse'
@@ -405,7 +566,8 @@ class QuizCreationController extends GetxController {
       final isPro = subscription.isPro;
 
       await Get.to(() => QuizPage(
-            versesList: versesList,
+            versesList: const [],
+            versesFuture: versesFuture,
             reviewTitle: reviewTitle,
             review: '$startSurahNumber:$startVerse - $endSurahNumber:$endVerse',
             id: quizId,

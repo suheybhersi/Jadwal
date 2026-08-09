@@ -2,71 +2,24 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:jadwal/components/bottom_nav_bar.dart';
 import 'package:jadwal/components/firestore_error_view.dart';
 import 'package:jadwal/pages/auth/email_verification_page.dart';
 import 'package:jadwal/pages/onboarding/finished_memorising_question_page.dart';
 import 'package:jadwal/pages/onboarding/new_plan.dart';
+import 'package:jadwal/pages/onboarding/notification_onboarding_page.dart';
 import 'package:jadwal/pages/onboarding/onboarding.dart';
 import 'package:jadwal/pages/onboarding/usage_mode_selection.dart';
-import 'package:jadwal/pages/onboarding/notification_onboarding_page.dart';
 import 'package:jadwal/pages/screens/PaywallPage/paywall_page.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/subscription_service.dart';
-import 'package:jadwal/services/tutorial_service.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
-import 'package:jadwal/pages/onboarding/app_tutorial_page.dart';
 import 'package:jadwal/utils/auth_verification.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-/// Wrapper widget to show tutorial on first app entry
-class _TutorialWrapper extends StatefulWidget {
-  final Widget child;
-
-  const _TutorialWrapper({required this.child});
-
-  @override
-  State<_TutorialWrapper> createState() => _TutorialWrapperState();
-}
-
-class _TutorialWrapperState extends State<_TutorialWrapper> {
-  bool _hasShownTutorial = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showTutorialIfNeeded();
-    });
-  }
-
-  void _showTutorialIfNeeded() async {
-    if (_hasShownTutorial || !mounted) return;
-
-    final tutorialService =
-        Provider.of<TutorialService>(context, listen: false);
-    if (!tutorialService.hasCompletedTutorial) {
-      _hasShownTutorial = true;
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const AppTutorialPage(),
-            fullscreenDialog: true,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
-}
-
-/// Loading screen shown while prefs/tutorial state is loading; avoids flashing mode or tutorial.
+/// Loading screen shown while prefs state is loading; avoids flashing mode selection.
 class _AuthLoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -113,7 +66,9 @@ class _NoHifdhsRouterState extends State<_NoHifdhsRouter> {
   @override
   Widget build(BuildContext context) {
     if (_step == 'plan') {
-      return const NewPlanScreen();
+      return NewPlanScreen(
+        onBackToQuestion: () => setState(() => _step = 'question'),
+      );
     }
     return FinishedMemorisingQuestionPage(
       firestoreService: widget.firestoreService,
@@ -127,6 +82,39 @@ class AuthPage extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
+  /// Signs out, clears navigation, and opens a fresh onboarding root.
+  static Future<void> signOutToOnboarding(BuildContext context) async {
+    try {
+      if (context.mounted) {
+        await Provider.of<SubscriptionService>(context, listen: false).logOut();
+      }
+    } catch (_) {
+      // Still sign out of Firebase even if RevenueCat logout fails.
+    }
+    await FirebaseAuth.instance.signOut();
+    OnboardingScreen.resetController();
+    Get.offAll(() => AuthPage());
+  }
+
+  Widget _homeShell(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: EdgeInsets.only(
+          top: Platform.isIOS
+              ? MediaQuery.of(context).padding.top - 10
+              : MediaQuery.of(context).padding.top,
+          bottom: 5,
+        ),
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: const MyBottomNavBar(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -135,7 +123,8 @@ class AuthPage extends StatelessWidget {
         if (snapshot.hasError) {
           return const Scaffold(
             body: FirestoreErrorView(
-              message: 'Unable to sign in. Please restart the app and try again.',
+              message:
+                  'Unable to sign in. Please restart the app and try again.',
             ),
           );
         }
@@ -184,7 +173,7 @@ class AuthPage extends StatelessWidget {
               if (snapshot.data!.docs.isNotEmpty) {
                 return Consumer<UserPreferencesService>(
                   builder: (context, prefsService, child) {
-                    // Wait for prefs to load so we don't flash mode selection or tutorial
+                    // Wait for prefs to load so we don't flash mode selection
                     if (!prefsService.initialLoadDone) {
                       return _AuthLoadingScreen();
                     }
@@ -224,51 +213,7 @@ class AuthPage extends StatelessWidget {
                       );
                     }
 
-                    return Consumer<TutorialService>(
-                      builder: (context, tutorialService, child) {
-                        // Wait for tutorial prefs so we don't flash tutorial
-                        if (!tutorialService.initialLoadDone) {
-                          return _AuthLoadingScreen();
-                        }
-                        if (!tutorialService.hasCompletedTutorial) {
-                          return _TutorialWrapper(
-                            child: Scaffold(
-                              body: Padding(
-                                padding: EdgeInsets.only(
-                                  top: Platform.isIOS
-                                      ? MediaQuery.of(context).padding.top - 10
-                                      : MediaQuery.of(context).padding.top,
-                                  bottom: 5,
-                                ),
-                                child: MediaQuery.removePadding(
-                                  context: context,
-                                  removeTop: true,
-                                  removeBottom: true,
-                                  child: const MyBottomNavBar(),
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return Scaffold(
-                          body: Padding(
-                            padding: EdgeInsets.only(
-                              top: Platform.isIOS
-                                  ? MediaQuery.of(context).padding.top - 10
-                                  : MediaQuery.of(context).padding.top,
-                              bottom: 5,
-                            ),
-                            child: MediaQuery.removePadding(
-                              context: context,
-                              removeTop: true,
-                              removeBottom: true,
-                              child: const MyBottomNavBar(),
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                    return _homeShell(context);
                   },
                 );
               }

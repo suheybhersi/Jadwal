@@ -194,7 +194,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildBulletPoint(
               'Delete your account in Settings → Delete Account'),
           _buildBulletPoint(
-              'Contact us at jadwal.qrn@gmail.com to ask questions about your data'),
+              'Contact us at support@jadwal.co.uk to ask questions about your data'),
           _buildParagraph(
             'Depending on where you live, you may have additional rights under applicable privacy laws (for example access or deletion). Contact us to make a request.',
           ),
@@ -218,7 +218,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           _buildParagraph(
             'Questions about this Privacy Policy:',
           ),
-          _buildContactInfo(context, 'jadwal.qrn@gmail.com'),
+          _buildContactInfo(context, 'support@jadwal.co.uk'),
           _buildContactInfo(context, 'https://www.jadwal.co.uk'),
         ],
       ),

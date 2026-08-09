@@ -7,13 +7,20 @@ import 'package:jadwal/components/daily_amount_picker.dart';
 import 'package:jadwal/components/onboarding_ui.dart';
 import 'package:jadwal/components/schedule_day_picker.dart';
 import 'package:jadwal/components/verse_picker.dart';
+import 'package:jadwal/pages/auth/widgets/auth_widgets.dart';
 import 'package:jadwal/services/firestore.dart';
 import 'package:jadwal/services/user_preferences_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 
 class NewPlanScreen extends StatefulWidget {
-  const NewPlanScreen({super.key});
+  const NewPlanScreen({
+    super.key,
+    this.onBackToQuestion,
+  });
+
+  /// When set, Back on the first plan step returns to the hafidh question.
+  final VoidCallback? onBackToQuestion;
 
   @override
   State<NewPlanScreen> createState() => _NewPlanScreenState();
@@ -62,10 +69,8 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: Obx(() {
+    return AuthGradientScaffold(
+      child: Obx(() {
           if (controller.isCreatingPlan.value) {
             return CreatingPlanPage(
               isCompleted: controller.planCreated,
@@ -77,7 +82,7 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(color: kOnboardingAccent),
+                  child: CircularProgressIndicator(color: kAuthBrandBlue),
                 );
               }
 
@@ -107,13 +112,20 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 4, 20, 0),
                     child: Obx(() {
-                      final canGoBack = controller.currentPageIndex.value != 0;
+                      final index = controller.currentPageIndex.value;
+                      final canGoBackInPlan = index != 0;
+                      final canGoToQuestion =
+                          index == 0 && widget.onBackToQuestion != null;
                       return Row(
                         children: [
-                          if (canGoBack)
+                          if (canGoBackInPlan)
                             OnboardingBackButton(
-                              onPressed: () => controller.jumpToPageSafe(
-                                  controller.currentPageIndex.value - 1),
+                              onPressed: () =>
+                                  controller.jumpToPageSafe(index - 1),
+                            )
+                          else if (canGoToQuestion)
+                            OnboardingBackButton(
+                              onPressed: () => widget.onBackToQuestion!(),
                             )
                           else
                             const SizedBox(width: 44, height: 44),
@@ -161,7 +173,6 @@ class _NewPlanScreenState extends State<NewPlanScreen> {
             },
           );
         }),
-      ),
     );
   }
 }
@@ -186,14 +197,14 @@ class CreatingPlanPage extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: kOnboardingAccent.withValues(alpha: 0.1),
+                color: kAuthBrandBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Padding(
                 padding: EdgeInsets.all(18),
                 child: CircularProgressIndicator(
                   strokeWidth: 3,
-                  color: kOnboardingAccent,
+                  color: kAuthBrandBlue,
                 ),
               ),
             ),
@@ -241,9 +252,14 @@ class BottomNavigation extends StatelessWidget {
             controller.reviewPageIndex;
         final busy = controller.isAdvancing.value ||
             controller.isCreatingPlan.value;
-        return OnboardingPrimaryButton(
+        final onIntro = controller.currentPageIndex.value == 0;
+        final introReady = controller.answeredMemorisedBefore.value &&
+            controller.answeredDirection.value;
+        final canContinue = !busy && (!onIntro || introReady);
+        return AuthPrimaryButton(
           label: isReview ? 'Confirm & create' : 'Continue',
-          onPressed: busy
+          enabled: canContinue,
+          onPressed: !canContinue
               ? null
               : () async {
                   final reviewIndex = controller.reviewPageIndex;
@@ -290,83 +306,109 @@ class IntroPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<NewPlanController>();
+    final labelColor = Theme.of(context)
+        .colorScheme
+        .inversePrimary
+        .withValues(alpha: 0.75);
 
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const OnboardingStepHeader(
-            icon: Iconsax.book_1,
-            title: 'Build your plan',
-            subtitle:
-                'Tell us a bit about your memorisation so we can set a realistic daily schedule.',
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Have you memorised before?',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context)
-                  .colorScheme
-                  .inversePrimary
-                  .withValues(alpha: 0.75),
+      child: Obx(() {
+        final answeredFirst = controller.answeredMemorisedBefore.value;
+        final memorisedBefore = controller.hasMemorisedBefore.value;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const OnboardingStepHeader(
+              title: 'Build your plan',
+              subtitle:
+                  'Tell us a bit about your memorisation so we can set a realistic daily schedule.',
             ),
-          ),
-          const SizedBox(height: 8),
-          Obx(() => OnboardingChoiceCard(
+            const SizedBox(height: 16),
+            if (!answeredFirst) ...[
+              Text(
+                'Have you memorised before?',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: labelColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              OnboardingChoiceCard(
                 icon: Iconsax.tick_circle,
                 title: 'Yes, I have',
                 subtitle: 'We’ll ask how far you’ve reached',
-                selected: controller.hasMemorisedBefore.value,
+                selected: false,
                 onTap: () {
                   controller.hasMemorisedBefore.value = true;
+                  controller.answeredMemorisedBefore.value = true;
                 },
-              )),
-          const SizedBox(height: 8),
-          Obx(() => OnboardingChoiceCard(
+              ),
+              const SizedBox(height: 8),
+              OnboardingChoiceCard(
                 icon: Iconsax.add_circle,
                 title: 'No, starting fresh',
                 subtitle: 'We’ll begin from the start of your path',
-                selected: !controller.hasMemorisedBefore.value,
+                selected: false,
                 onTap: () {
                   controller.hasMemorisedBefore.value = false;
                   controller.selectedToSurah.value = null;
                   controller.selectedToVerse.value = null;
                   controller.selectedToSurahData.value = null;
+                  controller.answeredMemorisedBefore.value = true;
                 },
-              )),
-          const SizedBox(height: 20),
-          Text(
-            'Direction',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context)
-                  .colorScheme
-                  .inversePrimary
-                  .withValues(alpha: 0.75),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Obx(() => OnboardingChoiceCard(
+              ),
+            ] else ...[
+              OnboardingReviewTile(
+                title: 'Have you memorised before?',
+                content: memorisedBefore ? 'Yes, I have' : 'No, starting fresh',
+                icon: memorisedBefore
+                    ? Iconsax.tick_circle
+                    : Iconsax.add_circle,
+                onEdit: () {
+                  controller.answeredMemorisedBefore.value = false;
+                  controller.answeredDirection.value = false;
+                },
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Direction',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: labelColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              OnboardingChoiceCard(
                 icon: Iconsax.arrow_right_1,
                 title: 'Front to back',
                 subtitle: 'Start from Al-Fatiha',
-                selected: !controller.isBackToFront.value,
-                onTap: () => controller.isBackToFront.value = false,
-              )),
-          const SizedBox(height: 8),
-          Obx(() => OnboardingChoiceCard(
+                selected: controller.answeredDirection.value &&
+                    !controller.isBackToFront.value,
+                onTap: () {
+                  controller.isBackToFront.value = false;
+                  controller.answeredDirection.value = true;
+                },
+              ),
+              const SizedBox(height: 8),
+              OnboardingChoiceCard(
                 icon: Iconsax.arrow_left_1,
                 title: 'Back to front',
                 subtitle: 'Start from An-Nas',
-                selected: controller.isBackToFront.value,
-                onTap: () => controller.isBackToFront.value = true,
-              )),
-        ],
-      ),
+                selected: controller.answeredDirection.value &&
+                    controller.isBackToFront.value,
+                onTap: () {
+                  controller.isBackToFront.value = true;
+                  controller.answeredDirection.value = true;
+                },
+              ),
+            ],
+          ],
+        );
+      }),
     );
   }
 }
@@ -391,12 +433,11 @@ class MemorisedPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const OnboardingStepHeader(
-            icon: Iconsax.bookmark,
             title: 'Where did you stop?',
             subtitle:
                 'We start from the beginning of your path. Tell us the last surah and verse you’ve memorised so far.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // Fixed start of the memorised range
           Text(
@@ -682,7 +723,7 @@ class MemorisedPage extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                  child: OnboardingPrimaryButton(
+                  child: AuthPrimaryButton(
                     label: 'Done',
                     onPressed: () {
                       final selectedSurah = ordered.firstWhere(
@@ -713,76 +754,109 @@ class PlanDetailsPage extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const OnboardingStepHeader(
-                icon: Iconsax.calendar_1,
-                title: 'Daily amount & schedule',
-                subtitle:
-                    'Choose how much you memorise each day and on which days.',
-              ),
-              const SizedBox(height: 20),
+      child: Obx(() {
+        final amountDone = controller.answeredDailyAmount.value;
+        final scheduleDone = controller.answeredSchedule.value;
 
-              // Daily Amount Section
-              OnboardingSurfaceCard(
-                child: Obx(
-                  () => DailyAmountPicker(
-                    unit: controller.selectedUnit.value,
-                    amount: max(
-                        1, int.tryParse(controller.inputValue.value) ?? 1),
-                    onUnitChanged: (unit) {
-                      controller.selectedUnit.value = unit;
-                    },
-                    onAmountChanged: (amount) {
-                      controller.inputController.text =
-                          max(1, amount).toString();
-                      controller.update();
-                    },
-                  ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const OnboardingStepHeader(
+              title: 'Daily amount & schedule',
+              subtitle:
+                  'Choose how much you memorise each day and on which days.',
+            ),
+            const SizedBox(height: 16),
+            if (!amountDone) ...[
+              Text(
+                'Daily amount',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .inversePrimary
+                      .withValues(alpha: 0.75),
                 ),
               ),
-
-              const SizedBox(height: 12),
-
-              // Days Selection Section
+              const SizedBox(height: 8),
               OnboardingSurfaceCard(
-                child: Obx(
-                  () => ScheduleDayPicker(
+                child: DailyAmountPicker(
+                  compact: true,
+                  unit: controller.selectedUnit.value,
+                  amount: max(
+                      1, int.tryParse(controller.inputValue.value) ?? 1),
+                  onUnitChanged: (unit) {
+                    controller.selectedUnit.value = unit;
+                  },
+                  onAmountChanged: (amount) {
+                    controller.inputController.text =
+                        max(1, amount).toString();
+                    controller.update();
+                  },
+                ),
+              ),
+            ] else ...[
+              OnboardingReviewTile(
+                title: 'Daily amount',
+                content: controller.dailyAmountSummary,
+                icon: Iconsax.chart_2,
+                onEdit: () {
+                  controller.answeredDailyAmount.value = false;
+                  controller.answeredSchedule.value = false;
+                },
+              ),
+              const SizedBox(height: 16),
+              if (!scheduleDone) ...[
+                Text(
+                  'Schedule',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .inversePrimary
+                        .withValues(alpha: 0.75),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                OnboardingSurfaceCard(
+                  child: ScheduleDayPicker(
+                    compact: true,
                     selectedDays: controller.selectedDays.toList(),
                     onChanged: (days) {
                       controller.selectedDays.assignAll(days);
                     },
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Error Message
-              Obx(() {
-                return controller.planDetailsError.value.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          controller.planDetailsError.value,
-                          style: GoogleFonts.poppins(
-                            color: Colors.red.shade700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink();
-              }),
+              ] else
+                OnboardingReviewTile(
+                  title: 'Schedule',
+                  content: controller.scheduleSummary,
+                  icon: Iconsax.calendar_1,
+                  onEdit: () {
+                    controller.answeredSchedule.value = false;
+                  },
+                ),
             ],
-          ),
-        ),
-      ),
+            if (controller.planDetailsError.value.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                controller.planDetailsError.value,
+                style: GoogleFonts.poppins(
+                  color: Colors.red.shade700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
+        );
+      }),
     );
   }
 }
@@ -800,12 +874,11 @@ class PlanModePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const OnboardingStepHeader(
-            icon: Iconsax.setting_2,
             title: 'Choose your path',
             subtitle:
                 'How should Jadwal support your reviews and consistency?',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Obx(() => _ModeCard(
                 mode: UsageMode.flexible,
                 icon: Iconsax.timer_pause,
@@ -1022,11 +1095,10 @@ class ReviewPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           OnboardingStepHeader(
-            icon: Iconsax.clipboard_tick,
             title: title,
             subtitle: description,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           OnboardingReviewTile(
             title: 'Direction',
             content: controller.isBackToFront.value
@@ -1116,6 +1188,14 @@ class NewPlanController extends GetxController {
   final RxBool isBackToFront = false.obs;
   final RxBool hasMemorisedBefore = false.obs;
 
+  /// Intro step: first question answered → show summary + direction.
+  final RxBool answeredMemorisedBefore = false.obs;
+  final RxBool answeredDirection = false.obs;
+
+  /// Plan details: amount confirmed → show schedule; schedule confirmed → summaries.
+  final RxBool answeredDailyAmount = false.obs;
+  final RxBool answeredSchedule = false.obs;
+
   final RxBool isCreatingPlan = false.obs;
   final RxBool planCreated = false.obs;
 
@@ -1175,6 +1255,9 @@ class NewPlanController extends GetxController {
 
   void nextPage() {
     if (currentPageIndex.value == 0) {
+      if (!answeredMemorisedBefore.value || !answeredDirection.value) {
+        return;
+      }
       jumpToPageSafe(1);
     } else if (currentPageIndex.value == 1 && hasMemorisedBefore.value) {
       if (selectedToSurah.value != null && selectedToVerse.value != null) {
@@ -1186,15 +1269,59 @@ class NewPlanController extends GetxController {
     } else if (currentPageIndex.value == (hasMemorisedBefore.value ? 2 : 1)) {
       final amount = int.tryParse(inputController.text) ?? 0;
       final lines = selectedUnit.value == 'Lines' ? amount : amount * 15;
-      if (lines >= 1 && selectedDays.contains(true)) {
-        planDetailsError.value = '';
-        jumpToPageSafe(modePageIndex);
-      } else if (lines < 1) {
+      if (lines < 1) {
         planDetailsError.value = 'Daily amount must be at least 1 line.';
-      } else {
-        planDetailsError.value =
-            'Please fill out all fields and select at least one day.';
+        return;
       }
+      if (!answeredDailyAmount.value) {
+        planDetailsError.value = '';
+        answeredDailyAmount.value = true;
+        return;
+      }
+      if (!answeredSchedule.value) {
+        if (!selectedDays.contains(true)) {
+          planDetailsError.value = 'Please select at least one day.';
+          return;
+        }
+        planDetailsError.value = '';
+        answeredSchedule.value = true;
+        return;
+      }
+      planDetailsError.value = '';
+      jumpToPageSafe(modePageIndex);
     }
+  }
+
+  String get dailyAmountSummary {
+    final amount = max(1, int.tryParse(inputController.text) ?? 1);
+    final unit = selectedUnit.value.toLowerCase();
+    return '$amount $unit';
+  }
+
+  String get scheduleSummary {
+    final days = selectedDays.toList();
+    if (!days.contains(true)) return 'No days selected';
+    if (days.every((d) => d)) return 'Every day';
+    final weekdays = days[0] &&
+        days[1] &&
+        days[2] &&
+        days[3] &&
+        days[4] &&
+        !days[5] &&
+        !days[6];
+    if (weekdays) return 'Weekdays (Mon–Fri)';
+    final weekends = !days[0] &&
+        !days[1] &&
+        !days[2] &&
+        !days[3] &&
+        !days[4] &&
+        days[5] &&
+        days[6];
+    if (weekends) return 'Weekends (Sat–Sun)';
+    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return [
+      for (var i = 0; i < days.length; i++)
+        if (days[i]) names[i],
+    ].join(', ');
   }
 }

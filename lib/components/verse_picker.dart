@@ -8,12 +8,17 @@ class QuranVersePicker extends StatefulWidget {
     required this.onVerseSelected,
     this.initialSurahIndex = 0,
     this.initialVerseNumber,
+    this.minVerseNumber = 1,
   });
 
   final List<Map<String, dynamic>> surahData;
   final void Function(String surahName, int verseNumber) onVerseSelected;
   final int initialSurahIndex;
   final int? initialVerseNumber;
+
+  /// Lowest selectable verse for the currently shown surah list.
+  /// When the first surah in [surahData] is the start surah, use start+1.
+  final int minVerseNumber;
 
   @override
   QuranVersePickerState createState() => QuranVersePickerState();
@@ -28,28 +33,53 @@ class QuranVersePickerState extends State<QuranVersePicker> {
   static const double itemHeight = 50.0;
   static const double pickerHeight = 200.0;
 
+  int _minVerseFor(int surahIndex) {
+    // Only the first surah in a filtered end-list is constrained.
+    if (surahIndex == 0) {
+      return widget.minVerseNumber.clamp(1, _rawVerseCountFor(surahIndex));
+    }
+    return 1;
+  }
+
+  int _rawVerseCountFor(int surahIndex) {
+    if (surahIndex < 0 || surahIndex >= widget.surahData.length) return 1;
+    return (widget.surahData[surahIndex]['verses'] as int?) ?? 1;
+  }
+
+  int _verseCountFor(int surahIndex) {
+    final raw = _rawVerseCountFor(surahIndex);
+    final minVerse = _minVerseFor(surahIndex);
+    return (raw - minVerse + 1).clamp(1, raw);
+  }
+
+  int _verseNumberForIndex(int surahIndex, int index) =>
+      _minVerseFor(surahIndex) + index;
+
   @override
   void initState() {
     super.initState();
     selectedSurahIndex =
         widget.initialSurahIndex.clamp(0, widget.surahData.length - 1);
-    selectedVerseNumber = widget.initialVerseNumber ?? 1;
+    final minVerse = _minVerseFor(selectedSurahIndex);
+    final maxVerse = _rawVerseCountFor(selectedSurahIndex);
+    final initial = widget.initialVerseNumber ?? minVerse;
+    selectedVerseNumber = initial.clamp(minVerse, maxVerse);
 
     surahScrollController = FixedExtentScrollController(
       initialItem: selectedSurahIndex,
     );
 
     verseScrollController = FixedExtentScrollController(
-      initialItem: (selectedVerseNumber! - 1).clamp(
+      initialItem: (selectedVerseNumber! - minVerse).clamp(
         0,
         _verseCountFor(selectedSurahIndex) - 1,
       ),
     );
-  }
 
-  int _verseCountFor(int surahIndex) {
-    if (surahIndex < 0 || surahIndex >= widget.surahData.length) return 1;
-    return (widget.surahData[surahIndex]['verses'] as int?) ?? 1;
+    // Ensure parent gets the initial selection even if the user never scrolls.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _commitSelection();
+    });
   }
 
   void _commitSelection() {
@@ -64,7 +94,7 @@ class QuranVersePickerState extends State<QuranVersePicker> {
     if (index == selectedSurahIndex) return;
     setState(() {
       selectedSurahIndex = index;
-      selectedVerseNumber = 1;
+      selectedVerseNumber = _minVerseFor(index);
     });
     // Reset verse wheel without notifying parent mid-fling.
     if (verseScrollController.hasClients) {
@@ -73,7 +103,7 @@ class QuranVersePickerState extends State<QuranVersePicker> {
   }
 
   void _onVerseIndexChanged(int index) {
-    final verseNumber = index + 1;
+    final verseNumber = _verseNumberForIndex(selectedSurahIndex, index);
     if (verseNumber == selectedVerseNumber) return;
     setState(() {
       selectedVerseNumber = verseNumber;
@@ -274,7 +304,10 @@ class QuranVersePickerState extends State<QuranVersePicker> {
                               if (index < 0 || index >= selectedSurahVerses) {
                                 return null;
                               }
-                              final verseNumber = index + 1;
+                              final verseNumber = _verseNumberForIndex(
+                                selectedSurahIndex,
+                                index,
+                              );
                               final isSelected =
                                   verseNumber == selectedVerseNumber;
                               return SizedBox(
