@@ -7,16 +7,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Soft App Store update prompt. Compares the installed version to the
-/// live store listing and asks once per newer store version.
+/// live store listing and prompts on each launch while an update is available.
 class AppUpdateService {
   AppUpdateService._();
 
   static const appStoreId = '6741811055';
-  static const _dismissedVersionKey = 'update_prompt_dismissed_version';
   static const _storeUrl = 'https://apps.apple.com/app/id$appStoreId';
   static const _brandBlue = Color(0xFF4979FB);
 
@@ -31,10 +29,6 @@ class AppUpdateService {
     try {
       final result = await _check();
       if (result == null || !result.updateAvailable) return;
-
-      final prefs = await SharedPreferences.getInstance();
-      final dismissed = prefs.getString(_dismissedVersionKey);
-      if (dismissed == result.storeVersion) return;
 
       if (!context.mounted) return;
       _promptShownThisSession = true;
@@ -294,12 +288,7 @@ class AppUpdateService {
                   ),
                   const SizedBox(height: 4),
                   TextButton(
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString(
-                        _dismissedVersionKey,
-                        result.storeVersion,
-                      );
+                    onPressed: () {
                       if (sheetContext.mounted) {
                         Navigator.pop(sheetContext);
                       }
