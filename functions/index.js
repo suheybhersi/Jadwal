@@ -1,10 +1,11 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const functions = require('firebase-functions/v1');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const axios = require('axios');
 const FormData = require('form-data');
 
-admin.initializeApp();
+initializeApp();
 
 // Define the secrets
 const openaiApiKey = defineSecret('OPENAI_API_KEY');
@@ -23,7 +24,7 @@ function verifyAuth(context) {
 
 /** Require users/{uid}.isPro === true (set by RevenueCat webhook). */
 async function requirePro(uid) {
-  const snap = await admin.firestore().collection('users').doc(uid).get();
+  const snap = await getFirestore().collection('users').doc(uid).get();
   if (!snap.exists || snap.data().isPro !== true) {
     throw new functions.https.HttpsError(
       'permission-denied',
@@ -172,10 +173,10 @@ exports.revenueCatWebhook = functions
     }
 
     try {
-      await admin.firestore().collection('users').doc(appUserId).set(
+      await getFirestore().collection('users').doc(appUserId).set(
         {
           isPro,
-          proUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          proUpdatedAt: FieldValue.serverTimestamp(),
           revenueCatLastEvent: event.type
         },
         { merge: true }
@@ -223,10 +224,10 @@ exports.syncProEntitlement = functions
       const pro = entitlements.pro;
       const isPro = !!(pro && (!pro.expires_date || new Date(pro.expires_date) > new Date()));
 
-      await admin.firestore().collection('users').doc(uid).set(
+      await getFirestore().collection('users').doc(uid).set(
         {
           isPro,
-          proUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          proUpdatedAt: FieldValue.serverTimestamp(),
           revenueCatLastEvent: 'SYNC'
         },
         { merge: true }
