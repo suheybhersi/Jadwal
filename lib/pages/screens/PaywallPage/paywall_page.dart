@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -104,7 +106,11 @@ class _PaywallPageState extends State<PaywallPage> {
   }
 
   Future<void> _manage() async {
-    final uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+    final uri = Platform.isAndroid
+        ? Uri.parse(
+            'https://play.google.com/store/account/subscriptions?package=com.suheyb.jadwal',
+          )
+        : Uri.parse('https://apps.apple.com/account/subscriptions');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
