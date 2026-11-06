@@ -4,8 +4,19 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const axios = require('axios');
 const FormData = require('form-data');
+const crypto = require('crypto');
 
 initializeApp();
+
+// Largest audio upload accepted (OpenAI's own limit is 25 MB).
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
+
+/** Compare two strings in constant time so the secret can't be guessed by timing. */
+function secretsMatch(provided, expected) {
+  const a = crypto.createHash('sha256').update(String(provided)).digest();
+  const b = crypto.createHash('sha256').update(String(expected)).digest();
+  return crypto.timingSafeEqual(a, b);
+}
 
 // Define the secrets
 const openaiApiKey = defineSecret('OPENAI_API_KEY');
@@ -45,10 +56,18 @@ exports.convertSpeechToText = functions
 
     const { audioBase64, filename } = data;
 
-    if (!audioBase64) {
+    if (!audioBase64 || typeof audioBase64 !== 'string') {
       throw new functions.https.HttpsError(
         'invalid-argument',
         'Missing required parameter: audioBase64'
+      );
+    }
+
+    // Base64 is ~4/3 the size of the raw audio.
+    if (audioBase64.length * 0.75 > MAX_AUDIO_BYTES) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Recording is too large.'
       );
     }
 
@@ -67,7 +86,7 @@ exports.convertSpeechToText = functions
       // Create form data
       const formData = new FormData();
       formData.append('file', audioBuffer, {
-        filename: filename || 'recording.wav',
+        filename: typeof filename === 'string' && filename ? filename : 'recording.wav',
         contentType: 'audio/wav'
       });
       formData.append('model', 'whisper-1');
@@ -81,8 +100,9 @@ exports.convertSpeechToText = functions
             ...formData.getHeaders(),
             'Authorization': `Bearer ${apiKey}`
           },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity
+          maxContentLength: 1024 * 1024,
+          maxBodyLength: MAX_AUDIO_BYTES * 2,
+          timeout: 60000
         }
       );
 
@@ -98,9 +118,10 @@ exports.convertSpeechToText = functions
       if (error instanceof functions.https.HttpsError) {
         throw error;
       }
+      console.error('convertSpeechToText error', error.response?.data || error.message);
       throw new functions.https.HttpsError(
         'internal',
-        `Failed to convert speech to text: ${error.message}`
+        'Failed to convert speech to text.'
       );
     }
   });
@@ -123,7 +144,7 @@ exports.revenueCatWebhook = functions
       ? authHeader.slice(7)
       : authHeader;
 
-    if (!expected || provided !== expected) {
+    if (!expected || !secretsMatch(provided, expected)) {
       res.status(401).send('Unauthorized');
       return;
     }
